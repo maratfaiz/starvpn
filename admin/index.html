@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STAR VPN — Admin Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:      #08080a;
+  --bg2:     #111115;
+  --bg3:     #18181e;
+  --bg4:     #1e1e26;
+  --gold:    #FFB800;
+  --gold2:   #FFD84D;
+  --green:   #3DFF8A;
+  --red:     #FF4444;
+  --blue:    #60b4ff;
+  --text:    #EBE0CC;
+  --text2:   #8A7A60;
+  --text3:   #3a3428;
+  --border:  rgba(255,184,0,.12);
+  --border2: rgba(255,255,255,.06);
+  --sidebar: 220px;
+  --r:       12px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; }
+a { color: inherit; text-decoration: none; }
+button { cursor: pointer; font-family: inherit; }
+input, textarea { font-family: inherit; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ── Login ───────────────────────────────────────────────────── */
+#login-screen {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: var(--bg); z-index: 1000;
+}
+.login-box {
+  width: 360px; padding: 40px 36px;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 20px;
+  box-shadow: 0 0 60px rgba(255,184,0,.06);
+}
+.login-logo { text-align: center; margin-bottom: 28px; }
+.login-logo-icon {
+  width: 56px; height: 56px; border-radius: 16px; margin: 0 auto 12px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  display: flex; align-items: center; justify-content: center; font-size: 26px;
+}
+.login-logo h1 { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; }
+.login-logo p { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.login-label { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; display: block; }
+.login-input {
+  width: 100%; padding: 12px 14px; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); font-size: 14px; outline: none; transition: border-color .15s;
+}
+.login-input:focus { border-color: var(--gold); }
+.login-btn {
+  width: 100%; margin-top: 16px; padding: 13px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2)); border: none;
+  border-radius: 10px; color: #000; font-size: 14px; font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif; transition: opacity .15s;
+}
+.login-btn:hover { opacity: .9; }
+.login-err { color: var(--red); font-size: 12px; margin-top: 10px; text-align: center; min-height: 18px; }
+
+/* ── App layout ──────────────────────────────────────────────── */
+#app { display: flex; height: 100vh; overflow: hidden; }
+
+/* ── Sidebar ──────────────────────────────────────────────────── */
+#sidebar {
+  width: var(--sidebar); flex-shrink: 0;
+  background: var(--bg2); border-right: 1px solid var(--border2);
+  display: flex; flex-direction: column; padding: 0; overflow: hidden;
+}
+.sb-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid var(--border2);
+}
+.sb-logo-icon {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+}
+.sb-logo-text { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; }
+.sb-logo-sub { font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; }
+.sb-nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
+.sb-section { font-size: 9px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .1em; padding: 10px 8px 4px; }
+.sb-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 10px; margin-bottom: 2px;
+  color: var(--text2); font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .15s; position: relative;
+  border: 1px solid transparent;
+}
+.sb-item:hover { background: var(--bg3); color: var(--text); }
+.sb-item.active { background: rgba(255,184,0,.1); color: var(--gold); border-color: var(--border); }
+.sb-item svg { width: 16px; height: 16px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.sb-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 9px; font-weight: 700; border-radius: 8px; padding: 2px 6px; }
+.sb-footer {
+  padding: 12px; border-top: 1px solid var(--border2);
+  font-size: 11px; color: var(--text2); text-align: center;
+}
+.sb-key { font-size: 10px; color: var(--text3); word-break: break-all; margin-top: 4px; }
+
+/* ── Main area ───────────────────────────────────────────────── */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+#topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; height: 56px; border-bottom: 1px solid var(--border2);
+  background: var(--bg2); flex-shrink: 0;
+}
+.topbar-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; }
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.topbar-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+.topbar-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.topbar-btn {
+  padding: 7px 14px; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text2); font-size: 12px; font-weight: 500;
+  transition: all .15s;
+}
+.topbar-btn:hover { color: var(--text); border-color: var(--gold); }
+#content { flex: 1; overflow-y: auto; padding: 24px; }
+
+/* ── Page header ─────────────────────────────────────────────── */
+.page-header { margin-bottom: 20px; }
+.page-header h2 { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+.page-header p { font-size: 12px; color: var(--text2); }
+
+/* ── Stat cards ──────────────────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 14px; padding: 16px;
+  transition: border-color .15s;
+}
+.stat-card:hover { border-color: var(--border); }
+.stat-card-icon { font-size: 20px; margin-bottom: 10px; }
+.stat-card-val { font-family: 'Bebas Neue', sans-serif; font-size: 32px; line-height: 1; color: var(--gold); }
+.stat-card-val.green { color: var(--green); }
+.stat-card-val.red { color: var(--red); }
+.stat-card-val.blue { color: var(--blue); }
+.stat-card-lbl { font-size: 11px; color: var(--text2); margin-top: 4px; font-weight: 500; }
+.stat-card-sub { font-size: 11px; color: var(--green); margin-top: 2px; }
+
+/* ── Charts ──────────────────────────────────────────────────── */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+.chart-card { background: var(--bg2); border: 1px solid var(--border2); border-radius: 14px; padding: 20px; }
+.chart-card-title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 16px; text-transform: uppercase; letter-spacing: .04em; }
+.chart-wrap { height: 160px; position: relative; }
+
+/* ── Table ───────────────────────────────────────────────────── */
+.card { background: var(--bg2); border: 1px solid var(--border2); border-radius: 14px; overflow: hidden; margin-bottom: 20px; }
+.card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border2); gap: 12px; flex-wrap: wrap; }
+.card-title { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; }
+.card-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.search-input {
+  padding: 8px 12px; background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 8px; color: var(--text); font-size: 13px; outline: none;
+  transition: border-color .15s; width: 220px;
+}
+.search-input:focus { border-color: var(--gold); }
+.search-input::placeholder { color: var(--text2); }
+.filter-select {
+  padding: 8px 10px; background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 8px; color: var(--text2); font-size: 12px; outline: none; cursor: pointer;
+}
+.filter-select:focus { border-color: var(--gold); }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; font-family: 'Space Grotesk', sans-serif; transition: all .15s; cursor: pointer; white-space: nowrap; }
+.btn-gold { background: linear-gradient(135deg,var(--gold),var(--gold2)); color: #000; }
+.btn-gold:hover { opacity: .9; }
+.btn-outline { background: var(--bg3); border: 1px solid var(--border2); color: var(--text2); }
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+.btn-danger { background: rgba(255,68,68,.12); border: 1px solid rgba(255,68,68,.3); color: var(--red); }
+.btn-danger:hover { background: rgba(255,68,68,.2); }
+.btn-green { background: rgba(61,255,138,.1); border: 1px solid rgba(61,255,138,.3); color: var(--green); }
+.btn-green:hover { background: rgba(61,255,138,.18); }
+.btn-sm { padding: 5px 10px; font-size: 11px; }
+table { width: 100%; border-collapse: collapse; }
+thead th { padding: 10px 16px; text-align: left; font-size: 10px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .07em; border-bottom: 1px solid var(--border2); white-space: nowrap; }
+tbody tr { border-bottom: 1px solid var(--border2); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+tbody td { padding: 12px 16px; font-size: 13px; vertical-align: middle; }
+.td-user { display: flex; align-items: center; gap: 10px; }
+.td-ava {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg,var(--gold),var(--gold2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: #000;
+}
+.td-ava.banned { background: linear-gradient(135deg,#ff4444,#ff8888); }
+.td-name { font-weight: 600; font-size: 13px; }
+.td-sub { font-size: 11px; color: var(--text2); margin-top: 1px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: .02em; white-space: nowrap; }
+.badge-active { background: rgba(61,255,138,.12); color: var(--green); border: 1px solid rgba(61,255,138,.3); }
+.badge-inactive { background: rgba(255,255,255,.06); color: var(--text2); border: 1px solid var(--border2); }
+.badge-banned { background: rgba(255,68,68,.15); color: var(--red); border: 1px solid rgba(255,68,68,.3); }
+.badge-stars { background: rgba(255,184,0,.12); color: var(--gold); border: 1px solid var(--border); }
+.badge-crypto { background: rgba(96,180,255,.12); color: var(--blue); border: 1px solid rgba(96,180,255,.3); }
+.badge-online { background: rgba(61,255,138,.15); color: var(--green); border: 1px solid rgba(61,255,138,.3); }
+.td-actions { display: flex; gap: 6px; align-items: center; }
+.pagination { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--border2); font-size: 12px; color: var(--text2); }
+.pg-btns { display: flex; gap: 6px; }
+.pg-btn { padding: 5px 12px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; color: var(--text2); font-size: 12px; transition: all .15s; }
+.pg-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+.pg-btn:disabled { opacity: .3; cursor: default; }
+
+/* ── Empty / Loading ─────────────────────────────────────────── */
+.empty { text-align: center; padding: 48px; color: var(--text2); }
+.empty-icon { font-size: 40px; margin-bottom: 10px; }
+.spinner { width: 28px; height: 28px; border: 2px solid var(--border2); border-top-color: var(--gold); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-row td { text-align: center; padding: 40px; }
+
+/* ── Notification toast ──────────────────────────────────────── */
+#toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.toast-item {
+  padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 500;
+  background: var(--bg3); border: 1px solid var(--border); color: var(--text);
+  box-shadow: 0 4px 24px rgba(0,0,0,.4);
+  animation: slideIn .2s ease; max-width: 320px;
+}
+@keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+
+/* ── Modal (drawer) ──────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 500;
+  display: none; align-items: flex-start; justify-content: flex-end;
+}
+.modal-overlay.open { display: flex; }
+.drawer {
+  width: 420px; max-width: 100%; height: 100vh; background: var(--bg2);
+  border-left: 1px solid var(--border2); overflow-y: auto; padding: 24px;
+  animation: drawerIn .2s ease;
+}
+@keyframes drawerIn { from { transform: translateX(40px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+.drawer-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.drawer-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; }
+.drawer-close { width: 32px; height: 32px; border-radius: 8px; background: var(--bg3); border: 1px solid var(--border2); color: var(--text2); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.drawer-close:hover { color: var(--text); border-color: var(--gold); }
+.drawer-section { margin-bottom: 20px; }
+.drawer-section-title { font-size: 10px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+.drawer-stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.drawer-stat { background: var(--bg3); border: 1px solid var(--border2); border-radius: 10px; padding: 10px 8px; text-align: center; }
+.drawer-stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold); }
+.drawer-stat-lbl { font-size: 9px; color: var(--text2); text-transform: uppercase; letter-spacing: .04em; margin-top: 2px; }
+.input { width: 100%; padding: 10px 12px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; color: var(--text); font-size: 13px; outline: none; transition: border-color .15s; }
+.input:focus { border-color: var(--gold); }
+.input::placeholder { color: var(--text2); }
+textarea.input { resize: none; line-height: 1.5; }
+.form-group { margin-bottom: 12px; }
+.form-label { font-size: 11px; color: var(--text2); margin-bottom: 5px; display: block; font-weight: 500; }
+.quick-days { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+.quick-day-btn { padding: 8px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; color: var(--text2); font-size: 12px; font-weight: 600; transition: all .15s; }
+.quick-day-btn:hover { border-color: var(--gold); color: var(--gold); }
+.danger-zone { background: rgba(255,68,68,.06); border: 1px solid rgba(255,68,68,.2); border-radius: 10px; padding: 14px; }
+.danger-zone p { font-size: 12px; color: var(--text2); margin-bottom: 12px; }
+.payment-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border2); font-size: 12px; }
+.payment-row:last-child { border-bottom: none; }
+.mz-status-active { color: var(--green); }
+.mz-status-disabled { color: var(--red); }
+.mz-traffic { font-size: 11px; color: var(--text2); }
+
+/* ── Broadcast ───────────────────────────────────────────────── */
+.bc-preview { background: var(--bg3); border: 1px solid var(--border2); border-radius: 10px; padding: 14px; font-size: 13px; line-height: 1.6; min-height: 60px; color: var(--text); }
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  #sidebar { width: 52px; }
+  .sb-logo-text, .sb-logo-sub, .sb-item span, .sb-section, .sb-footer { display: none; }
+  .sb-item { justify-content: center; padding: 10px; }
+  .sb-badge { display: none; }
+  .charts-grid { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ Login ═══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">⭐</div>
+      <h1>STAR VPN</h1>
+      <p>Admin Portal</p>
+    </div>
+    <label class="login-label">Ключ администратора</label>
+    <input class="login-input" type="password" id="login-key" placeholder="Введи ADMIN_WEB_KEY" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Войти</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ═══ App ═══ -->
+<div id="app" style="display:none">
+
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">⭐</div>
+      <div>
+        <div class="sb-logo-text">STAR VPN</div>
+        <div class="sb-logo-sub">Admin Portal</div>
+      </div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-section">Главное</div>
+      <div class="sb-item active" onclick="goto('dashboard')" id="nav-dashboard">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>Дашборд</span>
+      </div>
+      <div class="sb-item" onclick="goto('users')" id="nav-users">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>Пользователи</span>
+      </div>
+      <div class="sb-item" onclick="goto('vpn')" id="nav-vpn">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20"/></svg>
+        <span>VPN / Marzban</span>
+      </div>
+      <div class="sb-item" onclick="goto('payments')" id="nav-payments">
+        <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        <span>Платежи</span>
+      </div>
+      <div class="sb-section">Управление</div>
+      <div class="sb-item" onclick="goto('broadcast')" id="nav-broadcast">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+        <span>Рассылка</span>
+      </div>
+      <div class="sb-item" onclick="goto('withdrawals')" id="nav-withdrawals">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Выводы</span>
+        <span class="sb-badge" id="sb-wd-badge" style="display:none">0</span>
+      </div>
+    </nav>
+    <div class="sb-footer">
+      <div>STAR VPN Admin v1.0</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <div id="topbar">
+      <div class="topbar-title" id="topbar-title">Дашборд</div>
+      <div class="topbar-right">
+        <div class="topbar-status">
+          <div class="topbar-dot"></div>
+          <span id="topbar-api">API онлайн</span>
+        </div>
+        <button class="topbar-btn" onclick="refreshPage()">🔄 Обновить</button>
+        <button class="topbar-btn" onclick="logout()">Выйти</button>
+      </div>
+    </div>
+    <div id="content"></div>
+  </div>
+</div>
+
+<!-- ═══ User Drawer ═══ -->
+<div class="modal-overlay" id="user-drawer-overlay" onclick="if(event.target===this)closeDrawer()">
+  <div class="drawer" id="user-drawer">
+    <div class="drawer-header">
+      <div class="drawer-title" id="dr-name">—</div>
+      <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;color:var(--text2)" id="dr-id">—</div>
+      <div style="margin-top:8px" id="dr-badge"></div>
+    </div>
+    <div class="drawer-stat-grid">
+      <div class="drawer-stat"><div class="drawer-stat-val" id="dr-days">—</div><div class="drawer-stat-lbl">Дней</div></div>
+      <div class="drawer-stat"><div class="drawer-stat-val" id="dr-devices">—</div><div class="drawer-stat-lbl">Устройств</div></div>
+      <div class="drawer-stat"><div class="drawer-stat-val" id="dr-refs">—</div><div class="drawer-stat-lbl">Рефералов</div></div>
+      <div class="drawer-stat" style="grid-column:span 2"><div class="drawer-stat-val" id="dr-stars">—</div><div class="drawer-stat-lbl">Stars оплачено</div></div>
+      <div class="drawer-stat"><div class="drawer-stat-val" style="font-size:14px;padding-top:4px" id="dr-created">—</div><div class="drawer-stat-lbl">Регистрация</div></div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title">🎁 Выдать подписку</div>
+      <div class="quick-days">
+        <button class="quick-day-btn" onclick="drSetDays(7)">+7 дн.</button>
+        <button class="quick-day-btn" onclick="drSetDays(30)">+30 дн.</button>
+        <button class="quick-day-btn" onclick="drSetDays(90)">+90 дн.</button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input class="input" type="number" id="dr-grant-days" placeholder="Кол-во дней" min="1" style="flex:1">
+        <button class="btn btn-gold" onclick="drGrant()">Выдать</button>
+      </div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title">✉️ Сообщение</div>
+      <textarea class="input" id="dr-msg" rows="3" placeholder="Текст сообщения (HTML поддерживается)" style="margin-bottom:8px"></textarea>
+      <button class="btn btn-outline" style="width:100%" onclick="drSendMsg()">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Отправить
+      </button>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title">💳 История платежей</div>
+      <div id="dr-payments"><div style="color:var(--text2);font-size:12px">Загрузка...</div></div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title">🖥️ Устройства</div>
+      <div id="dr-devices-list"><div style="color:var(--text2);font-size:12px">Загрузка...</div></div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-section-title danger-zone">
+        <p>Действие необратимо и немедленно вступит в силу.</p>
+        <div id="dr-ban-btn"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Toast container ═══ -->
+<div id="toast"></div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────
+const API = ''; // same origin — панель открывается с того же сервера
+let token = '';
+let currentPage = 'dashboard';
+let drUserId = null;
+
+// ── Auth ──────────────────────────────────────────────────────────
+async function doLogin() {
+  const key = document.getElementById('login-key').value.trim();
+  if (!key) return;
+  try {
+    const r = await fetch(API + '/web/login', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ key })
+    });
+    if (r.status === 503) { document.getElementById('login-err').textContent = 'ADMIN_WEB_KEY не настроен на сервере'; return; }
+    if (r.status === 401) { document.getElementById('login-err').textContent = 'Неверный ключ'; return; }
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      document.getElementById('login-err').textContent = 'Ошибка: ' + (err.detail || r.status);
+      return;
+    }
+    token = key;
+    localStorage.setItem('adminToken', token);
+    showApp();
+  } catch(e) {
+    document.getElementById('login-err').textContent = 'Нет связи с сервером (' + API + ')';
+  }
+}
+
+function logout() {
+  localStorage.removeItem('adminToken');
+  token = '';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-key').value = '';
+  document.getElementById('login-err').textContent = '';
+}
+
+async function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  goto('dashboard');
+}
+
+// ── API helper ────────────────────────────────────────────────────
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  if (r.status === 401) { logout(); return; }
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.detail || r.statusText);
+  }
+  return r.json();
+}
+
+// ── Navigation ────────────────────────────────────────────────────
+const PAGE_TITLES = {
+  dashboard: 'Дашборд', users: 'Пользователи', vpn: 'VPN / Marzban',
+  payments: 'Платежи', broadcast: 'Рассылка', withdrawals: 'Заявки на вывод'
+};
+
+function goto(page) {
+  currentPage = page;
+  document.querySelectorAll('.sb-item').forEach(el => el.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + page);
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('topbar-title').textContent = PAGE_TITLES[page] || page;
+  const c = document.getElementById('content');
+  c.innerHTML = '<div style="text-align:center;padding:60px"><div class="spinner"></div></div>';
+  const fns = { dashboard: renderDashboard, users: renderUsers, vpn: renderVPN, payments: renderPayments, broadcast: renderBroadcast, withdrawals: renderWithdrawals };
+  (fns[page] || (() => {}))();
+}
+
+function refreshPage() { goto(currentPage); }
+
+// ── Toast ─────────────────────────────────────────────────────────
+function toast(msg, type = 'default') {
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.textContent = msg;
+  if (type === 'error') el.style.borderColor = 'rgba(255,68,68,.4)';
+  if (type === 'success') el.style.borderColor = 'rgba(61,255,138,.4)';
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit',year:'2-digit'});
+}
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('ru-RU', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function fmtBytes(b) {
+  if (!b) return '0 B';
+  const gb = b / (1024**3);
+  if (gb >= 1) return gb.toFixed(2) + ' GB';
+  const mb = b / (1024**2);
+  return mb.toFixed(1) + ' MB';
+}
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ═══════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+let _charts = {};
+async function renderDashboard() {
+  document.getElementById('content').innerHTML = `
+    <div class="page-header"><h2>📊 Обзор</h2><p>Статистика платформы в реальном времени</p></div>
+    <div class="stat-grid" id="dash-stats">
+      ${['','','','','',''].map(() => `<div class="stat-card"><div class="spinner" style="width:20px;height:20px;margin:20px auto"></div></div>`).join('')}
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card"><div class="chart-card-title">💰 Доход за 7 дней</div><div class="chart-wrap"><canvas id="chart-revenue"></canvas></div></div>
+      <div class="chart-card"><div class="chart-card-title">👥 Новые юзеры за 7 дней</div><div class="chart-wrap"><canvas id="chart-users"></canvas></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">⚡ Быстрые действия</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:16px">
+        ${[
+          ['👥','Все пользователи','users'],
+          ['🌐','VPN / Marzban','vpn'],
+          ['💳','Платежи','payments'],
+          ['📢','Рассылка','broadcast'],
+          ['💸','Выводы','withdrawals'],
+        ].map(([icon,label,page]) => `
+          <div onclick="goto('${page}')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:16px;cursor:pointer;transition:all .15s;text-align:center"
+            onmouseenter="this.style.borderColor='var(--border)'" onmouseleave="this.style.borderColor='var(--border2)'">
+            <div style="font-size:28px;margin-bottom:8px">${icon}</div>
+            <div style="font-size:12px;font-weight:600;color:var(--text2)">${label}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  try {
+    const s = await api('GET', '/web/stats');
+    document.getElementById('dash-stats').innerHTML = `
+      <div class="stat-card"><div class="stat-card-icon">👥</div><div class="stat-card-val">${s.total_users}</div><div class="stat-card-lbl">Всего юзеров</div></div>
+      <div class="stat-card"><div class="stat-card-icon">✅</div><div class="stat-card-val green">${s.active_subscriptions}</div><div class="stat-card-lbl">Активных подписок</div></div>
+      <div class="stat-card"><div class="stat-card-icon">⭐</div><div class="stat-card-val blue">${s.total_stars}</div><div class="stat-card-lbl">Stars получено</div></div>
+      <div class="stat-card"><div class="stat-card-icon">💳</div><div class="stat-card-val">${s.total_payments}</div><div class="stat-card-lbl">Платежей</div></div>
+      <div class="stat-card"><div class="stat-card-icon">🎁</div><div class="stat-card-val">${s.trial_used}</div><div class="stat-card-lbl">Использовали триал</div></div>
+      <div class="stat-card"><div class="stat-card-icon">🚫</div><div class="stat-card-val red">${s.banned}</div><div class="stat-card-lbl">Забанено</div></div>`;
+
+    const chartCfg = {
+      type: 'bar',
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#8A7A60', font: { size: 10 } } },
+          y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#8A7A60', font: { size: 10 } }, beginAtZero: true }
+        }
+      }
+    };
+    new Chart(document.getElementById('chart-revenue'), { ...chartCfg, data: {
+      labels: s.revenue_chart.map(r => r.date),
+      datasets: [{ data: s.revenue_chart.map(r => r.amount), backgroundColor: 'rgba(255,184,0,.6)', borderColor: '#FFB800', borderWidth: 1, borderRadius: 4 }]
+    }});
+    new Chart(document.getElementById('chart-users'), { ...chartCfg, data: {
+      labels: s.users_chart.map(r => r.date),
+      datasets: [{ data: s.users_chart.map(r => r.count), backgroundColor: 'rgba(61,255,138,.4)', borderColor: '#3DFF8A', borderWidth: 1, borderRadius: 4 }]
+    }});
+  } catch(e) { toast('Ошибка загрузки: ' + e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  USERS
+// ═══════════════════════════════════════════════════════════════
+let _usersState = { page: 0, limit: 200, total: 0, q: '', status: '', sort: 'created_at', data: [] };
+let _usersTimer = null;
+
+async function renderUsers() {
+  document.getElementById('content').innerHTML = `
+    <div class="page-header"><h2>👥 Пользователи</h2><p>Управление аккаунтами и подписками</p></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Список пользователей <span id="u-total-lbl" style="font-weight:400;color:var(--text2);font-size:13px"></span></div>
+        <div class="card-tools">
+          <input class="search-input" id="u-search" placeholder="🔍 Поиск по имени, @username, ID" oninput="usersDebounce()">
+          <select class="filter-select" id="u-status" onchange="usersLoad(true)">
+            <option value="">Все статусы</option>
+            <option value="active">✅ Активные</option>
+            <option value="trial">🎁 Триал</option>
+            <option value="expired">⏰ Истёк</option>
+            <option value="banned">🚫 Забанены</option>
+          </select>
+          <select class="filter-select" id="u-sort" onchange="usersLoad(true)">
+            <option value="created_at">По дате регистрации</option>
+            <option value="stars">По Stars</option>
+            <option value="refs">По рефералам</option>
+          </select>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Пользователь</th>
+            <th>Подписка</th>
+            <th>Stars</th>
+            <th>Рефералы</th>
+            <th>Регистрация</th>
+            <th>Действия</th>
+          </tr></thead>
+          <tbody id="u-tbody"><tr class="loading-row"><td colspan="6"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span id="u-pg-info">—</span>
+        <div class="pg-btns">
+          <button class="pg-btn" id="u-pg-prev" onclick="usersPrev()">← Назад</button>
+          <button class="pg-btn" id="u-pg-next" onclick="usersNext()">Вперёд →</button>
+        </div>
+      </div>
+    </div>`;
+  _usersState = { page: 0, limit: 200, total: 0, q: '', status: '', sort: 'created_at', data: [] };
+  await usersLoad(true);
+}
+
+function usersDebounce() {
+  clearTimeout(_usersTimer);
+  _usersTimer = setTimeout(() => usersLoad(true), 400);
+}
+
+async function usersLoad(reset) {
+  if (reset) _usersState.page = 0;
+  _usersState.q = (document.getElementById('u-search')?.value || '').trim();
+  _usersState.status = document.getElementById('u-status')?.value || '';
+  _usersState.sort = document.getElementById('u-sort')?.value || 'created_at';
+  const offset = _usersState.page * _usersState.limit;
+  const tbody = document.getElementById('u-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr class="loading-row"><td colspan="6"><div class="spinner"></div></td></tr>';
+  try {
+    let url = `/web/users?limit=${_usersState.limit}&offset=${offset}&sort=${_usersState.sort}`;
+    if (_usersState.q) url += '&q=' + encodeURIComponent(_usersState.q);
+    if (_usersState.status) url += '&status=' + _usersState.status;
+    const data = await api('GET', url);
+    _usersState.total = data.total;
+    _usersState.data = data.users;
+    document.getElementById('u-total-lbl').textContent = `(${data.total})`;
+    const showingAll = data.users.length >= data.total;
+    document.getElementById('u-pg-info').textContent = showingAll
+      ? `Показано все ${data.total}`
+      : `${offset+1}–${Math.min(offset+_usersState.limit, data.total)} из ${data.total}`;
+    document.getElementById('u-pg-prev').disabled = _usersState.page === 0;
+    document.getElementById('u-pg-next').disabled = offset + _usersState.limit >= data.total;
+    document.getElementById('u-pg-prev').style.display = showingAll ? 'none' : '';
+    document.getElementById('u-pg-next').style.display = showingAll ? 'none' : '';
+    if (!data.users.length) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="empty-icon">🔍</div>Пользователи не найдены</div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.users.map(u => {
+      const name = u.full_name || (u.username ? '@'+u.username : 'ID '+u.telegram_id);
+      const initials = (name||'U').charAt(0).toUpperCase();
+      const avaClass = u.is_banned ? 'td-ava banned' : 'td-ava';
+      const badge = u.is_banned
+        ? '<span class="badge badge-banned">🚫 Бан</span>'
+        : u.subscription_active
+          ? `<span class="badge badge-active">✅ ${u.days_left} дн.</span>`
+          : '<span class="badge badge-inactive">Нет подписки</span>';
+      return `<tr>
+        <td><div class="td-user">
+          <div class="${avaClass}">${esc(initials)}</div>
+          <div><div class="td-name">${esc(name)}</div><div class="td-sub">ID: ${u.telegram_id}</div></div>
+        </div></td>
+        <td>${badge}</td>
+        <td>${u.total_stars_paid > 0 ? `<span class="badge badge-stars">${u.total_stars_paid} ⭐</span>` : '<span style="color:var(--text2)">—</span>'}</td>
+        <td><span style="color:var(--text2)">${u.referral_count || 0}</span></td>
+        <td style="color:var(--text2)">${fmtDate(u.created_at)}</td>
+        <td><div class="td-actions">
+          <button class="btn btn-outline btn-sm" onclick="openUserDrawer(${u.telegram_id})">Открыть</button>
+          ${u.is_banned
+            ? `<button class="btn btn-green btn-sm" onclick="quickUnban(${u.telegram_id})">Разбан</button>`
+            : `<button class="btn btn-danger btn-sm" onclick="quickBan(${u.telegram_id})">Бан</button>`}
+        </div></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">⚠️</div>Ошибка: ${esc(e.message)}</div></td></tr>`;
+  }
+}
+
+function usersPrev() { if (_usersState.page > 0) { _usersState.page--; usersLoad(false); } }
+function usersNext() { _usersState.page++; usersLoad(false); }
+
+async function quickBan(id) {
+  if (!confirm('Забанить ' + id + '?')) return;
+  try { await api('POST', `/web/user/${id}/ban`); toast('🚫 Забанен', 'success'); usersLoad(false); } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+async function quickUnban(id) {
+  try { await api('POST', `/web/user/${id}/unban`); toast('✅ Разбанен', 'success'); usersLoad(false); } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  USER DRAWER
+// ═══════════════════════════════════════════════════════════════
+async function openUserDrawer(tgId) {
+  drUserId = tgId;
+  ['dr-days','dr-devices','dr-refs','dr-stars','dr-created'].forEach(id => document.getElementById(id).textContent = '…');
+  document.getElementById('dr-name').textContent = 'Загрузка...';
+  document.getElementById('dr-id').textContent = 'ID: ' + tgId;
+  document.getElementById('dr-badge').innerHTML = '';
+  document.getElementById('dr-ban-btn').innerHTML = '';
+  document.getElementById('dr-grant-days').value = '';
+  document.getElementById('dr-msg').value = '';
+  document.getElementById('dr-payments').innerHTML = '<div style="color:var(--text2);font-size:12px">Загрузка...</div>';
+  document.getElementById('dr-devices-list').innerHTML = '<div style="color:var(--text2);font-size:12px">Загрузка...</div>';
+  document.getElementById('user-drawer-overlay').classList.add('open');
+  try {
+    const u = await api('GET', `/web/user/${tgId}`);
+    const name = u.full_name || (u.username ? '@'+u.username : 'Пользователь');
+    document.getElementById('dr-name').textContent = name;
+    document.getElementById('dr-id').textContent = `ID: ${u.telegram_id}` + (u.username ? ` · @${u.username}` : '') + (u.marzban_username ? ` · mz: ${u.marzban_username}` : '');
+    document.getElementById('dr-badge').innerHTML = u.is_banned
+      ? '<span class="badge badge-banned">🚫 ЗАБАНЕН</span>'
+      : u.subscription_active
+        ? '<span class="badge badge-active">🟢 Активна до ' + fmtDate(u.subscription_expires_at) + '</span>'
+        : '<span class="badge badge-inactive">⬜ Нет подписки</span>';
+    document.getElementById('dr-days').textContent = u.days_left ?? 0;
+    document.getElementById('dr-devices').textContent = u.device_count + '/3';
+    document.getElementById('dr-refs').textContent = u.referral_count ?? 0;
+    document.getElementById('dr-stars').textContent = (u.total_stars_paid ?? 0) + ' ⭐';
+    document.getElementById('dr-created').textContent = fmtDate(u.created_at);
+    // Payments
+    document.getElementById('dr-payments').innerHTML = u.payments?.length
+      ? u.payments.map(p => `<div class="payment-row">
+          <span>${fmtDateTime(p.paid_at)}</span>
+          <span class="badge ${p.method==='stars'?'badge-stars':'badge-crypto'}">${p.method==='stars'?'⭐ Stars':'💎 '+p.asset}</span>
+          <span style="color:var(--gold);font-weight:600">${p.amount} Stars · ${p.days||0} дн.</span>
+        </div>`).join('')
+      : '<div style="color:var(--text2);font-size:12px">Платежей нет</div>';
+    // Devices (only live devices from Marzban)
+    const devIcons = { ios:'📱', android:'🤖', macos:'💻', windows:'🖥', androidtv:'📺', appletv:'📺' };
+    const devStatusMap = { active:'🟢 Активен', disabled:'🔴 Откл.', expired:'⏰ Истёк', limited:'⚠️ Лимит', unknown:'❓' };
+    document.getElementById('dr-devices-list').innerHTML = u.devices?.length
+      ? u.devices.map(d => {
+          const icon = devIcons[d.name] || '📲';
+          const st = devStatusMap[d.status] || d.status || 'неизв.';
+          const stClass = d.status === 'active' ? 'badge-active' : d.status === 'disabled' ? 'badge-banned' : 'badge-inactive';
+          const trafficMb = d.used_traffic ? (d.used_traffic / 1048576).toFixed(1) + ' MB' : '0 MB';
+          const expStr = (() => { try { return d.expire ? fmtDate(new Date(d.expire * 1000).toISOString()) : '∞'; } catch { return '∞'; } })();
+          return `<div class="payment-row" style="flex-wrap:wrap;gap:4px">
+            <span style="font-size:16px">${icon}</span>
+            <span style="font-weight:600">${esc(d.name)}</span>
+            <span style="color:var(--text2);font-size:11px;flex:1;min-width:120px">${esc(d.marzban_username)}</span>
+            <span class="badge ${stClass}" style="font-size:11px">${st}</span>
+            <span style="color:var(--text2);font-size:11px">📊 ${trafficMb}</span>
+            <span style="color:var(--text2);font-size:11px">⏱ ${expStr}</span>
+          </div>`;
+        }).join('')
+      : '<div style="color:var(--text2);font-size:12px">Нет активных устройств</div>';
+    // Ban btn
+    document.getElementById('dr-ban-btn').innerHTML = u.is_banned
+      ? '<button class="btn btn-green" style="width:100%" onclick="drUnban()">✅ Разбанить пользователя</button>'
+      : '<button class="btn btn-danger" style="width:100%" onclick="drBan()">🚫 Забанить пользователя</button>';
+  } catch(e) { toast('Ошибка: ' + e.message, 'error'); closeDrawer(); }
+}
+
+function closeDrawer() {
+  document.getElementById('user-drawer-overlay').classList.remove('open');
+  drUserId = null;
+}
+
+function drSetDays(n) { document.getElementById('dr-grant-days').value = n; }
+
+async function drGrant() {
+  const days = parseInt(document.getElementById('dr-grant-days').value);
+  if (!days || days < 1) { toast('Введи количество дней'); return; }
+  try {
+    await api('POST', `/web/user/${drUserId}/grant`, { days });
+    toast(`✅ Выдано ${days} дней`, 'success');
+    openUserDrawer(drUserId);
+    if (currentPage === 'users') usersLoad(false);
+  } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+async function drSendMsg() {
+  const text = document.getElementById('dr-msg').value.trim();
+  if (!text) { toast('Введи текст'); return; }
+  try {
+    await api('POST', `/web/user/${drUserId}/message`, { text });
+    toast('✅ Сообщение отправлено', 'success');
+    document.getElementById('dr-msg').value = '';
+  } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+async function drBan() {
+  if (!confirm('Забанить пользователя?')) return;
+  try { await api('POST', `/web/user/${drUserId}/ban`); toast('🚫 Забанен', 'success'); openUserDrawer(drUserId); } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+async function drUnban() {
+  try { await api('POST', `/web/user/${drUserId}/unban`); toast('✅ Разбанен', 'success'); openUserDrawer(drUserId); } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  VPN / MARZBAN
+// ═══════════════════════════════════════════════════════════════
+let _mzFilter = '';
+async function renderVPN() {
+  document.getElementById('content').innerHTML = `
+    <div class="page-header">
+      <div><h2>🌐 VPN / Marzban</h2><p>Управление VPN-пользователями напрямую</p></div>
+      <button class="btn btn-outline btn-sm" onclick="mzPing()" id="mz-ping-btn" style="margin-left:auto;align-self:center">🔌 Проверить соединение</button>
+    </div>
+    <div id="mz-ping-result" style="display:none;margin-bottom:12px"></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Пользователи Marzban <span id="mz-count" style="font-weight:400;color:var(--text2);font-size:13px"></span></div>
+        <div class="card-tools">
+          <input class="search-input" id="mz-search" placeholder="🔍 Поиск по username" oninput="mzFilterRender()">
+          <select class="filter-select" id="mz-status-filter" onchange="mzFilterRender()">
+            <option value="">Все</option>
+            <option value="active">Активные</option>
+            <option value="disabled">Отключённые</option>
+            <option value="limited">Лимит трафика</option>
+            <option value="expired">Истёкшие</option>
+          </select>
+          <button class="btn btn-outline" onclick="renderVPN()">🔄</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Username</th>
+            <th>Статус</th>
+            <th>Использовано</th>
+            <th>Лимит</th>
+            <th>Истекает</th>
+            <th>Онлайн</th>
+            <th>Действия</th>
+          </tr></thead>
+          <tbody id="mz-tbody"><tr class="loading-row"><td colspan="7"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>`;
+  try {
+    const users = await api('GET', '/web/marzban/users');
+    window._mzUsers = Array.isArray(users) ? users : (users.users || []);
+    document.getElementById('mz-count').textContent = `(${window._mzUsers.length})`;
+    mzFilterRender();
+  } catch(e) {
+    const msg = e.message || 'Неизвестная ошибка';
+    let hint = '';
+    if (msg.includes('недоступен') || msg.includes('ConnectError')) hint = '<br><small style="color:var(--text2)">Проверь: запущен ли контейнер marzban? (<code>docker ps</code>)</small>';
+    else if (msg.includes('401') || msg.includes('auth')) hint = '<br><small style="color:var(--text2)">Проверь MARZBAN_USERNAME / MARZBAN_PASSWORD в .env</small>';
+    else if (msg.includes('timeout') || msg.includes('504')) hint = '<br><small style="color:var(--text2)">Marzban не отвечает — возможно перегружен</small>';
+    document.getElementById('mz-tbody').innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">⚠️</div><strong>Ошибка Marzban:</strong><br>${esc(msg)}${hint}<br><br><button class="btn btn-outline btn-sm" onclick="renderVPN()">🔄 Повторить</button></div></td></tr>`;
+  }
+}
+
+function mzFilterRender() {
+  const q = (document.getElementById('mz-search')?.value||'').toLowerCase();
+  const sf = document.getElementById('mz-status-filter')?.value||'';
+  const users = (window._mzUsers||[]).filter(u => {
+    if (q && !u.username?.toLowerCase().includes(q)) return false;
+    if (sf && u.status !== sf) return false;
+    return true;
+  });
+  const tbody = document.getElementById('mz-tbody');
+  if (!tbody) return;
+  if (!users.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="empty-icon">🔍</div>Ничего не найдено</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = users.map(u => {
+    const statusMap = { active: '<span class="badge badge-active">🟢 Активен</span>', disabled: '<span class="badge badge-banned">🔴 Отключён</span>', limited: '<span class="badge badge-inactive">⚠️ Лимит</span>', expired: '<span class="badge badge-inactive">⏰ Истёк</span>' };
+    const badge = statusMap[u.status] || `<span class="badge badge-inactive">${esc(u.status)}</span>`;
+    const used = fmtBytes(u.used_traffic);
+    const limit = u.data_limit ? fmtBytes(u.data_limit) : '∞';
+    const safeFmt = (ts, fn, fallback) => { try { return ts ? fn(new Date(ts * 1000).toISOString()) : fallback; } catch { return fallback; } };
+    const exp = safeFmt(u.expire, fmtDate, '∞');
+    const online = safeFmt(u.online_at, fmtDateTime, '—');
+    const isActive = u.status === 'active';
+    return `<tr>
+      <td><span style="font-family:monospace;font-size:12px;color:var(--gold)">${esc(u.username)}</span></td>
+      <td>${badge}</td>
+      <td class="mz-traffic">${used}</td>
+      <td class="mz-traffic">${limit}</td>
+      <td style="color:var(--text2);font-size:12px">${exp}</td>
+      <td style="color:var(--text2);font-size:12px">${online}</td>
+      <td><div class="td-actions">
+        ${isActive
+          ? `<button class="btn btn-danger btn-sm" onclick="mzDisable('${esc(u.username)}')">Откл.</button>`
+          : `<button class="btn btn-green btn-sm" onclick="mzEnable('${esc(u.username)}')">Вкл.</button>`}
+        <button class="btn btn-outline btn-sm" onclick="mzExtend('${esc(u.username)}')">+дн.</button>
+        <button class="btn btn-danger btn-sm" onclick="mzDelete('${esc(u.username)}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+async function mzEnable(username) {
+  try { await api('POST', `/web/marzban/users/${username}/enable`); toast('✅ Включён', 'success'); renderVPN(); } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+async function mzDisable(username) {
+  if (!confirm('Отключить ' + username + '?')) return;
+  try { await api('POST', `/web/marzban/users/${username}/disable`); toast('🔴 Отключён', 'success'); renderVPN(); } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+async function mzExtend(username) {
+  const d = prompt('Продлить ' + username + ' на сколько дней?', '30');
+  if (!d || isNaN(Number(d))) return;
+  try { await api('POST', `/web/marzban/users/${username}/extend`, { days: Number(d) }); toast(`✅ Продлено на ${d} дней`, 'success'); renderVPN(); } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+async function mzDelete(username) {
+  if (!confirm('Удалить ' + username + ' из Marzban? Это необратимо!')) return;
+  try { await api('DELETE', `/web/marzban/users/${username}`); toast('🗑 Удалён', 'success'); renderVPN(); } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+
+async function mzPing() {
+  const btn = document.getElementById('mz-ping-btn');
+  const box = document.getElementById('mz-ping-result');
+  if (!btn || !box) return;
+  btn.disabled = true; btn.textContent = '⏳ Проверяем...';
+  box.style.display = 'block';
+  box.innerHTML = '<div style="padding:10px 14px;border-radius:8px;background:rgba(255,255,255,.05);font-size:13px">Соединяемся с Marzban…</div>';
+  try {
+    const r = await api('GET', '/web/marzban/ping');
+    box.innerHTML = `<div style="padding:10px 14px;border-radius:8px;background:rgba(61,255,138,.08);border:1px solid rgba(61,255,138,.2);font-size:13px">✅ <strong>Marzban доступен</strong><br>URL: <code>${esc(r.url)}</code> · Токен получен (${r.token_len} chars)<br><button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="renderVPN()">🔄 Загрузить пользователей</button></div>`;
+  } catch(e) {
+    box.innerHTML = `<div style="padding:10px 14px;border-radius:8px;background:rgba(255,68,68,.08);border:1px solid rgba(255,68,68,.2);font-size:13px">❌ <strong>Marzban недоступен</strong><br>${esc(e.message)}<br><br><small style="color:var(--text2)">Что проверить на сервере:<br>1. <code>docker ps | grep marzban</code> — контейнер запущен?<br>2. <code>docker logs marzban --tail 30</code> — есть ли ошибки?<br>3. <code>curl http://localhost:8000/api/admin/token</code> — отвечает ли Marzban изнутри?</small></div>`;
+  }
+  btn.disabled = false; btn.textContent = '🔌 Проверить соединение';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PAYMENTS
+// ═══════════════════════════════════════════════════════════════
+async function renderPayments() {
+  document.getElementById('content').innerHTML = `
+    <div class="page-header"><h2>💳 Платежи</h2><p>История всех транзакций</p></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Транзакции <span id="pay-total-lbl" style="font-weight:400;color:var(--text2);font-size:13px"></span></div>
+        <div class="card-tools">
+          <button class="btn btn-outline" onclick="renderPayments()">🔄</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>ID</th>
+            <th>Пользователь</th>
+            <th>Сумма</th>
+            <th>Метод</th>
+            <th>Дней</th>
+            <th>Дата</th>
+          </tr></thead>
+          <tbody id="pay-tbody"><tr class="loading-row"><td colspan="6"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>`;
+  try {
+    const data = await api('GET', '/web/payments?limit=50');
+    document.getElementById('pay-total-lbl').textContent = `(${data.total})`;
+    document.getElementById('pay-tbody').innerHTML = data.payments.map(p => `<tr>
+      <td style="color:var(--text2);font-size:11px">#${p.id}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="openUserDrawer(${p.telegram_id})">${p.telegram_id}</button></td>
+      <td style="color:var(--gold);font-weight:700">${p.amount}</td>
+      <td><span class="badge ${p.method==='stars'?'badge-stars':'badge-crypto'}">${p.method==='stars'?'⭐ Stars':'💎 '+p.asset}</span></td>
+      <td style="color:var(--text2)">${p.days || '—'}</td>
+      <td style="color:var(--text2);font-size:12px">${fmtDateTime(p.paid_at)}</td>
+    </tr>`).join('') || '<tr><td colspan="6"><div class="empty"><div class="empty-icon">💳</div>Платежей нет</div></td></tr>';
+  } catch(e) {
+    document.getElementById('pay-tbody').innerHTML = `<tr><td colspan="6"><div class="empty">Ошибка: ${esc(e.message)}</div></td></tr>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  BROADCAST
+// ═══════════════════════════════════════════════════════════════
+function renderBroadcast() {
+  document.getElementById('content').innerHTML = `
+    <div class="page-header"><h2>📢 Рассылка</h2><p>Отправить сообщение всем пользователям</p></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header"><div class="card-title">✍️ Compose</div></div>
+        <div style="padding:20px">
+          <div class="form-group">
+            <label class="form-label">Текст рассылки (HTML поддерживается)</label>
+            <textarea class="input" id="bc-text" rows="8" placeholder="Введи текст...&#10;&#10;Пример:&#10;&lt;b&gt;Акция!&lt;/b&gt; 🎉 7 дней бесплатно!" oninput="bcPreview()" style="height:200px"></textarea>
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:16px;display:flex;gap:6px;align-items:center">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Отправится всем незабаненным пользователям
+          </div>
+          <button class="btn btn-gold" style="width:100%;padding:12px" id="bc-send-btn" onclick="sendBroadcast()">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Отправить рассылку
+          </button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:0">
+        <div class="card-header"><div class="card-title">👁 Предпросмотр</div></div>
+        <div style="padding:20px">
+          <div style="background:var(--bg3);border-radius:12px;padding:16px;min-height:200px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:14px;color:#000">⭐</div>
+              <div><div style="font-size:12px;font-weight:600">STAR VPN</div><div style="font-size:10px;color:var(--text2)">бот</div></div>
+            </div>
+            <div class="bc-preview" id="bc-preview" style="font-size:14px;line-height:1.6;color:var(--text)">Начни вводить текст…</div>
+          </div>
+          <div id="bc-result" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function bcPreview() {
+  const t = document.getElementById('bc-text').value;
+  const el = document.getElementById('bc-preview');
+  el.innerHTML = t || '<span style="color:var(--text2)">Начни вводить текст…</span>';
+}
+
+async function sendBroadcast() {
+  const text = document.getElementById('bc-text').value.trim();
+  if (!text) { toast('Введи текст рассылки'); return; }
+  if (!confirm('Отправить рассылку всем пользователям?')) return;
+  const btn = document.getElementById('bc-send-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Отправляю...';
+  try {
+    const r = await api('POST', '/web/broadcast', { text });
+    document.getElementById('bc-result').innerHTML = `<div style="background:rgba(61,255,138,.1);border:1px solid rgba(61,255,138,.3);border-radius:8px;padding:12px;font-size:13px">✅ Отправлено: <b>${r.sent}</b> &nbsp; ❌ Ошибок: <b>${r.failed}</b></div>`;
+    document.getElementById('bc-text').value = '';
+    document.getElementById('bc-preview').innerHTML = '<span style="color:var(--text2)">Начни вводить текст…</span>';
+  } catch(e) {
+    document.getElementById('bc-result').innerHTML = `<div style="color:var(--red)">❌ ${esc(e.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Отправить рассылку';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  WITHDRAWALS
+// ═══════════════════════════════════════════════════════════════
+async function renderWithdrawals() {
+  document.getElementById('content').innerHTML = `
+    <div class="page-header"><h2>💸 Заявки на вывод</h2><p>Ожидающие обработки запросы</p></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Pending заявки</div>
+        <button class="btn btn-outline" onclick="renderWithdrawals()">🔄</button>
+      </div>
+      <div id="wd-list" style="padding:12px"><div style="text-align:center;padding:30px"><div class="spinner"></div></div></div>
+    </div>`;
+  try {
+    const wds = await api('GET', '/web/withdrawals');
+    const badge = document.getElementById('sb-wd-badge');
+    if (badge) { badge.textContent = wds.length; badge.style.display = wds.length ? 'inline' : 'none'; }
+    const el = document.getElementById('wd-list');
+    if (!wds.length) {
+      el.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div>Нет активных заявок</div>';
+      return;
+    }
+    el.innerHTML = wds.map(w => {
+      const name = w.username ? '@'+w.username : (w.full_name || String(w.telegram_id));
+      return `<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div>
+            <div style="font-weight:600">${esc(name)}</div>
+            <div style="font-size:11px;color:var(--text2)">ID: ${w.telegram_id} · ${fmtDateTime(w.created_at)}</div>
+          </div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold)">${w.stars_amount} ⭐</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gold" onclick="wdApprove(${w.id})">✅ Одобрить</button>
+          <button class="btn btn-danger" onclick="wdReject(${w.id})">❌ Отклонить</button>
+          <button class="btn btn-outline" onclick="openUserDrawer(${w.telegram_id})">👤 Профиль</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('wd-list').innerHTML = `<div class="empty">Ошибка: ${esc(e.message)}</div>`;
+  }
+}
+
+async function wdApprove(id) {
+  try { await api('POST', `/web/withdrawals/${id}/approve`); toast('✅ Одобрено', 'success'); renderWithdrawals(); } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+async function wdReject(id) {
+  if (!confirm('Отклонить заявку?')) return;
+  try { await api('POST', `/web/withdrawals/${id}/reject`); toast('❌ Отклонено'); renderWithdrawals(); } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+(function init() {
+  const saved = localStorage.getItem('adminToken');
+  if (saved) { token = saved; showApp(); }
+})();
+</script>
+</body>
+</html>

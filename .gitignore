@@ -1,0 +1,23 @@
+# Environment — never commit secrets
+.env
+star_vpn_key
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+webapp/dist/
+
+# macOS
+.DS_Store
+
+# Docker
+infra/volumes/

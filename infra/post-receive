@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+echo "=== Deploying STAR VPN ==="
+GIT_WORK_TREE=/root/STAR_VPN GIT_DIR=/root/STAR_VPN.git git checkout -f main 2>/dev/null || \
+GIT_WORK_TREE=/root/STAR_VPN GIT_DIR=/root/STAR_VPN.git git checkout -f master
+echo "=== Files updated ==="
+cd /root/STAR_VPN/infra
+docker compose down
+docker compose up --build -d
+echo "=== Done ==="
