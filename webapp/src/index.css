@@ -2,18 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Glassmorphism card utility */
+@keyframes starTwinkle {
+  0%, 100% { opacity: .35; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@keyframes pulseDot {
+  0% { box-shadow: 0 0 0 0 rgba(46,217,166,.55); }
+  100% { box-shadow: 0 0 0 8px rgba(46,217,166,0); }
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: #05070A;
+  color: #F5F3EE;
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  overscroll-behavior-y: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
 @layer components {
+  /* Glassmorphism card utility (kept for reuse) */
   .glass-card {
     @apply rounded-2xl border border-white/20 bg-white/10 backdrop-blur-glass shadow-lg;
   }
-}
-
-/* Use Telegram theme colors as CSS vars */
-body {
-  background-color: var(--tg-theme-bg-color, #1a1a2e);
-  color: var(--tg-theme-text-color, #ffffff);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  min-height: 100vh;
-  margin: 0;
 }

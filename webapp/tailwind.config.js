@@ -14,9 +14,30 @@ export default {
           buttonText: "var(--tg-theme-button-text-color)",
           secondaryBg: "var(--tg-theme-secondary-bg-color)",
         },
+        // STAR VPN dark/gold design system
+        app: {
+          bg: "#05070A",
+          card: "#12151C",
+          sheet: "#0E1116",
+        },
+        gold: {
+          DEFAULT: "#F7CE68",
+          dark: "#C9962F",
+        },
+        ink: "#F5F3EE",
+        success: "#2ED9A6",
+        danger: "#E2554F",
+      },
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["Manrope", "system-ui", "sans-serif"],
       },
       backdropBlur: {
         glass: "12px",
+      },
+      boxShadow: {
+        gold: "0 10px 24px rgba(201,150,47,.3)",
+        sheet: "0 -20px 50px rgba(0,0,0,.5)",
       },
     },
   },
