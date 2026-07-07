@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-import Header from "./components/Header.jsx";
 import BottomNav from "./components/BottomNav.jsx";
 import Toast from "./components/Toast.jsx";
 import Starfield from "./components/Starfield.jsx";
@@ -18,7 +17,6 @@ import SettingsSheet from "./sheets/SettingsSheet.jsx";
 import GiftSheet from "./sheets/GiftSheet.jsx";
 import RenewSheet from "./sheets/RenewSheet.jsx";
 import DeviceSheet from "./sheets/DeviceSheet.jsx";
-import TopupSheet from "./sheets/TopupSheet.jsx";
 import AddDeviceSheet from "./sheets/AddDeviceSheet.jsx";
 import DeviceLinkSheet from "./sheets/DeviceLinkSheet.jsx";
 import InstructionsSheet from "./sheets/InstructionsSheet.jsx";
@@ -27,9 +25,6 @@ import * as api from "./data/mockApi.js";
 import {
   server,
   speedValue,
-  trafficUsedTotal,
-  trafficBars,
-  starsBalanceInitial,
   referral,
   rewardTiers,
   daysHistoryInitial,
@@ -39,7 +34,6 @@ import {
   languageOptions,
   renewPlans,
   giftDayOptions,
-  topupPacks,
 } from "./data/mockData.js";
 
 // Vite sets import.meta.env.DEV=true only for `npm run dev` / local preview —
@@ -79,8 +73,17 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState(null);
   const [devices, setDevices] = useState([]);
+  const [maxDevices, setMaxDevices] = useState(3);
   const [isAdmin, setIsAdmin] = useState(false);
   const [pendingGift, setPendingGift] = useState(null);
+
+  const loadAll = async () => {
+    const [me, devs, admin] = await Promise.all([api.getMe(), api.getDevices(), api.adminCheck()]);
+    setSubscription(meToSubscription(me));
+    setMaxDevices(me.max_devices);
+    setDevices(devs);
+    setIsAdmin(admin.is_admin);
+  };
 
   useEffect(() => {
     if (!telegramOk) return;
@@ -91,10 +94,7 @@ export default function App() {
       setTgUser(tg.initDataUnsafe?.user || null);
     }
 
-    Promise.all([api.getMe(), api.getDevices(), api.adminCheck()]).then(([me, devs, admin]) => {
-      setSubscription(meToSubscription(me));
-      setDevices(devs);
-      setIsAdmin(admin.is_admin);
+    loadAll().then(() => {
       setLoading(false);
       api.checkGiftNotification().then(setPendingGift);
     });
@@ -105,10 +105,10 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("home");
 
   // mutable app state (mock, no backend yet)
-  const [starsBalance, setStarsBalance] = useState(starsBalanceInitial);
   const [daysHistory, setDaysHistory] = useState(daysHistoryInitial);
   const [autoServer, setAutoServer] = useState(true);
   const [trialActivating, setTrialActivating] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // toast
   const [toast, setToast] = useState("");
@@ -135,6 +135,8 @@ export default function App() {
   const [renewOpen, setRenewOpen] = useState(false);
   const [renewStep, setRenewStep] = useState("form");
   const [renewPlanId, setRenewPlanId] = useState(2);
+  const [renewMethod, setRenewMethod] = useState("stars");
+  const [customDays, setCustomDays] = useState(14);
   const [lastAddedDays, setLastAddedDays] = useState(0);
   const [justRenewed, setJustRenewed] = useState(false);
 
@@ -146,11 +148,6 @@ export default function App() {
 
   // instructions
   const [instructionsOpen, setInstructionsOpen] = useState(false);
-
-  // topup sheet
-  const [topupOpen, setTopupOpen] = useState(false);
-  const [topupStep, setTopupStep] = useState("form");
-  const [topupPackId, setTopupPackId] = useState(2);
 
   // referral copy state
   const [codeCopied, setCodeCopied] = useState(false);
@@ -206,8 +203,27 @@ export default function App() {
     }
   };
   const submitRenew = () => {
-    const plan = renewPlans.find((p) => p.id === renewPlanId) || renewPlans[0];
+    const basePlan = renewPlans[0];
+    const pricePerDay = basePlan.price / basePlan.days;
+    const usdPerDay = basePlan.usd / basePlan.days;
+    const plan =
+      renewPlanId === "custom"
+        ? { label: `${customDays} дней`, days: customDays, price: Math.max(1, Math.round(customDays * pricePerDay)), usd: Math.max(0.1, +(customDays * usdPerDay).toFixed(1)) }
+        : renewPlans.find((p) => p.id === renewPlanId) || basePlan;
+
     haptic("notification");
+
+    if (renewMethod === "crypto") {
+      // Real endpoint: POST /api/invoice/crypto -> tg.openLink(url); payment
+      // confirmation arrives later via webhook, so we don't touch the
+      // subscription state here — only the invoice was created.
+      setRenewOpen(false);
+      showToast("💎 Счёт создан — оплати в @CryptoBot");
+      return;
+    }
+
+    // Stars: tg.openInvoice resolves synchronously with a paid/failed status
+    // in the real app, so we can apply the days right away.
     setSubscription((s) => ({
       ...s,
       active: true,
@@ -278,22 +294,6 @@ export default function App() {
     showToast("✅ Ссылка скопирована!");
   };
 
-  const openTopup = () => {
-    haptic("light");
-    setTopupOpen(true);
-    setTopupStep("form");
-  };
-  const closeTopup = () => {
-    setTopupOpen(false);
-    setTopupStep("form");
-  };
-  const submitTopup = () => {
-    const pack = topupPacks.find((p) => p.id === topupPackId) || topupPacks[0];
-    haptic("notification");
-    setStarsBalance((b) => b + pack.stars);
-    setTopupStep("success");
-  };
-
   const copyReferralCode = () => {
     haptic("light");
     navigator.clipboard?.writeText(referral.code).catch(() => {});
@@ -325,6 +325,17 @@ export default function App() {
     showToast("Функция выхода скоро появится");
   };
 
+  const refreshAll = async () => {
+    setRefreshing(true);
+    showToast("Обновляю...");
+    try {
+      await loadAll();
+      showToast("✅ Обновлено");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const closeGiftReceived = async () => {
     if (pendingGift) {
       await api.acceptGift(pendingGift.id);
@@ -334,6 +345,7 @@ export default function App() {
   };
 
   const selectedDevice = devices.find((d) => d.id === deviceSheetId) || null;
+  const totalTrafficGb = devices.reduce((sum, d) => sum + (d.traffic_gb || 0), 0);
 
   if (!telegramOk) {
     return <TelegramGate />;
@@ -365,15 +377,13 @@ export default function App() {
     <div className="relative flex flex-col h-screen bg-app-bg overflow-hidden">
       <Starfield />
       <div className="relative z-[1] flex flex-col h-full">
-        <Header starsBalance={starsBalance} onOpenTopup={openTopup} />
-
-        <div className="flex-1 overflow-y-auto px-5 pb-6">
+        <div className="flex-1 overflow-y-auto px-5 pt-5 pb-6">
           {activeTab === "home" && (
             <HomeScreen
               subscription={subscription}
               server={server}
               speedValue={speedValue}
-              trafficUsedTotal={trafficUsedTotal}
+              trafficUsedTotal={totalTrafficGb.toFixed(1)}
               autoServer={autoServer}
               onToggleAutoServer={toggleAutoServer}
               onOpenRenew={openRenew}
@@ -385,9 +395,8 @@ export default function App() {
           {activeTab === "devices" && (
             <DevicesScreen
               devices={devices}
-              devicesLimit={subscription.active ? 3 : 0}
-              trafficUsedTotal={trafficUsedTotal}
-              trafficBars={trafficBars}
+              devicesLimit={maxDevices}
+              totalTrafficGb={totalTrafficGb}
               onOpenDevice={openDevice}
               onAddDevice={openAddDevice}
             />
@@ -411,6 +420,8 @@ export default function App() {
               onManageSubscription={openRenew}
               onLogout={logout}
               onOpenInstructions={() => setInstructionsOpen(true)}
+              onRefresh={refreshAll}
+              refreshing={refreshing}
             />
           )}
           {activeTab === "admin" && isAdmin && <AdminScreen showToast={showToast} />}
@@ -451,6 +462,10 @@ export default function App() {
         plans={renewPlans}
         selectedPlanId={renewPlanId}
         onSelectPlan={setRenewPlanId}
+        method={renewMethod}
+        onSelectMethod={setRenewMethod}
+        customDays={customDays}
+        onCustomDaysChange={setCustomDays}
         onSubmit={submitRenew}
         lastAddedDays={lastAddedDays}
       />
@@ -474,17 +489,6 @@ export default function App() {
       />
 
       <InstructionsSheet open={instructionsOpen} onClose={() => setInstructionsOpen(false)} />
-
-      <TopupSheet
-        open={topupOpen}
-        step={topupStep}
-        onClose={closeTopup}
-        packs={topupPacks}
-        selectedPackId={topupPackId}
-        onSelectPack={setTopupPackId}
-        onSubmit={submitTopup}
-        starsBalance={starsBalance}
-      />
 
       <GiftReceivedModal gift={pendingGift} onClose={closeGiftReceived} />
 

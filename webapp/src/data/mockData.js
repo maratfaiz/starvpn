@@ -2,14 +2,6 @@
 // No backend calls yet — this feeds the fully interactive frontend
 // until the real API (bot/api.py) is wired in.
 
-export const subscription = {
-  planName: "Premium",
-  daysLeft: 23,
-  totalDays: 30,
-  expiryDate: "4 августа 2026",
-  connectionLabel: "Подключено",
-};
-
 export const server = {
   flag: "🇳🇱",
   name: "Амстердам #2",
@@ -18,51 +10,6 @@ export const server = {
 };
 
 export const speedValue = "184";
-export const trafficUsedTotal = "64.2";
-export const trafficBars = [22, 38, 30, 55, 41, 68, 47];
-
-export const starsBalanceInitial = 340;
-
-export const devicesInitial = [
-  {
-    id: 1,
-    name: "iPhone 15 Pro",
-    type: "phone",
-    current: true,
-    lastActive: "Сейчас",
-    traffic: "18.4",
-    connectedSince: "12 марта 2026",
-    location: "Москва, Россия",
-    ip: "10.66.12.4",
-    protocol: "WireGuard",
-  },
-  {
-    id: 2,
-    name: "MacBook Air",
-    type: "laptop",
-    current: false,
-    lastActive: "2 ч назад",
-    traffic: "31.7",
-    connectedSince: "2 июня 2026",
-    location: "Москва, Россия",
-    ip: "10.66.12.9",
-    protocol: "WireGuard",
-  },
-  {
-    id: 3,
-    name: "iPad mini",
-    type: "tablet",
-    current: false,
-    lastActive: "Вчера",
-    traffic: "14.1",
-    connectedSince: "28 мая 2026",
-    location: "Санкт-Петербург, Россия",
-    ip: "10.66.12.21",
-    protocol: "OpenVPN",
-  },
-];
-
-export const devicesLimit = 5;
 
 export const referral = {
   code: "STAR-9X4K2",
@@ -90,6 +37,10 @@ export const account = {
   name: "Марат К.",
   username: "@helloimmarat",
   appVersion: "1.2.0",
+  siteUrl: "https://starvpnservice.ru",
+  privacyUrl: "https://starvpnservice.ru/privacy.html",
+  termsUrl: "https://starvpnservice.ru/terms.html",
+  supportUrl: "https://t.me/hashprojects",
 };
 
 export const settingsRows = [
@@ -112,17 +63,11 @@ export const languageOptions = [
   { id: "ua", label: "Українська" },
 ];
 
+// price/usd — Stars price and its @CryptoBot USD equivalent
 export const renewPlans = [
-  { id: 1, label: "1 месяц", days: 30, perMonth: "199 ⭐ / мес", price: 199, popular: false },
-  { id: 2, label: "3 месяца", days: 90, perMonth: "183 ⭐ / мес", price: 549, popular: true },
-  { id: 3, label: "12 месяцев", days: 365, perMonth: "166 ⭐ / мес", price: 1990, popular: false },
+  { id: 1, label: "1 месяц", days: 30, perMonth: "199 ⭐ / мес", price: 199, usd: 2.1, popular: false },
+  { id: 2, label: "3 месяца", days: 90, perMonth: "183 ⭐ / мес", price: 549, usd: 5.7, popular: true },
+  { id: 3, label: "12 месяцев", days: 365, perMonth: "166 ⭐ / мес", price: 1990, usd: 20.5, popular: false },
 ];
 
 export const giftDayOptions = [7, 30, 90, 180];
-
-export const topupPacks = [
-  { id: 1, stars: 100, priceLabel: "149 ₽", best: false },
-  { id: 2, stars: 500, priceLabel: "699 ₽", best: true },
-  { id: 3, stars: 1000, priceLabel: "1290 ₽", best: false },
-  { id: 4, stars: 2500, priceLabel: "2990 ₽", best: false },
-];

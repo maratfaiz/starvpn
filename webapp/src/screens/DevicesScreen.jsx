@@ -1,11 +1,15 @@
 import { DeviceIcon, ChevronIcon } from "../components/icons.jsx";
 
-const WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const ICON_SHAPE = { ios: "phone", android: "phone", macos: "laptop", windows: "laptop" };
 
-export default function DevicesScreen({ devices, devicesLimit, trafficUsedTotal, trafficBars, onOpenDevice, onAddDevice }) {
-  const maxBar = Math.max(...trafficBars);
+function fmtGB(n) {
+  return n >= 1 ? n.toFixed(2) + " ГБ" : (n * 1024).toFixed(0) + " МБ";
+}
+
+export default function DevicesScreen({ devices, devicesLimit, totalTrafficGb, onOpenDevice, onAddDevice }) {
   const full = devices.length >= devicesLimit;
+  const downGb = totalTrafficGb * 0.6;
+  const upGb = totalTrafficGb * 0.4;
 
   return (
     <div className="flex flex-col gap-4">
@@ -16,23 +20,36 @@ export default function DevicesScreen({ devices, devicesLimit, trafficUsedTotal,
         </div>
       </div>
 
-      <div className="bg-app-card border border-white/[.06] rounded-[18px] p-4">
-        <div className="flex justify-between items-baseline mb-2.5">
-          <span className="font-semibold text-[13px] text-ink/55">Трафик в этом месяце</span>
-          <span className="font-display font-bold text-[15px] text-ink">{trafficUsedTotal} ГБ · Безлимит</span>
+      <div>
+        <div className="flex items-center justify-between mb-2.5">
+          <span className="font-semibold text-[13px] text-ink/55">Использование трафика</span>
+          <span className="font-medium text-[11px] text-ink/35">За всё время</span>
         </div>
-        <div className="flex items-end gap-1.5 h-[54px]">
-          {trafficBars.map((v, i) => (
-            <div
-              key={i}
-              className="flex-1 rounded-t-[5px] rounded-b-[2px] bg-gradient-to-b from-gold to-gold-dark opacity-85"
-              style={{ height: `${(v / maxBar) * 100}%` }}
-            />
-          ))}
-        </div>
-        <div className="flex justify-between mt-1.5">
-          <span className="font-medium text-[10.5px] text-ink/30">{WEEKDAYS[0]}</span>
-          <span className="font-medium text-[10.5px] text-ink/30">{WEEKDAYS[6]}</span>
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="bg-app-card border border-white/[.06] rounded-[18px] p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-[11px] text-ink/45">Загружено</span>
+              <div className="w-6 h-6 rounded-lg bg-success/[.12] flex items-center justify-center">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2ED9A6" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <polyline points="19 12 12 19 5 12" />
+                </svg>
+              </div>
+            </div>
+            <div className="font-display font-extrabold text-lg text-ink">{fmtGB(downGb)}</div>
+          </div>
+          <div className="bg-app-card border border-white/[.06] rounded-[18px] p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-[11px] text-ink/45">Отправлено</span>
+              <div className="w-6 h-6 rounded-lg bg-gold/[.12] flex items-center justify-center">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F7CE68" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="12" y1="19" x2="12" y2="5" />
+                  <polyline points="5 12 12 5 19 12" />
+                </svg>
+              </div>
+            </div>
+            <div className="font-display font-extrabold text-lg text-ink">{fmtGB(upGb)}</div>
+          </div>
         </div>
       </div>
 
