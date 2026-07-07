@@ -1,6 +1,6 @@
 import { StarIcon, GearIcon, SettingIcon, ChevronIcon } from "../components/icons.jsx";
 
-export default function AccountScreen({ account, subscription, settingsRows, onOpenSetting, onManageSubscription, onLogout }) {
+export default function AccountScreen({ account, subscription, settingsRows, onOpenSetting, onManageSubscription, onLogout, onOpenInstructions }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3.5 px-0.5 py-1.5">
@@ -38,6 +38,20 @@ export default function AccountScreen({ account, subscription, settingsRows, onO
           Управлять подпиской
         </button>
       </div>
+
+      <button
+        onClick={onOpenInstructions}
+        className="w-full flex items-center gap-3 bg-app-card border border-gold/20 rounded-2xl px-4 py-3.5 text-left"
+      >
+        <div className="w-9 h-9 rounded-[10px] bg-gold/[.08] border border-gold/20 flex items-center justify-center flex-shrink-0">
+          <SettingIcon name="info" color="#F7CE68" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="font-semibold text-[13.5px] text-ink">Как подключиться</div>
+          <div className="font-medium text-[11px] text-ink/40">Пошаговая инструкция для всех устройств</div>
+        </div>
+        <ChevronIcon />
+      </button>
 
       <div className="bg-app-card border border-white/[.06] rounded-[18px] overflow-hidden">
         {settingsRows.map((row, i) => (

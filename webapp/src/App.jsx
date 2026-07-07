@@ -3,27 +3,33 @@ import { useEffect, useRef, useState } from "react";
 import Header from "./components/Header.jsx";
 import BottomNav from "./components/BottomNav.jsx";
 import Toast from "./components/Toast.jsx";
+import Starfield from "./components/Starfield.jsx";
+import Onboarding, { onboardingSeen } from "./components/Onboarding.jsx";
+import TelegramGate from "./components/TelegramGate.jsx";
+import GiftReceivedModal from "./components/GiftReceivedModal.jsx";
 
 import HomeScreen from "./screens/HomeScreen.jsx";
 import DevicesScreen from "./screens/DevicesScreen.jsx";
 import ReferralsScreen from "./screens/ReferralsScreen.jsx";
 import AccountScreen from "./screens/AccountScreen.jsx";
+import AdminScreen from "./screens/AdminScreen.jsx";
 
 import SettingsSheet from "./sheets/SettingsSheet.jsx";
 import GiftSheet from "./sheets/GiftSheet.jsx";
 import RenewSheet from "./sheets/RenewSheet.jsx";
 import DeviceSheet from "./sheets/DeviceSheet.jsx";
 import TopupSheet from "./sheets/TopupSheet.jsx";
+import AddDeviceSheet from "./sheets/AddDeviceSheet.jsx";
+import DeviceLinkSheet from "./sheets/DeviceLinkSheet.jsx";
+import InstructionsSheet from "./sheets/InstructionsSheet.jsx";
 
+import * as api from "./data/mockApi.js";
 import {
-  subscription as subscriptionMock,
   server,
   speedValue,
   trafficUsedTotal,
   trafficBars,
   starsBalanceInitial,
-  devicesInitial,
-  devicesLimit,
   referral,
   rewardTiers,
   daysHistoryInitial,
@@ -36,6 +42,14 @@ import {
   topupPacks,
 } from "./data/mockData.js";
 
+// Vite sets import.meta.env.DEV=true only for `npm run dev` / local preview —
+// lets us exercise the app outside Telegram while still gating production
+// builds behind a real Telegram WebApp session, like the real bot does.
+function hasTelegramSession() {
+  const tg = window.Telegram?.WebApp;
+  return !!tg?.initData || import.meta.env.DEV;
+}
+
 function haptic(type = "impact") {
   const tg = window.Telegram?.WebApp;
   if (type === "notification") {
@@ -45,29 +59,56 @@ function haptic(type = "impact") {
   }
 }
 
+function meToSubscription(me) {
+  return {
+    active: me.subscription_active,
+    trialUsed: me.trial_used,
+    planName: me.plan_name,
+    daysLeft: me.days_left,
+    totalDays: me.total_days,
+    expiryDate: new Date(me.expires_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }),
+    connectionLabel: "Подключено",
+  };
+}
+
 export default function App() {
-  const [ready, setReady] = useState(false);
+  const [telegramOk] = useState(hasTelegramSession);
+  const [showOnboarding, setShowOnboarding] = useState(() => telegramOk && !onboardingSeen());
   const [tgUser, setTgUser] = useState(null);
 
+  const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState(null);
+  const [devices, setDevices] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [pendingGift, setPendingGift] = useState(null);
+
   useEffect(() => {
+    if (!telegramOk) return;
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.ready();
       tg.expand();
       setTgUser(tg.initDataUnsafe?.user || null);
     }
-    setReady(true);
-  }, []);
+
+    Promise.all([api.getMe(), api.getDevices(), api.adminCheck()]).then(([me, devs, admin]) => {
+      setSubscription(meToSubscription(me));
+      setDevices(devs);
+      setIsAdmin(admin.is_admin);
+      setLoading(false);
+      api.checkGiftNotification().then(setPendingGift);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [telegramOk]);
 
   // navigation
   const [activeTab, setActiveTab] = useState("home");
 
   // mutable app state (mock, no backend yet)
-  const [subscription, setSubscription] = useState(subscriptionMock);
   const [starsBalance, setStarsBalance] = useState(starsBalanceInitial);
-  const [devices, setDevices] = useState(devicesInitial);
   const [daysHistory, setDaysHistory] = useState(daysHistoryInitial);
   const [autoServer, setAutoServer] = useState(true);
+  const [trialActivating, setTrialActivating] = useState(false);
 
   // toast
   const [toast, setToast] = useState("");
@@ -83,7 +124,7 @@ export default function App() {
   const [notificationToggles, setNotificationToggles] = useState(notificationTogglesInitial);
   const [selectedLanguage, setSelectedLanguage] = useState("ru");
 
-  // gift sheet
+  // gift sheet (send)
   const [giftOpen, setGiftOpen] = useState(false);
   const [giftStep, setGiftStep] = useState("form");
   const [giftUsername, setGiftUsername] = useState("");
@@ -95,9 +136,16 @@ export default function App() {
   const [renewStep, setRenewStep] = useState("form");
   const [renewPlanId, setRenewPlanId] = useState(2);
   const [lastAddedDays, setLastAddedDays] = useState(0);
+  const [justRenewed, setJustRenewed] = useState(false);
 
-  // device sheet
+  // device sheets
   const [deviceSheetId, setDeviceSheetId] = useState(null);
+  const [addDeviceOpen, setAddDeviceOpen] = useState(false);
+  const [addingDevice, setAddingDevice] = useState(false);
+  const [linkSheet, setLinkSheet] = useState(null); // { name, link }
+
+  // instructions
+  const [instructionsOpen, setInstructionsOpen] = useState(false);
 
   // topup sheet
   const [topupOpen, setTopupOpen] = useState(false);
@@ -106,14 +154,6 @@ export default function App() {
 
   // referral copy state
   const [codeCopied, setCodeCopied] = useState(false);
-
-  if (!ready) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <span className="text-ink/50 text-sm animate-pulse">Загрузка...</span>
-      </div>
-    );
-  }
 
   const changeTab = (tab) => {
     haptic("light");
@@ -160,17 +200,39 @@ export default function App() {
   const closeRenew = () => {
     setRenewOpen(false);
     setRenewStep("form");
+    if (justRenewed) {
+      setJustRenewed(false);
+      setInstructionsOpen(true);
+    }
   };
   const submitRenew = () => {
     const plan = renewPlans.find((p) => p.id === renewPlanId) || renewPlans[0];
     haptic("notification");
-    setSubscription((s) => ({ ...s, daysLeft: s.daysLeft + plan.days, totalDays: s.totalDays + plan.days }));
+    setSubscription((s) => ({
+      ...s,
+      active: true,
+      daysLeft: s.daysLeft + plan.days,
+      totalDays: s.totalDays + plan.days,
+    }));
     setDaysHistory((h) => [
       { id: Date.now(), label: `Продление: ${plan.label}`, date: "только что", days: plan.days, type: "purchase" },
       ...h,
     ]);
     setLastAddedDays(plan.days);
     setRenewStep("success");
+    setJustRenewed(true);
+  };
+
+  const activateTrial = async () => {
+    setTrialActivating(true);
+    try {
+      const me = await api.activateTrial();
+      setSubscription(meToSubscription(me));
+      haptic("notification");
+      showToast("🎁 Триал активирован на 2 дня!");
+    } finally {
+      setTrialActivating(false);
+    }
   };
 
   const openDevice = (id) => {
@@ -178,11 +240,42 @@ export default function App() {
     setDeviceSheetId(id);
   };
   const closeDevice = () => setDeviceSheetId(null);
-  const deleteDevice = (id) => {
+
+  const deleteDevice = async (id) => {
     haptic("notification");
+    await api.deleteDevice(id);
     setDevices((prev) => prev.filter((d) => d.id !== id));
     setDeviceSheetId(null);
-    showToast("Устройство удалено");
+    showToast("✅ Устройство удалено");
+  };
+
+  const openAddDevice = () => {
+    haptic("light");
+    setAddDeviceOpen(true);
+  };
+  const submitAddDevice = async (type, label) => {
+    setAddingDevice(true);
+    try {
+      const device = await api.addDevice(type, label);
+      setDevices((prev) => [...prev, device]);
+      setAddDeviceOpen(false);
+      setLinkSheet({ name: `${label}`, link: device.link });
+      showToast("✅ Устройство добавлено");
+    } finally {
+      setAddingDevice(false);
+    }
+  };
+
+  const showDeviceLink = async (device) => {
+    haptic("light");
+    const { link } = await api.getDeviceLink(device.id);
+    setDeviceSheetId(null);
+    setLinkSheet({ name: device.name, link });
+  };
+
+  const copyDeviceLink = () => {
+    navigator.clipboard?.writeText(linkSheet.link).catch(() => {});
+    showToast("✅ Ссылка скопирована!");
   };
 
   const openTopup = () => {
@@ -232,57 +325,99 @@ export default function App() {
     showToast("Функция выхода скоро появится");
   };
 
+  const closeGiftReceived = async () => {
+    if (pendingGift) {
+      await api.acceptGift(pendingGift.id);
+      setSubscription((s) => ({ ...s, daysLeft: s.daysLeft + pendingGift.days, totalDays: s.totalDays + pendingGift.days }));
+    }
+    setPendingGift(null);
+  };
+
   const selectedDevice = devices.find((d) => d.id === deviceSheetId) || null;
 
-  return (
-    <div className="flex flex-col h-screen bg-app-bg">
-      <Header starsBalance={starsBalance} onOpenTopup={openTopup} />
+  if (!telegramOk) {
+    return <TelegramGate />;
+  }
 
-      <div className="flex-1 overflow-y-auto px-5 pb-6">
-        {activeTab === "home" && (
-          <HomeScreen
-            subscription={subscription}
-            server={server}
-            speedValue={speedValue}
-            trafficUsedTotal={trafficUsedTotal}
-            autoServer={autoServer}
-            onToggleAutoServer={toggleAutoServer}
-            onOpenRenew={openRenew}
-            onOpenGift={openGift}
-          />
-        )}
-        {activeTab === "devices" && (
-          <DevicesScreen
-            devices={devices}
-            devicesLimit={devicesLimit}
-            trafficUsedTotal={trafficUsedTotal}
-            trafficBars={trafficBars}
-            onOpenDevice={openDevice}
-          />
-        )}
-        {activeTab === "referral" && (
-          <ReferralsScreen
-            referral={referral}
-            rewardTiers={rewardTiers}
-            daysHistory={daysHistory}
-            copied={codeCopied}
-            onCopyCode={copyReferralCode}
-            onShare={shareReferralLink}
-          />
-        )}
-        {activeTab === "account" && (
-          <AccountScreen
-            account={{ ...account, name: tgUser ? `${tgUser.first_name}${tgUser.last_name ? " " + tgUser.last_name : ""}` : account.name }}
-            subscription={subscription}
-            settingsRows={settingsRows}
-            onOpenSetting={openSetting}
-            onManageSubscription={openRenew}
-            onLogout={logout}
-          />
-        )}
+  if (showOnboarding) {
+    return (
+      <Onboarding
+        trialUsed={subscription?.trialUsed ?? false}
+        onFinish={(action) => {
+          setShowOnboarding(false);
+          if (action === "buy") setRenewOpen(true);
+          if (action === "trial") activateTrial();
+        }}
+      />
+    );
+  }
+
+  if (loading || !subscription) {
+    return (
+      <div className="relative flex items-center justify-center min-h-screen bg-app-bg">
+        <Starfield />
+        <span className="relative text-ink/50 text-sm animate-pulse">Загрузка...</span>
       </div>
+    );
+  }
 
-      <BottomNav active={activeTab} onChange={changeTab} />
+  return (
+    <div className="relative flex flex-col h-screen bg-app-bg overflow-hidden">
+      <Starfield />
+      <div className="relative z-[1] flex flex-col h-full">
+        <Header starsBalance={starsBalance} onOpenTopup={openTopup} />
+
+        <div className="flex-1 overflow-y-auto px-5 pb-6">
+          {activeTab === "home" && (
+            <HomeScreen
+              subscription={subscription}
+              server={server}
+              speedValue={speedValue}
+              trafficUsedTotal={trafficUsedTotal}
+              autoServer={autoServer}
+              onToggleAutoServer={toggleAutoServer}
+              onOpenRenew={openRenew}
+              onOpenGift={openGift}
+              onActivateTrial={activateTrial}
+              trialActivating={trialActivating}
+            />
+          )}
+          {activeTab === "devices" && (
+            <DevicesScreen
+              devices={devices}
+              devicesLimit={subscription.active ? 3 : 0}
+              trafficUsedTotal={trafficUsedTotal}
+              trafficBars={trafficBars}
+              onOpenDevice={openDevice}
+              onAddDevice={openAddDevice}
+            />
+          )}
+          {activeTab === "referral" && (
+            <ReferralsScreen
+              referral={referral}
+              rewardTiers={rewardTiers}
+              daysHistory={daysHistory}
+              copied={codeCopied}
+              onCopyCode={copyReferralCode}
+              onShare={shareReferralLink}
+            />
+          )}
+          {activeTab === "account" && (
+            <AccountScreen
+              account={{ ...account, name: tgUser ? `${tgUser.first_name}${tgUser.last_name ? " " + tgUser.last_name : ""}` : account.name }}
+              subscription={subscription}
+              settingsRows={settingsRows}
+              onOpenSetting={openSetting}
+              onManageSubscription={openRenew}
+              onLogout={logout}
+              onOpenInstructions={() => setInstructionsOpen(true)}
+            />
+          )}
+          {activeTab === "admin" && isAdmin && <AdminScreen showToast={showToast} />}
+        </div>
+
+        <BottomNav active={activeTab} onChange={changeTab} showAdmin={isAdmin} />
+      </div>
 
       <SettingsSheet
         settingId={settingId}
@@ -320,7 +455,25 @@ export default function App() {
         lastAddedDays={lastAddedDays}
       />
 
-      <DeviceSheet open={!!deviceSheetId} device={selectedDevice} onClose={closeDevice} onDelete={deleteDevice} />
+      <DeviceSheet
+        open={!!deviceSheetId}
+        device={selectedDevice}
+        onClose={closeDevice}
+        onDelete={deleteDevice}
+        onShowLink={showDeviceLink}
+      />
+
+      <AddDeviceSheet open={addDeviceOpen} onClose={() => setAddDeviceOpen(false)} onSubmit={submitAddDevice} submitting={addingDevice} />
+
+      <DeviceLinkSheet
+        open={!!linkSheet}
+        deviceName={linkSheet?.name}
+        link={linkSheet?.link}
+        onClose={() => setLinkSheet(null)}
+        onCopy={copyDeviceLink}
+      />
+
+      <InstructionsSheet open={instructionsOpen} onClose={() => setInstructionsOpen(false)} />
 
       <TopupSheet
         open={topupOpen}
@@ -332,6 +485,8 @@ export default function App() {
         onSubmit={submitTopup}
         starsBalance={starsBalance}
       />
+
+      <GiftReceivedModal gift={pendingGift} onClose={closeGiftReceived} />
 
       <Toast message={toast} />
     </div>
