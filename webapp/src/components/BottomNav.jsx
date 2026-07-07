@@ -13,7 +13,7 @@ export default function BottomNav({ active, onChange, showAdmin }) {
   const tabs = showAdmin ? [...TABS, ADMIN_TAB] : TABS;
   return (
     <div
-      className="flex flex-shrink-0 px-3 pt-2 bg-app-bg/90 backdrop-blur-md border-t border-white/[.06]"
+      className="flex flex-shrink-0 px-3 pt-2 bg-app-bg border-t border-white/[.06]"
       style={{ paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))" }}
     >
       {tabs.map((tab) => {
