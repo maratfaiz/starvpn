@@ -205,20 +205,20 @@ export default function App() {
   const submitRenew = () => {
     const basePlan = renewPlans[0];
     const pricePerDay = basePlan.price / basePlan.days;
-    const usdPerDay = basePlan.usd / basePlan.days;
+    const rubPerDay = basePlan.rub / basePlan.days;
     const plan =
       renewPlanId === "custom"
-        ? { label: `${customDays} дней`, days: customDays, price: Math.max(1, Math.round(customDays * pricePerDay)), usd: Math.max(0.1, +(customDays * usdPerDay).toFixed(1)) }
+        ? { label: `${customDays} дней`, days: customDays, price: Math.max(1, Math.round(customDays * pricePerDay)), rub: Math.max(1, Math.round(customDays * rubPerDay)) }
         : renewPlans.find((p) => p.id === renewPlanId) || basePlan;
 
     haptic("notification");
 
-    if (renewMethod === "crypto") {
-      // Real endpoint: POST /api/invoice/crypto -> tg.openLink(url); payment
-      // confirmation arrives later via webhook, so we don't touch the
-      // subscription state here — only the invoice was created.
+    if (renewMethod === "card") {
+      // Real endpoint: POST /api/invoice/card -> tg.openLink(Robokassa url);
+      // confirmation arrives later via the /card/webhook ResultURL, so we
+      // don't touch the subscription state here — only the invoice was created.
       setRenewOpen(false);
-      showToast("💎 Счёт создан — оплати в @CryptoBot");
+      showToast("💳 Счёт создан — оплати картой на защищённой странице");
       return;
     }
 

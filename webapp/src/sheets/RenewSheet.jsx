@@ -1,9 +1,10 @@
 import BottomSheet from "../components/BottomSheet.jsx";
 import { BoltIcon, StarIcon, CheckIcon } from "../components/icons.jsx";
 
-const CryptoIcon = ({ size = 14, color = "#60b4ff" }) => (
+const CardIcon = ({ size = 14, color = "#5FD068" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M13 2L3 14h9l-1 8 10-12h-9z" />
+    <rect x="2" y="5" width="20" height="14" rx="2" />
+    <line x1="2" y1="10" x2="22" y2="10" />
   </svg>
 );
 
@@ -23,13 +24,13 @@ export default function RenewSheet({
 }) {
   const basePlan = plans[0];
   const pricePerDay = basePlan.price / basePlan.days;
-  const usdPerDay = basePlan.usd / basePlan.days;
+  const rubPerDay = basePlan.rub / basePlan.days;
   const isCustom = selectedPlanId === "custom";
   const customStars = Math.max(1, Math.round(customDays * pricePerDay));
-  const customUsd = Math.max(0.1, +(customDays * usdPerDay).toFixed(1));
+  const customRub = Math.max(1, Math.round(customDays * rubPerDay));
 
   const selectedPlan = isCustom
-    ? { label: `${customDays} дней`, days: customDays, price: customStars, usd: customUsd }
+    ? { label: `${customDays} дней`, days: customDays, price: customStars, rub: customRub }
     : plans.find((p) => p.id === selectedPlanId) || basePlan;
 
   if (step === "success") {
@@ -72,11 +73,11 @@ export default function RenewSheet({
           <StarIcon size={12} color={method === "stars" ? "#F7CE68" : "rgba(245,243,238,.5)"} /> Stars
         </button>
         <button
-          onClick={() => onSelectMethod("crypto")}
+          onClick={() => onSelectMethod("card")}
           className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-display font-semibold text-[12.5px]"
-          style={{ background: method === "crypto" ? "rgba(96,180,255,.14)" : "transparent", color: method === "crypto" ? "#60b4ff" : "rgba(245,243,238,.5)" }}
+          style={{ background: method === "card" ? "rgba(95,208,104,.14)" : "transparent", color: method === "card" ? "#5FD068" : "rgba(245,243,238,.5)" }}
         >
-          <CryptoIcon size={12} color={method === "crypto" ? "#60b4ff" : "rgba(245,243,238,.5)"} /> Crypto
+          <CardIcon size={12} color={method === "card" ? "#5FD068" : "rgba(245,243,238,.5)"} /> Карта ₽
         </button>
       </div>
 
@@ -109,7 +110,7 @@ export default function RenewSheet({
                     <span className="font-display font-extrabold text-base text-gold">{p.price}</span>
                   </>
                 ) : (
-                  <span className="font-display font-extrabold text-base text-[#60b4ff]">${p.usd}</span>
+                  <span className="font-display font-extrabold text-base text-[#5FD068]">{p.rub} ₽</span>
                 )}
               </div>
             </button>
@@ -135,7 +136,7 @@ export default function RenewSheet({
                 <span className="font-display font-extrabold text-base text-gold">{customStars}</span>
               </>
             ) : (
-              <span className="font-display font-extrabold text-base text-[#60b4ff]">${customUsd}</span>
+              <span className="font-display font-extrabold text-base text-[#5FD068]">{customRub} ₽</span>
             )}
           </div>
         </button>
@@ -166,7 +167,7 @@ export default function RenewSheet({
       <button
         onClick={onSubmit}
         className="w-full mt-[18px] border-none py-4 rounded-2xl flex items-center justify-center gap-2"
-        style={{ background: method === "stars" ? "linear-gradient(135deg,#F7CE68,#C9962F)" : "linear-gradient(135deg,#60b4ff,#3d7fd6)" }}
+        style={{ background: method === "stars" ? "linear-gradient(135deg,#F7CE68,#C9962F)" : "linear-gradient(135deg,#5FD068,#3AA84A)" }}
       >
         {method === "stars" ? (
           <>
@@ -175,13 +176,13 @@ export default function RenewSheet({
           </>
         ) : (
           <>
-            <CryptoIcon size={14} color="#0A0D13" />
-            <span className="font-display font-bold text-[15px] text-[#0A0D13]">Оплатить ${selectedPlan.usd}</span>
+            <CardIcon size={14} color="#0A0D13" />
+            <span className="font-display font-bold text-[15px] text-[#0A0D13]">Оплатить {selectedPlan.rub} ₽</span>
           </>
         )}
       </button>
       <div className="text-center font-medium text-[11.5px] text-ink/30 mt-2.5">
-        {method === "stars" ? "Оплата через Telegram Stars" : "USDT · TON · BTC · ETH · оплата через @CryptoBot"}
+        {method === "stars" ? "Оплата через Telegram Stars" : "Visa · Mastercard · МИР — оплата через Robokassa"}
       </div>
     </BottomSheet>
   );

@@ -63,11 +63,11 @@ export const languageOptions = [
   { id: "ua", label: "Українська" },
 ];
 
-// price/usd — Stars price and its @CryptoBot USD equivalent
+// price — Stars price, rub — card price via Robokassa. Matches bot/handlers/payment.py PLANS.
 export const renewPlans = [
-  { id: 1, label: "1 месяц", days: 30, perMonth: "199 ⭐ / мес", price: 199, usd: 2.1, popular: false },
-  { id: 2, label: "3 месяца", days: 90, perMonth: "183 ⭐ / мес", price: 549, usd: 5.7, popular: true },
-  { id: 3, label: "12 месяцев", days: 365, perMonth: "166 ⭐ / мес", price: 1990, usd: 20.5, popular: false },
+  { id: 1, label: "1 месяц", days: 30, perMonth: "99 ⭐ / мес", price: 99, rub: 199, popular: false },
+  { id: 2, label: "3 месяца", days: 90, perMonth: "83 ⭐ / мес", price: 249, rub: 499, popular: true },
+  { id: 3, label: "6 месяцев", days: 180, perMonth: "75 ⭐ / мес", price: 449, rub: 899, popular: false },
 ];
 
 export const giftDayOptions = [7, 30, 90, 180];

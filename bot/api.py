@@ -17,7 +17,7 @@ from pathlib import Path
 import httpx
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse
 from sqlalchemy import func, or_, select
 
 from bot.config import settings
@@ -1311,6 +1311,134 @@ async def crypto_webhook(request: Request):
             pass
 
     return {"ok": True}
+
+
+# ─── GET /api/card/plans ──────────────────────────────────────────────────────
+
+@app.get("/api/card/plans")
+async def get_card_plans(x_telegram_init_data: str | None = Header(default=None)):
+    """Тарифы для оплаты картой (RUB). Возвращает [] если Robokassa не настроена."""
+    _tg_id(x_telegram_init_data)
+    from bot.utils.robokassa import robokassa, CARD_PLANS
+    if not robokassa.configured:
+        return []
+    return [
+        {
+            "key": k,
+            "label": v["label"],
+            "rub": float(v["rub"]),
+            "days": v["days"],
+            "desc": v["desc"],
+        }
+        for k, v in CARD_PLANS.items()
+    ]
+
+
+# ─── POST /api/invoice/card ───────────────────────────────────────────────────
+
+@app.post("/api/invoice/card")
+async def create_card_invoice(
+    request: Request,
+    x_telegram_init_data: str | None = Header(default=None),
+):
+    """Создаёт pending-платёж и подписанную ссылку Robokassa (мини-апп)."""
+    tg_id = _tg_id(x_telegram_init_data)
+    body = await request.json()
+    plan_key = body.get("plan")
+
+    from bot.utils.robokassa import robokassa, CARD_PLANS
+    plan = CARD_PLANS.get(plan_key)
+    if not plan:
+        raise HTTPException(status_code=400, detail="Неизвестный тариф")
+    if not robokassa.configured:
+        raise HTTPException(status_code=503, detail="Оплата картой временно недоступна")
+
+    async with AsyncSessionLocal() as session:
+        payment = Payment(
+            order_id="",
+            telegram_id=tg_id,
+            amount=float(plan["rub"]),
+            status="pending",
+            payment_method="card",
+            days=plan["days"],
+        )
+        session.add(payment)
+        await session.flush()
+        payment.order_id = f"card_{payment.id}"
+
+        try:
+            pay_url = robokassa.build_payment_url(
+                inv_id=payment.id,
+                amount=plan["rub"],
+                description=f"STAR VPN - {plan['label']}",
+            )
+        except RuntimeError as e:
+            await session.rollback()
+            logger.error("Robokassa build_payment_url failed: %s", e)
+            raise HTTPException(status_code=502, detail="Ошибка Robokassa. Попробуйте позже.")
+
+        await session.commit()
+        inv_id = payment.id
+
+    return {"url": pay_url, "invoice_id": inv_id}
+
+
+# ─── POST /card/webhook (Robokassa ResultURL) ────────────────────────────────
+
+@app.post("/card/webhook", include_in_schema=False)
+async def card_webhook(request: Request):
+    """
+    ResultURL от Robokassa (server-to-server, application/x-www-form-urlencoded).
+    Подпись: MD5(OutSum:InvId:Password#2).
+    Обязан ответить строкой "OK{InvId}" — иначе Robokassa повторит запрос.
+    """
+    from bot.utils.robokassa import robokassa
+    from bot.handlers.card_payment import handle_card_webhook
+    from aiogram import Bot
+
+    form = await request.form()
+    out_sum = form.get("OutSum", "")
+    inv_id = form.get("InvId", "")
+    signature = form.get("SignatureValue", "")
+
+    if not robokassa.check_result_signature(out_sum, inv_id, signature):
+        logger.warning("Robokassa webhook: invalid signature for InvId=%s", inv_id)
+        raise HTTPException(status_code=403, detail="Invalid signature")
+
+    bot = Bot(token=settings.telegram_api_token)
+    try:
+        await handle_card_webhook(payment_id=int(inv_id), bot=bot)
+    except Exception as e:
+        logger.error("handle_card_webhook error: %s", e)
+    finally:
+        try:
+            await bot.session.close()
+        except Exception:
+            pass
+
+    # Формат ответа фиксирован протоколом Robokassa.
+    return PlainTextResponse(f"OK{inv_id}")
+
+
+@app.get("/card/success", response_class=HTMLResponse, include_in_schema=False)
+async def card_success():
+    return HTMLResponse(
+        "<html><body style='background:#05070A;color:#F5F3EE;font-family:sans-serif;"
+        "display:flex;align-items:center;justify-content:center;height:100vh;text-align:center'>"
+        "<div><h2>✅ Оплата прошла успешно</h2>"
+        "<p>Подписка активируется автоматически в течение минуты.<br>"
+        "Вернись в Telegram-бота, чтобы получить ключ.</p></div></body></html>"
+    )
+
+
+@app.get("/card/fail", response_class=HTMLResponse, include_in_schema=False)
+async def card_fail():
+    return HTMLResponse(
+        "<html><body style='background:#05070A;color:#F5F3EE;font-family:sans-serif;"
+        "display:flex;align-items:center;justify-content:center;height:100vh;text-align:center'>"
+        "<div><h2>❌ Платёж не прошёл</h2>"
+        "<p>Попробуй ещё раз в Telegram-боте — раздел «Продлить подписку».</p></div></body></html>"
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════
