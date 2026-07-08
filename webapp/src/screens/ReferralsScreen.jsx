@@ -71,7 +71,7 @@ export default function ReferralsScreen({ referral, rewardTiers, daysHistory, co
 
       <button
         onClick={onShare}
-        className="border-none py-[15px] rounded-[18px] bg-gradient-to-br from-gold to-gold-dark shadow-gold flex items-center justify-center gap-2"
+        className="border-none py-[15px] rounded-[18px] bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center gap-2"
       >
         <ShareIcon />
         <span className="font-display font-bold text-[14.5px] text-[#1A1408]">Поделиться ссылкой</span>

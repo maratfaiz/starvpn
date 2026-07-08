@@ -95,7 +95,7 @@ export default function HomeScreen({
       <div className="flex gap-2.5">
         <button
           onClick={onOpenRenew}
-          className="flex-1 py-4 rounded-[18px] bg-gradient-to-br from-gold to-gold-dark shadow-gold flex items-center justify-center gap-2"
+          className="flex-1 py-4 rounded-[18px] bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center gap-2"
         >
           <BoltIcon size={15} />
           <span className="font-display font-bold text-[14.5px] text-[#1A1408]">Продлить</span>

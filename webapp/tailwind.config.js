@@ -36,7 +36,6 @@ export default {
         glass: "12px",
       },
       boxShadow: {
-        gold: "0 10px 24px rgba(201,150,47,.3)",
         sheet: "0 -20px 50px rgba(0,0,0,.5)",
       },
     },
