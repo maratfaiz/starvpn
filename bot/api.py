@@ -76,6 +76,13 @@ async def serve_privacy():
     return _serve_html(_LANDING_DIR / "privacy.html")
 
 
+@app.get("/get-vpn", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/get-vpn.html", response_class=HTMLResponse, include_in_schema=False)
+async def serve_get_vpn():
+    """Покупка VPN-ключа без Telegram — для тех, кто не может открыть бота без VPN."""
+    return _serve_html(_LANDING_DIR / "get-vpn.html")
+
+
 @app.get("/logo.png", include_in_schema=False)
 async def serve_logo():
     from fastapi.responses import FileResponse
@@ -1367,8 +1374,9 @@ async def create_card_invoice(
         payment.order_id = f"card_{payment.id}"
 
         try:
+            from bot.utils.robokassa import payment_inv_id
             pay_url = robokassa.build_payment_url(
-                inv_id=payment.id,
+                inv_id=payment_inv_id(payment.id),
                 amount=plan["rub"],
                 description=f"STAR VPN - {plan['label']}",
             )
@@ -1383,6 +1391,123 @@ async def create_card_invoice(
     return {"url": pay_url, "invoice_id": inv_id}
 
 
+# ─── Гостевые заказы (покупка без Telegram, с лендинга) ──────────────────────
+
+@app.get("/api/guest/plans")
+async def get_guest_plans():
+    """Тарифы для покупки без Telegram. Публичный эндпоинт — initData не нужен."""
+    from bot.utils.robokassa import robokassa, CARD_PLANS
+    if not robokassa.configured:
+        return []
+    return [
+        {"key": k, "label": v["label"], "rub": float(v["rub"]), "days": v["days"], "desc": v["desc"]}
+        for k, v in CARD_PLANS.items()
+    ]
+
+
+@app.post("/api/guest/checkout")
+async def guest_checkout(request: Request):
+    """
+    Создаёт гостевой заказ и подписанную ссылку Robokassa. Публичный —
+    для покупки VPN прямо с сайта, без Telegram (initData не требуется).
+    """
+    import uuid
+    from bot.models.guest_order import GuestOrder
+    from bot.utils.robokassa import robokassa, CARD_PLANS, guest_inv_id
+
+    body = await request.json()
+    plan = CARD_PLANS.get(body.get("plan"))
+    if not plan:
+        raise HTTPException(status_code=400, detail="Неизвестный тариф")
+    if not robokassa.configured:
+        raise HTTPException(status_code=503, detail="Оплата картой временно недоступна")
+
+    async with AsyncSessionLocal() as session:
+        order = GuestOrder(
+            public_id=str(uuid.uuid4()),
+            plan_key=body["plan"],
+            days=plan["days"],
+            amount=float(plan["rub"]),
+            status="pending",
+        )
+        session.add(order)
+        await session.flush()
+
+        try:
+            pay_url = robokassa.build_payment_url(
+                inv_id=guest_inv_id(order.id),
+                amount=plan["rub"],
+                description=f"STAR VPN - {plan['label']} (сайт)",
+            )
+        except RuntimeError as e:
+            await session.rollback()
+            logger.error("Robokassa build_payment_url (guest) failed: %s", e)
+            raise HTTPException(status_code=502, detail="Ошибка Robokassa. Попробуйте позже.")
+
+        await session.commit()
+        public_id = order.public_id
+
+    return {"url": pay_url, "order_id": public_id}
+
+
+@app.get("/api/guest/order/{public_id}")
+async def guest_order_status(public_id: str):
+    """Поллится страницей успеха, пока вебхук не подтвердит оплату."""
+    from bot.models.guest_order import GuestOrder
+
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(GuestOrder).where(GuestOrder.public_id == public_id))
+        order: GuestOrder | None = result.scalar_one_or_none()
+        if not order:
+            raise HTTPException(status_code=404, detail="Заказ не найден")
+
+        return {
+            "status": order.status,
+            "link": order.vless_link,
+            "qr_url": (
+                f"https://api.qrserver.com/v1/create-qr-code/?size=240x240&data={urllib.parse.quote(order.vless_link)}"
+                if order.vless_link else None
+            ),
+        }
+
+
+async def _fulfill_guest_order(order_id: int) -> None:
+    """Создаёт Marzban-пользователя для гостевого заказа и сохраняет ключ."""
+    from datetime import datetime
+    from bot.models.guest_order import GuestOrder
+
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(GuestOrder).where(GuestOrder.id == order_id, GuestOrder.status == "pending")
+        )
+        order: GuestOrder | None = result.scalar_one_or_none()
+        if not order:
+            logger.warning("Guest webhook: pending order not found for id=%s", order_id)
+            return
+
+        mz_username = f"web_{order.public_id[:8]}"
+        try:
+            mz_user = await marzban.create_user(
+                telegram_id=0,
+                days=order.days,
+                note=f"guest_order:{order.public_id}",
+                ip_limit=1,
+                username=mz_username,
+            )
+            link = marzban.extract_vless_link(mz_user) or ""
+        except Exception as e:
+            logger.error("Guest order %s: Marzban create_user failed: %s", order.public_id, e)
+            return
+
+        order.status = "paid"
+        order.marzban_username = mz_username
+        order.vless_link = link
+        order.paid_at = datetime.utcnow()
+        await session.commit()
+
+    logger.info("Guest order fulfilled: public_id=%s rub=%s days=%s", order.public_id, order.amount, order.days)
+
+
 # ─── POST /card/webhook (Robokassa ResultURL) ────────────────────────────────
 
 @app.post("/card/webhook", include_in_schema=False)
@@ -1390,9 +1515,11 @@ async def card_webhook(request: Request):
     """
     ResultURL от Robokassa (server-to-server, application/x-www-form-urlencoded).
     Подпись: MD5(OutSum:InvId:Password#2).
+    Один InvId на два вида платежей — см. decode_inv_id: чётный/нечётный
+    разделяет обычные Telegram-платежи (Payment) и гостевые заказы (GuestOrder).
     Обязан ответить строкой "OK{InvId}" — иначе Robokassa повторит запрос.
     """
-    from bot.utils.robokassa import robokassa
+    from bot.utils.robokassa import robokassa, decode_inv_id
     from bot.handlers.card_payment import handle_card_webhook
     from aiogram import Bot
 
@@ -1405,9 +1532,18 @@ async def card_webhook(request: Request):
         logger.warning("Robokassa webhook: invalid signature for InvId=%s", inv_id)
         raise HTTPException(status_code=403, detail="Invalid signature")
 
+    kind, real_id = decode_inv_id(int(inv_id))
+
+    if kind == "guest":
+        try:
+            await _fulfill_guest_order(real_id)
+        except Exception as e:
+            logger.error("_fulfill_guest_order error: %s", e)
+        return PlainTextResponse(f"OK{inv_id}")
+
     bot = Bot(token=settings.telegram_api_token)
     try:
-        await handle_card_webhook(payment_id=int(inv_id), bot=bot)
+        await handle_card_webhook(payment_id=real_id, bot=bot)
     except Exception as e:
         logger.error("handle_card_webhook error: %s", e)
     finally:
@@ -1422,23 +1558,101 @@ async def card_webhook(request: Request):
 
 @app.get("/card/success", response_class=HTMLResponse, include_in_schema=False)
 async def card_success():
-    return HTMLResponse(
-        "<html><body style='background:#05070A;color:#F5F3EE;font-family:sans-serif;"
-        "display:flex;align-items:center;justify-content:center;height:100vh;text-align:center'>"
-        "<div><h2>✅ Оплата прошла успешно</h2>"
-        "<p>Подписка активируется автоматически в течение минуты.<br>"
-        "Вернись в Telegram-бота, чтобы получить ключ.</p></div></body></html>"
-    )
+    # Один SuccessURL обслуживает и Telegram-платежи, и гостевые заказы с
+    # сайта. Различаем их на клиенте: если браузер, вернувшийся с Robokassa,
+    # это тот же браузер, что открывал чекаут на /get-vpn, в localStorage
+    # будет лежать order_id гостевого заказа — тогда поллим его статус и
+    # показываем QR + ключ прямо здесь, без Telegram.
+    return HTMLResponse("""
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STAR VPN — Оплата</title>
+<style>
+  body{background:#05070A;color:#F5F3EE;font-family:system-ui,sans-serif;margin:0;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
+  .box{max-width:360px}
+  h2{margin:0 0 12px}
+  p{color:rgba(245,243,238,.6);line-height:1.6}
+  .spinner{width:28px;height:28px;border-radius:50%;border:3px solid rgba(255,184,0,.25);
+    border-top-color:#FFB800;animation:spin 1s linear infinite;margin:0 auto 18px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  img.qr{width:220px;height:220px;border-radius:12px;margin:16px auto;display:block;background:#fff;padding:8px}
+  .link-box{background:rgba(255,255,255,.05);border:1px solid rgba(255,184,0,.2);border-radius:12px;
+    padding:12px;font-family:monospace;font-size:12px;word-break:break-all;margin:16px 0}
+  button{background:#FFB800;color:#000;border:none;border-radius:10px;padding:12px 24px;
+    font-weight:700;font-size:14px;cursor:pointer}
+</style></head>
+<body><div class="box" id="box">
+  <div class="spinner"></div>
+  <h2>Оплата обрабатывается…</h2>
+  <p>Это займёт не больше минуты.</p>
+</div>
+<script>
+const orderId = localStorage.getItem('star_vpn_guest_order');
+const box = document.getElementById('box');
+
+function showTelegramReturn() {
+  box.innerHTML = '<h2>✅ Оплата прошла успешно</h2>' +
+    '<p>Подписка активируется автоматически в течение минуты.<br>' +
+    'Вернись в Telegram-бота, чтобы получить ключ.</p>';
+}
+
+async function pollGuestOrder(id, attempt) {
+  if (attempt > 40) {
+    box.innerHTML = '<h2>Оплата обрабатывается</h2><p>Обнови страницу через минуту — ключ появится здесь.</p>';
+    return;
+  }
+  try {
+    const res = await fetch('/api/guest/order/' + id);
+    const data = await res.json();
+    if (data.status === 'paid' && data.link) {
+      localStorage.removeItem('star_vpn_guest_order');
+      box.innerHTML =
+        '<h2>✅ VPN активирован!</h2>' +
+        '<p>Отсканируй QR или скопируй ссылку в приложение VPN-клиента.</p>' +
+        '<img class="qr" src="' + data.qr_url + '" alt="QR">' +
+        '<div class="link-box">' + data.link + '</div>' +
+        '<button onclick="navigator.clipboard.writeText(\\'' + data.link.replace(/'/g, "\\\\'") + '\\')">Скопировать ссылку</button>';
+      return;
+    }
+  } catch (e) { /* ignore, retry */ }
+  setTimeout(() => pollGuestOrder(id, attempt + 1), 2000);
+}
+
+if (orderId) {
+  pollGuestOrder(orderId, 0);
+} else {
+  showTelegramReturn();
+}
+</script>
+</body></html>
+""")
 
 
 @app.get("/card/fail", response_class=HTMLResponse, include_in_schema=False)
 async def card_fail():
-    return HTMLResponse(
-        "<html><body style='background:#05070A;color:#F5F3EE;font-family:sans-serif;"
-        "display:flex;align-items:center;justify-content:center;height:100vh;text-align:center'>"
-        "<div><h2>❌ Платёж не прошёл</h2>"
-        "<p>Попробуй ещё раз в Telegram-боте — раздел «Продлить подписку».</p></div></body></html>"
-    )
+    return HTMLResponse("""
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STAR VPN — Платёж не прошёл</title>
+<style>
+  body{background:#05070A;color:#F5F3EE;font-family:system-ui,sans-serif;margin:0;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
+  p{color:rgba(245,243,238,.6);line-height:1.6}
+  a{color:#FFB800;font-weight:700;text-decoration:none}
+</style></head>
+<body><div>
+<h2>❌ Платёж не прошёл</h2>
+<p id="hint">Попробуй ещё раз в Telegram-боте — раздел «Продлить подписку».</p>
+</div>
+<script>
+if (localStorage.getItem('star_vpn_guest_order')) {
+  localStorage.removeItem('star_vpn_guest_order');
+  document.getElementById('hint').innerHTML = 'Попробуй ещё раз: <a href="/get-vpn">вернуться к покупке</a>';
+}
+</script>
+</body></html>
+""")
 
 
 # ═══════════════════════════════════════════════════════════════════

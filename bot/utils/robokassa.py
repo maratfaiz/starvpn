@@ -92,3 +92,24 @@ class Robokassa:
 
 # Глобальный синглтон — используется в handlers и api.py
 robokassa = Robokassa()
+
+
+# ─── Кодирование InvId ────────────────────────────────────────────────────────
+# Robokassa настроена с одним общим ResultURL на весь проект, а InvId должен
+# быть целым числом. Чтобы вебхук понимал, к какой таблице относится платёж
+# (Payment от Telegram-пользователя или GuestOrder с сайта без Telegram),
+# кодируем это в чётности: Payment.id -> чётный, GuestOrder.id -> нечётный.
+
+def payment_inv_id(payment_id: int) -> int:
+    return payment_id * 2
+
+
+def guest_inv_id(guest_order_id: int) -> int:
+    return guest_order_id * 2 + 1
+
+
+def decode_inv_id(inv_id: int) -> tuple[str, int]:
+    """Возвращает ("payment" | "guest", исходный id строки в таблице)."""
+    if inv_id % 2 == 0:
+        return "payment", inv_id // 2
+    return "guest", (inv_id - 1) // 2

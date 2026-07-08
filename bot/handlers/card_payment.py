@@ -22,7 +22,7 @@ from sqlalchemy import select
 
 from bot.models.payment import Payment
 from bot.models.user import User
-from bot.utils.robokassa import robokassa, CARD_PLANS
+from bot.utils.robokassa import robokassa, CARD_PLANS, payment_inv_id
 from bot.utils.database import AsyncSessionLocal
 
 router = Router()
@@ -86,7 +86,7 @@ async def card_pay(callback: CallbackQuery) -> None:
 
         try:
             pay_url = robokassa.build_payment_url(
-                inv_id=payment.id,
+                inv_id=payment_inv_id(payment.id),
                 amount=plan["rub"],
                 description=f"STAR VPN - {plan['label']}",
             )

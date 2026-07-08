@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STAR VPN — Купить без Telegram</title>
+<meta name="description" content="Получи ключ STAR VPN сразу после оплаты картой — без Telegram и без VPN, который иначе понадобился бы, чтобы его открыть.">
+<link rel="icon" href="/logo.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --gold:#FFB800;--gold2:#FFD84D;
+  --gold-border:rgba(255,184,0,0.2);
+  --gold-dim:rgba(255,184,0,0.08);
+  --bg:#060606;--bg2:rgba(255,255,255,0.03);
+  --text:#EBE0CC;--text2:#8A7A60;
+}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Inter',system-ui,sans-serif;
+  font-size:16px;line-height:1.7;min-height:100vh;
+}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.wrap{position:relative;z-index:2;max-width:640px;margin:0 auto;padding:0 20px 80px}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:24px 0}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo img{width:28px;height:28px;border-radius:8px}
+.logo span{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--gold);letter-spacing:.04em}
+header a.back{color:var(--text2);text-decoration:none;font-size:13px}
+header a.back:hover{color:var(--gold)}
+
+.badge{
+  display:inline-flex;align-items:center;gap:8px;
+  border:1px solid var(--gold-border);border-radius:100px;
+  padding:6px 18px;margin:12px 0 20px;
+  font-size:12px;font-weight:500;letter-spacing:.06em;color:var(--gold);background:var(--gold-dim);
+}
+h1{
+  font-family:'Space Grotesk',sans-serif;font-weight:700;
+  font-size:clamp(28px,6vw,40px);line-height:1.15;letter-spacing:-.01em;color:#fff;
+  margin-bottom:14px;
+}
+h1 span{color:var(--gold)}
+.sub{color:var(--text2);font-size:15px;max-width:480px;margin-bottom:36px}
+
+.plans{display:flex;flex-direction:column;gap:12px;margin-bottom:28px}
+.plan{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--bg2);border:1.5px solid rgba(255,255,255,0.08);
+  border-radius:16px;padding:18px 20px;cursor:pointer;transition:border-color .15s,background .15s;
+  position:relative;
+}
+.plan:hover{border-color:rgba(255,184,0,.3)}
+.plan.sel{border-color:var(--gold);background:rgba(255,184,0,.06)}
+.plan-tag{
+  position:absolute;top:-9px;left:16px;background:var(--gold);color:#000;
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:10px;
+  padding:2px 10px;border-radius:100px;
+}
+.plan-name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:#fff}
+.plan-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.plan-price{font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:20px;color:var(--gold);white-space:nowrap}
+
+#plans-empty{display:none;color:var(--text2);font-size:14px;padding:20px;text-align:center;
+  border:1px dashed rgba(255,255,255,.12);border-radius:14px;margin-bottom:20px}
+
+.btn-gold{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--gold);color:#000;border:none;border-radius:14px;
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;
+  padding:17px;cursor:pointer;transition:background .2s,transform .15s;
+}
+.btn-gold:hover{background:var(--gold2);transform:translateY(-1px)}
+.btn-gold:disabled{opacity:.5;cursor:default;transform:none}
+.pay-note{text-align:center;color:var(--text2);font-size:12px;margin-top:10px}
+
+.how{margin-top:56px}
+.how h2{font-family:'Space Grotesk',sans-serif;font-size:18px;color:#fff;margin-bottom:16px}
+.how-step{display:flex;gap:14px;margin-bottom:16px}
+.how-num{
+  flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--gold-dim);
+  border:1px solid var(--gold-border);color:var(--gold);
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;
+  display:flex;align-items:center;justify-content:center;
+}
+.how-text{font-size:14px;color:var(--text2);line-height:1.6;padding-top:3px}
+.how-text b{color:var(--text)}
+
+footer{margin-top:60px;text-align:center;color:var(--text2);font-size:12px}
+footer a{color:var(--gold);text-decoration:none}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+
+<div class="wrap">
+  <header>
+    <a class="logo" href="/">
+      <img src="/logo.png" alt="STAR VPN">
+      <span>STAR VPN</span>
+    </a>
+    <a class="back" href="/">← На главную</a>
+  </header>
+
+  <div class="badge">🔓 Без Telegram</div>
+  <h1>Не открывается <span>Telegram?</span><br>Получи VPN прямо здесь</h1>
+  <p class="sub">
+    Оплати картой — сразу после оплаты ключ появится на этой же странице:
+    QR-код и ссылка для подключения. Открывать Telegram не нужно.
+  </p>
+
+  <div class="plans" id="plans"></div>
+  <div id="plans-empty">Оплата картой временно недоступна. Загляни чуть позже.</div>
+
+  <button class="btn-gold" id="buy-btn" disabled>Выбери тариф</button>
+  <div class="pay-note">Visa · Mastercard · МИР — оплата через Robokassa</div>
+
+  <div class="how">
+    <h2>Как это работает</h2>
+    <div class="how-step">
+      <div class="how-num">1</div>
+      <div class="how-text">Выбери тариф и нажми <b>«Оплатить»</b> — откроется защищённая страница Robokassa</div>
+    </div>
+    <div class="how-step">
+      <div class="how-num">2</div>
+      <div class="how-text">Оплати картой — после оплаты страница <b>сама вернётся сюда</b> с готовым ключом</div>
+    </div>
+    <div class="how-step">
+      <div class="how-num">3</div>
+      <div class="how-text">Скачай VPN-клиент (Streisand / v2rayNG / v2rayN / V2Box), вставь ссылку — готово</div>
+    </div>
+  </div>
+
+  <footer>
+    Уже пользуешься ботом? <a href="https://t.me/starisvpnbot">Открыть @starisvpnbot</a>
+  </footer>
+</div>
+
+<script>
+// ─── Starfield (тот же приём, что на главной) ───────────────────────────────
+(function () {
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  let stars = [];
+  function resize() { c.width = innerWidth; c.height = innerHeight; }
+  function init() {
+    stars = Array.from({ length: 110 }, () => ({
+      x: Math.random() * c.width, y: Math.random() * c.height,
+      r: Math.random() * 1.4 + .3, a: Math.random(),
+      s: Math.random() * .008 + .003,
+    }));
+  }
+  function draw() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    stars.forEach(s => {
+      s.a += s.s; if (s.a > 1 || s.a < 0) s.s *= -1;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,184,0,${s.a * .8})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  resize(); init(); draw();
+  window.addEventListener('resize', () => { resize(); init(); });
+})();
+
+// ─── Тарифы + чекаут ─────────────────────────────────────────────────────────
+let selectedPlan = null;
+const buyBtn = document.getElementById('buy-btn');
+const plansEl = document.getElementById('plans');
+
+function selectPlan(key, rub, el) {
+  selectedPlan = key;
+  document.querySelectorAll('.plan').forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+  buyBtn.disabled = false;
+  buyBtn.textContent = `Оплатить ${rub} ₽`;
+}
+
+async function loadPlans() {
+  try {
+    const res = await fetch('/api/guest/plans');
+    const plans = await res.json();
+    if (!plans.length) {
+      document.getElementById('plans-empty').style.display = 'block';
+      return;
+    }
+    plansEl.innerHTML = plans.map((p, i) => `
+      <div class="plan" onclick="selectPlan('${p.key}', ${p.rub}, this)">
+        ${i === 1 ? '<span class="plan-tag">ВЫГОДНО</span>' : ''}
+        <div>
+          <div class="plan-name">${p.label}</div>
+          <div class="plan-sub">${p.desc}</div>
+        </div>
+        <div class="plan-price">${p.rub} ₽</div>
+      </div>
+    `).join('');
+  } catch (e) {
+    document.getElementById('plans-empty').style.display = 'block';
+  }
+}
+
+buyBtn.addEventListener('click', async () => {
+  if (!selectedPlan) return;
+  buyBtn.disabled = true;
+  buyBtn.textContent = 'Создаём счёт…';
+  try {
+    const res = await fetch('/api/guest/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan: selectedPlan }),
+    });
+    if (!res.ok) throw new Error('checkout failed');
+    const data = await res.json();
+    localStorage.setItem('star_vpn_guest_order', data.order_id);
+    window.location.href = data.url;
+  } catch (e) {
+    buyBtn.disabled = false;
+    buyBtn.textContent = 'Не получилось — попробуй ещё раз';
+  }
+});
+
+loadPlans();
+</script>
+</body>
+</html>

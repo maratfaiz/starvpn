@@ -8,10 +8,11 @@ from bot.config import settings
 from bot.models.user import Base
 
 # Import all models so their tables are registered with Base.metadata
-import bot.models.payment     # noqa: F401
-import bot.models.withdrawal  # noqa: F401
-import bot.models.device             # noqa: F401
-import bot.models.gift_notification  # noqa: F401
+import bot.models.payment       # noqa: F401
+import bot.models.withdrawal    # noqa: F401
+import bot.models.device               # noqa: F401
+import bot.models.gift_notification    # noqa: F401
+import bot.models.guest_order   # noqa: F401
 
 engine = create_async_engine(
     settings.sqlalchemy_database_url,
