@@ -28,6 +28,7 @@ from bot.models.device import Device, MAX_DEVICES
 from bot.models.user import User
 from bot.utils.marzban import marzban
 from bot.utils.qr import make_qr_photo
+from bot.utils.branding import set_vless_remark, subscription_url
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -312,12 +313,12 @@ async def dev_add_type(callback: CallbackQuery, session: AsyncSession) -> None:
             ip_limit=1,
             username=mz_username,
         )
-        link = marzban.extract_vless_link(mz)
+        link = set_vless_remark(marzban.extract_vless_link(mz), type_key)
     except Exception as e:
         logger.warning("create_user failed (%s), trying get_or_create: %s", mz_username, e)
         try:
             mz = await marzban.get_or_create_user(mz_username, tg_id, days_left)
-            link = marzban.extract_vless_link(mz)
+            link = set_vless_remark(marzban.extract_vless_link(mz), type_key)
         except Exception as e2:
             logger.error("get_or_create_user also failed for %s: %s", mz_username, e2)
             await callback.message.answer(
@@ -345,7 +346,10 @@ async def dev_add_type(callback: CallbackQuery, session: AsyncSession) -> None:
                 f"✅ <b>{dt['icon']} {dt['label']}</b> добавлено!\n\n"
                 f"🔑 <b>Ваш ключ</b>\n\n"
                 f"<code>{link}</code>\n\n"
-                "👆 Нажми на ключ, чтобы скопировать, затем вставь в приложение"
+                "👆 Нажми на ключ, чтобы скопировать, затем вставь в приложение\n\n"
+                f"📲 <b>Используешь Happ?</b> Добавь как подписку — так в приложении "
+                f"будет отображаться «STAR VPN», а не техническое имя:\n"
+                f"<code>{subscription_url(mz_username)}</code>"
             ),
             parse_mode="HTML",
             reply_markup=_instructions_kb(),
@@ -441,7 +445,7 @@ async def dev_show_link(callback: CallbackQuery, session: AsyncSession) -> None:
 
     try:
         mz = await marzban.get_or_create_user(dev.marzban_username, dev.telegram_id, days_left)
-        link = marzban.extract_vless_link(mz)
+        link = set_vless_remark(marzban.extract_vless_link(mz), dev.name)
     except Exception as e:
         logger.error("dev:link failed for %s: %s", dev.marzban_username, e)
         await callback.message.answer(
@@ -463,7 +467,10 @@ async def dev_show_link(callback: CallbackQuery, session: AsyncSession) -> None:
         caption=(
             f"🔑 <b>Ваш ключ — {icon} {label}</b>\n\n"
             f"<code>{link}</code>\n\n"
-            "👆 Нажми на ключ, чтобы скопировать, затем вставь в приложение"
+            "👆 Нажми на ключ, чтобы скопировать, затем вставь в приложение\n\n"
+            f"📲 <b>Используешь Happ?</b> Добавь как подписку — так в приложении "
+            f"будет отображаться «STAR VPN», а не техническое имя:\n"
+            f"<code>{subscription_url(dev.marzban_username)}</code>"
         ),
         parse_mode="HTML",
         reply_markup=_instructions_kb(),

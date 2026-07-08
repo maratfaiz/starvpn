@@ -5,6 +5,7 @@ FastAPI веб-API для Telegram Mini App STAR VPN.
 """
 
 import asyncio
+import base64
 import hashlib
 import hmac
 import json
@@ -83,6 +84,49 @@ async def serve_get_vpn():
     return _serve_html(_LANDING_DIR / "get-vpn.html")
 
 
+# ─── GET /sub/{username} — подписка для VPN-клиентов (Happ, v2rayNG, ...) ────
+#
+# В отличие от одиночной vless://-ссылки, которую бот шлёт как текст/QR,
+# подписка — это URL, который сам клиент периодически перечитывает. Это даёт
+# три вещи бесплатно: (1) стабильное имя "STAR VPN" вместо marzban_username,
+# (2) нативный бар "трафик/осталось" в клиенте (заголовок Subscription-
+# Userinfo — тот же механизм, что использует сам Marzban), и (3) когда
+# подписка истекла — на месте сервера в списке клиента виден сам текст
+# "Подписка закончилась — продли в @бот", а не просто обрыв соединения.
+
+@app.get("/sub/{username}", include_in_schema=False)
+async def serve_subscription(username: str):
+    from bot.utils.branding import set_vless_remark, set_vless_remark_text
+
+    try:
+        mz = await marzban.get_user(username)
+    except Exception as e:
+        logger.warning("Subscription: marzban get_user failed for %s: %s", username, e)
+        raise HTTPException(status_code=404, detail="Not found")
+
+    link = marzban.extract_vless_link(mz) or ""
+    is_active = mz.get("status") == "active"
+
+    if is_active and link:
+        link = set_vless_remark(link)
+    elif link:
+        expired_text = f"⚠️ Подписка закончилась — продли в @{settings.bot_username}"
+        link = set_vless_remark_text(link, expired_text)
+
+    body = base64.b64encode(link.encode()).decode() if link else ""
+
+    used = int(mz.get("used_traffic") or 0)
+    total = int(mz.get("data_limit") or 0)
+    expire = int(mz.get("expire") or 0)
+
+    headers = {
+        "Profile-Title": "base64:" + base64.b64encode("STAR VPN".encode()).decode(),
+        "Profile-Update-Interval": "12",
+        "Subscription-Userinfo": f"upload=0; download={used}; total={total}; expire={expire}",
+    }
+    return PlainTextResponse(body, headers=headers)
+
+
 @app.get("/logo.png", include_in_schema=False)
 async def serve_logo():
     from fastapi.responses import FileResponse
@@ -149,22 +193,7 @@ def _fmt_online(online_at: int | None, now_ts: int) -> str:
     return f"{diff // 86400} дн. назад"
 
 
-_DEVICE_LABELS: dict[str, str] = {
-    "ios":       "STAR VPN · iPhone",
-    "android":   "STAR VPN · Android",
-    "macos":     "STAR VPN · macOS",
-    "windows":   "STAR VPN · Windows",
-    "androidtv": "STAR VPN · Android TV",
-    "appletv":   "STAR VPN · Apple TV",
-}
-
-
-def _set_vless_remark(link: str, device_name: str) -> str:
-    """Заменяет remark (#...) в VLESS-ссылке на читаемое название устройства."""
-    label = _DEVICE_LABELS.get(device_name, f"STAR VPN · {device_name}")
-    if "#" in link:
-        link = link[:link.index("#")]
-    return f"{link}#{urllib.parse.quote(label)}"
+from bot.utils.branding import set_vless_remark as _set_vless_remark
 
 
 async def _get_active_devices(tg_id: int, session) -> list[Device]:
@@ -381,6 +410,7 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
         f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(link)}"
         if link else ""
     )
+    from bot.utils.branding import subscription_url
     return {
         "id": dev.id,
         "slot": slot,
@@ -388,6 +418,7 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
         "name": type_key,
         "link": link,
         "qr_url": qr_url,
+        "sub_url": subscription_url(mz_username),
     }
 
 
@@ -412,7 +443,8 @@ async def get_device_link(device_id: int, x_telegram_init_data: str | None = Hea
         raise HTTPException(500, str(e))
 
     qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(link)}" if link else ""
-    return {"link": link, "qr_url": qr_url, "name": dev.name}
+    from bot.utils.branding import subscription_url
+    return {"link": link, "qr_url": qr_url, "name": dev.name, "sub_url": subscription_url(dev.marzban_username)}
 
 
 # ─── DELETE /api/devices/{id} ─────────────────────────────────────────────────
@@ -1495,6 +1527,7 @@ async def _fulfill_guest_order(order_id: int) -> None:
                 username=mz_username,
             )
             link = marzban.extract_vless_link(mz_user) or ""
+            link = _set_vless_remark(link)
         except Exception as e:
             logger.error("Guest order %s: Marzban create_user failed: %s", order.public_id, e)
             return

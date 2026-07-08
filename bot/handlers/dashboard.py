@@ -18,6 +18,7 @@ from bot.models.user import User
 from bot.models.device import Device
 from bot.utils.marzban import marzban
 from bot.utils.qr import make_qr_photo
+from bot.utils.branding import set_vless_remark, subscription_url
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -141,7 +142,7 @@ async def my_connection(message: Message, session: AsyncSession) -> None:
         exp = user.subscription_expires_at
         days_left = max(1, (exp - now).days) if exp and exp > now else 30
         mz = await marzban.get_or_create_user(mz_username, tg_id, days_left)
-        link = marzban.extract_vless_link(mz)
+        link = set_vless_remark(marzban.extract_vless_link(mz))
     except Exception as e:
         logger.error("Marzban get_or_create failed for %s: %s", mz_username, e)
         await message.answer("⚠️ Не удалось получить ссылку. Попробуй позже.")
@@ -159,7 +160,10 @@ async def my_connection(message: Message, session: AsyncSession) -> None:
         caption=(
             f"🔑 <b>{dev_name}</b>\n\n"
             f"<code>{link}</code>\n\n"
-            "📲 Импортируй ссылку в Streisand (iOS) или v2rayNG (Android)."
+            "📲 Импортируй ссылку в Streisand (iOS) или v2rayNG (Android).\n\n"
+            f"Используешь Happ? Добавь как подписку — тогда в приложении будет "
+            f"«STAR VPN» вместо технического имени:\n"
+            f"<code>{subscription_url(mz_username)}</code>"
         ),
         parse_mode="HTML",
     )

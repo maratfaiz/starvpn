@@ -22,6 +22,7 @@ from sqlalchemy import select
 
 from bot.models.user import User
 from bot.utils.marzban import marzban
+from bot.utils.branding import set_vless_remark, subscription_url
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -216,7 +217,7 @@ async def show_link(callback: CallbackQuery, session: AsyncSession) -> None:
         await callback.answer("Ошибка получения ссылки.", show_alert=True)
         return
 
-    link = marzban.extract_vless_link(mz)
+    link = set_vless_remark(marzban.extract_vless_link(mz))
     if not link:
         await callback.answer("Ссылка недоступна — обратись в поддержку.", show_alert=True)
         return
@@ -228,7 +229,10 @@ async def show_link(callback: CallbackQuery, session: AsyncSession) -> None:
         caption=(
             "🔑 <b>Ваш ключ</b>\n\n"
             f"<code>{link}</code>\n\n"
-            "👆 Нажми на ключ, чтобы скопировать, затем вставь в приложение"
+            "👆 Нажми на ключ, чтобы скопировать, затем вставь в приложение\n\n"
+            f"Используешь Happ? Добавь как подписку — тогда в приложении будет "
+            f"«STAR VPN» вместо технического имени:\n"
+            f"<code>{subscription_url(mz_username)}</code>"
         ),
         parse_mode="HTML",
         reply_markup=_instructions_kb(),

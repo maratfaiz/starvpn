@@ -44,6 +44,7 @@ const store = {
       slot: 1,
       created_at: "2026-03-12",
       link: "vless://a1b2c3@vpn.starvpn.ru:443?type=tcp&security=reality&sni=www.google.com#STAR-VPN-iPhone-15-Pro",
+      sub_url: "https://starvpnservice.ru/sub/ios_tg_a1b2c3",
     },
     {
       id: 2,
@@ -55,6 +56,7 @@ const store = {
       slot: 2,
       created_at: "2026-06-02",
       link: "vless://d4e5f6@vpn.starvpn.ru:443?type=tcp&security=reality&sni=www.google.com#STAR-VPN-MacBook-Air",
+      sub_url: "https://starvpnservice.ru/sub/macos_tg_d4e5f6",
     },
   ],
   referral: {
@@ -114,6 +116,10 @@ function genVlessLink(type, deviceId) {
   return `vless://${rand}@vpn.starvpn.ru:443?type=tcp&security=reality&sni=www.google.com#STAR-VPN-${type}-${deviceId}`;
 }
 
+function genSubUrl(type, deviceId) {
+  return `https://starvpnservice.ru/sub/${type}_tg_${deviceId}`;
+}
+
 // ─── GET /api/me, /api/devices ───
 export async function getMe() {
   await delay();
@@ -139,6 +145,7 @@ export async function addDevice(type, label) {
     slot: store.devices.length + 1,
     created_at: new Date().toISOString().slice(0, 10),
     link: genVlessLink(type, id),
+    sub_url: genSubUrl(type, id),
   };
   store.devices.push(device);
   store.me.device_count += 1;
@@ -149,7 +156,7 @@ export async function getDeviceLink(id) {
   await delay();
   const d = store.devices.find((x) => x.id === id);
   if (!d) throw new Error("Устройство не найдено");
-  return { link: d.link };
+  return { link: d.link, sub_url: d.sub_url };
 }
 
 export async function deleteDevice(id) {

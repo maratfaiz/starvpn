@@ -275,7 +275,7 @@ export default function App() {
       const device = await api.addDevice(type, label);
       setDevices((prev) => [...prev, device]);
       setAddDeviceOpen(false);
-      setLinkSheet({ name: `${label}`, link: device.link });
+      setLinkSheet({ name: `${label}`, link: device.link, subUrl: device.sub_url });
       showToast("✅ Устройство добавлено");
     } finally {
       setAddingDevice(false);
@@ -284,14 +284,19 @@ export default function App() {
 
   const showDeviceLink = async (device) => {
     haptic("light");
-    const { link } = await api.getDeviceLink(device.id);
+    const { link, sub_url } = await api.getDeviceLink(device.id);
     setDeviceSheetId(null);
-    setLinkSheet({ name: device.name, link });
+    setLinkSheet({ name: device.name, link, subUrl: sub_url });
   };
 
   const copyDeviceLink = () => {
     navigator.clipboard?.writeText(linkSheet.link).catch(() => {});
     showToast("✅ Ссылка скопирована!");
+  };
+
+  const copyDeviceSubUrl = () => {
+    navigator.clipboard?.writeText(linkSheet.subUrl).catch(() => {});
+    showToast("✅ Ссылка подписки скопирована!");
   };
 
   const copyReferralCode = () => {
@@ -484,8 +489,10 @@ export default function App() {
         open={!!linkSheet}
         deviceName={linkSheet?.name}
         link={linkSheet?.link}
+        subUrl={linkSheet?.subUrl}
         onClose={() => setLinkSheet(null)}
         onCopy={copyDeviceLink}
+        onCopySub={copyDeviceSubUrl}
       />
 
       <InstructionsSheet open={instructionsOpen} onClose={() => setInstructionsOpen(false)} />
