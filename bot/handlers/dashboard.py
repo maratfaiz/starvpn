@@ -9,7 +9,7 @@ import logging
 from datetime import datetime, timezone
 
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -99,23 +99,14 @@ async def my_status(message: Message, session: AsyncSession) -> None:
     )
 
 
-@router.message(F.text == "🔗 Моё подключение")
-async def my_connection(message: Message, session: AsyncSession) -> None:
-    tg_id = message.from_user.id
+async def _resolve_connection(tg_id: int, session: AsyncSession) -> tuple[User | None, str | None, str]:
+    """Первое активное устройство; если нет — основной аккаунт пользователя.
+    Возвращает (user, mz_username, dev_name)."""
     result = await session.execute(select(User).where(User.telegram_id == tg_id))
     user: User | None = result.scalar_one_or_none()
-
     if not user:
-        await message.answer(
-            "У тебя нет активного VPN-аккаунта.\n"
-            "Нажми <b>🎁 Попробовать бесплатно</b> или <b>⚡️ Купить подписку</b>.",
-            parse_mode="HTML",
-        )
-        return
+        return None, None, "VPN"
 
-    # Берём первое активное устройство; если нет — основной аккаунт пользователя
-    mz_username = None
-    dev_name = "VPN"
     dev_r = await session.execute(
         select(Device)
         .where(Device.telegram_id == tg_id, Device.is_active.is_(True))
@@ -124,19 +115,48 @@ async def my_connection(message: Message, session: AsyncSession) -> None:
     )
     dev = dev_r.scalar_one_or_none()
     if dev:
-        mz_username = dev.marzban_username
-        dev_name = dev.name
-    elif user.marzban_username:
-        mz_username = user.marzban_username
+        return user, dev.marzban_username, dev.name
+    if user.marzban_username:
+        return user, user.marzban_username, "VPN"
+    return user, None, "VPN"
 
-    if not mz_username:
-        await message.answer(
-            "У тебя нет активного VPN-аккаунта.\n"
-            "Нажми <b>🎁 Попробовать бесплатно</b> или <b>⚡️ Купить подписку</b>.",
-            parse_mode="HTML",
-        )
+
+_NO_ACCOUNT_TEXT = (
+    "У тебя нет активного VPN-аккаунта.\n"
+    "Нажми <b>🎁 Попробовать бесплатно</b> или <b>⚡️ Купить подписку</b>."
+)
+
+
+@router.message(F.text == "🔗 Моё подключение")
+async def my_connection(message: Message, session: AsyncSession) -> None:
+    tg_id = message.from_user.id
+    user, mz_username, dev_name = await _resolve_connection(tg_id, session)
+
+    if not user or not mz_username:
+        await message.answer(_NO_ACCOUNT_TEXT, parse_mode="HTML")
         return
 
+    await message.answer(
+        f"🔑 <b>{dev_name}</b>\n\n"
+        "Получи доступ — вручную (QR/ссылка для вставки в приложение) "
+        "или подпиской (сама добавится в Happ, v2rayNG и т.п.):",
+        parse_mode="HTML",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
+            InlineKeyboardButton(text="🔑 Ключ", callback_data="conn:key"),
+            InlineKeyboardButton(text="🔗 Ссылка", callback_data="conn:sub"),
+        ]]),
+    )
+
+
+@router.callback_query(F.data == "conn:key")
+async def conn_show_key(callback: CallbackQuery, session: AsyncSession) -> None:
+    tg_id = callback.from_user.id
+    user, mz_username, dev_name = await _resolve_connection(tg_id, session)
+    if not user or not mz_username:
+        await callback.answer("Нет активного VPN-аккаунта.", show_alert=True)
+        return
+
+    await callback.answer("⏳")
     try:
         now = datetime.utcnow()
         exp = user.subscription_expires_at
@@ -145,25 +165,36 @@ async def my_connection(message: Message, session: AsyncSession) -> None:
         link = set_vless_remark(marzban.extract_vless_link(mz))
     except Exception as e:
         logger.error("Marzban get_or_create failed for %s: %s", mz_username, e)
-        await message.answer("⚠️ Не удалось получить ссылку. Попробуй позже.")
+        await callback.message.answer("⚠️ Не удалось получить ссылку. Попробуй позже.")
         return
 
     if not link:
-        await message.answer(
+        await callback.message.answer(
             f"⚠️ Ссылка недоступна. Обратись в поддержку: {settings.support_username}"
         )
         return
 
     qr = make_qr_photo(link, "vpn_qr.png")
-    await message.answer_photo(
+    await callback.message.answer_photo(
         qr,
-        caption=(
-            f"🔑 <b>{dev_name}</b>\n\n"
-            f"<code>{link}</code>\n\n"
-            "📲 Импортируй ссылку в Streisand (iOS) или v2rayNG (Android).\n\n"
-            f"Используешь Happ? Добавь как подписку — тогда в приложении будет "
-            f"«STAR VPN» вместо технического имени:\n"
-            f"<code>{subscription_url(mz_username)}</code>"
-        ),
+        caption=f"🔑 <b>{dev_name}</b>\n\n<code>{link}</code>\n\n👆 Нажми на ключ, чтобы скопировать",
+        parse_mode="HTML",
+    )
+
+
+@router.callback_query(F.data == "conn:sub")
+async def conn_show_sublink(callback: CallbackQuery, session: AsyncSession) -> None:
+    tg_id = callback.from_user.id
+    user, mz_username, dev_name = await _resolve_connection(tg_id, session)
+    if not user or not mz_username:
+        await callback.answer("Нет активного VPN-аккаунта.", show_alert=True)
+        return
+
+    await callback.answer()
+    await callback.message.answer(
+        f"🔗 <b>Ссылка-подписка — {dev_name}</b>\n\n"
+        f"<code>{subscription_url(mz_username)}</code>\n\n"
+        "Открой в Happ, v2rayNG или другом клиенте — сервер добавится "
+        "автоматически под именем «STAR VPN».",
         parse_mode="HTML",
     )

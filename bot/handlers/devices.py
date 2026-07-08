@@ -157,12 +157,23 @@ def _type_select_kb() -> InlineKeyboardMarkup:
     ])
 
 
+def _key_or_sublink_kb(dev_id: int) -> InlineKeyboardMarkup:
+    """Минимальный вариант — только два способа получить доступ."""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="🔑 Ключ",  callback_data=f"dev:link:{dev_id}"),
+            InlineKeyboardButton(text="🔗 Ссылка", callback_data=f"dev:sublink:{dev_id}"),
+        ],
+    ])
+
+
 def _device_card_kb(dev_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="🔑 Получить ключ / QR", callback_data=f"dev:link:{dev_id}"),
-            InlineKeyboardButton(text="🗑 Удалить",             callback_data=f"dev:del:{dev_id}"),
+            InlineKeyboardButton(text="🔑 Ключ",  callback_data=f"dev:link:{dev_id}"),
+            InlineKeyboardButton(text="🔗 Ссылка", callback_data=f"dev:sublink:{dev_id}"),
         ],
+        [InlineKeyboardButton(text="🗑 Удалить", callback_data=f"dev:del:{dev_id}")],
         [InlineKeyboardButton(text="◀️ К устройствам", callback_data="dev:list")],
     ])
 
@@ -336,23 +347,13 @@ async def dev_add_type(callback: CallbackQuery, session: AsyncSession) -> None:
     session.add(dev)
     await session.commit()
 
-    from bot.handlers.payment import _instructions_kb
-
     if link:
-        qr = make_qr_photo(link, f"device_{tg_id}_{slot}.png")
-        await callback.message.answer_photo(
-            qr,
-            caption=(
-                f"✅ <b>{dt['icon']} {dt['label']}</b> добавлено!\n\n"
-                f"🔑 <b>Ваш ключ</b>\n\n"
-                f"<code>{link}</code>\n\n"
-                "👆 Нажми на ключ, чтобы скопировать, затем вставь в приложение\n\n"
-                f"📲 <b>Используешь Happ?</b> Добавь как подписку — так в приложении "
-                f"будет отображаться «STAR VPN», а не техническое имя:\n"
-                f"<code>{subscription_url(mz_username)}</code>"
-            ),
+        await callback.message.answer(
+            f"✅ <b>{dt['icon']} {dt['label']}</b> добавлено!\n\n"
+            "Получи ключ ниже — вручную (QR/ссылка для вставки в приложение) "
+            "или подпиской (сама добавится в Happ, v2rayNG и т.п.):",
             parse_mode="HTML",
-            reply_markup=_instructions_kb(),
+            reply_markup=_key_or_sublink_kb(dev.id),
         )
     else:
         await callback.message.answer(
@@ -467,13 +468,35 @@ async def dev_show_link(callback: CallbackQuery, session: AsyncSession) -> None:
         caption=(
             f"🔑 <b>Ваш ключ — {icon} {label}</b>\n\n"
             f"<code>{link}</code>\n\n"
-            "👆 Нажми на ключ, чтобы скопировать, затем вставь в приложение\n\n"
-            f"📲 <b>Используешь Happ?</b> Добавь как подписку — так в приложении "
-            f"будет отображаться «STAR VPN», а не техническое имя:\n"
-            f"<code>{subscription_url(dev.marzban_username)}</code>"
+            "👆 Нажми на ключ, чтобы скопировать, затем вставь в приложение"
         ),
         parse_mode="HTML",
         reply_markup=_instructions_kb(),
+    )
+
+
+@router.callback_query(F.data.startswith("dev:sublink:"))
+async def dev_show_sublink(callback: CallbackQuery, session: AsyncSession) -> None:
+    """Ссылка-подписка: откроется в браузере страницей STAR VPN, либо
+    сама добавится в Happ/v2rayNG/... если открыть её оттуда."""
+    dev_id = int(callback.data.split(":")[2])
+    result = await session.execute(select(Device).where(Device.id == dev_id))
+    dev = result.scalar_one_or_none()
+
+    if not dev or dev.telegram_id != callback.from_user.id:
+        await callback.answer("Устройство не найдено.", show_alert=True)
+        return
+
+    await callback.answer()
+    icon = _type_icon(dev.name)
+    label = _type_label(dev.name)
+    await callback.message.answer(
+        f"🔗 <b>Ссылка-подписка — {icon} {label}</b>\n\n"
+        f"<code>{subscription_url(dev.marzban_username)}</code>\n\n"
+        "Открой в Happ, v2rayNG или другом клиенте — сервер добавится "
+        "автоматически под именем «STAR VPN». Либо открой прямо в браузере, "
+        "если нужна пошаговая инструкция.",
+        parse_mode="HTML",
     )
 
 

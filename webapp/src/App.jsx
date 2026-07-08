@@ -19,6 +19,7 @@ import RenewSheet from "./sheets/RenewSheet.jsx";
 import DeviceSheet from "./sheets/DeviceSheet.jsx";
 import AddDeviceSheet from "./sheets/AddDeviceSheet.jsx";
 import DeviceLinkSheet from "./sheets/DeviceLinkSheet.jsx";
+import SubscriptionLinkSheet from "./sheets/SubscriptionLinkSheet.jsx";
 import InstructionsSheet from "./sheets/InstructionsSheet.jsx";
 
 import * as api from "./data/mockApi.js";
@@ -145,6 +146,7 @@ export default function App() {
   const [addDeviceOpen, setAddDeviceOpen] = useState(false);
   const [addingDevice, setAddingDevice] = useState(false);
   const [linkSheet, setLinkSheet] = useState(null); // { name, link }
+  const [subSheet, setSubSheet] = useState(null); // { name, subUrl }
 
   // instructions
   const [instructionsOpen, setInstructionsOpen] = useState(false);
@@ -275,7 +277,7 @@ export default function App() {
       const device = await api.addDevice(type, label);
       setDevices((prev) => [...prev, device]);
       setAddDeviceOpen(false);
-      setLinkSheet({ name: `${label}`, link: device.link, subUrl: device.sub_url });
+      setDeviceSheetId(device.id);
       showToast("✅ Устройство добавлено");
     } finally {
       setAddingDevice(false);
@@ -284,9 +286,16 @@ export default function App() {
 
   const showDeviceLink = async (device) => {
     haptic("light");
-    const { link, sub_url } = await api.getDeviceLink(device.id);
+    const { link } = await api.getDeviceLink(device.id);
     setDeviceSheetId(null);
-    setLinkSheet({ name: device.name, link, subUrl: sub_url });
+    setLinkSheet({ name: device.name, link });
+  };
+
+  const showDeviceSublink = async (device) => {
+    haptic("light");
+    const { sub_url } = await api.getDeviceLink(device.id);
+    setDeviceSheetId(null);
+    setSubSheet({ name: device.name, subUrl: sub_url });
   };
 
   const copyDeviceLink = () => {
@@ -295,7 +304,7 @@ export default function App() {
   };
 
   const copyDeviceSubUrl = () => {
-    navigator.clipboard?.writeText(linkSheet.subUrl).catch(() => {});
+    navigator.clipboard?.writeText(subSheet.subUrl).catch(() => {});
     showToast("✅ Ссылка подписки скопирована!");
   };
 
@@ -481,6 +490,7 @@ export default function App() {
         onClose={closeDevice}
         onDelete={deleteDevice}
         onShowLink={showDeviceLink}
+        onShowSubscription={showDeviceSublink}
       />
 
       <AddDeviceSheet open={addDeviceOpen} onClose={() => setAddDeviceOpen(false)} onSubmit={submitAddDevice} submitting={addingDevice} />
@@ -489,10 +499,16 @@ export default function App() {
         open={!!linkSheet}
         deviceName={linkSheet?.name}
         link={linkSheet?.link}
-        subUrl={linkSheet?.subUrl}
         onClose={() => setLinkSheet(null)}
         onCopy={copyDeviceLink}
-        onCopySub={copyDeviceSubUrl}
+      />
+
+      <SubscriptionLinkSheet
+        open={!!subSheet}
+        deviceName={subSheet?.name}
+        subUrl={subSheet?.subUrl}
+        onClose={() => setSubSheet(null)}
+        onCopy={copyDeviceSubUrl}
       />
 
       <InstructionsSheet open={instructionsOpen} onClose={() => setInstructionsOpen(false)} />

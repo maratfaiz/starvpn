@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import BottomSheet from "../components/BottomSheet.jsx";
 
-export default function DeviceLinkSheet({ open, deviceName, link, subUrl, onClose, onCopy, onCopySub }) {
+export default function DeviceLinkSheet({ open, deviceName, link, onClose, onCopy }) {
   const [qrDataUrl, setQrDataUrl] = useState(null);
 
   useEffect(() => {
@@ -45,26 +45,6 @@ export default function DeviceLinkSheet({ open, deviceName, link, subUrl, onClos
         <div className="text-center font-medium text-[11.5px] text-ink/30 mt-3">
           Отсканируй QR или вставь ссылку в приложение VPN-клиента
         </div>
-
-        {subUrl && (
-          <div className="w-full mt-5 pt-5 border-t border-white/[.06]">
-            <div className="font-semibold text-[12.5px] text-ink/55 mb-2">Используешь Happ?</div>
-            <div className="font-medium text-[11.5px] text-ink/40 mb-3 leading-relaxed">
-              Добавь эту ссылку как <b className="text-ink/60">подписку</b> (Subscription), а не отдельный конфиг —
-              приложение покажет «STAR VPN» вместо технического имени и само предупредит,
-              когда подписка закончится.
-            </div>
-            <div className="w-full bg-app-card border border-white/[.06] rounded-[14px] px-3.5 py-3 mb-3">
-              <div className="font-mono text-[11px] text-ink/60 break-all leading-relaxed">{subUrl}</div>
-            </div>
-            <button
-              onClick={onCopySub}
-              className="w-full py-3 rounded-2xl border border-gold/35 bg-gold/[.08] font-display font-bold text-[13px] text-gold"
-            >
-              Скопировать ссылку подписки
-            </button>
-          </div>
-        )}
       </div>
     </BottomSheet>
   );

@@ -18,7 +18,7 @@ const ROWS = [
   ],
 ];
 
-export default function DeviceSheet({ open, device, onClose, onDelete, onShowLink }) {
+export default function DeviceSheet({ open, device, onClose, onDelete, onShowLink, onShowSubscription }) {
   const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
@@ -75,12 +75,20 @@ export default function DeviceSheet({ open, device, onClose, onDelete, onShowLin
       </div>
 
       <div className="flex flex-col gap-2.5">
-        <button
-          onClick={() => onShowLink(device)}
-          className="w-full border border-gold/35 bg-gold/[.08] py-3.5 rounded-[14px] font-display font-bold text-[13.5px] text-gold"
-        >
-          Показать QR-код и ссылку
-        </button>
+        <div className="flex gap-2.5">
+          <button
+            onClick={() => onShowLink(device)}
+            className="flex-1 border border-gold/35 bg-gold/[.08] py-3.5 rounded-[14px] font-display font-bold text-[13.5px] text-gold"
+          >
+            🔑 Ключ
+          </button>
+          <button
+            onClick={() => onShowSubscription(device)}
+            className="flex-1 border border-gold/35 bg-gold/[.08] py-3.5 rounded-[14px] font-display font-bold text-[13.5px] text-gold"
+          >
+            🔗 Ссылка
+          </button>
+        </div>
         <button
           onClick={() => setConfirming(true)}
           className="w-full border border-danger/35 bg-danger/[.08] py-3.5 rounded-[14px] font-display font-bold text-[13.5px] text-danger"
