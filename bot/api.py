@@ -95,8 +95,9 @@ async def serve_get_vpn():
 # "Подписка закончилась — продли в @бот", а не просто обрыв соединения.
 
 @app.get("/sub/{username}", include_in_schema=False)
-async def serve_subscription(username: str):
+async def serve_subscription(username: str, request: Request):
     from bot.utils.branding import set_vless_remark, set_vless_remark_text
+    from bot.utils.sub_page import is_vpn_client, render_subscription_page
 
     try:
         mz = await marzban.get_user(username)
@@ -106,6 +107,7 @@ async def serve_subscription(username: str):
 
     link = marzban.extract_vless_link(mz) or ""
     is_active = mz.get("status") == "active"
+    expire = int(mz.get("expire") or 0)
 
     if is_active and link:
         link = set_vless_remark(link)
@@ -113,11 +115,23 @@ async def serve_subscription(username: str):
         expired_text = f"⚠️ Подписка закончилась — продли в @{settings.bot_username}"
         link = set_vless_remark_text(link, expired_text)
 
+    user_agent = request.headers.get("user-agent", "")
+    if not is_vpn_client(user_agent):
+        days_left = max(0, (expire - int(datetime.utcnow().timestamp())) // 86400) if expire else None
+        sub_url = f"{settings.webapp_url.rstrip('/')}/sub/{username}"
+        html_page = render_subscription_page(
+            sub_url=sub_url,
+            display_name="STAR VPN",
+            is_active=is_active,
+            days_left=days_left,
+            bot_username=settings.bot_username,
+        )
+        return HTMLResponse(html_page)
+
     body = base64.b64encode(link.encode()).decode() if link else ""
 
     used = int(mz.get("used_traffic") or 0)
     total = int(mz.get("data_limit") or 0)
-    expire = int(mz.get("expire") or 0)
 
     headers = {
         "Profile-Title": "base64:" + base64.b64encode("STAR VPN".encode()).decode(),
