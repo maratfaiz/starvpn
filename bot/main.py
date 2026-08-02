@@ -14,7 +14,7 @@ from bot.config import settings
 from bot.utils.database import init_db
 from bot.middlewares.db import DbSessionMiddleware
 from bot.middlewares.ban import BanMiddleware
-from bot.handlers import admin, start, payment, profile, referral, instructions, gift, devices, crypto_payment, card_payment
+from bot.handlers import admin, start, payment, profile, referral, instructions, gift, devices, crypto_payment, card_payment, yoomoney_payment
 from bot.tasks.scheduler import scheduler_loop
 
 logging.basicConfig(
@@ -52,6 +52,7 @@ async def main() -> None:
     dp.include_router(instructions.router)
     dp.include_router(crypto_payment.router)
     dp.include_router(card_payment.router)
+    dp.include_router(yoomoney_payment.router)
 
     # FastAPI (Mini App API) — порт 8080
     api_config = uvicorn.Config(

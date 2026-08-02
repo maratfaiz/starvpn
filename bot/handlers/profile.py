@@ -56,6 +56,7 @@ def _pay_choice_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="⭐  Telegram Stars", callback_data="sub:renew")],
         [InlineKeyboardButton(text="💳  Банковская карта  (₽)", callback_data="sub:card")],
+        [InlineKeyboardButton(text="🟣  ЮMoney  (₽)", callback_data="sub:yoomoney")],
         [InlineKeyboardButton(text="◀️ Назад", callback_data="sub:back")],
     ])
 

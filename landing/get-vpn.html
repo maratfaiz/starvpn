@@ -69,6 +69,15 @@ h1 span{color:var(--gold)}
 #plans-empty{display:none;color:var(--text2);font-size:14px;padding:20px;text-align:center;
   border:1px dashed rgba(255,255,255,.12);border-radius:14px;margin-bottom:20px}
 
+#providers{display:none;gap:8px;margin-bottom:20px}
+.provider{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+  border:1.5px solid rgba(255,255,255,0.08);background:var(--bg2);border-radius:12px;
+  padding:11px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:600;
+  font-size:12.5px;color:var(--text2);transition:border-color .15s,background .15s,color .15s;
+}
+.provider.sel{border-color:var(--gold);background:rgba(255,184,0,.08);color:#fff}
+
 .btn-gold{
   width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
   background:var(--gold);color:#000;border:none;border-radius:14px;
@@ -115,16 +124,21 @@ footer a{color:var(--gold);text-decoration:none}
   </p>
 
   <div class="plans" id="plans"></div>
-  <div id="plans-empty">Оплата картой временно недоступна. Загляни чуть позже.</div>
+  <div id="plans-empty">Оплата временно недоступна. Загляни чуть позже.</div>
+
+  <div id="providers">
+    <div class="provider sel" data-provider="robokassa" onclick="selectProvider('robokassa', this)">💳 Карта</div>
+    <div class="provider" data-provider="yoomoney" onclick="selectProvider('yoomoney', this)">🟣 ЮMoney</div>
+  </div>
 
   <button class="btn-gold" id="buy-btn" disabled>Выбери тариф</button>
-  <div class="pay-note">Visa · Mastercard · МИР — оплата через Robokassa</div>
+  <div class="pay-note" id="pay-note">Visa · Mastercard · МИР — оплата через Robokassa</div>
 
   <div class="how">
     <h2>Как это работает</h2>
     <div class="how-step">
       <div class="how-num">1</div>
-      <div class="how-text">Выбери тариф и нажми <b>«Оплатить»</b> — откроется защищённая страница Robokassa</div>
+      <div class="how-text">Выбери тариф и нажми <b>«Оплатить»</b> — откроется защищённая страница оплаты</div>
     </div>
     <div class="how-step">
       <div class="how-num">2</div>
@@ -168,17 +182,35 @@ footer a{color:var(--gold);text-decoration:none}
   window.addEventListener('resize', () => { resize(); init(); });
 })();
 
-// ─── Тарифы + чекаут ─────────────────────────────────────────────────────────
+// ─── Тарифы + способ оплаты + чекаут ──────────────────────────────────────────
 let selectedPlan = null;
+let selectedRub = 0;
+let selectedProvider = 'robokassa';
 const buyBtn = document.getElementById('buy-btn');
 const plansEl = document.getElementById('plans');
+const providersEl = document.getElementById('providers');
+const payNoteEl = document.getElementById('pay-note');
+
+const PAY_NOTES = {
+  robokassa: 'Visa · Mastercard · МИР — оплата через Robokassa',
+  yoomoney: 'Карта, СБП или кошелёк — оплата через ЮMoney',
+};
 
 function selectPlan(key, rub, el) {
   selectedPlan = key;
+  selectedRub = rub;
   document.querySelectorAll('.plan').forEach(p => p.classList.remove('sel'));
   el.classList.add('sel');
   buyBtn.disabled = false;
   buyBtn.textContent = `Оплатить ${rub} ₽`;
+}
+
+function selectProvider(provider, el) {
+  selectedProvider = provider;
+  document.querySelectorAll('.provider').forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+  payNoteEl.textContent = PAY_NOTES[provider];
+  if (selectedPlan) buyBtn.textContent = `Оплатить ${selectedRub} ₽`;
 }
 
 async function loadPlans() {
@@ -204,6 +236,23 @@ async function loadPlans() {
   }
 }
 
+async function loadProviders() {
+  try {
+    const res = await fetch('/api/guest/providers');
+    const { robokassa, yoomoney } = await res.json();
+    const pills = providersEl.querySelectorAll('.provider');
+    let firstAvailable = null;
+    pills.forEach(el => {
+      const available = el.dataset.provider === 'robokassa' ? robokassa : yoomoney;
+      el.style.display = available ? 'flex' : 'none';
+      if (available && !firstAvailable) firstAvailable = el;
+    });
+    const bothAvailable = robokassa && yoomoney;
+    providersEl.style.display = bothAvailable ? 'flex' : 'none';
+    if (firstAvailable) selectProvider(firstAvailable.dataset.provider, firstAvailable);
+  } catch (e) { /* оставляем Robokassa по умолчанию */ }
+}
+
 buyBtn.addEventListener('click', async () => {
   if (!selectedPlan) return;
   buyBtn.disabled = true;
@@ -212,7 +261,7 @@ buyBtn.addEventListener('click', async () => {
     const res = await fetch('/api/guest/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan: selectedPlan }),
+      body: JSON.stringify({ plan: selectedPlan, provider: selectedProvider }),
     });
     if (!res.ok) throw new Error('checkout failed');
     const data = await res.json();
@@ -225,6 +274,7 @@ buyBtn.addEventListener('click', async () => {
 });
 
 loadPlans();
+loadProviders();
 </script>
 </body>
 </html>
