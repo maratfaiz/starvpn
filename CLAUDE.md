@@ -114,4 +114,6 @@ project_root/
 - **Trial**: granted once per `telegram_id`. Field: `User.trial_used`.
 - **Referral bonus**: +30 days per every 2 paying referrals. Tracked via `User.extra_days_granted`.
 - **Pre-checkout**: `pre_checkout_query` must always be answered within 10 seconds.
-- **Marzban username**: always `tg_{telegram_id}` — never change this format.
+- **Marzban username**: always `tg_{telegram_id}` for Telegram-identified users — never change this format. Guest/web-only accounts use `web_{id}` instead (established exception, not a violation of this rule).
+
+> **Planned, not yet implemented**: a website account (email magic-link login, no Telegram required) as a second way to use the service alongside the bot — see ABOUT_PROJECT.md §7. Once built, `User.telegram_id` becomes nullable and `User.email` is added; until then, treat `telegram_id` as required everywhere in the code as it is today. UI/design for this is being handled in a separate session — don't build frontend for it here unless asked.
