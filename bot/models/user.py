@@ -31,8 +31,9 @@ class User(Base):
     # Stars paid (сумма в Stars со всех оплаченных инвойсов)
     total_stars_paid: Mapped[int] = mapped_column(Integer, default=0)
 
-    # Партнёрский баланс в Stars (начисляется с покупок рефералов)
-    referral_stars_balance: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    # Учтён ли этот пользователь (как реферал) в счётчике своего реферера —
+    # чтобы бонус начислялся один раз за человека, а не при каждой продлении
+    referral_bonus_counted: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Модерация
     is_banned: Mapped[bool] = mapped_column(Boolean, default=False)

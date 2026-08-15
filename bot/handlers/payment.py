@@ -93,7 +93,8 @@ PLANS: dict[str, dict] = {
 }
 
 # 10% с каждой покупки реферала идёт на партнёрский баланс реферера
-REFERRAL_COMMISSION_PERCENT = 10
+REFERRAL_DAYS_BONUS = 30      # дней рефереру за каждую пачку оплативших рефералов
+REFERRAL_MILESTONE_SIZE = 2   # сколько оплативших рефералов нужно для одной пачки
 
 
 # ---------------------------------------------------------------------------
@@ -142,9 +143,14 @@ async def _grant_subscription(user: User, days: int, session: AsyncSession) -> N
     await session.commit()
 
 
-async def _credit_referral(buyer: User, stars_paid: int, session: AsyncSession, bot: Bot) -> None:
-    """Начислить реферальные Stars рефереру (10% с каждой покупки)."""
-    if not buyer.referrer_id:
+async def _credit_referral(buyer: User, session: AsyncSession, bot: Bot) -> None:
+    """
+    +30 дней рефереру за каждые 2 оплативших подписку реферала.
+    Считается один раз на человека (buyer.referral_bonus_counted), а не на
+    каждую его покупку/продление — иначе один и тот же реферал накручивал бы
+    счётчик при каждом продлении подписки.
+    """
+    if not buyer.referrer_id or buyer.referral_bonus_counted:
         return
 
     result = await session.execute(
@@ -154,25 +160,29 @@ async def _credit_referral(buyer: User, stars_paid: int, session: AsyncSession, 
     if not referrer:
         return
 
-    bonus = max(1, stars_paid * REFERRAL_COMMISSION_PERCENT // 100)
-    referrer.referral_stars_balance = (referrer.referral_stars_balance or 0) + bonus
+    buyer.referral_bonus_counted = True
+    referrer.referral_count = (referrer.referral_count or 0) + 1
+
+    if referrer.referral_count % REFERRAL_MILESTONE_SIZE == 0:
+        await _grant_subscription(referrer, REFERRAL_DAYS_BONUS, session)
+        referrer.extra_days_granted = (referrer.extra_days_granted or 0) + REFERRAL_DAYS_BONUS
+        try:
+            await bot.send_message(
+                referrer.telegram_id,
+                f"🎉 <b>+{REFERRAL_DAYS_BONUS} дней за рефералов!</b>\n\n"
+                f"Уже {referrer.referral_count} друзей оформили подписку по твоей ссылке — "
+                f"подписка продлена автоматически.",
+                parse_mode="HTML",
+            )
+        except Exception as e:
+            logger.warning("Failed to notify referrer %s: %s", referrer.telegram_id, e)
+
     await session.commit()
 
     logger.info(
-        "Referral bonus: +%s Stars → tg_id=%s (from buyer tg_id=%s)",
-        bonus, referrer.telegram_id, buyer.telegram_id,
+        "Referral: tg_id=%s now has %s paying referrals (buyer tg_id=%s)",
+        referrer.telegram_id, referrer.referral_count, buyer.telegram_id,
     )
-
-    try:
-        await bot.send_message(
-            referrer.telegram_id,
-            f"⭐ <b>+{bonus} Stars на партнёрский баланс!</b>\n"
-            f"Твой реферал оплатил подписку STAR VPN.\n"
-            f"Текущий баланс: <b>{referrer.referral_stars_balance} ⭐</b>",
-            parse_mode="HTML",
-        )
-    except Exception:
-        pass
 
 
 async def _notify_admin_purchase(bot: Bot, user: User, plan: dict) -> None:
@@ -328,7 +338,7 @@ async def on_stars_payment(message: Message, session: AsyncSession) -> None:
 
     stars = payment.total_amount
 
-    await _credit_referral(user, stars, session, message.bot)
+    await _credit_referral(user, session, message.bot)
     await _notify_admin_purchase(message.bot, user, plan)
 
     db_payment = Payment(

@@ -15,7 +15,7 @@ const HISTORY_ICON = {
   ),
 };
 
-export default function ReferralsScreen({ referral, rewardTiers, daysHistory, copied, onCopyCode, onShare }) {
+export default function ReferralsScreen({ referral, daysHistory, copied, onCopyCode, onShare }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="relative rounded-3xl p-[22px] overflow-hidden border border-gold/30 bg-[linear-gradient(160deg,#1A1408_0%,#13161D_60%)]">
@@ -38,35 +38,34 @@ export default function ReferralsScreen({ referral, rewardTiers, daysHistory, co
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-2 gap-2.5">
         <div className="bg-app-card border border-white/[.06] rounded-2xl py-3.5 px-2 text-center">
           <div className="font-display font-extrabold text-[19px] text-ink">{referral.invitedCount}</div>
           <div className="font-medium text-[10.5px] text-ink/40 mt-1">приглашено</div>
         </div>
         <div className="bg-app-card border border-white/[.06] rounded-2xl py-3.5 px-2 text-center">
-          <div className="font-display font-extrabold text-[19px] text-ink">{referral.daysEarned}</div>
+          <div className="font-display font-extrabold text-[19px] text-gold">{referral.daysEarned}</div>
           <div className="font-medium text-[10.5px] text-ink/40 mt-1">дней получено</div>
-        </div>
-        <div className="bg-app-card border border-white/[.06] rounded-2xl py-3.5 px-2 text-center">
-          <div className="font-display font-extrabold text-[19px] text-gold">{referral.starsEarned}</div>
-          <div className="font-medium text-[10.5px] text-ink/40 mt-1">stars бонус</div>
         </div>
       </div>
 
       <div className="bg-app-card border border-white/[.06] rounded-2xl px-4 py-3.5">
-        <div className="font-semibold text-[13px] text-ink/60 mb-2.5">Уровни наград</div>
-        {rewardTiers.map((tier, i) => (
-          <div
-            key={tier.id}
-            className={`flex items-center gap-2.5 py-2 ${i < rewardTiers.length - 1 ? "border-b border-white/[.05]" : ""}`}
-          >
-            <div className="w-7 h-7 rounded-[9px] bg-gold/10 flex items-center justify-center font-display font-bold text-[11px] text-gold flex-shrink-0">
-              {tier.count}
-            </div>
-            <span className="flex-1 font-medium text-[12.5px] text-ink">{tier.label}</span>
-            <span className="font-display font-semibold text-xs text-ink/45">{tier.reward}</span>
+        <div className="font-semibold text-[13px] text-ink/60 mb-1">Как начисляется</div>
+        <div className="font-medium text-[12.5px] text-ink/50 leading-relaxed mb-2.5">
+          За каждые {referral.milestoneSize} друзей, оформивших подписку, — автоматически
+          +{referral.bonusDays} дней к твоей подписке. Без баланса и вывода.
+        </div>
+        <div className="flex items-center gap-2.5">
+          <div className="flex-1 h-1.5 rounded-full bg-white/[.06] overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gold"
+              style={{ width: `${((referral.paidCount % referral.milestoneSize) / referral.milestoneSize) * 100}%` }}
+            />
           </div>
-        ))}
+          <span className="font-display font-semibold text-[11px] text-ink/45 flex-shrink-0">
+            {referral.paidCount % referral.milestoneSize} / {referral.milestoneSize}
+          </span>
+        </div>
       </div>
 
       <button

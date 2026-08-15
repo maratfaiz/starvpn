@@ -59,17 +59,6 @@ const store = {
       sub_url: "https://starvpnservice.ru/sub/macos_tg_d4e5f6",
     },
   ],
-  referral: {
-    balance: 62,
-    total_earned: 142,
-    total_invited: 6,
-    link: "https://t.me/starisvpnbot?start=ref_9x4k2",
-    history: [
-      { id: 1, label: "Реферал: Артём К.", date: "3 дня назад", amount: 15 },
-      { id: 2, label: "Реферал: Мария С.", date: "неделю назад", amount: 15 },
-      { id: 3, label: "Реферал: Дмитрий В.", date: "2 недели назад", amount: 12 },
-    ],
-  },
   plans: [
     { key: "plan_1m", label: "1 месяц", days: 30, stars: 199, discount: 0 },
     { key: "plan_3m", label: "3 месяца", days: 90, stars: 549, discount: 8 },
@@ -84,7 +73,7 @@ const store = {
     users_total: 1284,
     users_active_subs: 341,
     users_online: 58,
-    stars_balance_total: 48210,
+    referral_days_total: 960,
     payments_total: 902,
     users_banned: 6,
   },
@@ -94,15 +83,10 @@ const store = {
     username: i % 3 === 0 ? null : `user${i + 1}`,
     subscription_active: i % 2 === 0,
     expires_at: i % 2 === 0 ? "2026-08-04" : null,
-    stars_balance: (i * 7) % 90,
+    extra_days_granted: (i * 7) % 90,
     banned: i % 11 === 0,
     joined_at: "2026-0" + ((i % 6) + 1) + "-1" + (i % 9),
   })),
-  withdrawals: [
-    { id: 1, tg_id: 100002, name: "Пользователь 3", amount: 120, status: "pending", requested_at: "сегодня, 14:02" },
-    { id: 2, tg_id: 100007, name: "Пользователь 8", amount: 100, status: "pending", requested_at: "вчера, 09:41" },
-    { id: 3, tg_id: 100014, name: "Пользователь 15", amount: 250, status: "approved", requested_at: "3 дня назад" },
-  ],
   pendingGift: {
     id: 501,
     from_name: "Артём К.",
@@ -178,11 +162,6 @@ export async function activateTrial() {
 }
 
 // ─── GET /api/referral ───
-export async function getReferral() {
-  await delay();
-  return { ...store.referral, history: [...store.referral.history] };
-}
-
 // ─── GET /api/plans, /api/crypto-plans ───
 export async function getPlans() {
   await delay();
@@ -285,25 +264,6 @@ export async function adminMessageUser(tgId, text) {
   return { success: true };
 }
 
-export async function getAdminWithdrawals() {
-  await delay();
-  return store.withdrawals.map((w) => ({ ...w }));
-}
-
-export async function approveWithdrawal(id) {
-  await delay(400);
-  const w = store.withdrawals.find((x) => x.id === id);
-  if (w) w.status = "approved";
-  return { success: true };
-}
-
-export async function rejectWithdrawal(id) {
-  await delay(400);
-  const w = store.withdrawals.find((x) => x.id === id);
-  if (w) w.status = "rejected";
-  return { success: true };
-}
-
 export async function sendBroadcast(text) {
   await delay(700);
   if (!text.trim()) throw new Error("Пустой текст рассылки");
@@ -311,9 +271,9 @@ export async function sendBroadcast(text) {
 }
 
 export function exportUsersCSV() {
-  const header = "tg_id,name,username,subscription_active,expires_at,stars_balance,banned,joined_at";
+  const header = "tg_id,name,username,subscription_active,expires_at,extra_days_granted,banned,joined_at";
   const rows = store.adminUsers.map((u) =>
-    [u.tg_id, u.name, u.username || "", u.subscription_active, u.expires_at || "", u.stars_balance, u.banned, u.joined_at].join(",")
+    [u.tg_id, u.name, u.username || "", u.subscription_active, u.expires_at || "", u.extra_days_granted, u.banned, u.joined_at].join(",")
   );
   return [header, ...rows].join("\n");
 }

@@ -336,11 +336,6 @@ textarea.input { resize: none; line-height: 1.5; }
         <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
         <span>Рассылка</span>
       </div>
-      <div class="sb-item" onclick="goto('withdrawals')" id="nav-withdrawals">
-        <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-        <span>Выводы</span>
-        <span class="sb-badge" id="sb-wd-badge" style="display:none">0</span>
-      </div>
     </nav>
     <div class="sb-footer">
       <div>STAR VPN Admin v1.0</div>
@@ -492,7 +487,7 @@ async function api(method, path, body) {
 // ── Navigation ────────────────────────────────────────────────────
 const PAGE_TITLES = {
   dashboard: 'Дашборд', users: 'Пользователи', vpn: 'VPN / Marzban',
-  payments: 'Платежи', broadcast: 'Рассылка', withdrawals: 'Заявки на вывод'
+  payments: 'Платежи', broadcast: 'Рассылка'
 };
 
 function goto(page) {
@@ -503,7 +498,7 @@ function goto(page) {
   document.getElementById('topbar-title').textContent = PAGE_TITLES[page] || page;
   const c = document.getElementById('content');
   c.innerHTML = '<div style="text-align:center;padding:60px"><div class="spinner"></div></div>';
-  const fns = { dashboard: renderDashboard, users: renderUsers, vpn: renderVPN, payments: renderPayments, broadcast: renderBroadcast, withdrawals: renderWithdrawals };
+  const fns = { dashboard: renderDashboard, users: renderUsers, vpn: renderVPN, payments: renderPayments, broadcast: renderBroadcast };
   (fns[page] || (() => {}))();
 }
 
@@ -561,7 +556,6 @@ async function renderDashboard() {
           ['🌐','VPN / Marzban','vpn'],
           ['💳','Платежи','payments'],
           ['📢','Рассылка','broadcast'],
-          ['💸','Выводы','withdrawals'],
         ].map(([icon,label,page]) => `
           <div onclick="goto('${page}')" style="background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:16px;cursor:pointer;transition:all .15s;text-align:center"
             onmouseenter="this.style.borderColor='var(--border)'" onmouseleave="this.style.borderColor='var(--border2)'">
@@ -1068,58 +1062,6 @@ async function sendBroadcast() {
     btn.disabled = false;
     btn.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Отправить рассылку';
   }
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  WITHDRAWALS
-// ═══════════════════════════════════════════════════════════════
-async function renderWithdrawals() {
-  document.getElementById('content').innerHTML = `
-    <div class="page-header"><h2>💸 Заявки на вывод</h2><p>Ожидающие обработки запросы</p></div>
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Pending заявки</div>
-        <button class="btn btn-outline" onclick="renderWithdrawals()">🔄</button>
-      </div>
-      <div id="wd-list" style="padding:12px"><div style="text-align:center;padding:30px"><div class="spinner"></div></div></div>
-    </div>`;
-  try {
-    const wds = await api('GET', '/web/withdrawals');
-    const badge = document.getElementById('sb-wd-badge');
-    if (badge) { badge.textContent = wds.length; badge.style.display = wds.length ? 'inline' : 'none'; }
-    const el = document.getElementById('wd-list');
-    if (!wds.length) {
-      el.innerHTML = '<div class="empty"><div class="empty-icon">🎉</div>Нет активных заявок</div>';
-      return;
-    }
-    el.innerHTML = wds.map(w => {
-      const name = w.username ? '@'+w.username : (w.full_name || String(w.telegram_id));
-      return `<div style="background:var(--bg3);border:1px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div>
-            <div style="font-weight:600">${esc(name)}</div>
-            <div style="font-size:11px;color:var(--text2)">ID: ${w.telegram_id} · ${fmtDateTime(w.created_at)}</div>
-          </div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold)">${w.stars_amount} ⭐</div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-gold" onclick="wdApprove(${w.id})">✅ Одобрить</button>
-          <button class="btn btn-danger" onclick="wdReject(${w.id})">❌ Отклонить</button>
-          <button class="btn btn-outline" onclick="openUserDrawer(${w.telegram_id})">👤 Профиль</button>
-        </div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    document.getElementById('wd-list').innerHTML = `<div class="empty">Ошибка: ${esc(e.message)}</div>`;
-  }
-}
-
-async function wdApprove(id) {
-  try { await api('POST', `/web/withdrawals/${id}/approve`); toast('✅ Одобрено', 'success'); renderWithdrawals(); } catch(e) { toast('❌ ' + e.message, 'error'); }
-}
-async function wdReject(id) {
-  if (!confirm('Отклонить заявку?')) return;
-  try { await api('POST', `/web/withdrawals/${id}/reject`); toast('❌ Отклонено'); renderWithdrawals(); } catch(e) { toast('❌ ' + e.message, 'error'); }
 }
 
 // ═══════════════════════════════════════════════════════════════

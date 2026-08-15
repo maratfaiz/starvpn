@@ -23,7 +23,6 @@ from bot.config import settings
 from bot.models.device import Device
 from bot.models.payment import Payment
 from bot.models.user import User
-from bot.models.withdrawal import WithdrawalRequest
 from bot.states.payment_states import AdminForm
 from bot.utils.marzban import marzban
 
@@ -635,7 +634,7 @@ async def _user_card(user: User, session: AsyncSession | None = None) -> str:
     uname = f"@{user.username}" if user.username else "—"
     ref = f"<code>{user.referrer_id}</code>" if user.referrer_id else "нет"
     ban_str = "🚫 <b>ЗАБЛОКИРОВАН</b>" if user.is_banned else "✅ активен"
-    ref_balance = getattr(user, "referral_stars_balance", 0) or 0
+    ref_days = getattr(user, "extra_days_granted", 0) or 0
 
     # Устройства из БД
     devices_str = ""
@@ -674,7 +673,7 @@ async def _user_card(user: User, session: AsyncSession | None = None) -> str:
         f"<code>{sep}</code>\n"
         f"💰 <b>Финансы:</b>\n"
         f"⭐ Оплачено Stars: <b>{user.total_stars_paid or 0} ⭐</b>\n"
-        f"👥 Партнёрский баланс: <b>{ref_balance} ⭐</b>\n"
+        f"👥 Дней получено за рефералов: <b>{ref_days}</b>\n"
         f"<code>{sep}</code>\n"
         f"👥 <b>Партнёрка:</b>\n"
         f"🎁 Триал: {'использован ✅' if user.trial_used else 'не использован'}\n"
@@ -830,8 +829,8 @@ async def _do_stats(msg: Message, session: AsyncSession) -> None:
         pays   = (await session.execute(
             select(func.count(Payment.id)).where(Payment.status == "paid")
         )).scalar_one()
-        ref_balance_total = int((await session.execute(
-            select(func.sum(User.referral_stars_balance))
+        ref_days_total = int((await session.execute(
+            select(func.sum(User.extra_days_granted))
         )).scalar_one() or 0)
     except Exception as e:
         await _err(msg, e)
@@ -859,94 +858,9 @@ async def _do_stats(msg: Message, session: AsyncSession) -> None:
         f"🟢 Онлайн прямо сейчас: {online_str}\n"
         f"🚫 Забаненных: <b>{banned}</b>\n\n"
         f"⭐ Заработано Stars: <b>{stars} ⭐</b> ({pays} платежей)\n"
-        f"👥 На партнёрских балансах: <b>{ref_balance_total} ⭐</b>",
+        f"👥 Дней начислено за рефералов: <b>{ref_days_total}</b>",
         parse_mode="HTML",
     )
-
-
-# ──────────────────── withdrawal approve / reject ───────────────────────────
-
-@router.callback_query(F.data.startswith("adm:wd_approve:"))
-async def wd_approve(cb: CallbackQuery, session: AsyncSession) -> None:
-    if not _admin(cb.from_user.id):
-        await cb.answer(); return
-    req_id = int(cb.data.split(":")[2])
-    result = await session.execute(
-        select(WithdrawalRequest).where(WithdrawalRequest.id == req_id)
-    )
-    req: WithdrawalRequest | None = result.scalar_one_or_none()
-    if not req:
-        await cb.answer("Заявка не найдена.", show_alert=True); return
-    if req.status != "pending":
-        await cb.answer(f"Заявка уже обработана: {req.status}", show_alert=True); return
-
-    req.status = "approved"
-    req.processed_at = datetime.utcnow()
-    await session.commit()
-
-    await cb.message.edit_reply_markup(reply_markup=None)
-    await cb.message.answer(
-        f"✅ Заявка #{req_id} одобрена. {req.stars_amount} ⭐ → tg_id={req.telegram_id}",
-        parse_mode="HTML",
-    )
-    await cb.answer("Одобрено!")
-
-    try:
-        await cb.bot.send_message(
-            req.telegram_id,
-            f"✅ <b>Вывод одобрен!</b>\n\n"
-            f"Сумма: <b>{req.stars_amount} ⭐</b>\n"
-            f"Stars переводятся на твой аккаунт Telegram.\n"
-            f"Если не получил — напиши в поддержку.",
-            parse_mode="HTML",
-        )
-    except Exception as e:
-        logger.warning("Cannot notify user about withdrawal approval: %s", e)
-
-
-@router.callback_query(F.data.startswith("adm:wd_reject:"))
-async def wd_reject(cb: CallbackQuery, session: AsyncSession) -> None:
-    if not _admin(cb.from_user.id):
-        await cb.answer(); return
-    req_id = int(cb.data.split(":")[2])
-    result = await session.execute(
-        select(WithdrawalRequest).where(WithdrawalRequest.id == req_id)
-    )
-    req: WithdrawalRequest | None = result.scalar_one_or_none()
-    if not req:
-        await cb.answer("Заявка не найдена.", show_alert=True); return
-    if req.status != "pending":
-        await cb.answer(f"Заявка уже обработана: {req.status}", show_alert=True); return
-
-    req.status = "rejected"
-    req.processed_at = datetime.utcnow()
-
-    # Возвращаем Stars пользователю
-    user_result = await session.execute(
-        select(User).where(User.telegram_id == req.telegram_id)
-    )
-    user = user_result.scalar_one_or_none()
-    if user:
-        user.referral_stars_balance = (user.referral_stars_balance or 0) + req.stars_amount
-
-    await session.commit()
-
-    await cb.message.edit_reply_markup(reply_markup=None)
-    await cb.message.answer(
-        f"❌ Заявка #{req_id} отклонена. {req.stars_amount} ⭐ возвращены на баланс пользователя.",
-    )
-    await cb.answer("Отклонено.")
-
-    try:
-        await cb.bot.send_message(
-            req.telegram_id,
-            f"❌ <b>Заявка на вывод отклонена.</b>\n\n"
-            f"{req.stars_amount} ⭐ возвращены на твой партнёрский баланс.\n"
-            f"По вопросам — напиши в поддержку.",
-            parse_mode="HTML",
-        )
-    except Exception as e:
-        logger.warning("Cannot notify user about withdrawal rejection: %s", e)
 
 
 async def _do_payments(msg: Message, session: AsyncSession) -> None:

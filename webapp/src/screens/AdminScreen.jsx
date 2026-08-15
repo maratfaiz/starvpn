@@ -6,7 +6,7 @@ const STRIP_ITEMS = [
   { key: "users_total", label: "Юзеров", color: "text-ink" },
   { key: "users_active_subs", label: "Активных", color: "text-success" },
   { key: "users_online", label: "Онлайн", color: "text-success" },
-  { key: "stars_balance_total", label: "Stars ⭐", color: "text-[#60b4ff]" },
+  { key: "referral_days_total", label: "Дней за рефералов", color: "text-gold" },
   { key: "payments_total", label: "Платежей", color: "text-ink" },
   { key: "users_banned", label: "Банов", color: "text-danger" },
 ];
@@ -19,7 +19,6 @@ const FILTERS = [
 
 const SUB_TABS = [
   { id: "users", label: "👥 Юзеры" },
-  { id: "wd", label: "💸 Выводы" },
   { id: "bc", label: "📢 Рассылка" },
   { id: "act", label: "⚡ Действия" },
 ];
@@ -42,15 +41,9 @@ export default function AdminScreen({ showToast }) {
   const [total, setTotal] = useState(0);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  // withdrawals
-  const [withdrawals, setWithdrawals] = useState([]);
-  const [wdLoading, setWdLoading] = useState(true);
-
   // broadcast
   const [broadcastText, setBroadcastText] = useState("");
   const [broadcastSending, setBroadcastSending] = useState(false);
-
-  const pendingWd = withdrawals.filter((w) => w.status === "pending").length;
 
   const loadStats = () => api.getAdminStats().then(setStats);
 
@@ -67,10 +60,6 @@ export default function AdminScreen({ showToast }) {
   useEffect(() => {
     loadStats();
     loadUsers(true);
-    api.getAdminWithdrawals().then((w) => {
-      setWithdrawals(w);
-      setWdLoading(false);
-    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -122,17 +111,6 @@ export default function AdminScreen({ showToast }) {
     } catch (e) {
       showToast("❌ " + e.message);
     }
-  };
-
-  const approve = async (id) => {
-    await api.approveWithdrawal(id);
-    setWithdrawals(await api.getAdminWithdrawals());
-    showToast("✅ Заявка одобрена");
-  };
-  const reject = async (id) => {
-    await api.rejectWithdrawal(id);
-    setWithdrawals(await api.getAdminWithdrawals());
-    showToast("❌ Заявка отклонена");
   };
 
   const sendBroadcast = async () => {
@@ -194,11 +172,6 @@ export default function AdminScreen({ showToast }) {
               }}
             >
               {t.label}
-              {t.id === "wd" && pendingWd > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-danger text-[9px] font-bold text-white">
-                  {pendingWd}
-                </span>
-              )}
             </button>
           );
         })}
@@ -270,47 +243,6 @@ export default function AdminScreen({ showToast }) {
         </div>
       )}
 
-      {subTab === "wd" && (
-        <div className="flex flex-col gap-2.5">
-          {wdLoading ? (
-            <div className="text-center py-8 text-ink/40 text-sm">Загрузка…</div>
-          ) : (
-            withdrawals.map((w) => (
-              <div key={w.id} className="bg-app-card border border-white/[.06] rounded-2xl px-3.5 py-3">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-semibold text-[13px] text-ink">{w.name}</span>
-                  <span className="font-display font-bold text-[13px] text-gold">{w.amount} ⭐</span>
-                </div>
-                <div className="font-medium text-[11px] text-ink/40 mb-2.5">{w.requested_at}</div>
-                {w.status === "pending" ? (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => approve(w.id)}
-                      className="flex-1 py-2 rounded-lg bg-success/10 border border-success/30 font-display font-semibold text-xs text-success"
-                    >
-                      Одобрить
-                    </button>
-                    <button
-                      onClick={() => reject(w.id)}
-                      className="flex-1 py-2 rounded-lg bg-danger/10 border border-danger/30 font-display font-semibold text-xs text-danger"
-                    >
-                      Отклонить
-                    </button>
-                  </div>
-                ) : (
-                  <span
-                    className="font-display font-semibold text-[11px]"
-                    style={{ color: w.status === "approved" ? "#2ED9A6" : "#E2554F" }}
-                  >
-                    {w.status === "approved" ? "Одобрено" : "Отклонено"}
-                  </span>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-      )}
-
       {subTab === "bc" && (
         <div className="flex flex-col gap-2.5">
           <div className="font-semibold text-[13px] text-ink">📢 Рассылка пользователям</div>
@@ -347,9 +279,6 @@ export default function AdminScreen({ showToast }) {
           >
             🔄<div className="mt-1.5">Обновить статистику</div>
           </button>
-          <button onClick={() => setSubTab("wd")} className="bg-app-card border border-white/[.06] rounded-2xl py-4 px-3 text-center font-display font-semibold text-xs text-ink">
-            💸<div className="mt-1.5">Заявки на вывод</div>
-          </button>
           <button onClick={() => setSubTab("bc")} className="bg-app-card border border-white/[.06] rounded-2xl py-4 px-3 text-center font-display font-semibold text-xs text-ink">
             📢<div className="mt-1.5">Сделать рассылку</div>
           </button>
@@ -374,7 +303,7 @@ export default function AdminScreen({ showToast }) {
                 ["ID", selectedUser.tg_id],
                 ["Подписка", selectedUser.subscription_active ? "Активна" : "Нет"],
                 ["Истекает", selectedUser.expires_at || "—"],
-                ["Stars", selectedUser.stars_balance],
+                ["Дней от рефералов", selectedUser.extra_days_granted],
                 ["Статус", selectedUser.banned ? "Забанен" : "Обычный"],
               ].map(([label, value], i, arr) => (
                 <div key={label} className={`flex justify-between px-3.5 py-2.5 ${i < arr.length - 1 ? "border-b border-white/[.05]" : ""}`}>

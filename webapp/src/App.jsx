@@ -27,7 +27,6 @@ import {
   server,
   speedValue,
   referral,
-  rewardTiers,
   daysHistoryInitial,
   account,
   settingsRows,
@@ -418,7 +417,6 @@ export default function App() {
           {activeTab === "referral" && (
             <ReferralsScreen
               referral={referral}
-              rewardTiers={rewardTiers}
               daysHistory={daysHistory}
               copied={codeCopied}
               onCopyCode={copyReferralCode}

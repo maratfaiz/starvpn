@@ -26,7 +26,6 @@ from bot.models.device import Device, MAX_DEVICES
 from bot.models.gift_notification import GiftNotification
 from bot.models.payment import Payment
 from bot.models.user import User
-from bot.models.withdrawal import WithdrawalRequest
 from bot.utils.database import AsyncSessionLocal
 from bot.utils.marzban import marzban
 
@@ -280,7 +279,7 @@ async def get_me(x_telegram_init_data: str | None = Header(default=None)):
         "trial_used": bool(user.trial_used),
         "total_stars_paid": int(user.total_stars_paid or 0),
         "referral_count": int(user.referral_count or 0),
-        "referral_stars_balance": int(user.referral_stars_balance or 0),
+        "extra_days_granted": int(user.extra_days_granted or 0),
         "traffic_gb": traffic_gb,
         "device_count": device_count,
         "created_at": user.created_at.isoformat() if user.created_at else None,
@@ -496,63 +495,23 @@ async def get_referral(x_telegram_init_data: str | None = Header(default=None)):
         )
         referrals = refs_r.scalars().all()
 
-        pending_r = await session.execute(
-            select(WithdrawalRequest).where(
-                WithdrawalRequest.telegram_id == tg_id,
-                WithdrawalRequest.status == "pending",
-            )
-        )
-        has_pending = bool(pending_r.scalar_one_or_none())
+    from bot.handlers.payment import REFERRAL_DAYS_BONUS, REFERRAL_MILESTONE_SIZE
 
     return {
-        "balance": int(user.referral_stars_balance or 0),
+        "extra_days_granted": int(user.extra_days_granted or 0),
         "link": f"https://t.me/{settings.bot_username}?start=ref{tg_id}",
         "referral_count": int(user.referral_count or 0),
-        "has_pending_withdrawal": has_pending,
+        "days_bonus": REFERRAL_DAYS_BONUS,
+        "milestone_size": REFERRAL_MILESTONE_SIZE,
         "referrals": [
             {
                 "name": r.full_name or r.username or "Пользователь",
                 "date": r.created_at.strftime("%d.%m.%Y") if r.created_at else "",
-                "paid": int(r.total_stars_paid or 0),
-                "bonus": max(1, int((r.total_stars_paid or 0) * 0.10)),
+                "paid": bool(r.referral_bonus_counted),
             }
             for r in referrals
         ],
     }
-
-
-# ─── POST /api/referral/withdraw ──────────────────────────────────────────────
-
-@app.post("/api/referral/withdraw")
-async def request_withdraw(x_telegram_init_data: str | None = Header(default=None)):
-    tg_id = _tg_id(x_telegram_init_data)
-    WITHDRAWAL_MIN = 100
-
-    async with AsyncSessionLocal() as session:
-        r = await session.execute(select(User).where(User.telegram_id == tg_id))
-        user: User | None = r.scalar_one_or_none()
-        if not user:
-            raise HTTPException(404, "User not found")
-
-        balance = int(user.referral_stars_balance or 0)
-        if balance < WITHDRAWAL_MIN:
-            raise HTTPException(400, f"Minimum {WITHDRAWAL_MIN} Stars required, you have {balance}")
-
-        pending = await session.execute(
-            select(WithdrawalRequest).where(
-                WithdrawalRequest.telegram_id == tg_id,
-                WithdrawalRequest.status == "pending",
-            )
-        )
-        if pending.scalar_one_or_none():
-            raise HTTPException(400, "You already have a pending withdrawal request")
-
-        req = WithdrawalRequest(telegram_id=tg_id, stars_amount=balance, status="pending")
-        user.referral_stars_balance = 0
-        session.add(req)
-        await session.commit()
-
-    return {"ok": True, "stars_amount": balance}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -604,9 +563,6 @@ async def admin_stats(x_telegram_init_data: str | None = Header(default=None)):
         pays_count = (await session.execute(
             select(func.count(Payment.id)).where(Payment.status == "paid")
         )).scalar_one()
-        pending_wd = (await session.execute(
-            select(func.count()).where(WithdrawalRequest.status == "pending")
-        )).scalar_one()
 
     # Онлайн из Marzban
     online_count = 0
@@ -625,7 +581,6 @@ async def admin_stats(x_telegram_init_data: str | None = Header(default=None)):
         "online_now": online_count,
         "total_stars": int(stars_sum or 0),
         "total_payments": pays_count,
-        "pending_withdrawals": pending_wd,
     }
 
 
@@ -665,7 +620,7 @@ async def admin_get_user(
         "days_left": days_left,
         "total_stars_paid": int(user.total_stars_paid or 0),
         "referral_count": int(user.referral_count or 0),
-        "referral_stars_balance": int(user.referral_stars_balance or 0),
+        "extra_days_granted": int(user.extra_days_granted or 0),
         "marzban_username": user.marzban_username or "",
         "device_count": len(devs),
         "created_at": user.created_at.isoformat() if user.created_at else None,
@@ -898,78 +853,6 @@ async def admin_payments(x_telegram_init_data: str | None = Header(default=None)
     ]
 
 
-# ─── GET /api/admin/withdrawals ──────────────────────────────────────────────
-@app.get("/api/admin/withdrawals")
-async def admin_withdrawals(x_telegram_init_data: str | None = Header(default=None)):
-    tg_id = _tg_id(x_telegram_init_data)
-    _require_admin(tg_id)
-
-    async with AsyncSessionLocal() as session:
-        r = await session.execute(
-            select(WithdrawalRequest).where(WithdrawalRequest.status == "pending")
-            .order_by(WithdrawalRequest.created_at.desc())
-        )
-        reqs = r.scalars().all()
-
-        result = []
-        for req in reqs:
-            ur = await session.execute(select(User).where(User.telegram_id == req.telegram_id))
-            u = ur.scalar_one_or_none()
-            result.append({
-                "id": req.id,
-                "telegram_id": req.telegram_id,
-                "username": (u.username or "") if u else "",
-                "full_name": (u.full_name or "") if u else "",
-                "stars_amount": req.stars_amount,
-                "created_at": req.created_at.isoformat() if req.created_at else None,
-            })
-    return result
-
-
-# ─── POST /api/admin/withdrawals/{id}/approve ────────────────────────────────
-@app.post("/api/admin/withdrawals/{req_id}/approve")
-async def admin_wd_approve(req_id: int, x_telegram_init_data: str | None = Header(default=None)):
-    tg_id = _tg_id(x_telegram_init_data)
-    _require_admin(tg_id)
-
-    async with AsyncSessionLocal() as session:
-        r = await session.execute(select(WithdrawalRequest).where(WithdrawalRequest.id == req_id))
-        req = r.scalar_one_or_none()
-        if not req:
-            raise HTTPException(404, "Not found")
-        if req.status != "pending":
-            raise HTTPException(400, f"Already {req.status}")
-        req.status = "approved"
-        req.processed_at = datetime.utcnow()
-        await session.commit()
-
-    await _tg_send(req.telegram_id, f"✅ <b>Вывод {req.stars_amount} ⭐ одобрен!</b>\nStars переводятся на ваш аккаунт Telegram.")
-    return {"ok": True}
-
-
-# ─── POST /api/admin/withdrawals/{id}/reject ─────────────────────────────────
-@app.post("/api/admin/withdrawals/{req_id}/reject")
-async def admin_wd_reject(req_id: int, x_telegram_init_data: str | None = Header(default=None)):
-    tg_id = _tg_id(x_telegram_init_data)
-    _require_admin(tg_id)
-
-    async with AsyncSessionLocal() as session:
-        r = await session.execute(select(WithdrawalRequest).where(WithdrawalRequest.id == req_id))
-        req = r.scalar_one_or_none()
-        if not req:
-            raise HTTPException(404, "Not found")
-        if req.status != "pending":
-            raise HTTPException(400, f"Already {req.status}")
-        req.status = "rejected"
-        req.processed_at = datetime.utcnow()
-        ur = await session.execute(select(User).where(User.telegram_id == req.telegram_id))
-        u = ur.scalar_one_or_none()
-        if u:
-            u.referral_stars_balance = (u.referral_stars_balance or 0) + req.stars_amount
-        await session.commit()
-
-    await _tg_send(req.telegram_id, f"❌ Заявка на вывод {req.stars_amount} ⭐ отклонена. Stars возвращены на баланс.")
-    return {"ok": True}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -2085,48 +1968,6 @@ async def web_payments(limit: int = 50, offset: int = 0, authorization: str | No
                       "method": p.payment_method or "stars", "asset": p.asset or "",
                       "days": p.days or 0, "paid_at": p.paid_at.isoformat() if p.paid_at else None} for p in pays],
     }
-
-
-@app.get("/web/withdrawals")
-async def web_withdrawals(authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
-    async with AsyncSessionLocal() as session:
-        reqs = (await session.execute(
-            select(WithdrawalRequest).where(WithdrawalRequest.status == "pending").order_by(WithdrawalRequest.created_at.desc())
-        )).scalars().all()
-        result = []
-        for req in reqs:
-            u = (await session.execute(select(User).where(User.telegram_id == req.telegram_id))).scalar_one_or_none()
-            result.append({"id": req.id, "telegram_id": req.telegram_id,
-                           "username": (u.username or "") if u else "", "full_name": (u.full_name or "") if u else "",
-                           "stars_amount": req.stars_amount, "created_at": req.created_at.isoformat() if req.created_at else None})
-    return result
-
-
-@app.post("/web/withdrawals/{req_id}/approve")
-async def web_wd_approve(req_id: int, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
-    async with AsyncSessionLocal() as session:
-        req = (await session.execute(select(WithdrawalRequest).where(WithdrawalRequest.id == req_id))).scalar_one_or_none()
-        if not req:
-            raise HTTPException(404)
-        req.status = "approved"
-        await session.commit()
-    await _tg_send(req.telegram_id, "✅ Заявка на вывод одобрена! Средства поступят в течение 24 часов.")
-    return {"ok": True}
-
-
-@app.post("/web/withdrawals/{req_id}/reject")
-async def web_wd_reject(req_id: int, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
-    async with AsyncSessionLocal() as session:
-        req = (await session.execute(select(WithdrawalRequest).where(WithdrawalRequest.id == req_id))).scalar_one_or_none()
-        if not req:
-            raise HTTPException(404)
-        req.status = "rejected"
-        await session.commit()
-    await _tg_send(req.telegram_id, "❌ Заявка на вывод отклонена. Обратитесь в поддержку.")
-    return {"ok": True}
 
 
 @app.post("/web/broadcast")

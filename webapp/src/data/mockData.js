@@ -14,22 +14,16 @@ export const speedValue = "184";
 export const referral = {
   code: "STAR-9X4K2",
   bonusDays: 30,
+  milestoneSize: 2,
   invitedCount: 6,
-  daysEarned: 44,
-  starsEarned: 100,
+  paidCount: 5,
+  daysEarned: 60,
 };
 
-export const rewardTiers = [
-  { id: 1, count: "1", label: "Друг оформил подписку", reward: "+7 дней" },
-  { id: 2, count: "5", label: "Бонус за 5 друзей", reward: "+30 дней" },
-  { id: 3, count: "10", label: "Бонус за 10 друзей", reward: "100 ⭐" },
-];
-
 export const daysHistoryInitial = [
-  { id: 1, label: "Реферал: Артём К.", date: "3 дня назад", days: 7, type: "referral" },
-  { id: 2, label: "Реферал: Мария С.", date: "неделю назад", days: 7, type: "referral" },
-  { id: 3, label: "Бонус за 5 друзей", date: "2 недели назад", days: 30, type: "bonus" },
-  { id: 4, label: "Продление подписки", date: "месяц назад", days: 30, type: "purchase" },
+  { id: 1, label: "Бонус за 2 друзей", date: "3 дня назад", days: 30, type: "bonus" },
+  { id: 2, label: "Бонус за 2 друзей", date: "2 недели назад", days: 30, type: "bonus" },
+  { id: 3, label: "Продление подписки", date: "месяц назад", days: 30, type: "purchase" },
 ];
 
 export const account = {
