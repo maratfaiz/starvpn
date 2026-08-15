@@ -24,6 +24,7 @@ from bot.models.payment import Payment
 from bot.models.user import User
 from bot.utils.robokassa import robokassa, CARD_PLANS, payment_inv_id
 from bot.utils.database import AsyncSessionLocal
+from bot.handlers.start import main_keyboard
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -164,6 +165,7 @@ async def handle_card_webhook(payment_id: int, bot: Bot) -> None:
                 f"Твой STAR VPN активирован 🚀\n"
                 f"Перейди в раздел <b>📱 Устройства</b>, чтобы получить ключ.",
                 parse_mode="HTML",
+                reply_markup=main_keyboard(user),
             )
         except Exception as e:
             logger.error("Failed to notify user %s: %s", payment.telegram_id, e)

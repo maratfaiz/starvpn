@@ -74,9 +74,25 @@ async def instructions_menu(message: Message) -> None:
     )
 
 
+_BACK_TO_MENU_KB = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text="◀️ К выбору устройства", callback_data="instr:pick")],
+])
+
+
 @router.callback_query(F.data.startswith("instr:"))
 async def show_guide(callback: CallbackQuery) -> None:
     device = callback.data.split(":", 1)[1]
+
+    if device == "pick":
+        await callback.message.answer(
+            "📚 <b>База знаний</b>\n\n"
+            "Выбери своё устройство, чтобы получить пошаговую инструкцию по настройке:",
+            parse_mode="HTML",
+            reply_markup=DEVICE_MENU,
+        )
+        await callback.answer()
+        return
+
     guide = GUIDES.get(device)
     if not guide:
         await callback.answer("Инструкция не найдена.", show_alert=True)
@@ -86,5 +102,6 @@ async def show_guide(callback: CallbackQuery) -> None:
         guide,
         parse_mode="HTML",
         disable_web_page_preview=True,
+        reply_markup=_BACK_TO_MENU_KB,
     )
     await callback.answer()

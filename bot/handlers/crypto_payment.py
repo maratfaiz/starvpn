@@ -27,6 +27,7 @@ from bot.models.payment import Payment
 from bot.models.user import User
 from bot.utils.cryptopay import cryptopay, CRYPTO_PLANS
 from bot.utils.database import AsyncSessionLocal
+from bot.handlers.start import main_keyboard
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -183,17 +184,14 @@ async def handle_crypto_webhook(
 
             # Уведомляем получателя
             plan_label = {30: "1 месяц", 90: "3 месяца", 180: "6 месяцев"}.get(days, f"{days} дней")
-            try:
-                sender_result = await session.execute(
-                    select(User).where(User.telegram_id == sender_id)
-                )
-                sender: User | None = sender_result.scalar_one_or_none()
-                sender_name = (
-                    f"@{sender.username}" if sender and sender.username
-                    else (sender.full_name if sender else "Аноним")
-                ) if not anon else "Аноним"
-            except Exception:
-                sender_name = "Аноним"
+            sender_result = await session.execute(
+                select(User).where(User.telegram_id == sender_id)
+            )
+            sender: User | None = sender_result.scalar_one_or_none()
+            sender_name = (
+                f"@{sender.username}" if sender and sender.username
+                else (sender.full_name if sender else "Аноним")
+            ) if not anon else "Аноним"
 
             try:
                 await bot.send_message(
@@ -203,6 +201,7 @@ async def handle_crypto_webhook(
                     f"📦 Тариф: <b>{plan_label}</b>\n\n"
                     f"VPN активирован 🚀 Перейди в <b>📱 Устройства</b> за ключом.",
                     parse_mode="HTML",
+                    reply_markup=main_keyboard(recipient),
                 )
             except Exception as e:
                 logger.error("Gift notify recipient error: %s", e)
@@ -216,6 +215,7 @@ async def handle_crypto_webhook(
                     f"📦 Тариф: <b>{plan_label}</b>\n"
                     f"Получатель уже может пользоваться VPN 🎉",
                     parse_mode="HTML",
+                    reply_markup=main_keyboard(sender) if sender else None,
                 )
             except Exception as e:
                 logger.error("Gift notify sender error: %s", e)
@@ -243,6 +243,7 @@ async def handle_crypto_webhook(
                     f"Твой STAR VPN активирован 🚀\n"
                     f"Перейди в раздел <b>📱 Устройства</b>, чтобы получить ключ.",
                     parse_mode="HTML",
+                    reply_markup=main_keyboard(user),
                 )
             except Exception as e:
                 logger.error("Failed to notify user %s: %s", payment.telegram_id, e)
