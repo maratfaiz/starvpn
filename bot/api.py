@@ -495,14 +495,27 @@ async def get_referral(x_telegram_init_data: str | None = Header(default=None)):
         )
         referrals = refs_r.scalars().all()
 
-    from bot.handlers.payment import REFERRAL_DAYS_BONUS, REFERRAL_MILESTONE_SIZE
+    from bot.handlers.payment import REFERRAL_DAYS_BONUS, REFERRAL_MILESTONE_SIZE, REFERRAL_ACHIEVEMENTS
+
+    paying = int(user.referral_count or 0)
 
     return {
         "extra_days_granted": int(user.extra_days_granted or 0),
         "link": f"https://t.me/{settings.bot_username}?start=ref{tg_id}",
-        "referral_count": int(user.referral_count or 0),
+        "referral_count": paying,
         "days_bonus": REFERRAL_DAYS_BONUS,
         "milestone_size": REFERRAL_MILESTONE_SIZE,
+        "achievements": [
+            {
+                "key": a["key"],
+                "icon": a["icon"],
+                "title": a["title"],
+                "threshold": a["threshold"],
+                "bonus_days": a["bonus_days"],
+                "unlocked": paying >= a["threshold"],
+            }
+            for a in REFERRAL_ACHIEVEMENTS
+        ],
         "referrals": [
             {
                 "name": r.full_name or r.username or "Пользователь",

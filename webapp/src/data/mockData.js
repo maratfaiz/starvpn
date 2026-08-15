@@ -17,7 +17,13 @@ export const referral = {
   milestoneSize: 2,
   invitedCount: 6,
   paidCount: 5,
-  daysEarned: 60,
+  daysEarned: 85,
+  achievements: [
+    { key: "first", icon: "🥉", title: "Первая ласточка", threshold: 1, bonusDays: 5, unlocked: true },
+    { key: "ambassador", icon: "🥈", title: "Амбассадор", threshold: 5, bonusDays: 20, unlocked: true },
+    { key: "legend", icon: "🥇", title: "Легенда STAR VPN", threshold: 10, bonusDays: 50, unlocked: false },
+    { key: "vip", icon: "💎", title: "Партнёр года", threshold: 25, bonusDays: 150, unlocked: false },
+  ],
 };
 
 export const daysHistoryInitial = [

@@ -68,6 +68,28 @@ export default function ReferralsScreen({ referral, daysHistory, copied, onCopyC
         </div>
       </div>
 
+      <div>
+        <div className="font-semibold text-[13px] text-ink/60 mb-2">Достижения</div>
+        <div className="grid grid-cols-2 gap-2.5">
+          {referral.achievements.map((a) => (
+            <div
+              key={a.key}
+              className={`rounded-2xl px-3 py-3.5 text-center border ${
+                a.unlocked ? "bg-gold/[.08] border-gold/35" : "bg-app-card border-white/[.06]"
+              }`}
+            >
+              <div className={`text-2xl mb-1.5 ${a.unlocked ? "" : "grayscale opacity-40"}`}>{a.icon}</div>
+              <div className={`font-display font-bold text-[12px] ${a.unlocked ? "text-gold" : "text-ink/50"}`}>
+                {a.title}
+              </div>
+              <div className="font-medium text-[10.5px] text-ink/35 mt-0.5">
+                {a.unlocked ? `+${a.bonusDays} дней получено ✅` : `${a.threshold} друзей · +${a.bonusDays} дней`}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <button
         onClick={onShare}
         className="border-none py-[15px] rounded-[18px] bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center gap-2"

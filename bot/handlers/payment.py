@@ -92,9 +92,18 @@ PLANS: dict[str, dict] = {
     "plan_6m": {"days": 180, "stars": 449, "label": "6 месяцев", "desc": "180 дней · скидка 24%"},
 }
 
-# 10% с каждой покупки реферала идёт на партнёрский баланс реферера
 REFERRAL_DAYS_BONUS = 30      # дней рефереру за каждую пачку оплативших рефералов
 REFERRAL_MILESTONE_SIZE = 2   # сколько оплативших рефералов нужно для одной пачки
+
+# Разовые бейджи-достижения по общему числу оплативших рефералов — выдаются
+# один раз, ровно когда referral_count достигает threshold, поверх обычных
+# пачек выше. Порядок важен для отображения в /partner.
+REFERRAL_ACHIEVEMENTS = [
+    {"key": "first",      "threshold": 1,  "icon": "🥉", "title": "Первая ласточка",  "bonus_days": 5},
+    {"key": "ambassador", "threshold": 5,  "icon": "🥈", "title": "Амбассадор",       "bonus_days": 20},
+    {"key": "legend",     "threshold": 10, "icon": "🥇", "title": "Легенда STAR VPN", "bonus_days": 50},
+    {"key": "vip",        "threshold": 25, "icon": "💎", "title": "Партнёр года",     "bonus_days": 150},
+]
 
 
 # ---------------------------------------------------------------------------
@@ -145,10 +154,11 @@ async def _grant_subscription(user: User, days: int, session: AsyncSession) -> N
 
 async def _credit_referral(buyer: User, session: AsyncSession, bot: Bot) -> None:
     """
-    +30 дней рефереру за каждые 2 оплативших подписку реферала.
-    Считается один раз на человека (buyer.referral_bonus_counted), а не на
-    каждую его покупку/продление — иначе один и тот же реферал накручивал бы
-    счётчик при каждом продлении подписки.
+    +30 дней рефереру за каждые 2 оплативших подписку реферала, плюс разовые
+    бейджи-достижения (REFERRAL_ACHIEVEMENTS) при первом/5-м/10-м/25-м
+    оплатившем друге. Считается один раз на человека
+    (buyer.referral_bonus_counted), а не на каждую его покупку/продление —
+    иначе один и тот же реферал накручивал бы счётчик при каждом продлении.
     """
     if not buyer.referrer_id or buyer.referral_bonus_counted:
         return
@@ -163,15 +173,34 @@ async def _credit_referral(buyer: User, session: AsyncSession, bot: Bot) -> None
     buyer.referral_bonus_counted = True
     referrer.referral_count = (referrer.referral_count or 0) + 1
 
+    bonus_lines: list[str] = []
+    total_bonus_days = 0
+    unlocked_achievement = None
+
     if referrer.referral_count % REFERRAL_MILESTONE_SIZE == 0:
-        await _grant_subscription(referrer, REFERRAL_DAYS_BONUS, session)
-        referrer.extra_days_granted = (referrer.extra_days_granted or 0) + REFERRAL_DAYS_BONUS
+        total_bonus_days += REFERRAL_DAYS_BONUS
+        bonus_lines.append(f"🎁 +{REFERRAL_DAYS_BONUS} дней — за {referrer.referral_count} оплативших друзей")
+
+    unlocked_achievement = next(
+        (a for a in REFERRAL_ACHIEVEMENTS if a["threshold"] == referrer.referral_count), None
+    )
+    if unlocked_achievement:
+        total_bonus_days += unlocked_achievement["bonus_days"]
+        bonus_lines.append(
+            f"{unlocked_achievement['icon']} +{unlocked_achievement['bonus_days']} дней — "
+            f"достижение «{unlocked_achievement['title']}»"
+        )
+
+    if total_bonus_days:
+        await _grant_subscription(referrer, total_bonus_days, session)
+        referrer.extra_days_granted = (referrer.extra_days_granted or 0) + total_bonus_days
         try:
+            header = "🏆 <b>Новое достижение!</b>" if unlocked_achievement else "🎉 <b>Бонус за рефералов!</b>"
             await bot.send_message(
                 referrer.telegram_id,
-                f"🎉 <b>+{REFERRAL_DAYS_BONUS} дней за рефералов!</b>\n\n"
-                f"Уже {referrer.referral_count} друзей оформили подписку по твоей ссылке — "
-                f"подписка продлена автоматически.",
+                f"{header}\n\n" + "\n".join(bonus_lines) +
+                f"\n\nВсего оплативших друзей: <b>{referrer.referral_count}</b>. "
+                f"Подписка продлена автоматически.",
                 parse_mode="HTML",
             )
         except Exception as e:
@@ -180,8 +209,8 @@ async def _credit_referral(buyer: User, session: AsyncSession, bot: Bot) -> None
     await session.commit()
 
     logger.info(
-        "Referral: tg_id=%s now has %s paying referrals (buyer tg_id=%s)",
-        referrer.telegram_id, referrer.referral_count, buyer.telegram_id,
+        "Referral: tg_id=%s now has %s paying referrals (buyer tg_id=%s, +%s days)",
+        referrer.telegram_id, referrer.referral_count, buyer.telegram_id, total_bonus_days,
     )
 
 

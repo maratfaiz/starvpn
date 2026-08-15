@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from bot.models.user import User
-from bot.handlers.payment import REFERRAL_DAYS_BONUS, REFERRAL_MILESTONE_SIZE
+from bot.handlers.payment import REFERRAL_DAYS_BONUS, REFERRAL_MILESTONE_SIZE, REFERRAL_ACHIEVEMENTS
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -64,6 +64,16 @@ async def referral_info(message: Message, session: AsyncSession) -> None:
         else f"Следующие +{REFERRAL_DAYS_BONUS} дней — за ещё {REFERRAL_MILESTONE_SIZE} оплативших друзей.\n\n"
     )
 
+    achievements_lines = []
+    for a in REFERRAL_ACHIEVEMENTS:
+        if paying >= a["threshold"]:
+            achievements_lines.append(f"{a['icon']} {a['title']} ✅")
+        else:
+            achievements_lines.append(
+                f"{a['icon']} {a['title']} — ещё {a['threshold'] - paying} до +{a['bonus_days']} дней"
+            )
+    achievements_block = "\n".join(achievements_lines)
+
     await message.answer(
         f"👥 <b>Партнёрская программа STAR VPN</b>\n\n"
         f"<b>Как работает:</b>\n"
@@ -76,6 +86,8 @@ async def referral_info(message: Message, session: AsyncSession) -> None:
         f"✅ Оплатили подписку: <b>{paying}</b> чел.\n"
         f"🎁 Всего получено дней: <b>{days_earned}</b>\n\n"
         f"{next_milestone_line}"
+        f"🏆 <b>Достижения:</b>\n"
+        f"{achievements_block}\n\n"
         f"🔗 <b>Твоя реферальная ссылка:</b>\n"
         f"<code>{ref_link}</code>",
         parse_mode="HTML",
