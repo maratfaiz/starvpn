@@ -499,6 +499,7 @@ async def get_me(request: Request, x_telegram_init_data: str | None = Header(def
         "subscription_expires_at": exp.isoformat() if exp else None,
         "subscription_active": bool(exp and exp > now),
         "trial_used": bool(user.trial_used),
+        "trial_days": settings.trial_days,
         "total_stars_paid": int(user.total_stars_paid or 0),
         "referral_count": int(user.referral_count or 0),
         "extra_days_granted": int(user.extra_days_granted or 0),
@@ -1278,10 +1279,11 @@ async def create_gift_crypto_invoice(
 # ─── POST /api/trial ─────────────────────────────────────────────────────────
 
 @app.post("/api/trial")
-async def activate_trial_api(x_telegram_init_data: str | None = Header(default=None)):
-    """Активировать пробный период (2 дня). Только один раз на аккаунт."""
-    tg_id = _tg_id(x_telegram_init_data)
+async def activate_trial_api(request: Request, x_telegram_init_data: str | None = Header(default=None)):
+    """Активировать пробный период (2 дня). Только один раз на аккаунт.
+    Работает и для Mini App (initData), и для веб-аккаунта (star_session cookie)."""
     async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         result = await session.execute(select(User).where(User.telegram_id == tg_id))
         user: User | None = result.scalar_one_or_none()
         if not user:

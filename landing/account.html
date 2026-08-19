@@ -205,6 +205,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 20px;background:rg
 
   <!-- Подписка -->
   <div class="tab-panel active" id="tab-subscription">
+    <div class="card" id="trialCard" style="display:none;text-align:center;padding:24px 20px">
+      <div style="font-size:30px;margin-bottom:10px">🎁</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;margin-bottom:8px">Попробуй бесплатно — <span id="trialDaysLbl">2</span> дня</div>
+      <p style="color:var(--text2);font-size:13.5px;line-height:1.7;margin-bottom:16px">Полный доступ ко всем возможностям STAR VPN. Без карты, без обязательств — один раз на аккаунт.</p>
+      <button class="btn btn-block" id="activateTrialBtn">Активировать пробный период</button>
+    </div>
     <div class="card">
       <div class="section-title" style="margin-top:0">Сервер</div>
       <div class="profile-row"><span class="k">Локация</span><span class="v" id="srvLoc">—</span></div>
@@ -313,6 +319,13 @@ async function boot() {
 
 function renderStatus() {
   const active = ME.subscription_active;
+  const trialCard = document.getElementById('trialCard');
+  if (!active && !ME.trial_used) {
+    trialCard.style.display = 'block';
+    document.getElementById('trialDaysLbl').textContent = ME.trial_days || 2;
+  } else {
+    trialCard.style.display = 'none';
+  }
   const card = document.getElementById('statusCard');
   card.classList.add(active ? 'active' : 'inactive');
   document.getElementById('statusPill').classList.add(active ? 'active' : 'inactive');
@@ -356,11 +369,31 @@ function initTabs() {
 
   document.getElementById('logoutLink').addEventListener('click', (e) => { e.preventDefault(); logout(); });
   document.getElementById('logoutBtn').addEventListener('click', logout);
+  document.getElementById('activateTrialBtn').addEventListener('click', activateTrial);
 }
 
 async function logout() {
   await API('/api/account/logout', {method: 'POST'});
   window.location.href = '/';
+}
+
+async function activateTrial() {
+  const btn = document.getElementById('activateTrialBtn');
+  btn.disabled = true;
+  btn.textContent = 'Активируем...';
+  try {
+    const r = await API('/api/trial', {method: 'POST'});
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'Не удалось активировать');
+    showToast(`Пробный период на ${data.days} дня активирован ✅`);
+    const me = await API('/api/me');
+    ME = await me.json();
+    renderStatus();
+  } catch (e) {
+    showToast(e.message);
+    btn.disabled = false;
+    btn.textContent = 'Активировать пробный период';
+  }
 }
 
 /* ── Устройства ─────────────────────────────────────────── */
