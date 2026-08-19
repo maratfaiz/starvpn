@@ -451,6 +451,8 @@ async def get_me(request: Request, x_telegram_init_data: str | None = Header(def
         "telegram_id": tg_id,
         "telegram_linked": tg_id > 0,
         "email": user.email or "",
+        "is_banned": bool(user.is_banned),
+        "ban_reason": user.ban_reason or "",
         "full_name": user.full_name or "",
         "username": user.username or "",
         "subscription_expires_at": exp.isoformat() if exp else None,
@@ -806,6 +808,7 @@ async def admin_get_user(
         "username": user.username or "",
         "full_name": user.full_name or "",
         "is_banned": bool(user.is_banned),
+        "ban_reason": user.ban_reason or "",
         "trial_used": bool(user.trial_used),
         "subscription_expires_at": exp.isoformat() if exp else None,
         "subscription_active": bool(exp and exp > now),
@@ -932,12 +935,15 @@ async def admin_ban(request: Request, x_telegram_init_data: str | None = Header(
     if not target_id:
         raise HTTPException(400, "telegram_id required")
 
+    reason = (body.get("reason") or "").strip()[:500] or None
+
     async with AsyncSessionLocal() as session:
         r = await session.execute(select(User).where(User.telegram_id == target_id))
         user: User | None = r.scalar_one_or_none()
         if not user:
             raise HTTPException(404, "User not found")
         user.is_banned = True
+        user.ban_reason = reason
         if user.marzban_username:
             try:
                 await marzban.disable_user(user.marzban_username)
@@ -945,7 +951,8 @@ async def admin_ban(request: Request, x_telegram_init_data: str | None = Header(
                 pass
         await session.commit()
 
-    await _tg_send(target_id, "🚫 <b>Ваш аккаунт STAR VPN заблокирован.</b>\nПо вопросам — обратитесь в поддержку.")
+    reason_line = f"\nПричина: {reason}" if reason else ""
+    await _tg_send(target_id, f"🚫 <b>Ваш аккаунт STAR VPN заблокирован.</b>{reason_line}\nПо вопросам — обратитесь в поддержку.")
     return {"ok": True}
 
 
@@ -963,6 +970,7 @@ async def admin_unban(request: Request, x_telegram_init_data: str | None = Heade
         if not user:
             raise HTTPException(404, "User not found")
         user.is_banned = False
+        user.ban_reason = None
         if user.marzban_username:
             try:
                 await marzban.enable_user(user.marzban_username)
@@ -2010,7 +2018,8 @@ async def web_users(
     return {
         "total": total,
         "users": [{"telegram_id": u.telegram_id, "username": u.username or "", "full_name": u.full_name or "",
-                   "is_banned": bool(u.is_banned), "subscription_active": bool(u.subscription_expires_at and u.subscription_expires_at > now),
+                   "is_banned": bool(u.is_banned), "ban_reason": u.ban_reason or "",
+                   "subscription_active": bool(u.subscription_expires_at and u.subscription_expires_at > now),
                    "subscription_expires_at": u.subscription_expires_at.isoformat() if u.subscription_expires_at else None,
                    "days_left": max(0, (u.subscription_expires_at - now).days) if u.subscription_expires_at and u.subscription_expires_at > now else 0,
                    "total_stars_paid": int(u.total_stars_paid or 0), "referral_count": int(u.referral_count or 0),
@@ -2066,7 +2075,8 @@ async def web_user_detail(tg_id: int, authorization: str | None = Header(default
 
     return {
         "telegram_id": u.telegram_id, "username": u.username or "", "full_name": u.full_name or "",
-        "is_banned": bool(u.is_banned), "subscription_active": bool(u.subscription_expires_at and u.subscription_expires_at > now),
+        "is_banned": bool(u.is_banned), "ban_reason": u.ban_reason or "",
+        "subscription_active": bool(u.subscription_expires_at and u.subscription_expires_at > now),
         "subscription_expires_at": u.subscription_expires_at.isoformat() if u.subscription_expires_at else None,
         "days_left": max(0, (u.subscription_expires_at - now).days) if u.subscription_expires_at and u.subscription_expires_at > now else 0,
         "total_stars_paid": int(u.total_stars_paid or 0), "referral_count": int(u.referral_count or 0),
@@ -2104,19 +2114,30 @@ async def web_user_grant(tg_id: int, request: Request, authorization: str | None
 
 
 @app.post("/web/user/{tg_id}/ban")
-async def web_user_ban(tg_id: int, authorization: str | None = Header(default=None)):
+async def web_user_ban(tg_id: int, request: Request, authorization: str | None = Header(default=None)):
     _web_auth(authorization)
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        pass
+    reason = (body.get("reason") or "").strip()[:500] or None
+
     async with AsyncSessionLocal() as session:
         u = (await session.execute(select(User).where(User.telegram_id == tg_id))).scalar_one_or_none()
         if not u:
             raise HTTPException(404)
         u.is_banned = True
+        u.ban_reason = reason
         if u.marzban_username:
             try:
                 await marzban.disable_user(u.marzban_username)
             except Exception:
                 pass
         await session.commit()
+
+    reason_line = f"\nПричина: {reason}" if reason else ""
+    await _tg_send(tg_id, f"🚫 <b>Ваш аккаунт STAR VPN заблокирован.</b>{reason_line}\nПо вопросам — обратитесь в поддержку.")
     return {"ok": True}
 
 
@@ -2128,12 +2149,15 @@ async def web_user_unban(tg_id: int, authorization: str | None = Header(default=
         if not u:
             raise HTTPException(404)
         u.is_banned = False
+        u.ban_reason = None
         if u.marzban_username:
             try:
                 await marzban.enable_user(u.marzban_username)
             except Exception:
                 pass
         await session.commit()
+
+    await _tg_send(tg_id, "✅ Ваш аккаунт STAR VPN разблокирован.")
     return {"ok": True}
 
 
@@ -2189,6 +2213,75 @@ async def web_broadcast(request: Request, authorization: str | None = Header(def
         except Exception:
             pass
     return {"ok": True, "sent": sent, "failed": failed}
+
+
+# ─── Тикеты поддержки (админка) ───────────────────────────────────────────────
+
+@app.get("/web/tickets")
+async def web_tickets(status: str = "", authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.support_ticket import SupportTicket
+
+    async with AsyncSessionLocal() as session:
+        query = select(SupportTicket, User).join(User, User.telegram_id == SupportTicket.user_id)
+        if status:
+            query = query.where(SupportTicket.status == status)
+        rows = (await session.execute(query.order_by(SupportTicket.created_at.desc()).limit(300))).all()
+
+    return {
+        "tickets": [
+            {
+                "id": t.id,
+                "user_id": t.user_id,
+                "user_label": u.email or u.username or (str(u.telegram_id) if u.telegram_id > 0 else "веб-аккаунт"),
+                "subject": t.subject,
+                "message": t.message,
+                "platform": t.platform or "",
+                "status": t.status,
+                "admin_reply": t.admin_reply or "",
+                "created_at": t.created_at.isoformat() if t.created_at else None,
+                "updated_at": t.updated_at.isoformat() if t.updated_at else None,
+            }
+            for t, u in rows
+        ]
+    }
+
+
+@app.post("/web/tickets/{ticket_id}/reply")
+async def web_ticket_reply(ticket_id: int, request: Request, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.support_ticket import SupportTicket
+
+    body = await request.json()
+    reply = (body.get("reply") or "").strip()[:4000]
+    new_status = (body.get("status") or "answered").strip()
+    if new_status not in ("open", "answered", "closed"):
+        raise HTTPException(400, "Invalid status")
+
+    async with AsyncSessionLocal() as session:
+        t = (await session.execute(select(SupportTicket).where(SupportTicket.id == ticket_id))).scalar_one_or_none()
+        if not t:
+            raise HTTPException(404, "Ticket not found")
+        if reply:
+            t.admin_reply = reply
+        t.status = new_status
+        user_id = t.user_id
+        subject = t.subject
+        user = (await session.execute(select(User).where(User.telegram_id == user_id))).scalar_one_or_none()
+        await session.commit()
+
+    if reply and user:
+        # Telegram-аккаунт — шлём в бота. Веб-аккаунт (telegram_id синтетический,
+        # отрицательный) — Telegram недостижим, шлём на почту вместо этого.
+        if user.telegram_id > 0:
+            await _tg_send(user.telegram_id, f"💬 <b>Ответ поддержки по тикету «{subject}»:</b>\n\n{reply}")
+        elif user.email:
+            from bot.utils.mailer import send_ticket_reply_email
+            try:
+                await send_ticket_reply_email(user.email, subject, reply)
+            except Exception as e:
+                logger.error("Failed to email ticket reply to %s: %s", user.email, e)
+    return {"ok": True}
 
 
 @app.get("/web/marzban/ping")

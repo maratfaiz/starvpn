@@ -331,6 +331,10 @@ textarea.input { resize: none; line-height: 1.5; }
         <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
         <span>Платежи</span>
       </div>
+      <div class="sb-item" onclick="goto('tickets')" id="nav-tickets">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        <span>Тикеты</span>
+      </div>
       <div class="sb-section">Управление</div>
       <div class="sb-item" onclick="goto('broadcast')" id="nav-broadcast">
         <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
@@ -487,7 +491,7 @@ async function api(method, path, body) {
 // ── Navigation ────────────────────────────────────────────────────
 const PAGE_TITLES = {
   dashboard: 'Дашборд', users: 'Пользователи', vpn: 'VPN / Marzban',
-  payments: 'Платежи', broadcast: 'Рассылка'
+  payments: 'Платежи', tickets: 'Тикеты', broadcast: 'Рассылка'
 };
 
 function goto(page) {
@@ -498,7 +502,7 @@ function goto(page) {
   document.getElementById('topbar-title').textContent = PAGE_TITLES[page] || page;
   const c = document.getElementById('content');
   c.innerHTML = '<div style="text-align:center;padding:60px"><div class="spinner"></div></div>';
-  const fns = { dashboard: renderDashboard, users: renderUsers, vpn: renderVPN, payments: renderPayments, broadcast: renderBroadcast };
+  const fns = { dashboard: renderDashboard, users: renderUsers, vpn: renderVPN, payments: renderPayments, tickets: renderTickets, broadcast: renderBroadcast };
   (fns[page] || (() => {}))();
 }
 
@@ -689,7 +693,7 @@ async function usersLoad(reset) {
       const initials = (name||'U').charAt(0).toUpperCase();
       const avaClass = u.is_banned ? 'td-ava banned' : 'td-ava';
       const badge = u.is_banned
-        ? '<span class="badge badge-banned">🚫 Бан</span>'
+        ? `<span class="badge badge-banned" title="${esc(u.ban_reason || 'Причина не указана')}">🚫 Бан</span>`
         : u.subscription_active
           ? `<span class="badge badge-active">✅ ${u.days_left} дн.</span>`
           : '<span class="badge badge-inactive">Нет подписки</span>';
@@ -720,7 +724,8 @@ function usersNext() { _usersState.page++; usersLoad(false); }
 
 async function quickBan(id) {
   if (!confirm('Забанить ' + id + '?')) return;
-  try { await api('POST', `/web/user/${id}/ban`); toast('🚫 Забанен', 'success'); usersLoad(false); } catch(e) { toast('❌ ' + e.message, 'error'); }
+  const reason = prompt('Причина бана (покажем пользователю, можно оставить пустой):', '') || '';
+  try { await api('POST', `/web/user/${id}/ban`, { reason }); toast('🚫 Забанен', 'success'); usersLoad(false); } catch(e) { toast('❌ ' + e.message, 'error'); }
 }
 async function quickUnban(id) {
   try { await api('POST', `/web/user/${id}/unban`); toast('✅ Разбанен', 'success'); usersLoad(false); } catch(e) { toast('❌ ' + e.message, 'error'); }
@@ -747,7 +752,7 @@ async function openUserDrawer(tgId) {
     document.getElementById('dr-name').textContent = name;
     document.getElementById('dr-id').textContent = `ID: ${u.telegram_id}` + (u.username ? ` · @${u.username}` : '') + (u.marzban_username ? ` · mz: ${u.marzban_username}` : '');
     document.getElementById('dr-badge').innerHTML = u.is_banned
-      ? '<span class="badge badge-banned">🚫 ЗАБАНЕН</span>'
+      ? '<span class="badge badge-banned">🚫 ЗАБАНЕН</span>' + (u.ban_reason ? `<div style="color:var(--text2);font-size:12px;margin-top:6px">Причина: ${esc(u.ban_reason)}</div>` : '')
       : u.subscription_active
         ? '<span class="badge badge-active">🟢 Активна до ' + fmtDate(u.subscription_expires_at) + '</span>'
         : '<span class="badge badge-inactive">⬜ Нет подписки</span>';
@@ -819,7 +824,8 @@ async function drSendMsg() {
 }
 async function drBan() {
   if (!confirm('Забанить пользователя?')) return;
-  try { await api('POST', `/web/user/${drUserId}/ban`); toast('🚫 Забанен', 'success'); openUserDrawer(drUserId); } catch(e) { toast('❌ ' + e.message, 'error'); }
+  const reason = prompt('Причина бана (покажем пользователю, можно оставить пустой):', '') || '';
+  try { await api('POST', `/web/user/${drUserId}/ban`, { reason }); toast('🚫 Забанен', 'success'); openUserDrawer(drUserId); } catch(e) { toast('❌ ' + e.message, 'error'); }
 }
 async function drUnban() {
   try { await api('POST', `/web/user/${drUserId}/unban`); toast('✅ Разбанен', 'success'); openUserDrawer(drUserId); } catch(e) { toast('❌ ' + e.message, 'error'); }
@@ -996,6 +1002,78 @@ async function renderPayments() {
   } catch(e) {
     document.getElementById('pay-tbody').innerHTML = `<tr><td colspan="6"><div class="empty">Ошибка: ${esc(e.message)}</div></td></tr>`;
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TICKETS
+// ═══════════════════════════════════════════════════════════════
+const TICKET_STATUS_LABEL = { open: '🟡 Открыт', answered: '🟢 Отвечен', closed: '⚪ Закрыт' };
+let _ticketsFilter = '';
+
+async function renderTickets() {
+  document.getElementById('content').innerHTML = `
+    <div class="page-header"><h2>🎫 Тикеты поддержки</h2><p>Обращения из личного кабинета и сайта</p></div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Тикеты <span id="tk-total-lbl" style="font-weight:400;color:var(--text2);font-size:13px"></span></div>
+        <div class="card-tools">
+          <select class="input" id="tk-filter" style="width:auto" onchange="_ticketsFilter=this.value;renderTickets()">
+            <option value="">Все</option>
+            <option value="open" ${_ticketsFilter==='open'?'selected':''}>🟡 Открытые</option>
+            <option value="answered" ${_ticketsFilter==='answered'?'selected':''}>🟢 Отвеченные</option>
+            <option value="closed" ${_ticketsFilter==='closed'?'selected':''}>⚪ Закрытые</option>
+          </select>
+          <button class="btn btn-outline" onclick="renderTickets()">🔄</button>
+        </div>
+      </div>
+      <div id="tk-list"><div style="text-align:center;padding:40px"><div class="spinner"></div></div></div>
+    </div>`;
+  document.getElementById('tk-filter').value = _ticketsFilter;
+  try {
+    const data = await api('GET', '/web/tickets' + (_ticketsFilter ? '?status=' + _ticketsFilter : ''));
+    document.getElementById('tk-total-lbl').textContent = `(${data.tickets.length})`;
+    document.getElementById('tk-list').innerHTML = data.tickets.length ? data.tickets.map(t => `
+      <div class="card" style="margin:12px 16px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px">
+          <div>
+            <div style="font-weight:700;font-size:14px">${esc(t.subject)}</div>
+            <div style="color:var(--text2);font-size:12px;margin-top:2px">
+              ${esc(t.user_label)} · ${esc(t.platform || '—')} · ${fmtDateTime(t.created_at)}
+            </div>
+          </div>
+          <span class="badge">${TICKET_STATUS_LABEL[t.status] || t.status}</span>
+        </div>
+        <div style="color:var(--text2);font-size:13px;white-space:pre-wrap;margin-bottom:10px">${esc(t.message)}</div>
+        ${t.admin_reply ? `<div style="background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:10px"><b>Ответ:</b> ${esc(t.admin_reply)}</div>` : ''}
+        <div style="display:flex;gap:8px">
+          <input class="input" type="text" id="tk-reply-${t.id}" placeholder="Ответить..." style="flex:1" value="${esc(t.admin_reply)}">
+          <button class="btn btn-gold btn-sm" onclick="ticketReply(${t.id})">Ответить</button>
+          ${t.status !== 'closed' ? `<button class="btn btn-outline btn-sm" onclick="ticketClose(${t.id})">Закрыть</button>` : ''}
+        </div>
+      </div>
+    `).join('') : '<div class="empty" style="padding:40px"><div class="empty-icon">🎫</div>Тикетов нет</div>';
+  } catch(e) {
+    document.getElementById('tk-list').innerHTML = `<div class="empty" style="padding:40px">Ошибка: ${esc(e.message)}</div>`;
+  }
+}
+
+async function ticketReply(id) {
+  const input = document.getElementById('tk-reply-' + id);
+  const reply = input.value.trim();
+  if (!reply) return;
+  try {
+    await api('POST', `/web/tickets/${id}/reply`, { reply, status: 'answered' });
+    toast('💬 Ответ отправлен', 'success');
+    renderTickets();
+  } catch(e) { toast('❌ ' + e.message, 'error'); }
+}
+
+async function ticketClose(id) {
+  try {
+    await api('POST', `/web/tickets/${id}/reply`, { reply: '', status: 'closed' });
+    toast('✅ Тикет закрыт', 'success');
+    renderTickets();
+  } catch(e) { toast('❌ ' + e.message, 'error'); }
 }
 
 // ═══════════════════════════════════════════════════════════════

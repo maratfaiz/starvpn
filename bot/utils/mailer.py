@@ -55,3 +55,25 @@ async def send_magic_link_email(to_email: str, link: str) -> None:
     except Exception as e:
         logger.error("Не удалось отправить magic-link на %s: %s", to_email, e)
         raise
+
+
+async def send_ticket_reply_email(to_email: str, ticket_subject: str, reply: str) -> None:
+    if not settings.smtp_host:
+        logger.warning("SMTP не настроен — ответ на тикет для %s: %s", to_email, reply)
+        return
+
+    subject = f"Ответ поддержки STAR VPN: {ticket_subject}"
+    text_body = f"Ответ поддержки по тикету «{ticket_subject}»:\n\n{reply}"
+    html_body = f"""
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#060606;color:#EBE0CC">
+      <h2 style="color:#FFB800;margin:0 0 16px">STAR VPN — Поддержка</h2>
+      <p style="color:#8A7A60;margin:0 0 8px">По тикету «{ticket_subject}»:</p>
+      <p style="white-space:pre-wrap">{reply}</p>
+    </div>
+    """
+
+    try:
+        await asyncio.to_thread(_send_sync, to_email, subject, text_body, html_body)
+    except Exception as e:
+        logger.error("Не удалось отправить ответ на тикет %s: %s", to_email, e)
+        raise

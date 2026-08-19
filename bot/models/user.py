@@ -51,6 +51,7 @@ class User(Base):
 
     # Модерация
     is_banned: Mapped[bool] = mapped_column(Boolean, default=False)
+    ban_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Подписка
     trial_used: Mapped[bool] = mapped_column(Boolean, default=False)
