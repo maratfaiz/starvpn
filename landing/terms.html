@@ -61,6 +61,10 @@ body{
   font-family:'Space Grotesk',sans-serif;
   font-size:17px;font-weight:700;letter-spacing:.05em;color:var(--gold);
 }
+.nav-links{display:flex;gap:20px;flex:1}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--gold)}
+@media(max-width:600px){.nav-links{display:none}}
 .nav-home{
   margin-left:auto;
   display:inline-flex;align-items:center;gap:6px;
@@ -282,6 +286,11 @@ footer{
       <img src="/logo.png" alt="STAR VPN">
       <span class="nav-logo-text">STAR VPN</span>
     </a>
+    <div class="nav-links">
+      <a href="/tariffs">Тарифы</a>
+      <a href="/connect">Подключение</a>
+      <a href="/wiki">Wiki</a>
+    </div>
     <a class="nav-home" href="/">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
       На главную
@@ -488,9 +497,11 @@ footer{
     <a class="footer-logo" href="/">STAR VPN</a>
     <div class="footer-links">
       <a href="https://t.me/starisvpnbot">@starisvpnbot</a>
-      <a href="/privacy.html">Политика конфиденциальности</a>
-      <a href="/terms.html">Условия использования</a>
+      <a href="/tariffs.html">Тарифы</a>
+      <a href="/wiki.html">Wiki</a>
       <a href="/connect.html">Подключение</a>
+      <a href="/privacy.html">Политика конфиденциальности</a>
+      <a href="https://t.me/hashprojects">Поддержка</a>
     </div>
     <div class="footer-copy">© 2026 STAR VPN · VLESS Reality · Zero Logs</div>
   </div>

@@ -29,12 +29,23 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-h
 
 /* Nav */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 20px;background:rgba(6,6,6,0.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--gold-border)}
-.nav-inner{max-width:540px;margin:0 auto;display:flex;align-items:center;height:56px}
-.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+.nav-inner{max-width:540px;margin:0 auto;display:flex;align-items:center;height:56px;gap:16px}
+.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0}
 .nav-logo img{width:24px;height:24px;border-radius:6px}
 .nav-logo-text{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:.04em;color:var(--gold)}
-.nav-back{margin-left:auto;font-size:13px;color:var(--text2);text-decoration:none;transition:color .2s}
+.nav-links{display:flex;gap:16px;flex:1}
+.nav-links a{font-size:12.5px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--gold)}
+.nav-back{margin-left:auto;font-size:13px;color:var(--text2);text-decoration:none;transition:color .2s;flex-shrink:0}
 .nav-back:hover{color:var(--gold)}
+@media(max-width:480px){.nav-links{display:none}}
+
+/* Footer */
+footer{border-top:1px solid var(--gold-border);padding:44px 20px 32px;text-align:center;position:relative;z-index:2;margin-top:24px}
+.footer-links{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.footer-links a{font-size:12px;color:var(--text3);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--gold)}
+.footer-copy{font-size:11.5px;color:var(--text3);letter-spacing:.05em}
 
 /* Page wrapper */
 .page{position:relative;z-index:2;max-width:540px;margin:0 auto;padding:80px 20px 60px}
@@ -107,6 +118,10 @@ code{font-family:monospace;background:rgba(255,184,0,.1);border:1px solid var(--
       <img src="/logo.png" alt="STAR VPN">
       <span class="nav-logo-text">STAR VPN</span>
     </a>
+    <div class="nav-links">
+      <a href="/tariffs">Тарифы</a>
+      <a href="/wiki">Wiki</a>
+    </div>
     <a class="nav-back" href="/">← Назад</a>
   </div>
 </nav>
@@ -387,6 +402,18 @@ code{font-family:monospace;background:rgba(255,184,0,.1);border:1px solid var(--
   </div>
 
 </div>
+
+<footer>
+  <div class="footer-links">
+    <a href="https://t.me/starisvpnbot">@starisvpnbot</a>
+    <a href="/tariffs.html">Тарифы</a>
+    <a href="/wiki.html">Wiki</a>
+    <a href="/privacy.html">Конфиденциальность</a>
+    <a href="/terms.html">Условия</a>
+    <a href="https://t.me/hashprojects">Поддержка</a>
+  </div>
+  <div class="footer-copy">© 2026 STAR VPN · VLESS Reality · Zero Logs</div>
+</footer>
 
 <script>
 function showGuide(id, btn) {

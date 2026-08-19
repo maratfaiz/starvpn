@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Реферальная программа — STAR VPN Wiki</title>
+<meta name="description" content="Как работает реферальная программа STAR VPN: дни за друзей и достижения — без баланса и вывода средств.">
+<link rel="icon" href="/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+:root{
+  --gold:#FFB800;--gold2:#FFD84D;
+  --gold-border:rgba(255,184,0,0.18);
+  --gold-dim:rgba(255,184,0,0.08);
+  --bg:#060606;--bg2:rgba(255,255,255,0.025);
+  --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;
+  --r:18px;--max:900px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.75;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,184,0,.2);border-radius:2px}
+
+#progress{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));z-index:9999;transition:width .08s linear}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6}
+
+#nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;background:rgba(6,6,6,.85);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid var(--gold-border)}
+.nav-inner{max-width:var(--max);margin:0 auto;display:flex;align-items:center;height:64px;gap:32px}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.nav-logo img{width:30px;height:30px;border-radius:8px;object-fit:cover}
+.nav-logo-text{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
+.nav-links{display:flex;gap:26px;flex:1}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--gold)}
+.nav-cta{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;padding:10px 22px;border-radius:10px;text-decoration:none;white-space:nowrap;flex-shrink:0;transition:background .2s,transform .15s}
+.nav-cta:hover{background:var(--gold2);transform:translateY(-1px)}
+@media(max-width:768px){.nav-links{display:none}.nav-cta{padding:8px 16px;font-size:12px}}
+
+.wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}
+
+.back-nav{padding-top:118px}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);text-decoration:none;transition:color .2s}
+.back-link:hover{color:var(--gold)}
+
+.doc-hero{padding:28px 0 56px;text-align:center}
+.doc-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--gold-border);border-radius:100px;padding:6px 20px;margin-bottom:32px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);background:var(--gold-dim)}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;animation:blink 1.8s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.doc-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(36px,7vw,60px);font-weight:700;line-height:1.08;letter-spacing:-.02em;color:var(--text);margin-bottom:16px}
+.doc-title .gold{background:linear-gradient(135deg,var(--gold) 0%,var(--gold2) 50%,var(--gold) 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite}
+@keyframes shimmer{0%{background-position:0 center}100%{background-position:200% center}}
+.doc-date{font-size:14px;color:var(--text2);letter-spacing:.02em;margin-bottom:44px;max-width:520px;margin-left:auto;margin-right:auto}
+.doc-meta{display:flex;gap:1px;max-width:380px;margin:0 auto;border:1px solid var(--gold-border);border-radius:16px;background:var(--gold-border);overflow:hidden}
+.doc-meta-item{flex:1;background:rgba(6,6,6,.9);padding:16px 8px;text-align:center;backdrop-filter:blur(12px)}
+.doc-meta-val{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--gold);line-height:1;margin-bottom:4px}
+.doc-meta-lbl{font-size:10px;color:var(--text2);letter-spacing:.06em;text-transform:uppercase}
+
+.intro-banner{display:flex;align-items:center;gap:16px;background:rgba(255,184,0,.04);border:1px solid var(--gold-border);border-radius:16px;padding:20px 24px;margin:48px 0;position:relative;overflow:hidden}
+.intro-banner::before{content:'';position:absolute;right:-40px;top:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(255,184,0,.08),transparent 65%);pointer-events:none}
+.intro-icon{width:44px;height:44px;border-radius:12px;background:rgba(255,184,0,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.intro-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--gold);margin-bottom:3px}
+.intro-sub{font-size:13px;color:var(--text2);line-height:1.5}
+
+.doc-body{padding-bottom:96px}
+.doc-section{display:grid;grid-template-columns:72px 1fr;gap:36px;padding:52px 0;border-bottom:1px solid rgba(255,184,0,.07)}
+.doc-section:last-child{border-bottom:none}
+.doc-num{font-family:'Space Grotesk',sans-serif;font-size:56px;font-weight:700;color:rgba(255,184,0,.09);line-height:1;text-align:right;padding-top:4px;user-select:none;flex-shrink:0}
+.doc-content h2{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;color:var(--text);margin-bottom:20px;letter-spacing:-.01em}
+.doc-content p{color:var(--text2);font-size:15px;line-height:1.85;margin-bottom:14px}
+.doc-content p:last-child{margin-bottom:0}
+.doc-content .hl{color:var(--text);font-weight:500}
+.doc-content a{color:var(--gold);text-decoration:none}
+.doc-content a:hover{text-decoration:underline}
+.sub-item{position:relative;padding-left:22px;color:var(--text2);font-size:15px;line-height:1.85;margin-bottom:10px}
+.sub-item::before{content:'';position:absolute;left:0;top:.75em;width:6px;height:6px;border-radius:50%;border:1.5px solid rgba(255,184,0,.35)}
+
+.doc-table{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--gold-border);border-radius:14px;overflow:hidden;margin:20px 0;font-size:14px}
+.doc-table th{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);background:rgba(255,184,0,.05);text-align:left;padding:13px 20px;border-bottom:1px solid var(--gold-border)}
+.doc-table td{color:var(--text2);padding:14px 20px;border-bottom:1px solid rgba(255,184,0,.05);vertical-align:top;line-height:1.7}
+.doc-table tr:last-child td{border-bottom:none}
+.doc-table td:first-child{color:var(--text);font-weight:500;width:170px}
+
+.badge-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px}
+@media(max-width:520px){.badge-grid{grid-template-columns:1fr}}
+.badge-card{background:var(--bg2);border:1px solid var(--gold-border);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px}
+.badge-emoji{font-size:26px;flex-shrink:0}
+.badge-name{font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:700;color:var(--text)}
+.badge-req{font-size:12px;color:var(--text2);margin-top:2px}
+
+.contact-card{background:var(--bg2);border:1px solid var(--gold-border);border-radius:16px;padding:24px 28px;margin-top:24px;position:relative;overflow:hidden}
+.contact-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 0 0,rgba(255,184,0,.07),transparent 60%);pointer-events:none}
+.contact-card-label{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+.contact-card p{margin-bottom:8px;position:relative}
+.contact-card a{color:var(--gold);text-decoration:none}
+.contact-card a:hover{text-decoration:underline}
+
+footer{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align:center;position:relative;z-index:2}
+.footer-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:24px}
+.footer-logo img{width:32px;height:32px;border-radius:8px;object-fit:cover}
+.footer-logo-text{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
+.footer-links{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.footer-links a{font-size:13px;color:var(--text3);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--gold)}
+.footer-copy{font-size:12px;color:var(--text3);letter-spacing:.05em}
+
+@media(max-width:640px){
+  .back-nav{padding-top:96px}
+  .doc-section{grid-template-columns:1fr;gap:12px;padding:40px 0}
+  .doc-num{font-size:32px;text-align:left;color:rgba(255,184,0,.14)}
+  .doc-meta{max-width:100%}
+  .doc-table{display:block;overflow-x:auto}
+  .intro-banner{align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<canvas id="bg-canvas"></canvas>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <img src="/logo.png" alt="STAR VPN">
+      <span class="nav-logo-text">STAR VPN</span>
+    </a>
+    <div class="nav-links">
+      <a href="/tariffs">Тарифы</a>
+      <a href="/connect">Подключение</a>
+      <a href="/wiki" class="active">Wiki</a>
+      <a href="/get-vpn">Купить без Telegram</a>
+    </div>
+    <a class="nav-cta" href="https://t.me/starisvpnbot">Попробовать бесплатно</a>
+  </div>
+</nav>
+
+<main>
+<div class="wrap">
+
+  <div class="back-nav">
+    <a href="/wiki" class="back-link">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Назад в Wiki
+    </a>
+  </div>
+
+  <div class="doc-hero">
+    <div class="doc-badge">
+      <div class="badge-dot"></div>
+      Wiki · Оплата и аккаунт
+    </div>
+    <h1 class="doc-title">Реферальная<br><span class="gold">программа</span></h1>
+    <div class="doc-date">Приглашай друзей — получай дни VPN автоматически. Без баланса и вывода средств.</div>
+    <div class="doc-meta">
+      <div class="doc-meta-item">
+        <div class="doc-meta-val">4</div>
+        <div class="doc-meta-lbl">раздела</div>
+      </div>
+      <div class="doc-meta-item">
+        <div class="doc-meta-val">~2</div>
+        <div class="doc-meta-lbl">мин чтения</div>
+      </div>
+      <div class="doc-meta-item">
+        <div class="doc-meta-val">+30</div>
+        <div class="doc-meta-lbl">дней за 2 друзей</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="intro-banner">
+    <div class="intro-icon">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    </div>
+    <div>
+      <div class="intro-title">Всё начисляется автоматически</div>
+      <div class="intro-sub">Никакого баланса и вывода — бонус сразу добавляется как дни к твоей подписке.</div>
+    </div>
+  </div>
+
+  <div class="doc-body">
+
+    <div class="doc-section" id="s1">
+      <div class="doc-num">01</div>
+      <div class="doc-content">
+        <h2>Как это работает</h2>
+        <p>У каждого пользователя есть личная реферальная ссылка — её можно найти в разделе <span class="hl">«Приглашения»</span> мини-приложения бота. Когда приглашённый человек оформляет <span class="hl">первую платную</span> подписку (активация пробного периода не считается), он засчитывается как оплативший реферал.</p>
+      </div>
+    </div>
+
+    <div class="doc-section" id="s2">
+      <div class="doc-num">02</div>
+      <div class="doc-content">
+        <h2>Бонус за друзей</h2>
+        <p>За каждые <span class="hl">2 друзей</span>, оформивших платную подписку по твоей ссылке, к твоей собственной подписке автоматически добавляется <span class="hl">+30 дней</span>. Бонус применяется мгновенно, без баланса и без запроса на вывод — просто продлевается срок действия VPN.</p>
+      </div>
+    </div>
+
+    <div class="doc-section" id="s3">
+      <div class="doc-num">03</div>
+      <div class="doc-content">
+        <h2>Достижения</h2>
+        <p>Дополнительно к бонусу за каждые 2 друзей есть 4 одноразовых достижения — каждое срабатывает один раз при достижении порога по общему числу оплативших рефералов:</p>
+        <div class="badge-grid">
+          <div class="badge-card">
+            <div class="badge-emoji">🥉</div>
+            <div>
+              <div class="badge-name">Первая ласточка</div>
+              <div class="badge-req">1 реферал · +5 дней</div>
+            </div>
+          </div>
+          <div class="badge-card">
+            <div class="badge-emoji">🥈</div>
+            <div>
+              <div class="badge-name">Амбассадор</div>
+              <div class="badge-req">5 рефералов · +20 дней</div>
+            </div>
+          </div>
+          <div class="badge-card">
+            <div class="badge-emoji">🥇</div>
+            <div>
+              <div class="badge-name">Легенда STAR VPN</div>
+              <div class="badge-req">10 рефералов · +50 дней</div>
+            </div>
+          </div>
+          <div class="badge-card">
+            <div class="badge-emoji">💎</div>
+            <div>
+              <div class="badge-name">Партнёр года</div>
+              <div class="badge-req">25 рефералов · +150 дней</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="doc-section" id="s4">
+      <div class="doc-num">04</div>
+      <div class="doc-content">
+        <h2>Где смотреть статистику</h2>
+        <p>Количество приглашённых, оплативших друзей, полученные дни, прогресс до следующего бонуса и статус достижений — всё видно в разделе <span class="hl">«Приглашения»</span> мини-приложения. Там же можно скопировать или отправить свою реферальную ссылку.</p>
+        <p>Хочешь оплатить подписку сам — посмотри <a href="/wiki/payment">способы оплаты</a> или открой <a href="/tariffs">тарифы</a>.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+</main>
+
+<footer>
+  <a class="footer-logo" href="/">
+    <img src="/logo.png" alt="STAR VPN">
+    <span class="footer-logo-text">STAR VPN</span>
+  </a>
+  <div class="footer-links">
+    <a href="/tariffs">Тарифы</a>
+    <a href="/wiki">Wiki</a>
+    <a href="/connect">Подключение</a>
+    <a href="/privacy.html">Конфиденциальность</a>
+    <a href="/terms.html">Условия</a>
+    <a href="https://t.me/hashprojects">Поддержка</a>
+  </div>
+  <div class="footer-copy">© 2026 STAR VPN · VLESS Reality · Zero Logs</div>
+</footer>
+
+<script>
+const bar = document.getElementById('progress');
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  bar.style.width = Math.min(pct, 100) + '%';
+}, {passive:true});
+
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize, {passive:true});
+  const stars = Array.from({length:200}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.2 + 0.1,
+    o: Math.random() * 0.5 + 0.08,
+    sp: Math.random() * 0.0004 + 0.00006,
+    ph: Math.random() * Math.PI * 2,
+  }));
+  let f = 0;
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height); f++;
+    for(const s of stars){
+      const a = s.o * (0.4 + 0.6 * Math.sin(f * s.sp * 200 + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>

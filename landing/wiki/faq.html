@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Частые вопросы — STAR VPN Wiki</title>
+<meta name="description" content="Ответы на частые вопросы о STAR VPN: устройства, логи, продление, отмена подписки.">
+<link rel="icon" href="/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+:root{
+  --gold:#FFB800;--gold2:#FFD84D;
+  --gold-border:rgba(255,184,0,0.18);
+  --gold-dim:rgba(255,184,0,0.08);
+  --bg:#060606;--bg2:rgba(255,255,255,0.025);
+  --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;
+  --r:18px;--max:900px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.75;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,184,0,.2);border-radius:2px}
+
+#progress{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));z-index:9999;transition:width .08s linear}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6}
+
+#nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;background:rgba(6,6,6,.85);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid var(--gold-border)}
+.nav-inner{max-width:var(--max);margin:0 auto;display:flex;align-items:center;height:64px;gap:32px}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.nav-logo img{width:30px;height:30px;border-radius:8px;object-fit:cover}
+.nav-logo-text{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
+.nav-links{display:flex;gap:26px;flex:1}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--gold)}
+.nav-cta{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;padding:10px 22px;border-radius:10px;text-decoration:none;white-space:nowrap;flex-shrink:0;transition:background .2s,transform .15s}
+.nav-cta:hover{background:var(--gold2);transform:translateY(-1px)}
+@media(max-width:768px){.nav-links{display:none}.nav-cta{padding:8px 16px;font-size:12px}}
+
+.wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}
+
+.back-nav{padding-top:118px}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);text-decoration:none;transition:color .2s}
+.back-link:hover{color:var(--gold)}
+
+.doc-hero{padding:28px 0 56px;text-align:center}
+.doc-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--gold-border);border-radius:100px;padding:6px 20px;margin-bottom:32px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);background:var(--gold-dim)}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;animation:blink 1.8s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.doc-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(36px,7vw,60px);font-weight:700;line-height:1.08;letter-spacing:-.02em;color:var(--text);margin-bottom:16px}
+.doc-title .gold{background:linear-gradient(135deg,var(--gold) 0%,var(--gold2) 50%,var(--gold) 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite}
+@keyframes shimmer{0%{background-position:0 center}100%{background-position:200% center}}
+.doc-date{font-size:14px;color:var(--text2);letter-spacing:.02em;margin-bottom:44px;max-width:520px;margin-left:auto;margin-right:auto}
+.doc-meta{display:flex;gap:1px;max-width:380px;margin:0 auto;border:1px solid var(--gold-border);border-radius:16px;background:var(--gold-border);overflow:hidden}
+.doc-meta-item{flex:1;background:rgba(6,6,6,.9);padding:16px 8px;text-align:center;backdrop-filter:blur(12px)}
+.doc-meta-val{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--gold);line-height:1;margin-bottom:4px}
+.doc-meta-lbl{font-size:10px;color:var(--text2);letter-spacing:.06em;text-transform:uppercase}
+
+.doc-body{padding:48px 0 96px}
+
+.faq-list{display:flex;flex-direction:column;gap:8px}
+.faq-item{background:var(--bg2);border:1px solid var(--gold-border);border-radius:14px;overflow:hidden;transition:border-color .2s}
+.faq-item:hover,.faq-item.open{border-color:rgba(255,184,0,.4)}
+.faq-btn{width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:20px 22px;gap:16px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:500;text-align:left;transition:color .2s}
+.faq-btn:hover,.faq-item.open .faq-btn{color:var(--gold)}
+.faq-arr{width:18px;height:18px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;transition:transform .3s}
+.faq-item.open .faq-arr{transform:rotate(180deg)}
+.faq-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.faq-item.open .faq-body{max-height:320px}
+.faq-body p{padding:0 22px 20px;font-size:13.5px;color:var(--text2);line-height:1.75}
+.faq-body a{color:var(--gold);text-decoration:none}
+.faq-body a:hover{text-decoration:underline}
+
+.contact-card{background:var(--bg2);border:1px solid var(--gold-border);border-radius:16px;padding:24px 28px;margin-top:32px;position:relative;overflow:hidden}
+.contact-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 0 0,rgba(255,184,0,.07),transparent 60%);pointer-events:none}
+.contact-card-label{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+.contact-card p{margin-bottom:8px;position:relative;color:var(--text2);font-size:14px}
+.contact-card a{color:var(--gold);text-decoration:none}
+.contact-card a:hover{text-decoration:underline}
+
+footer{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align:center;position:relative;z-index:2}
+.footer-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:24px}
+.footer-logo img{width:32px;height:32px;border-radius:8px;object-fit:cover}
+.footer-logo-text{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
+.footer-links{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.footer-links a{font-size:13px;color:var(--text3);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--gold)}
+.footer-copy{font-size:12px;color:var(--text3);letter-spacing:.05em}
+
+@media(max-width:640px){
+  .back-nav{padding-top:96px}
+  .doc-meta{max-width:100%}
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<canvas id="bg-canvas"></canvas>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <img src="/logo.png" alt="STAR VPN">
+      <span class="nav-logo-text">STAR VPN</span>
+    </a>
+    <div class="nav-links">
+      <a href="/tariffs">Тарифы</a>
+      <a href="/connect">Подключение</a>
+      <a href="/wiki" class="active">Wiki</a>
+      <a href="/get-vpn">Купить без Telegram</a>
+    </div>
+    <a class="nav-cta" href="https://t.me/starisvpnbot">Попробовать бесплатно</a>
+  </div>
+</nav>
+
+<main>
+<div class="wrap">
+
+  <div class="back-nav">
+    <a href="/wiki" class="back-link">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Назад в Wiki
+    </a>
+  </div>
+
+  <div class="doc-hero">
+    <div class="doc-badge">
+      <div class="badge-dot"></div>
+      Wiki · О сервисе
+    </div>
+    <h1 class="doc-title">Частые <span class="gold">вопросы</span></h1>
+    <div class="doc-date">Короткие ответы на самое популярное</div>
+    <div class="doc-meta">
+      <div class="doc-meta-item">
+        <div class="doc-meta-val">8</div>
+        <div class="doc-meta-lbl">вопросов</div>
+      </div>
+      <div class="doc-meta-item">
+        <div class="doc-meta-val">~2</div>
+        <div class="doc-meta-lbl">мин чтения</div>
+      </div>
+      <div class="doc-meta-item">
+        <div class="doc-meta-val">0</div>
+        <div class="doc-meta-lbl">логов</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-body">
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <button class="faq-btn">
+          Сколько устройств можно подключить?
+          <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
+        </button>
+        <div class="faq-body"><p>До 3 устройств одновременно на одной подписке — каждое со своим независимым VLESS-ключом. Управлять устройствами можно в разделе «Устройства» мини-приложения.</p></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn">
+          Можно ли изменить ключ устройства?
+          <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
+        </button>
+        <div class="faq-body"><p>Да — удали устройство и добавь заново в разделе «Устройства». Будет создан новый VLESS-ключ, старый перестанет работать.</p></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn">
+          Подписка продлевается автоматически?
+          <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
+        </button>
+        <div class="faq-body"><p>Нет, автосписаний нет. Все оплаты в STAR VPN разовые и вручную — ты сам выбираешь, когда продлить подписку.</p></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn">
+          Как отменить подписку?
+          <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
+        </button>
+        <div class="faq-body"><p>Отменять нечего — просто не продлевай её. Никакого списания в конце срока не будет, аккаунт и данные не удаляются.</p></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn">
+          Вы записываете мою активность в интернете?
+          <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
+        </button>
+        <div class="faq-body"><p>Нет. Политика Zero Logs — никаких логов подключений, посещённых сайтов или трафика. Подробнее — в статье <a href="/wiki/zero-logs">Zero Logs: что мы храним</a>.</p></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn">
+          Пробный период можно активировать повторно?
+          <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
+        </button>
+        <div class="faq-body"><p>Нет, 2 дня бесплатно даются один раз на Telegram-аккаунт. Подробнее — в статье <a href="/wiki/trial">Пробный период</a>.</p></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn">
+          Что будет, если не продлить подписку вовремя?
+          <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
+        </button>
+        <div class="faq-body"><p>Доступ к VPN приостанавливается — устройства перестают подключаться. Аккаунт и история никуда не пропадают, продлить можно в любой момент, и всё снова заработает.</p></div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn">
+          Как получить поддержку?
+          <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
+        </button>
+        <div class="faq-body"><p>Через бота <a href="https://t.me/starisvpnbot">@starisvpnbot</a> или напрямую <a href="https://t.me/hashprojects">@hashprojects</a> в Telegram.</p></div>
+      </div>
+
+    </div>
+
+    <div class="contact-card">
+      <div class="contact-card-label">Не нашёл ответ?</div>
+      <p>Посмотри остальные статьи <a href="/wiki">Wiki</a> или напиши в поддержку <a href="https://t.me/starisvpnbot">@starisvpnbot</a>.</p>
+    </div>
+  </div>
+</div>
+</main>
+
+<footer>
+  <a class="footer-logo" href="/">
+    <img src="/logo.png" alt="STAR VPN">
+    <span class="footer-logo-text">STAR VPN</span>
+  </a>
+  <div class="footer-links">
+    <a href="/tariffs">Тарифы</a>
+    <a href="/wiki">Wiki</a>
+    <a href="/connect">Подключение</a>
+    <a href="/privacy.html">Конфиденциальность</a>
+    <a href="/terms.html">Условия</a>
+    <a href="https://t.me/hashprojects">Поддержка</a>
+  </div>
+  <div class="footer-copy">© 2026 STAR VPN · VLESS Reality · Zero Logs</div>
+</footer>
+
+<script>
+const bar = document.getElementById('progress');
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  bar.style.width = Math.min(pct, 100) + '%';
+}, {passive:true});
+
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize, {passive:true});
+  const stars = Array.from({length:200}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.2 + 0.1,
+    o: Math.random() * 0.5 + 0.08,
+    sp: Math.random() * 0.0004 + 0.00006,
+    ph: Math.random() * Math.PI * 2,
+  }));
+  let f = 0;
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height); f++;
+    for(const s of stars){
+      const a = s.o * (0.4 + 0.6 * Math.sin(f * s.sp * 200 + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+document.querySelectorAll('.faq-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const item = btn.closest('.faq-item');
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if(!isOpen) item.classList.add('open');
+  });
+});
+</script>
+</body>
+</html>

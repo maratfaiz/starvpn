@@ -83,6 +83,42 @@ async def serve_get_vpn():
     return _serve_html(_LANDING_DIR / "get-vpn.html")
 
 
+@app.get("/terms", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/terms.html", response_class=HTMLResponse, include_in_schema=False)
+async def serve_terms():
+    return _serve_html(_LANDING_DIR / "terms.html")
+
+
+@app.get("/connect", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/connect.html", response_class=HTMLResponse, include_in_schema=False)
+async def serve_connect():
+    return _serve_html(_LANDING_DIR / "connect.html")
+
+
+@app.get("/tariffs", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/tariffs.html", response_class=HTMLResponse, include_in_schema=False)
+async def serve_tariffs():
+    return _serve_html(_LANDING_DIR / "tariffs.html")
+
+
+_WIKI_SLUGS = {"vless-reality", "zero-logs", "payment", "trial", "referrals", "troubleshooting", "faq"}
+
+
+@app.get("/wiki", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/wiki.html", response_class=HTMLResponse, include_in_schema=False)
+async def serve_wiki_index():
+    return _serve_html(_LANDING_DIR / "wiki" / "index.html")
+
+
+@app.get("/wiki/{slug}", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/wiki/{slug}.html", response_class=HTMLResponse, include_in_schema=False)
+async def serve_wiki_article(slug: str):
+    slug = slug.removesuffix(".html")
+    if slug not in _WIKI_SLUGS:
+        return HTMLResponse(content="<h1>Not found</h1>", status_code=404)
+    return _serve_html(_LANDING_DIR / "wiki" / f"{slug}.html")
+
+
 # ─── GET /sub/{username} — подписка для VPN-клиентов (Happ, v2rayNG, ...) ────
 #
 # В отличие от одиночной vless://-ссылки, которую бот шлёт как текст/QR,
