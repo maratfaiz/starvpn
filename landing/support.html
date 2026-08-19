@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Поддержка — STAR VPN</title>
+<meta name="description" content="Служба поддержки STAR VPN: напишите нам в Telegram или отправьте тикет из личного кабинета.">
+<link rel="icon" href="/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+:root{
+  --gold:#FFB800;--gold2:#FFD84D;
+  --gold-border:rgba(255,184,0,0.2);
+  --gold-dim:rgba(255,184,0,0.1);
+  --bg:#060606;--bg2:rgba(255,255,255,0.025);
+  --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;
+  --error:#F87171;--success:#4ADE80;
+  --max:640px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.7;overflow-x:hidden}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,184,0,.2);border-radius:2px}
+
+#nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;background:rgba(6,6,6,0.85);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid var(--gold-border)}
+.nav-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;height:64px;gap:32px}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.nav-logo img{width:30px;height:30px;border-radius:8px;object-fit:cover}
+.nav-logo-text{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
+.nav-links{display:flex;gap:26px;flex:1}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s}
+.nav-links a:hover,.nav-links a.active{color:var(--gold)}
+.nav-cta{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;padding:10px 22px;border-radius:10px;text-decoration:none;white-space:nowrap;flex-shrink:0}
+@media(max-width:768px){.nav-links{display:none}.nav-cta{padding:8px 16px;font-size:12px}}
+
+.wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:150px 24px 100px}
+
+.hero{text-align:center;margin-bottom:44px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--gold-border);border-radius:100px;padding:6px 20px;margin-bottom:24px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);background:var(--gold-dim)}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:blink 1.8s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(30px,5vw,42px);font-weight:700;letter-spacing:-.02em;margin-bottom:12px}
+h1 em{font-style:normal;background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{color:var(--text2);font-size:15px}
+
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:36px}
+@media(max-width:520px){.quick-grid{grid-template-columns:1fr}}
+.quick-card{background:var(--bg2);border:1px solid var(--gold-border);border-radius:16px;padding:22px;text-decoration:none;display:flex;align-items:center;gap:14px;transition:transform .2s,border-color .2s}
+.quick-card:hover{transform:translateY(-3px);border-color:rgba(255,184,0,.4)}
+.quick-icon{width:42px;height:42px;border-radius:12px;background:var(--gold-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--gold)}
+.quick-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.quick-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--text)}
+.quick-sub{font-size:12.5px;color:var(--text2);margin-top:2px}
+
+.card{background:var(--bg2);border:1px solid var(--gold-border);border-radius:20px;padding:32px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;right:-60px;top:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(255,184,0,.08),transparent 65%);pointer-events:none}
+.card h2{font-family:'Space Grotesk',sans-serif;font-size:18px;margin-bottom:6px}
+.card .sub{font-size:13.5px;color:var(--text2);margin-bottom:24px}
+
+.field{margin-bottom:16px}
+.field-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;display:block}
+input[type=text],select,textarea{width:100%;background:rgba(255,255,255,.04);border:1.5px solid var(--gold-border);border-radius:12px;padding:13px 15px;color:var(--text);font-family:inherit;font-size:14.5px;outline:none;transition:border-color .2s}
+input[type=text]:focus,select:focus,textarea:focus{border-color:var(--gold)}
+textarea{resize:vertical;min-height:110px}
+select{appearance:none;cursor:pointer}
+
+.btn{width:100%;margin-top:6px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:700;padding:14px;border-radius:12px;border:none;cursor:pointer;transition:all .2s}
+.btn:hover{filter:brightness(1.06)}
+.btn:disabled{opacity:.55;cursor:default}
+
+.msg{font-size:13px;margin-top:14px;display:none}
+.msg.show{display:block}
+.msg.err{color:var(--error)}
+.msg.ok{color:var(--success)}
+
+.locked{text-align:center;padding:20px 0}
+.locked p{color:var(--text2);font-size:14px;margin-bottom:18px;line-height:1.7}
+.locked a{color:var(--gold);text-decoration:none;font-weight:600}
+.locked a:hover{text-decoration:underline}
+
+footer{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align:center;position:relative;z-index:2}
+.footer-links{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.footer-links a{font-size:13px;color:var(--text3);text-decoration:none}
+.footer-links a:hover{color:var(--gold)}
+.footer-copy{font-size:12px;color:var(--text3)}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <img src="/logo.png" alt="STAR VPN">
+      <span class="nav-logo-text">STAR VPN</span>
+    </a>
+    <div class="nav-links">
+      <a href="/tariffs">Тарифы</a>
+      <a href="/connect">Подключение</a>
+      <a href="/wiki">Wiki</a>
+    </div>
+    <a class="nav-cta" href="https://t.me/starisvpnbot">Попробовать бесплатно</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-badge"><span class="badge-dot"></span>Поддержка</div>
+    <h1>Чем <em>помочь</em>?</h1>
+    <p>Отвечаем быстро — обычно в течение пары часов.</p>
+  </div>
+
+  <div class="quick-grid">
+    <a class="quick-card" href="https://t.me/starisvpnbot">
+      <div class="quick-icon"><svg viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></div>
+      <div>
+        <div class="quick-title">Написать боту</div>
+        <div class="quick-sub">@starisvpnbot</div>
+      </div>
+    </a>
+    <a class="quick-card" href="/wiki/troubleshooting">
+      <div class="quick-icon"><svg viewBox="0 0 24 24"><path d="M12 9v4"/><line x1="12" y1="17" x2="12.01" y2="17"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
+      <div>
+        <div class="quick-title">Wiki: Неполадки</div>
+        <div class="quick-sub">Частые проблемы и решения</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="card">
+    <div id="lockedState" class="locked" style="display:none">
+      <h2 style="margin-bottom:10px">Отправить тикет из личного кабинета</h2>
+      <p>Войдите в аккаунт, чтобы отправить тикет и видеть ответ поддержки — или просто напишите боту напрямую, это тоже быстро.</p>
+      <a href="/login">Войти в личный кабинет →</a>
+    </div>
+
+    <form id="ticketForm" style="display:none">
+      <h2>Отправить тикет</h2>
+      <div class="sub">Ответим на почту, привязанную к вашему аккаунту.</div>
+
+      <div class="field">
+        <label class="field-label" for="platform">Платформа</label>
+        <select id="platform" name="platform">
+          <option value="ios">iOS</option>
+          <option value="android">Android</option>
+          <option value="windows">Windows</option>
+          <option value="macos">macOS</option>
+          <option value="web">Сайт / личный кабинет</option>
+          <option value="other">Другое</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="subject">Тема</label>
+        <input type="text" id="subject" name="subject" placeholder="Коротко опишите проблему" required maxlength="200">
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="message">Сообщение</label>
+        <textarea id="message" name="message" placeholder="Опишите проблему подробнее — что делали, что ожидали, что произошло на самом деле" required maxlength="4000"></textarea>
+      </div>
+
+      <button type="submit" class="btn" id="submitBtn">Отправить тикет</button>
+      <div class="msg" id="msg"></div>
+    </form>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-links">
+    <a href="/tariffs">Тарифы</a>
+    <a href="/wiki">Wiki</a>
+    <a href="/connect">Подключение</a>
+    <a href="/privacy.html">Конфиденциальность</a>
+    <a href="/terms.html">Условия</a>
+  </div>
+  <div class="footer-copy">© 2026 STAR VPN · VLESS Reality · Zero Logs</div>
+</footer>
+
+<script>
+(async function init() {
+  try {
+    const r = await fetch('/api/me', {credentials: 'same-origin'});
+    if (r.ok) {
+      document.getElementById('ticketForm').style.display = 'block';
+    } else {
+      document.getElementById('lockedState').style.display = 'block';
+    }
+  } catch (e) {
+    document.getElementById('lockedState').style.display = 'block';
+  }
+})();
+
+const form = document.getElementById('ticketForm');
+if (form) {
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const msg = document.getElementById('msg');
+    btn.disabled = true;
+    btn.textContent = 'Отправляем...';
+    msg.className = 'msg';
+    try {
+      const r = await fetch('/api/account/support', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          subject: document.getElementById('subject').value.trim(),
+          message: document.getElementById('message').value.trim(),
+          platform: document.getElementById('platform').value,
+        }),
+      });
+      if (r.ok) {
+        msg.textContent = 'Тикет отправлен — ответим на почту.';
+        msg.className = 'msg show ok';
+        form.reset();
+      } else {
+        const data = await r.json().catch(() => ({}));
+        msg.textContent = data.detail || 'Не получилось отправить тикет. Попробуйте ещё раз.';
+        msg.className = 'msg show err';
+      }
+    } catch (e) {
+      msg.textContent = 'Проблема с соединением.';
+      msg.className = 'msg show err';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Отправить тикет';
+    }
+  });
+}
+
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize, {passive:true});
+  const stars = Array.from({length:200}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.2 + 0.1,
+    o: Math.random() * 0.5 + 0.08,
+    sp: Math.random() * 0.0004 + 0.00006,
+    ph: Math.random() * Math.PI * 2,
+  }));
+  let f = 0;
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height); f++;
+    for(const s of stars){
+      const a = s.o * (0.4 + 0.6 * Math.sin(f * s.sp * 200 + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>

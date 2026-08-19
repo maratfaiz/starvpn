@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Личный кабинет — STAR VPN</title>
+<meta name="description" content="Личный кабинет STAR VPN: подписка, устройства, продление, приглашения.">
+<link rel="icon" href="/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+:root{
+  --gold:#FFB800;--gold2:#FFD84D;
+  --gold-border:rgba(255,184,0,0.18);
+  --gold-dim:rgba(255,184,0,0.09);
+  --bg:#060606;--bg2:rgba(255,255,255,0.03);--bg3:rgba(255,255,255,0.05);
+  --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;
+  --success:#4ADE80;--error:#F87171;
+  --max:760px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,184,0,.2);border-radius:2px}
+code,.mono{font-family:'JetBrains Mono',monospace}
+
+/* Loading / gate */
+#loadingGate{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.spinner{width:32px;height:32px;border-radius:50%;border:2.5px solid var(--gold-border);border-top-color:var(--gold);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loadingGate p{color:var(--text2);font-size:13px}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 20px;background:rgba(6,6,6,0.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--gold-border)}
+.nav-inner{max-width:var(--max);margin:0 auto;display:flex;align-items:center;height:60px;gap:12px}
+.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0}
+.nav-logo img{width:26px;height:26px;border-radius:7px}
+.nav-logo-text{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:.04em;color:var(--gold)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:14px}
+.nav-right a{font-size:12.5px;color:var(--text2);text-decoration:none}
+.nav-right a:hover{color:var(--gold)}
+
+.page{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:88px 20px 100px}
+
+/* Subscription status header */
+.status-card{border-radius:22px;padding:26px 24px;margin-bottom:24px;position:relative;overflow:hidden;border:1px solid var(--gold-border)}
+.status-card.active{background:linear-gradient(160deg,rgba(74,222,128,.09),rgba(6,6,6,0) 60%);border-color:rgba(74,222,128,.3)}
+.status-card.inactive{background:linear-gradient(160deg,rgba(248,113,113,.08),rgba(6,6,6,0) 60%);border-color:rgba(248,113,113,.28)}
+.status-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.status-pill{display:inline-flex;align-items:center;gap:7px;font-family:'Space Grotesk',sans-serif;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 12px;border-radius:100px}
+.status-pill.active{background:rgba(74,222,128,.13);color:var(--success)}
+.status-pill.inactive{background:rgba(248,113,113,.13);color:var(--error)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.status-h{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;letter-spacing:-.01em;margin-bottom:4px}
+.status-sub{font-size:13px;color:var(--text2)}
+.status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--gold-border);border-radius:14px;overflow:hidden;margin-top:18px}
+.status-item{background:rgba(6,6,6,.6);padding:14px 10px;text-align:center}
+.status-val{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--gold)}
+.status-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;background:var(--bg2);border:1px solid var(--gold-border);border-radius:14px;padding:4px;margin-bottom:24px;overflow-x:auto}
+.tab-btn{flex:1;white-space:nowrap;background:none;border:none;color:var(--text2);font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:600;padding:10px 12px;border-radius:10px;cursor:pointer;transition:all .2s;outline:none}
+.tab-btn.active{background:var(--gold);color:#000}
+
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.section-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:var(--text2);margin:22px 0 10px}
+.section-title:first-child{margin-top:0}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--gold-border);border-radius:16px;padding:20px}
+.card + .card{margin-top:10px}
+.empty{text-align:center;padding:32px 16px;color:var(--text2);font-size:13.5px}
+
+/* Devices */
+.device-row{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--gold-border);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.device-icon{width:38px;height:38px;border-radius:10px;background:var(--gold-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--gold);font-size:18px}
+.device-info{flex:1;min-width:0}
+.device-name{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600}
+.device-meta{font-size:12px;color:var(--text2);margin-top:1px}
+.device-actions{display:flex;gap:8px;flex-shrink:0}
+.icon-btn{width:34px;height:34px;border-radius:9px;background:var(--bg3);border:1px solid var(--gold-border);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.icon-btn:hover{color:var(--gold);border-color:var(--gold)}
+.icon-btn.danger:hover{color:var(--error);border-color:var(--error)}
+.icon-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.add-device-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.add-device-btn{background:var(--bg2);border:1.5px dashed var(--gold-border);border-radius:14px;padding:16px 10px;text-align:center;cursor:pointer;transition:all .2s;color:var(--text)}
+.add-device-btn:hover{border-color:var(--gold);background:var(--gold-dim)}
+.add-device-btn .ic{font-size:24px;margin-bottom:6px}
+.add-device-btn .lbl{font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:600}
+
+.btn{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:700;padding:12px 20px;border-radius:11px;border:none;cursor:pointer;transition:all .2s}
+.btn:hover{filter:brightness(1.06)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn-block{width:100%}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--gold-border);font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;padding:11px 18px;border-radius:11px;cursor:pointer}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+
+/* Renew */
+.plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:560px){.plan-grid{grid-template-columns:1fr}}
+.plan-card{background:var(--bg2);border:1.5px solid var(--gold-border);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;transition:all .2s}
+.plan-card.selected{border-color:var(--gold);background:var(--gold-dim)}
+.plan-card .lbl{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.plan-card .price{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:var(--gold)}
+.plan-card .unit{font-size:11px;color:var(--text2);margin-top:2px}
+.provider-toggle{display:flex;gap:8px;margin-bottom:16px}
+.provider-btn{flex:1;background:var(--bg2);border:1.5px solid var(--gold-border);border-radius:12px;padding:12px;text-align:center;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:var(--text2);transition:all .2s}
+.provider-btn.selected{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+
+/* Referral */
+.ref-code{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--gold-border);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.ref-code span{flex:1;font-weight:700;color:var(--gold);letter-spacing:.08em}
+.ref-copy{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;color:#1A1408;background:var(--gold);padding:8px 14px;border-radius:9px;border:none;cursor:pointer}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat-box{background:var(--bg2);border:1px solid var(--gold-border);border-radius:14px;padding:16px;text-align:center}
+.stat-box .val{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--gold)}
+.stat-box .lbl{font-size:11px;color:var(--text2);margin-top:3px}
+.badge-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.badge-card{border-radius:14px;padding:14px;text-align:center;border:1px solid var(--gold-border);background:var(--bg2)}
+.badge-card.unlocked{border-color:rgba(255,184,0,.35);background:var(--gold-dim)}
+.badge-card .em{font-size:22px;margin-bottom:6px}
+.badge-card.locked .em{filter:grayscale(1);opacity:.4}
+.badge-card .t{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700}
+.badge-card .d{font-size:10.5px;color:var(--text2);margin-top:2px}
+
+/* Profile */
+.profile-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,184,0,.07)}
+.profile-row:last-child{border-bottom:none}
+.profile-row .k{font-size:13px;color:var(--text2)}
+.profile-row .v{font-size:13.5px;font-weight:600}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:150;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:#0B0A09;border:1px solid var(--gold-border);border-radius:20px;padding:26px;max-width:380px;width:100%;text-align:center;position:relative}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;line-height:1}
+.modal h3{font-family:'Space Grotesk',sans-serif;font-size:16px;margin-bottom:14px}
+.modal img{width:180px;height:180px;border-radius:12px;margin:0 auto 16px;display:block;background:#fff;padding:8px}
+.modal-key{background:var(--bg3);border:1px solid var(--gold-border);border-radius:10px;padding:10px 12px;font-size:11px;word-break:break-all;color:var(--text2);margin-bottom:14px;max-height:80px;overflow-y:auto;text-align:left}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0B0A09;border:1px solid var(--gold-border);color:var(--text);padding:12px 20px;border-radius:12px;font-size:13px;z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
+.toast.show{opacity:1}
+
+.msg{font-size:13px;margin-top:12px}
+.msg.err{color:var(--error)}
+.msg.ok{color:var(--success)}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div id="loadingGate">
+  <div class="spinner"></div>
+  <p>Загружаем аккаунт...</p>
+</div>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <img src="/logo.png" alt="STAR VPN">
+      <span class="nav-logo-text">STAR VPN</span>
+    </a>
+    <div class="nav-right">
+      <a href="/support">Поддержка</a>
+      <a href="#" id="logoutLink">Выйти</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page" id="page" style="display:none">
+
+  <div class="status-card" id="statusCard">
+    <div class="status-top">
+      <div>
+        <div class="status-h" id="statusH">—</div>
+        <div class="status-sub" id="statusSub">—</div>
+      </div>
+      <div class="status-pill" id="statusPill"><span class="status-dot"></span><span id="statusPillText">—</span></div>
+    </div>
+    <div class="status-grid">
+      <div class="status-item"><div class="status-val" id="statDevices">—</div><div class="status-lbl">устройств</div></div>
+      <div class="status-item"><div class="status-val" id="statProtocol">VLESS</div><div class="status-lbl">протокол</div></div>
+      <div class="status-item"><div class="status-val" id="statDays">—</div><div class="status-lbl">рефералов дней</div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="subscription">Подписка</button>
+    <button class="tab-btn" data-tab="devices">Устройства</button>
+    <button class="tab-btn" data-tab="renew">Продление</button>
+    <button class="tab-btn" data-tab="referral">Приглашения</button>
+    <button class="tab-btn" data-tab="gift">Подарить</button>
+    <button class="tab-btn" data-tab="profile">Профиль</button>
+  </div>
+
+  <!-- Подписка -->
+  <div class="tab-panel active" id="tab-subscription">
+    <div class="card">
+      <div class="section-title" style="margin-top:0">Сервер</div>
+      <div class="profile-row"><span class="k">Локация</span><span class="v" id="srvLoc">—</span></div>
+      <div class="profile-row"><span class="k">Протокол</span><span class="v" id="srvProto">—</span></div>
+      <div class="profile-row"><span class="k">Шифрование</span><span class="v" id="srvTls">—</span></div>
+      <div class="profile-row"><span class="k">Логи трафика</span><span class="v" style="color:var(--success)">0 · Zero Logs</span></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-block" data-goto="renew">Продлить подписку</button>
+      <button class="btn-ghost" data-goto="devices" style="flex-shrink:0">Устройства</button>
+    </div>
+  </div>
+
+  <!-- Устройства -->
+  <div class="tab-panel" id="tab-devices">
+    <div id="devicesList"></div>
+    <div class="section-title">Добавить устройство</div>
+    <div class="add-device-grid">
+      <div class="add-device-btn" data-type="ios"><div class="ic">🍎</div><div class="lbl">iPhone / iPad</div></div>
+      <div class="add-device-btn" data-type="android"><div class="ic">🤖</div><div class="lbl">Android</div></div>
+      <div class="add-device-btn" data-type="windows"><div class="ic">🖥</div><div class="lbl">Windows</div></div>
+      <div class="add-device-btn" data-type="macos"><div class="ic">💻</div><div class="lbl">macOS</div></div>
+    </div>
+    <div class="msg" id="devicesMsg"></div>
+  </div>
+
+  <!-- Продление -->
+  <div class="tab-panel" id="tab-renew">
+    <div id="renewContent"><div class="empty">Загружаем тарифы...</div></div>
+  </div>
+
+  <!-- Приглашения -->
+  <div class="tab-panel" id="tab-referral">
+    <div id="referralContent"><div class="empty">Загружаем...</div></div>
+  </div>
+
+  <!-- Подарить -->
+  <div class="tab-panel" id="tab-gift">
+    <div class="card" style="text-align:center;padding:36px 20px">
+      <div style="font-size:34px;margin-bottom:12px">🎁</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;margin-bottom:8px">Скоро можно будет дарить прямо отсюда</div>
+      <p style="color:var(--text2);font-size:13.5px;line-height:1.7;margin-bottom:18px">Пока функция «Подарить VPN» доступна только в боте — выбери тариф, укажи получателя, и подписка активируется у него автоматически.</p>
+      <a class="btn" href="https://t.me/starisvpnbot" style="text-decoration:none;display:inline-block">Открыть бота →</a>
+    </div>
+  </div>
+
+  <!-- Профиль -->
+  <div class="tab-panel" id="tab-profile">
+    <div class="card">
+      <div class="profile-row"><span class="k">Email</span><span class="v" id="profEmail">—</span></div>
+      <div class="profile-row"><span class="k">Telegram</span><span class="v" id="profTg">—</span></div>
+      <div class="profile-row"><span class="k">Аккаунт создан</span><span class="v" id="profCreated">—</span></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <a class="btn-ghost" href="/support" style="text-decoration:none;flex:1;text-align:center">Написать в поддержку</a>
+      <button class="btn-ghost" id="logoutBtn" style="flex:1;color:var(--error);border-color:rgba(248,113,113,.3)">Выйти</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Device link modal -->
+<div class="modal-overlay" id="linkModal">
+  <div class="modal">
+    <button class="modal-close" id="closeLinkModal">✕</button>
+    <h3 id="linkModalTitle">Устройство добавлено</h3>
+    <img id="linkQr" alt="QR-код">
+    <div class="modal-key mono" id="linkKey"></div>
+    <button class="btn btn-block" id="copyKeyBtn">Скопировать ключ</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = (path, opts = {}) => fetch(path, {credentials: 'same-origin', ...opts});
+let ME = null;
+
+function showToast(text) {
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('ru-RU', {day: 'numeric', month: 'long', year: 'numeric'});
+}
+
+async function boot() {
+  const r = await API('/api/me');
+  if (!r.ok) {
+    window.location.href = '/login';
+    return;
+  }
+  ME = await r.json();
+  document.getElementById('loadingGate').style.display = 'none';
+  document.getElementById('page').style.display = 'block';
+  renderStatus();
+  renderProfile();
+  initTabs();
+  initDevices();
+}
+
+function renderStatus() {
+  const active = ME.subscription_active;
+  const card = document.getElementById('statusCard');
+  card.classList.add(active ? 'active' : 'inactive');
+  document.getElementById('statusPill').classList.add(active ? 'active' : 'inactive');
+  document.getElementById('statusPillText').textContent = active ? 'Активна' : 'Не активна';
+  document.getElementById('statusH').textContent = active ? 'STAR VPN подключён' : 'Подписка не активна';
+  document.getElementById('statusSub').textContent = active
+    ? `Действует до ${fmtDate(ME.subscription_expires_at)}`
+    : 'Продлите подписку, чтобы пользоваться VPN';
+  document.getElementById('statDevices').textContent = `${ME.device_count}/${ME.max_devices}`;
+  document.getElementById('statDays').textContent = ME.extra_days_granted;
+  document.getElementById('srvLoc').textContent = `${ME.server_flag} ${ME.server_city}, ${ME.server_country}`;
+  document.getElementById('srvProto').textContent = ME.server_protocol;
+  document.getElementById('srvTls').textContent = ME.server_tls;
+}
+
+function renderProfile() {
+  document.getElementById('profEmail').textContent = ME.email || '—';
+  document.getElementById('profTg').textContent = ME.telegram_linked ? (ME.username ? '@' + ME.username : 'Привязан') : 'Не привязан';
+  document.getElementById('profCreated').textContent = fmtDate(ME.created_at);
+}
+
+function initTabs() {
+  const btns = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+  const loaded = {};
+
+  function activate(tab) {
+    btns.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    panels.forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab));
+    if (!loaded[tab]) {
+      loaded[tab] = true;
+      if (tab === 'renew') loadRenew();
+      if (tab === 'referral') loadReferral();
+    }
+  }
+
+  btns.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab)));
+  document.querySelectorAll('[data-goto]').forEach(el => {
+    el.addEventListener('click', () => activate(el.dataset.goto));
+  });
+
+  document.getElementById('logoutLink').addEventListener('click', (e) => { e.preventDefault(); logout(); });
+  document.getElementById('logoutBtn').addEventListener('click', logout);
+}
+
+async function logout() {
+  await API('/api/account/logout', {method: 'POST'});
+  window.location.href = '/';
+}
+
+/* ── Устройства ─────────────────────────────────────────── */
+
+const DEVICE_ICONS = {ios: '🍎', android: '🤖', windows: '🖥', macos: '💻'};
+const DEVICE_LABELS = {ios: 'iPhone / iPad', android: 'Android', windows: 'Windows', macos: 'macOS'};
+
+async function initDevices() {
+  await loadDevices();
+  document.querySelectorAll('.add-device-btn').forEach(btn => {
+    btn.addEventListener('click', () => addDevice(btn.dataset.type));
+  });
+  document.getElementById('closeLinkModal').addEventListener('click', () => {
+    document.getElementById('linkModal').classList.remove('show');
+  });
+}
+
+async function loadDevices() {
+  const list = document.getElementById('devicesList');
+  const r = await API('/api/devices');
+  if (!r.ok) { list.innerHTML = '<div class="empty">Не удалось загрузить устройства</div>'; return; }
+  const devices = await r.json();
+  if (!devices.length) {
+    list.innerHTML = '<div class="empty">Пока нет ни одного устройства — добавьте первое ниже</div>';
+    return;
+  }
+  list.innerHTML = devices.map(d => `
+    <div class="device-row">
+      <div class="device-icon">${DEVICE_ICONS[d.name] || '📱'}</div>
+      <div class="device-info">
+        <div class="device-name">${DEVICE_LABELS[d.name] || d.name} · слот ${d.slot}</div>
+        <div class="device-meta">${d.status_label} · ${d.traffic_gb} ГБ · ${d.online ? 'онлайн' : d.last_online}</div>
+      </div>
+      <div class="device-actions">
+        <button class="icon-btn" data-link="${d.id}" title="Ключ / QR">
+          <svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z"/></svg>
+        </button>
+        <button class="icon-btn danger" data-delete="${d.id}" title="Удалить">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  list.querySelectorAll('[data-link]').forEach(b => b.addEventListener('click', () => showDeviceLink(b.dataset.link)));
+  list.querySelectorAll('[data-delete]').forEach(b => b.addEventListener('click', () => deleteDevice(b.dataset.delete)));
+}
+
+const DEVICE_ERROR_RU = {
+  'No active subscription': 'Нет активной подписки — сначала продлите её на вкладке «Продление».',
+};
+
+async function addDevice(type) {
+  const msg = document.getElementById('devicesMsg');
+  msg.className = 'msg';
+  const r = await API('/api/devices', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({type}),
+  });
+  if (!r.ok) {
+    const data = await r.json().catch(() => ({}));
+    const detail = data.detail || '';
+    msg.textContent = DEVICE_ERROR_RU[detail] || (detail.startsWith('Maximum') ? 'Достигнут лимит устройств.' : detail) || 'Не удалось добавить устройство';
+    msg.className = 'msg err';
+    return;
+  }
+  const dev = await r.json();
+  await loadDevices();
+  openLinkModal(DEVICE_LABELS[type] || type, dev.link, dev.qr_url);
+}
+
+async function showDeviceLink(id) {
+  const r = await API(`/api/devices/${id}/link`);
+  if (!r.ok) { showToast('Не удалось получить ключ'); return; }
+  const data = await r.json();
+  openLinkModal(DEVICE_LABELS[data.name] || data.name, data.link, data.qr_url);
+}
+
+function openLinkModal(title, link, qrUrl) {
+  document.getElementById('linkModalTitle').textContent = title;
+  document.getElementById('linkQr').src = qrUrl;
+  document.getElementById('linkKey').textContent = link;
+  document.getElementById('copyKeyBtn').onclick = () => {
+    navigator.clipboard.writeText(link);
+    showToast('Ключ скопирован');
+  };
+  document.getElementById('linkModal').classList.add('show');
+}
+
+async function deleteDevice(id) {
+  if (!confirm('Удалить это устройство?')) return;
+  await API(`/api/devices/${id}`, {method: 'DELETE'});
+  await loadDevices();
+  showToast('Устройство удалено');
+}
+
+/* ── Продление ───────────────────────────────────────────── */
+
+async function loadRenew() {
+  const el = document.getElementById('renewContent');
+  const [cardR, yooR] = await Promise.all([API('/api/card/plans'), API('/api/yoomoney/plans')]);
+  const cardPlans = cardR.ok ? await cardR.json() : [];
+  const yooPlans = yooR.ok ? await yooR.json() : [];
+
+  if (!cardPlans.length && !yooPlans.length) {
+    el.innerHTML = '<div class="empty">Оплата временно недоступна — напишите в <a href="/support" style="color:var(--gold)">поддержку</a> или продлите через бота.</div>';
+    return;
+  }
+
+  const providers = [];
+  if (cardPlans.length) providers.push({key: 'card', label: 'Банковской картой', plans: cardPlans});
+  if (yooPlans.length) providers.push({key: 'yoomoney', label: 'ЮMoney', plans: yooPlans});
+
+  let selectedProvider = providers[0].key;
+  let selectedPlan = providers[0].plans[0]?.key;
+
+  function render() {
+    const active = providers.find(p => p.key === selectedProvider);
+    el.innerHTML = `
+      ${providers.length > 1 ? `
+        <div class="provider-toggle">
+          ${providers.map(p => `<div class="provider-btn ${p.key === selectedProvider ? 'selected' : ''}" data-provider="${p.key}">${p.label}</div>`).join('')}
+        </div>
+      ` : ''}
+      <div class="plan-grid">
+        ${active.plans.map(p => `
+          <div class="plan-card ${p.key === selectedPlan ? 'selected' : ''}" data-plan="${p.key}">
+            <div class="lbl">${p.label}</div>
+            <div class="price">${p.rub}₽</div>
+            <div class="unit">${p.desc}</div>
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn btn-block" id="renewSubmit">Перейти к оплате</button>
+      <div class="msg" id="renewMsg"></div>
+    `;
+    el.querySelectorAll('[data-provider]').forEach(b => b.addEventListener('click', () => {
+      selectedProvider = b.dataset.provider;
+      selectedPlan = providers.find(p => p.key === selectedProvider).plans[0]?.key;
+      render();
+    }));
+    el.querySelectorAll('[data-plan]').forEach(b => b.addEventListener('click', () => {
+      selectedPlan = b.dataset.plan;
+      render();
+    }));
+    document.getElementById('renewSubmit').addEventListener('click', () => submitRenew(selectedProvider, selectedPlan));
+  }
+  render();
+}
+
+async function submitRenew(provider, plan) {
+  const msg = document.getElementById('renewMsg');
+  const btn = document.getElementById('renewSubmit');
+  btn.disabled = true;
+  btn.textContent = 'Создаём счёт...';
+  const r = await API(`/api/invoice/${provider}`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({plan}),
+  });
+  if (!r.ok) {
+    const data = await r.json().catch(() => ({}));
+    msg.textContent = data.detail || 'Не удалось создать счёт';
+    msg.className = 'msg err';
+    btn.disabled = false;
+    btn.textContent = 'Перейти к оплате';
+    return;
+  }
+  const data = await r.json();
+  window.location.href = data.url;
+}
+
+/* ── Приглашения ─────────────────────────────────────────── */
+
+async function loadReferral() {
+  const el = document.getElementById('referralContent');
+  const r = await API('/api/referral');
+  if (!r.ok) { el.innerHTML = '<div class="empty">Не удалось загрузить</div>'; return; }
+  const ref = await r.json();
+
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:14px">
+      <div class="section-title" style="margin-top:0">Твоя ссылка</div>
+      <div class="ref-code">
+        <span class="mono">${ref.link}</span>
+        <button class="ref-copy" id="copyRefBtn">Копировать</button>
+      </div>
+      <p style="font-size:12.5px;color:var(--text2);line-height:1.6">
+        За каждые ${ref.milestone_size} друзей, оформивших платную подписку — автоматически
+        +${ref.days_bonus} дней к твоей подписке. Без баланса и вывода.
+      </p>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-box"><div class="val">${ref.referral_count}</div><div class="lbl">оплативших друзей</div></div>
+      <div class="stat-box"><div class="val">${ref.extra_days_granted}</div><div class="lbl">дней получено</div></div>
+    </div>
+    <div class="section-title">Достижения</div>
+    <div class="badge-grid">
+      ${ref.achievements.map(a => `
+        <div class="badge-card ${a.unlocked ? 'unlocked' : 'locked'}">
+          <div class="em">${a.icon}</div>
+          <div class="t">${a.title}</div>
+          <div class="d">${a.unlocked ? `+${a.bonus_days} дней получено` : `${a.threshold} друзей · +${a.bonus_days} дней`}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  document.getElementById('copyRefBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(ref.link);
+    showToast('Ссылка скопирована');
+  });
+}
+
+boot();
+
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize, {passive:true});
+  const stars = Array.from({length:180}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.2 + 0.1,
+    o: Math.random() * 0.5 + 0.08,
+    sp: Math.random() * 0.0004 + 0.00006,
+    ph: Math.random() * Math.PI * 2,
+  }));
+  let f = 0;
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height); f++;
+    for(const s of stars){
+      const a = s.o * (0.4 + 0.6 * Math.sin(f * s.sp * 200 + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>

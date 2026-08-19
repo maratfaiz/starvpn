@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вход — STAR VPN</title>
+<meta name="description" content="Вход в личный кабинет STAR VPN по email — без пароля, без Telegram.">
+<link rel="icon" href="/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+:root{
+  --gold:#FFB800;--gold2:#FFD84D;
+  --gold-border:rgba(255,184,0,0.2);
+  --gold-dim:rgba(255,184,0,0.08);
+  --bg:#060606;--bg2:rgba(255,255,255,0.03);
+  --text:#EBE0CC;--text2:#8A7A60;
+  --error:#F87171;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.7;min-height:100vh}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.wrap{position:relative;z-index:2;max-width:420px;margin:0 auto;padding:0 20px 80px;min-height:100vh;display:flex;flex-direction:column;justify-content:center}
+
+header{display:flex;align-items:center;justify-content:center;padding:24px 0;position:fixed;top:0;left:0;right:0;z-index:5}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo img{width:28px;height:28px;border-radius:8px}
+.logo span{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--gold);letter-spacing:.04em}
+
+.card{background:var(--bg2);border:1px solid var(--gold-border);border-radius:20px;padding:36px 30px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;right:-60px;top:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(255,184,0,.1),transparent 65%);pointer-events:none}
+
+.badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--gold-border);border-radius:100px;padding:6px 16px;margin-bottom:20px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);background:var(--gold-dim)}
+h1{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.01em;margin-bottom:10px}
+.sub{font-size:14px;color:var(--text2);margin-bottom:28px;line-height:1.6}
+
+.field-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;display:block}
+input[type=email]{width:100%;background:rgba(255,255,255,.04);border:1.5px solid var(--gold-border);border-radius:12px;padding:14px 16px;color:var(--text);font-family:inherit;font-size:15px;outline:none;transition:border-color .2s}
+input[type=email]:focus{border-color:var(--gold)}
+input[type=email]::placeholder{color:#4a4030}
+
+.btn{width:100%;margin-top:16px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;padding:15px;border-radius:12px;border:none;cursor:pointer;transition:all .2s}
+.btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.btn:disabled{opacity:.55;cursor:default;transform:none;filter:none}
+
+.msg{font-size:13px;margin-top:14px;line-height:1.6;display:none}
+.msg.show{display:block}
+.msg.err{color:var(--error)}
+.msg.ok{color:#4ADE80}
+
+.state-sent{display:none;text-align:center}
+.state-sent.show{display:block}
+.state-sent .icon{font-size:40px;margin-bottom:16px}
+.state-sent h2{font-family:'Space Grotesk',sans-serif;font-size:20px;margin-bottom:10px}
+.state-sent p{font-size:14px;color:var(--text2);line-height:1.7}
+.state-sent p b{color:var(--text)}
+.resend{margin-top:20px;background:none;border:none;color:var(--gold);font-size:13px;cursor:pointer;text-decoration:underline}
+
+.foot{text-align:center;margin-top:24px;font-size:13px;color:var(--text2)}
+.foot a{color:var(--gold);text-decoration:none}
+.foot a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<header>
+  <a class="logo" href="/">
+    <img src="/logo.png" alt="STAR VPN">
+    <span>STAR VPN</span>
+  </a>
+</header>
+
+<div class="wrap">
+  <div class="card">
+
+    <div id="formState">
+      <div class="badge">Личный кабинет</div>
+      <h1>Вход по email</h1>
+      <p class="sub">Без пароля и без Telegram — пришлём ссылку для входа на почту, она будет действовать 15 минут.</p>
+
+      <form id="loginForm">
+        <label class="field-label" for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com" required autofocus>
+        <button type="submit" class="btn" id="submitBtn">Получить ссылку для входа</button>
+        <div class="msg" id="msg"></div>
+      </form>
+    </div>
+
+    <div class="state-sent" id="sentState">
+      <div class="icon">📩</div>
+      <h2>Проверьте почту</h2>
+      <p>Мы отправили ссылку для входа на <b id="sentEmail"></b>. Перейдите по ней в течение 15 минут — и вы окажетесь в личном кабинете.</p>
+      <button class="resend" id="resendBtn">Отправить письмо ещё раз</button>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    Пользуешься Telegram? <a href="https://t.me/starisvpnbot">Открой бота</a> — там всё то же самое.
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('loginForm');
+const msg = document.getElementById('msg');
+const submitBtn = document.getElementById('submitBtn');
+const formState = document.getElementById('formState');
+const sentState = document.getElementById('sentState');
+const sentEmail = document.getElementById('sentEmail');
+const resendBtn = document.getElementById('resendBtn');
+let lastEmail = '';
+
+function showMsg(text, kind) {
+  msg.textContent = text;
+  msg.className = 'msg show ' + kind;
+}
+
+async function submitLogin(email) {
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Отправляем...';
+  msg.className = 'msg';
+  try {
+    const r = await fetch('/api/account/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email}),
+    });
+    if (r.status === 400) {
+      showMsg('Проверьте правильность email.', 'err');
+      return false;
+    }
+    if (!r.ok) {
+      showMsg('Не получилось отправить письмо. Попробуйте ещё раз чуть позже.', 'err');
+      return false;
+    }
+    return true;
+  } catch (e) {
+    showMsg('Проблема с соединением. Попробуйте ещё раз.', 'err');
+    return false;
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Получить ссылку для входа';
+  }
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  lastEmail = email;
+  const ok = await submitLogin(email);
+  if (ok) {
+    sentEmail.textContent = email;
+    formState.style.display = 'none';
+    sentState.classList.add('show');
+  }
+});
+
+resendBtn.addEventListener('click', async () => {
+  resendBtn.disabled = true;
+  resendBtn.textContent = 'Отправляем...';
+  await submitLogin(lastEmail);
+  resendBtn.disabled = false;
+  resendBtn.textContent = 'Отправить письмо ещё раз';
+});
+
+// Starfield
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize, {passive:true});
+  const stars = Array.from({length:180}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.2 + 0.1,
+    o: Math.random() * 0.5 + 0.08,
+    sp: Math.random() * 0.0004 + 0.00006,
+    ph: Math.random() * Math.PI * 2,
+  }));
+  let f = 0;
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height); f++;
+    for(const s of stars){
+      const a = s.o * (0.4 + 0.6 * Math.sin(f * s.sp * 200 + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
