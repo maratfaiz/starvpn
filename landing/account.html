@@ -115,6 +115,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 20px;background:rg
 .provider-toggle{display:flex;gap:8px;margin-bottom:16px}
 .provider-btn{flex:1;background:var(--bg2);border:1.5px solid var(--gold-border);border-radius:12px;padding:12px;text-align:center;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:var(--text2);transition:all .2s}
 .provider-btn.selected{border-color:var(--gold);color:var(--gold);background:var(--gold-dim)}
+.field-input,.field-textarea{width:100%;background:rgba(0,0,0,.5);border:1px solid var(--gold-border);border-radius:12px;padding:12px 14px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+.field-input:focus,.field-textarea:focus{border-color:rgba(255,184,0,.4)}
+.field-textarea{min-height:90px;line-height:1.6;resize:vertical;margin-top:4px}
+.field-input::placeholder,.field-textarea::placeholder{color:var(--text3)}
 
 /* Referral */
 .ref-code{display:flex;align-items:center;gap:10px;background:var(--bg3);border:1px solid var(--gold-border);border-radius:14px;padding:14px 16px;margin-bottom:14px}
@@ -265,11 +269,30 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 20px;background:rg
 
   <!-- Подарить -->
   <div class="tab-panel" id="tab-gift">
-    <div class="card" style="text-align:center;padding:36px 20px">
-      <div style="font-size:34px;margin-bottom:12px">🎁</div>
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;margin-bottom:8px">Скоро можно будет дарить прямо отсюда</div>
-      <p style="color:var(--text2);font-size:13.5px;line-height:1.7;margin-bottom:18px">Пока функция «Подарить VPN» доступна только в боте — выбери тариф, укажи получателя, и подписка активируется у него автоматически.</p>
-      <a class="btn" href="https://t.me/starisvpnbot" style="text-decoration:none;display:inline-block">Открыть бота →</a>
+    <div class="card">
+      <div class="section-title" style="margin-top:0">Кому дарим</div>
+      <p style="color:var(--text2);font-size:13px;line-height:1.6;margin-bottom:12px">Получатель должен быть зарегистрирован в боте — он получит уведомление и подписку сразу после оплаты.</p>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="giftRecipient" class="field-input" placeholder="@username или Telegram ID" style="flex:1">
+        <button class="btn-ghost" id="giftCheckBtn" style="flex-shrink:0">Проверить</button>
+      </div>
+      <div class="msg" id="giftLookupMsg"></div>
+    </div>
+
+    <div class="card" id="giftFormCard" style="display:none">
+      <div class="section-title" style="margin-top:0">Способ оплаты и тариф</div>
+      <div id="giftPlansArea"><div class="empty">Загружаем тарифы...</div></div>
+
+      <div class="section-title">Личное сообщение (необязательно)</div>
+      <textarea id="giftMessage" class="field-textarea" maxlength="300" placeholder="Например: с днём рождения! 🎉"></textarea>
+
+      <label style="display:flex;align-items:center;gap:10px;margin:14px 0;cursor:pointer;font-size:13.5px;color:var(--text2)">
+        <input type="checkbox" id="giftAnon" style="width:16px;height:16px;accent-color:var(--gold)">
+        Отправить анонимно
+      </label>
+
+      <button class="btn btn-block" id="giftSubmitBtn">Подарить</button>
+      <div class="msg" id="giftSubmitMsg"></div>
     </div>
   </div>
 
@@ -375,6 +398,7 @@ function initTabs() {
       loaded[tab] = true;
       if (tab === 'renew') loadRenew();
       if (tab === 'referral') loadReferral();
+      if (tab === 'gift') initGift();
     }
   }
 
@@ -577,6 +601,138 @@ async function submitRenew(provider, plan) {
     msg.className = 'msg err';
     btn.disabled = false;
     btn.textContent = 'Перейти к оплате';
+    return;
+  }
+  const data = await r.json();
+  window.location.href = data.url;
+}
+
+/* ── Подарить ─────────────────────────────────────────────── */
+
+let giftRecipientInfo = null;
+let giftSelectedProvider = null;
+let giftSelectedPlan = null;
+
+function initGift() {
+  document.getElementById('giftCheckBtn').addEventListener('click', giftCheckRecipient);
+  document.getElementById('giftSubmitBtn').addEventListener('click', submitGift);
+}
+
+async function giftCheckRecipient() {
+  const input = document.getElementById('giftRecipient');
+  const msg = document.getElementById('giftLookupMsg');
+  const btn = document.getElementById('giftCheckBtn');
+  const recipient = input.value.trim();
+  if (!recipient) { msg.textContent = 'Введите получателя'; msg.className = 'msg err'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Проверяем...';
+  msg.className = 'msg';
+  msg.textContent = '';
+  giftRecipientInfo = null;
+  document.getElementById('giftFormCard').style.display = 'none';
+
+  try {
+    const r = await API('/api/gift/lookup', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({recipient}),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'Получатель не найден');
+    giftRecipientInfo = data;
+    msg.textContent = `Получатель найден: ${data.display_name} ✅`;
+    msg.className = 'msg ok';
+    document.getElementById('giftFormCard').style.display = 'block';
+    await loadGiftPlans();
+  } catch (e) {
+    msg.textContent = e.message;
+    msg.className = 'msg err';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Проверить';
+  }
+}
+
+async function loadGiftPlans() {
+  const el = document.getElementById('giftPlansArea');
+  const [cardR, yooR] = await Promise.all([API('/api/card/plans'), API('/api/yoomoney/plans')]);
+  const cardPlans = cardR.ok ? await cardR.json() : [];
+  const yooPlans = yooR.ok ? await yooR.json() : [];
+
+  if (!cardPlans.length && !yooPlans.length) {
+    el.innerHTML = '<div class="empty">Оплата подарков временно недоступна — напишите в <a href="/support" style="color:var(--gold)">поддержку</a>.</div>';
+    document.getElementById('giftSubmitBtn').style.display = 'none';
+    return;
+  }
+  document.getElementById('giftSubmitBtn').style.display = '';
+
+  const providers = [];
+  if (cardPlans.length) providers.push({key: 'card', label: 'Банковской картой', plans: cardPlans});
+  if (yooPlans.length) providers.push({key: 'yoomoney', label: 'ЮMoney', plans: yooPlans});
+
+  giftSelectedProvider = providers[0].key;
+  giftSelectedPlan = providers[0].plans[0]?.key;
+
+  function render() {
+    const active = providers.find(p => p.key === giftSelectedProvider);
+    el.innerHTML = `
+      ${providers.length > 1 ? `
+        <div class="provider-toggle">
+          ${providers.map(p => `<div class="provider-btn ${p.key === giftSelectedProvider ? 'selected' : ''}" data-gprovider="${p.key}">${p.label}</div>`).join('')}
+        </div>
+      ` : ''}
+      <div class="plan-grid">
+        ${active.plans.map(p => `
+          <div class="plan-card ${p.key === giftSelectedPlan ? 'selected' : ''}" data-gplan="${p.key}">
+            <div class="lbl">${p.label}</div>
+            <div class="price">${p.rub}₽</div>
+            <div class="unit">${p.desc}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    el.querySelectorAll('[data-gprovider]').forEach(b => b.addEventListener('click', () => {
+      giftSelectedProvider = b.dataset.gprovider;
+      giftSelectedPlan = providers.find(p => p.key === giftSelectedProvider).plans[0]?.key;
+      render();
+    }));
+    el.querySelectorAll('[data-gplan]').forEach(b => b.addEventListener('click', () => {
+      giftSelectedPlan = b.dataset.gplan;
+      render();
+    }));
+  }
+  render();
+}
+
+async function submitGift() {
+  const msg = document.getElementById('giftSubmitMsg');
+  const btn = document.getElementById('giftSubmitBtn');
+  if (!giftRecipientInfo) { msg.textContent = 'Сначала проверьте получателя'; msg.className = 'msg err'; return; }
+  if (!giftSelectedProvider || !giftSelectedPlan) { msg.textContent = 'Выберите тариф'; msg.className = 'msg err'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Создаём счёт...';
+  msg.className = 'msg';
+  msg.textContent = '';
+
+  const r = await API('/api/gift/invoice', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      provider: giftSelectedProvider,
+      plan: giftSelectedPlan,
+      recipient: document.getElementById('giftRecipient').value.trim(),
+      anon: document.getElementById('giftAnon').checked,
+      message: document.getElementById('giftMessage').value.trim(),
+    }),
+  });
+  if (!r.ok) {
+    const data = await r.json().catch(() => ({}));
+    msg.textContent = data.detail || 'Не удалось создать счёт';
+    msg.className = 'msg err';
+    btn.disabled = false;
+    btn.textContent = 'Подарить';
     return;
   }
   const data = await r.json();

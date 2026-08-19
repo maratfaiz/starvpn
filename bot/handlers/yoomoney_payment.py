@@ -163,21 +163,26 @@ async def handle_yoomoney_webhook(payment_id: int, bot: Bot) -> None:
         await _grant_subscription(user, days, session)
 
         plan_label = {30: "1 месяц", 90: "3 месяца", 180: "6 месяцев"}.get(days, f"{days} дней")
-        try:
-            await bot.send_message(
-                payment.telegram_id,
-                f"✅ <b>Оплата получена!</b>\n\n"
-                f"🟣 {float(payment.amount):.0f} ₽ через ЮMoney\n"
-                f"📦 Тариф: <b>{plan_label}</b>\n\n"
-                f"Твой STAR VPN активирован 🚀\n"
-                f"Перейди в раздел <b>📱 Устройства</b>, чтобы получить ключ.",
-                parse_mode="HTML",
-                reply_markup=main_keyboard(user),
-            )
-        except Exception as e:
-            logger.error("Failed to notify user %s: %s", payment.telegram_id, e)
+
+        if payment.is_gift:
+            from bot.handlers.card_payment import _notify_gift_recipient
+            await _notify_gift_recipient(payment, user, plan_label, bot, session)
+        else:
+            try:
+                await bot.send_message(
+                    payment.telegram_id,
+                    f"✅ <b>Оплата получена!</b>\n\n"
+                    f"🟣 {float(payment.amount):.0f} ₽ через ЮMoney\n"
+                    f"📦 Тариф: <b>{plan_label}</b>\n\n"
+                    f"Твой STAR VPN активирован 🚀\n"
+                    f"Перейди в раздел <b>📱 Устройства</b>, чтобы получить ключ.",
+                    parse_mode="HTML",
+                    reply_markup=main_keyboard(user),
+                )
+            except Exception as e:
+                logger.error("Failed to notify user %s: %s", payment.telegram_id, e)
 
     logger.info(
-        "YooMoney payment confirmed: id=%s tg=%s rub=%s days=%s",
-        payment_id, payment.telegram_id, payment.amount, days,
+        "YooMoney payment confirmed: id=%s tg=%s rub=%s days=%s gift=%s",
+        payment_id, payment.telegram_id, payment.amount, days, payment.is_gift,
     )

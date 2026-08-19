@@ -168,21 +168,75 @@ async def handle_card_webhook(payment_id: int, bot: Bot) -> None:
         await _grant_subscription(user, days, session)
 
         plan_label = {30: "1 месяц", 90: "3 месяца", 180: "6 месяцев"}.get(days, f"{days} дней")
-        try:
-            await bot.send_message(
-                payment.telegram_id,
-                f"✅ <b>Оплата получена!</b>\n\n"
-                f"💳 {float(payment.amount):.0f} ₽\n"
-                f"📦 Тариф: <b>{plan_label}</b>\n\n"
-                f"Твой STAR VPN активирован 🚀\n"
-                f"Перейди в раздел <b>📱 Устройства</b>, чтобы получить ключ.",
-                parse_mode="HTML",
-                reply_markup=main_keyboard(user),
-            )
-        except Exception as e:
-            logger.error("Failed to notify user %s: %s", payment.telegram_id, e)
+
+        if payment.is_gift:
+            await _notify_gift_recipient(payment, user, plan_label, bot, session)
+        else:
+            try:
+                await bot.send_message(
+                    payment.telegram_id,
+                    f"✅ <b>Оплата получена!</b>\n\n"
+                    f"💳 {float(payment.amount):.0f} ₽\n"
+                    f"📦 Тариф: <b>{plan_label}</b>\n\n"
+                    f"Твой STAR VPN активирован 🚀\n"
+                    f"Перейди в раздел <b>📱 Устройства</b>, чтобы получить ключ.",
+                    parse_mode="HTML",
+                    reply_markup=main_keyboard(user),
+                )
+            except Exception as e:
+                logger.error("Failed to notify user %s: %s", payment.telegram_id, e)
 
     logger.info(
-        "Card payment confirmed: id=%s tg=%s rub=%s days=%s",
-        payment_id, payment.telegram_id, payment.amount, days,
+        "Card payment confirmed: id=%s tg=%s rub=%s days=%s gift=%s",
+        payment_id, payment.telegram_id, payment.amount, days, payment.is_gift,
     )
+
+
+async def _notify_gift_recipient(payment: Payment, recipient: User, plan_label: str, bot: Bot, session) -> None:
+    """Общая логика уведомления о сайтовом подарке (карта/ЮMoney) — GiftNotification
+    для мини-аппа + сообщение в Telegram получателю с учётом анонимности."""
+    from bot.models.gift_notification import GiftNotification
+    from bot.handlers.gift import _instructions_kb
+
+    sender_name = "Аноним 🕵️"
+    if not payment.gift_anon and payment.gift_sender_id:
+        sender_result = await session.execute(
+            select(User).where(User.telegram_id == payment.gift_sender_id)
+        )
+        sender: User | None = sender_result.scalar_one_or_none()
+        if sender:
+            sender_name = f"@{sender.username}" if sender.username else (sender.full_name or sender.email or "пользователь")
+
+    notif = GiftNotification(
+        recipient_id=recipient.telegram_id,
+        sender_name=sender_name,
+        plan_label=plan_label,
+        plan_days=payment.days or 30,
+    )
+    session.add(notif)
+    await session.commit()
+
+    exp_str = recipient.subscription_expires_at.strftime("%d.%m.%Y") if recipient.subscription_expires_at else "—"
+    personal_block = f"\n\n💬 <i>«{payment.gift_message}»</i>" if payment.gift_message else ""
+
+    notif_text = (
+        f"🎁 <b>Тебе подарили подписку STAR VPN!</b>\n\n"
+        f"От: <b>{sender_name}</b>\n"
+        f"📦 Тариф: <b>{plan_label}</b>\n"
+        f"⏳ Действует до: <b>{exp_str}</b>"
+        f"{personal_block}\n\n"
+        f"Нажми <b>📱 Моя подписка</b> чтобы подключиться."
+    )
+    try:
+        await bot.send_message(
+            recipient.telegram_id, notif_text, parse_mode="HTML",
+            message_effect_id="5046509860389126442", reply_markup=_instructions_kb(),
+        )
+    except Exception:
+        try:
+            await bot.send_message(
+                recipient.telegram_id, notif_text, parse_mode="HTML",
+                reply_markup=_instructions_kb(),
+            )
+        except Exception as e:
+            logger.warning("Could not notify gift recipient %s: %s", recipient.telegram_id, e)

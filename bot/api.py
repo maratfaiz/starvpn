@@ -20,6 +20,7 @@ from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from sqlalchemy import func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.config import settings
 from bot.models.device import Device, MAX_DEVICES
@@ -1274,6 +1275,134 @@ async def create_gift_crypto_invoice(
         await session.commit()
 
     return {"url": pay_url, "recipient_name": uname}
+
+
+# ─── Подарок с сайта (личный кабинет) — только карта / ЮMoney, без Stars ─────
+
+async def _lookup_gift_recipient(recipient_input: str, session: AsyncSession) -> User | None:
+    recipient_input = recipient_input.strip()
+    if not recipient_input:
+        return None
+    if recipient_input.lstrip("-").isdigit():
+        r = await session.execute(select(User).where(User.telegram_id == int(recipient_input)))
+    else:
+        r = await session.execute(select(User).where(User.username == recipient_input.lstrip("@")))
+    return r.scalar_one_or_none()
+
+
+@app.post("/api/gift/lookup")
+async def gift_lookup(request: Request, x_telegram_init_data: str | None = Header(default=None)):
+    """Проверяет получателя подарка по @username или ID, до перехода к оплате."""
+    body = await request.json()
+    recipient_input = (body.get("recipient") or "").strip()
+    if not recipient_input:
+        raise HTTPException(400, "Укажите получателя")
+
+    async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+        recipient = await _lookup_gift_recipient(recipient_input, session)
+
+    if not recipient or recipient.telegram_id <= 0:
+        raise HTTPException(404, "Получатель не найден. Он должен сначала написать /start боту @starisvpnbot.")
+    if recipient.telegram_id == tg_id:
+        raise HTTPException(400, "Нельзя подарить подписку самому себе.")
+
+    uname = f"@{recipient.username}" if recipient.username else str(recipient.telegram_id)
+    return {"telegram_id": recipient.telegram_id, "display_name": uname}
+
+
+@app.post("/api/gift/invoice")
+async def gift_invoice(request: Request, x_telegram_init_data: str | None = Header(default=None)):
+    """
+    Создаёт подарочный платёж с сайта (личный кабинет) — картой или ЮMoney,
+    в зависимости от переключателя в админ-панели. Stars здесь недоступны —
+    это оплата только внутри Telegram.
+    """
+    body = await request.json()
+    provider = (body.get("provider") or "").strip()
+    plan_key = (body.get("plan") or "").strip()
+    recipient_input = (body.get("recipient") or "").strip()
+    anon = bool(body.get("anon"))
+    message = (body.get("message") or "").strip()[:300]
+
+    if provider not in ("card", "yoomoney"):
+        raise HTTPException(400, "Неизвестный способ оплаты")
+    if not recipient_input:
+        raise HTTPException(400, "Укажите получателя")
+
+    from bot.utils.settings_store import is_provider_enabled
+
+    async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+
+        if not await is_provider_enabled(session, provider):
+            raise HTTPException(503, "Этот способ оплаты временно недоступен")
+
+        recipient = await _lookup_gift_recipient(recipient_input, session)
+        if not recipient or recipient.telegram_id <= 0:
+            raise HTTPException(404, "Получатель не найден. Он должен сначала написать /start боту @starisvpnbot.")
+        if recipient.telegram_id == tg_id:
+            raise HTTPException(400, "Нельзя подарить подписку самому себе.")
+
+        uname = f"@{recipient.username}" if recipient.username else str(recipient.telegram_id)
+
+        if provider == "card":
+            from bot.utils.robokassa import robokassa, CARD_PLANS, payment_inv_id
+            plan = CARD_PLANS.get(plan_key)
+            if not plan:
+                raise HTTPException(400, "Неизвестный тариф")
+            if not robokassa.configured:
+                raise HTTPException(503, "Оплата картой временно недоступна")
+
+            payment = Payment(
+                order_id="", telegram_id=recipient.telegram_id, amount=float(plan["rub"]),
+                status="pending", payment_method="card", days=plan["days"],
+                is_gift=True, gift_sender_id=tg_id, gift_anon=anon, gift_message=message,
+            )
+            session.add(payment)
+            await session.flush()
+            payment.order_id = f"card_{payment.id}"
+            try:
+                pay_url = robokassa.build_payment_url(
+                    inv_id=payment_inv_id(payment.id),
+                    amount=plan["rub"],
+                    description=f"STAR VPN — подарок {plan['label']} для {uname}",
+                )
+            except RuntimeError as e:
+                await session.rollback()
+                logger.error("Robokassa gift build_payment_url failed: %s", e)
+                raise HTTPException(502, "Ошибка Robokassa. Попробуйте позже.")
+        else:
+            from bot.utils.yoomoney import yoomoney, CARD_PLANS, payment_label
+            plan = CARD_PLANS.get(plan_key)
+            if not plan:
+                raise HTTPException(400, "Неизвестный тариф")
+            if not yoomoney.configured:
+                raise HTTPException(503, "Оплата через ЮMoney временно недоступна")
+
+            payment = Payment(
+                order_id="", telegram_id=recipient.telegram_id, amount=float(plan["rub"]),
+                status="pending", payment_method="yoomoney", days=plan["days"],
+                is_gift=True, gift_sender_id=tg_id, gift_anon=anon, gift_message=message,
+            )
+            session.add(payment)
+            await session.flush()
+            payment.order_id = f"yoomoney_{payment.id}"
+            try:
+                pay_url = yoomoney.build_payment_url(
+                    label=payment_label(payment.id),
+                    amount=plan["rub"],
+                    description=f"STAR VPN — подарок {plan['label']} для {uname}",
+                )
+            except RuntimeError as e:
+                await session.rollback()
+                logger.error("YooMoney gift build_payment_url failed: %s", e)
+                raise HTTPException(502, "Ошибка ЮMoney. Попробуйте позже.")
+
+        await session.commit()
+        inv_id = payment.id
+
+    return {"url": pay_url, "invoice_id": inv_id, "recipient_name": uname}
 
 
 # ─── POST /api/trial ─────────────────────────────────────────────────────────
