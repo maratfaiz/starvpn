@@ -39,12 +39,12 @@ def render_subscription_page(
         else "Подписка закончилась" if not is_active
         else "Активна"
     )
-    status_color = "#2ED9A6" if is_active else "#E2554F"
+    status_color = "#4ADE80" if is_active else "#F87171"
     status_icon = (
-        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2ED9A6" stroke-width="3" '
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="3" '
         'stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
         if is_active else
-        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E2554F" stroke-width="3" '
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="3" '
         'stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/>'
         '<line x1="6" y1="6" x2="18" y2="18"/></svg>'
     )
@@ -67,10 +67,10 @@ def render_subscription_page(
 <style>
 *{{box-sizing:border-box;margin:0;padding:0}}
 :root{{
-  --gold:#F7CE68;--gold2:#C9962F;
-  --bg:#05070A;--card:#12151C;
-  --text:#F5F3EE;--text2:rgba(245,243,238,.45);--text3:rgba(245,243,238,.3);
-  --border:rgba(255,255,255,.08);
+  --gold:#FFB800;--gold2:#FFD84D;
+  --bg:#060606;--card:#0B0A09;
+  --text:#EBE0CC;--text2:rgba(235,224,204,.55);--text3:rgba(235,224,204,.35);
+  --border:rgba(255,184,0,.18);
 }}
 body{{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;
   min-height:100vh;padding:20px 16px 60px;font-size:15px;line-height:1.6}}
@@ -125,7 +125,7 @@ footer a{{color:var(--gold);text-decoration:none}}
 <div class="wrap">
   <header>
     <div class="logo">
-      <svg viewBox="0 0 24 24" fill="#0A0D13"><path d="M12 1l3.09 6.26L22 8.27l-5 4.87 1.18 6.88L12 16.9l-6.18 3.12L7 13.14 2 8.27l6.91-1.01L12 1z"/></svg>
+      <svg viewBox="0 0 24 24" fill="#1A1408"><path d="M12 1l3.09 6.26L22 8.27l-5 4.87 1.18 6.88L12 16.9l-6.18 3.12L7 13.14 2 8.27l6.91-1.01L12 1z"/></svg>
     </div>
     <span class="app-name">STAR VPN</span>
     <div class="domain-pill">{html.escape(domain)}</div>

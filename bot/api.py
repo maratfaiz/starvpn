@@ -1832,18 +1832,18 @@ async def card_success():
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>STAR VPN — Оплата</title>
 <style>
-  body{background:#05070A;color:#F5F3EE;font-family:system-ui,sans-serif;margin:0;
+  body{background:#060606;color:#EBE0CC;font-family:system-ui,sans-serif;margin:0;
     min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
   .box{max-width:360px}
   h2{margin:0 0 12px}
-  p{color:rgba(245,243,238,.6);line-height:1.6}
+  p{color:#8A7A60;line-height:1.6}
   .spinner{width:28px;height:28px;border-radius:50%;border:3px solid rgba(255,184,0,.25);
     border-top-color:#FFB800;animation:spin 1s linear infinite;margin:0 auto 18px}
   @keyframes spin{to{transform:rotate(360deg)}}
   img.qr{width:220px;height:220px;border-radius:12px;margin:16px auto;display:block;background:#fff;padding:8px}
   .link-box{background:rgba(255,255,255,.05);border:1px solid rgba(255,184,0,.2);border-radius:12px;
     padding:12px;font-family:monospace;font-size:12px;word-break:break-all;margin:16px 0}
-  button{background:#FFB800;color:#000;border:none;border-radius:10px;padding:12px 24px;
+  button{background:#FFB800;color:#1A1408;border:none;border-radius:10px;padding:12px 24px;
     font-weight:700;font-size:14px;cursor:pointer}
 </style></head>
 <body><div class="box" id="box">
@@ -1900,9 +1900,9 @@ async def card_fail():
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>STAR VPN — Платёж не прошёл</title>
 <style>
-  body{background:#05070A;color:#F5F3EE;font-family:system-ui,sans-serif;margin:0;
+  body{background:#060606;color:#EBE0CC;font-family:system-ui,sans-serif;margin:0;
     min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
-  p{color:rgba(245,243,238,.6);line-height:1.6}
+  p{color:#8A7A60;line-height:1.6}
   a{color:#FFB800;font-weight:700;text-decoration:none}
 </style></head>
 <body><div>

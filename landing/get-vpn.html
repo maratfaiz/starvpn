@@ -27,12 +27,20 @@ body{
 #bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
 .wrap{position:relative;z-index:2;max-width:640px;margin:0 auto;padding:0 20px 80px}
 
-header{display:flex;align-items:center;justify-content:space-between;padding:24px 0}
-.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+header{display:flex;align-items:center;gap:16px;padding:24px 0}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
 .logo img{width:28px;height:28px;border-radius:8px}
 .logo span{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--gold);letter-spacing:.04em}
-header a.back{color:var(--text2);text-decoration:none;font-size:13px}
+.header-links{display:flex;gap:16px;flex:1}
+.header-links a{color:var(--text2);text-decoration:none;font-size:12.5px;font-weight:500;transition:color .2s}
+.header-links a:hover{color:var(--gold)}
+@media(max-width:420px){.header-links{display:none}}
+header a.back{color:var(--text2);text-decoration:none;font-size:13px;flex-shrink:0}
 header a.back:hover{color:var(--gold)}
+
+.footer-links{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+.footer-links a{color:var(--text2);text-decoration:none}
+.footer-links a:hover{color:var(--gold)}
 
 .badge{
   display:inline-flex;align-items:center;gap:8px;
@@ -113,6 +121,10 @@ footer a{color:var(--gold);text-decoration:none}
       <img src="/logo.png" alt="STAR VPN">
       <span>STAR VPN</span>
     </a>
+    <div class="header-links">
+      <a href="/tariffs">Тарифы</a>
+      <a href="/wiki">Wiki</a>
+    </div>
     <a class="back" href="/">← На главную</a>
   </header>
 
@@ -151,6 +163,12 @@ footer a{color:var(--gold);text-decoration:none}
   </div>
 
   <footer>
+    <div class="footer-links">
+      <a href="/tariffs">Тарифы</a>
+      <a href="/wiki">Wiki</a>
+      <a href="/login">Личный кабинет</a>
+      <a href="https://t.me/hashprojects">Поддержка</a>
+    </div>
     Уже пользуешься ботом? <a href="https://t.me/starisvpnbot">Открыть @starisvpnbot</a>
   </footer>
 </div>
