@@ -52,13 +52,22 @@ def _subscription_kb() -> InlineKeyboardMarkup:
     ])
 
 
-def _pay_choice_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="⭐  Telegram Stars", callback_data="sub:renew")],
-        [InlineKeyboardButton(text="💳  Банковская карта  (₽)", callback_data="sub:card")],
-        [InlineKeyboardButton(text="🟣  ЮMoney  (₽)", callback_data="sub:yoomoney")],
-        [InlineKeyboardButton(text="◀️ Назад", callback_data="sub:back")],
-    ])
+async def _pay_choice_kb() -> InlineKeyboardMarkup:
+    from bot.utils.database import AsyncSessionLocal
+    from bot.utils.settings_store import get_all_provider_states
+
+    async with AsyncSessionLocal() as session:
+        states = await get_all_provider_states(session)
+
+    rows = [[InlineKeyboardButton(text="⭐  Telegram Stars", callback_data="sub:renew")]]
+    if states["card"]:
+        rows.append([InlineKeyboardButton(text="💳  Банковская карта  (₽)", callback_data="sub:card")])
+    if states["yoomoney"]:
+        rows.append([InlineKeyboardButton(text="🟣  ЮMoney  (₽)", callback_data="sub:yoomoney")])
+    if states["crypto"]:
+        rows.append([InlineKeyboardButton(text="💎  Криптовалюта", callback_data="sub:crypto")])
+    rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data="sub:back")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 async def _build_text(user: User) -> str:
@@ -129,7 +138,7 @@ async def pay_choice(callback: CallbackQuery) -> None:
     await callback.message.edit_text(
         "💳 <b>Выбери способ оплаты</b>",
         parse_mode="HTML",
-        reply_markup=_pay_choice_kb(),
+        reply_markup=await _pay_choice_kb(),
     )
     await callback.answer()
 

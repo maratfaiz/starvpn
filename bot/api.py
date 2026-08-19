@@ -1366,10 +1366,14 @@ async def gift_seen(request: Request, x_telegram_init_data: str | None = Header(
 
 @app.get("/api/crypto/plans")
 async def get_crypto_plans(x_telegram_init_data: str | None = Header(default=None)):
-    """Тарифы для оплаты криптой (USD). Возвращает [] если CRYPTOPAY_TOKEN не задан."""
+    """Тарифы для оплаты криптой (USD). Возвращает [] если CRYPTOPAY_TOKEN не задан или отключено в админке."""
     _tg_id(x_telegram_init_data)
     if not settings.cryptopay_token:
         return []
+    from bot.utils.settings_store import is_provider_enabled
+    async with AsyncSessionLocal() as session:
+        if not await is_provider_enabled(session, "crypto"):
+            return []
     from bot.utils.cryptopay import CRYPTO_PLANS
     return [
         {
@@ -1394,6 +1398,11 @@ async def create_crypto_invoice(
     tg_id = _tg_id(x_telegram_init_data)
     body = await request.json()
     plan_key = body.get("plan")
+
+    from bot.utils.settings_store import is_provider_enabled
+    async with AsyncSessionLocal() as session:
+        if not await is_provider_enabled(session, "crypto"):
+            raise HTTPException(status_code=503, detail="Оплата криптовалютой временно недоступна")
 
     from bot.utils.cryptopay import cryptopay, CRYPTO_PLANS
     plan = CRYPTO_PLANS.get(plan_key)
@@ -1494,9 +1503,12 @@ async def crypto_webhook(request: Request):
 
 @app.get("/api/card/plans")
 async def get_card_plans(request: Request, x_telegram_init_data: str | None = Header(default=None)):
-    """Тарифы для оплаты картой (RUB). Возвращает [] если Robokassa не настроена."""
+    """Тарифы для оплаты картой (RUB). Возвращает [] если Robokassa не настроена или отключена в админке."""
+    from bot.utils.settings_store import is_provider_enabled
     async with AsyncSessionLocal() as session:
         await _resolve_tg_id(request, x_telegram_init_data, session)
+        if not await is_provider_enabled(session, "card"):
+            return []
     from bot.utils.robokassa import robokassa, CARD_PLANS
     if not robokassa.configured:
         return []
@@ -1530,8 +1542,11 @@ async def create_card_invoice(
     if not robokassa.configured:
         raise HTTPException(status_code=503, detail="Оплата картой временно недоступна")
 
+    from bot.utils.settings_store import is_provider_enabled
     async with AsyncSessionLocal() as session:
         tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+        if not await is_provider_enabled(session, "card"):
+            raise HTTPException(status_code=503, detail="Оплата картой временно недоступна")
         payment = Payment(
             order_id="",
             telegram_id=tg_id,
@@ -1566,9 +1581,12 @@ async def create_card_invoice(
 
 @app.get("/api/yoomoney/plans")
 async def get_yoomoney_plans(request: Request, x_telegram_init_data: str | None = Header(default=None)):
-    """Тарифы для оплаты через ЮMoney (RUB). Возвращает [] если не настроена."""
+    """Тарифы для оплаты через ЮMoney (RUB). Возвращает [] если не настроена или отключена в админке."""
+    from bot.utils.settings_store import is_provider_enabled
     async with AsyncSessionLocal() as session:
         await _resolve_tg_id(request, x_telegram_init_data, session)
+        if not await is_provider_enabled(session, "yoomoney"):
+            return []
     from bot.utils.yoomoney import yoomoney, CARD_PLANS
     if not yoomoney.configured:
         return []
@@ -1594,8 +1612,11 @@ async def create_yoomoney_invoice(
     if not yoomoney.configured:
         raise HTTPException(status_code=503, detail="Оплата через ЮMoney временно недоступна")
 
+    from bot.utils.settings_store import is_provider_enabled
     async with AsyncSessionLocal() as session:
         tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+        if not await is_provider_enabled(session, "yoomoney"):
+            raise HTTPException(status_code=503, detail="Оплата через ЮMoney временно недоступна")
         payment = Payment(
             order_id="",
             telegram_id=tg_id,
@@ -1632,7 +1653,12 @@ async def get_guest_plans():
     """Тарифы для покупки без Telegram. Публичный эндпоинт — initData не нужен."""
     from bot.utils.robokassa import robokassa, CARD_PLANS
     from bot.utils.yoomoney import yoomoney
-    if not robokassa.configured and not yoomoney.configured:
+    from bot.utils.settings_store import get_all_provider_states
+    async with AsyncSessionLocal() as session:
+        states = await get_all_provider_states(session)
+    card_available = robokassa.configured and states["card"]
+    yoomoney_available = yoomoney.configured and states["yoomoney"]
+    if not card_available and not yoomoney_available:
         return []
     return [
         {"key": k, "label": v["label"], "rub": float(v["rub"]), "days": v["days"], "desc": v["desc"]}
@@ -1645,7 +1671,13 @@ async def get_guest_providers():
     """Какие способы оплаты доступны для покупки без Telegram."""
     from bot.utils.robokassa import robokassa
     from bot.utils.yoomoney import yoomoney
-    return {"robokassa": robokassa.configured, "yoomoney": yoomoney.configured}
+    from bot.utils.settings_store import get_all_provider_states
+    async with AsyncSessionLocal() as session:
+        states = await get_all_provider_states(session)
+    return {
+        "robokassa": robokassa.configured and states["card"],
+        "yoomoney": yoomoney.configured and states["yoomoney"],
+    }
 
 
 @app.post("/api/guest/checkout")
@@ -1667,6 +1699,12 @@ async def guest_checkout(request: Request):
     provider = body.get("provider") or "robokassa"
     if provider not in ("robokassa", "yoomoney"):
         raise HTTPException(status_code=400, detail="Неизвестный способ оплаты")
+
+    from bot.utils.settings_store import is_provider_enabled
+    async with AsyncSessionLocal() as session:
+        toggle_key = "card" if provider == "robokassa" else "yoomoney"
+        if not await is_provider_enabled(session, toggle_key):
+            raise HTTPException(status_code=503, detail="Этот способ оплаты временно недоступен")
 
     async with AsyncSessionLocal() as session:
         order = GuestOrder(
@@ -2416,6 +2454,7 @@ async def web_settings_overview(authorization: str | None = Header(default=None)
     from bot.utils.robokassa import robokassa, CARD_PLANS
     from bot.utils.yoomoney import yoomoney
     from bot.models.device import MAX_DEVICES
+    from bot.utils.settings_store import get_all_provider_states
 
     tariffs = []
     for key, plan in PLANS.items():
@@ -2425,13 +2464,16 @@ async def web_settings_overview(authorization: str | None = Header(default=None)
             "stars": plan["stars"], "rub": float(card.get("rub", 0)),
         })
 
+    async with AsyncSessionLocal() as session:
+        toggles = await get_all_provider_states(session)
+
     return {
         "tariffs": tariffs,
         "providers": {
-            "stars": True,
-            "card": robokassa.configured,
-            "yoomoney": yoomoney.configured,
-            "crypto": bool(settings.cryptopay_token),
+            "stars": {"configured": True, "enabled": True},
+            "card": {"configured": robokassa.configured, "enabled": toggles["card"]},
+            "yoomoney": {"configured": yoomoney.configured, "enabled": toggles["yoomoney"]},
+            "crypto": {"configured": bool(settings.cryptopay_token), "enabled": toggles["crypto"]},
         },
         "limits": {"max_devices": MAX_DEVICES, "trial_days": settings.trial_days},
         "admin_web_key_set": bool(settings.admin_web_key),
@@ -2439,6 +2481,24 @@ async def web_settings_overview(authorization: str | None = Header(default=None)
         "bot_username": settings.bot_username,
         "site_url": settings.site_url,
     }
+
+
+@app.post("/web/settings/payment-toggle")
+async def web_settings_payment_toggle(request: Request, authorization: str | None = Header(default=None)):
+    """Включить/выключить способ оплаты (card/yoomoney/crypto). Stars всегда включены — не тумблится."""
+    _web_auth(authorization)
+    from bot.utils.settings_store import set_provider_enabled, PROVIDER_KEYS
+
+    body = await request.json()
+    provider = body.get("provider")
+    enabled = bool(body.get("enabled"))
+    if provider not in PROVIDER_KEYS:
+        raise HTTPException(status_code=400, detail="Неизвестный способ оплаты")
+
+    async with AsyncSessionLocal() as session:
+        await set_provider_enabled(session, provider, enabled)
+
+    return {"ok": True, "provider": provider, "enabled": enabled}
 
 
 @app.post("/web/broadcast")

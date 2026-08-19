@@ -52,6 +52,11 @@ def _crypto_plans_kb() -> InlineKeyboardMarkup:
 @router.callback_query(F.data == "sub:crypto")
 async def show_crypto_plans(callback: CallbackQuery) -> None:
     """Показывает тарифы с ценами в USD."""
+    from bot.utils.settings_store import is_provider_enabled
+    async with AsyncSessionLocal() as session:
+        if not await is_provider_enabled(session, "crypto"):
+            await callback.answer("Оплата криптовалютой сейчас недоступна", show_alert=True)
+            return
     await callback.message.edit_text(
         "💎 <b>Оплата криптовалютой</b>\n\n"
         "Принимаем: USDT · TON · BTC · ETH\n"
@@ -73,6 +78,13 @@ async def crypto_pay(callback: CallbackQuery) -> None:
         return
 
     tg_id = callback.from_user.id
+
+    from bot.utils.settings_store import is_provider_enabled
+    async with AsyncSessionLocal() as session:
+        if not await is_provider_enabled(session, "crypto"):
+            await callback.answer("Оплата криптовалютой сейчас недоступна", show_alert=True)
+            return
+
     await callback.answer("⏳ Создаём счёт...")
 
     try:

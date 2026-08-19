@@ -17,6 +17,7 @@ import bot.models.magic_link        # noqa: F401
 import bot.models.web_session       # noqa: F401
 import bot.models.support_ticket    # noqa: F401
 import bot.models.wiki_article      # noqa: F401
+import bot.models.app_setting       # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

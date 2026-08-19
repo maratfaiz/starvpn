@@ -49,6 +49,11 @@ def _card_plans_kb() -> InlineKeyboardMarkup:
 @router.callback_query(F.data == "sub:card")
 async def show_card_plans(callback: CallbackQuery) -> None:
     """Показывает тарифы с ценами в рублях."""
+    from bot.utils.settings_store import is_provider_enabled
+    async with AsyncSessionLocal() as session:
+        if not await is_provider_enabled(session, "card"):
+            await callback.answer("Оплата картой сейчас недоступна", show_alert=True)
+            return
     await callback.message.edit_text(
         "💳 <b>Оплата банковской картой</b>\n\n"
         "Visa · Mastercard · МИР — через Robokassa.\n\n"
@@ -69,6 +74,13 @@ async def card_pay(callback: CallbackQuery) -> None:
         return
 
     tg_id = callback.from_user.id
+
+    from bot.utils.settings_store import is_provider_enabled
+    async with AsyncSessionLocal() as session:
+        if not await is_provider_enabled(session, "card"):
+            await callback.answer("Оплата картой сейчас недоступна", show_alert=True)
+            return
+
     await callback.answer("⏳ Создаём счёт...")
 
     async with AsyncSessionLocal() as session:

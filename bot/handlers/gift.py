@@ -64,6 +64,12 @@ def _instructions_kb() -> InlineKeyboardMarkup:
 
 # ──────────────────────── Шаг 1 — выбор тарифа ──────────────────────────────
 
+async def _crypto_enabled() -> bool:
+    from bot.utils.settings_store import is_provider_enabled
+    async with AsyncSessionLocal() as session:
+        return await is_provider_enabled(session, "crypto")
+
+
 @router.message(F.text == "🎁 Подарить VPN")
 async def gift_start(message: Message) -> None:
     buttons = []
@@ -100,11 +106,11 @@ async def gift_choose_plan(callback: CallbackQuery, state: FSMContext) -> None:
     crypto = CRYPTO_PLANS.get(plan_key, {})
     usd_str = f" / ${crypto['usd']}" if crypto else ""
 
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="⭐  Telegram Stars", callback_data="gift_method:stars")],
-        [InlineKeyboardButton(text="💎  Крипта  (USDT · TON · BTC · ETH)", callback_data="gift_method:crypto")],
-        [InlineKeyboardButton(text="❌ Отмена", callback_data="gift:cancel")],
-    ])
+    rows = [[InlineKeyboardButton(text="⭐  Telegram Stars", callback_data="gift_method:stars")]]
+    if await _crypto_enabled():
+        rows.append([InlineKeyboardButton(text="💎  Крипта  (USDT · TON · BTC · ETH)", callback_data="gift_method:crypto")])
+    rows.append([InlineKeyboardButton(text="❌ Отмена", callback_data="gift:cancel")])
+    kb = InlineKeyboardMarkup(inline_keyboard=rows)
 
     await callback.message.edit_text(
         f"🎁 Подарок: <b>{plan['label']}</b> — {plan['stars']} ⭐{usd_str}\n\n"
@@ -120,6 +126,9 @@ async def gift_choose_plan(callback: CallbackQuery, state: FSMContext) -> None:
 @router.callback_query(F.data.startswith("gift_method:"), GiftForm.pay_method)
 async def gift_choose_method(callback: CallbackQuery, state: FSMContext) -> None:
     method = callback.data.split(":", 1)[1]  # "stars" or "crypto"
+    if method == "crypto" and not await _crypto_enabled():
+        await callback.answer("Оплата криптовалютой сейчас недоступна", show_alert=True)
+        return
     await state.update_data(gift_method=method)
     await state.set_state(GiftForm.recipient)
 

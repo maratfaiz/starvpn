@@ -45,6 +45,11 @@ def _yoomoney_plans_kb() -> InlineKeyboardMarkup:
 @router.callback_query(F.data == "sub:yoomoney")
 async def show_yoomoney_plans(callback: CallbackQuery) -> None:
     """Показывает тарифы с ценами в рублях."""
+    from bot.utils.settings_store import is_provider_enabled
+    async with AsyncSessionLocal() as session:
+        if not await is_provider_enabled(session, "yoomoney"):
+            await callback.answer("Оплата через ЮMoney сейчас недоступна", show_alert=True)
+            return
     await callback.message.edit_text(
         "🟣 <b>Оплата через ЮMoney</b>\n\n"
         "Карта, СБП или кошелёк ЮMoney — паспорт не нужен.\n\n"
@@ -65,6 +70,13 @@ async def yoomoney_pay(callback: CallbackQuery) -> None:
         return
 
     tg_id = callback.from_user.id
+
+    from bot.utils.settings_store import is_provider_enabled
+    async with AsyncSessionLocal() as session:
+        if not await is_provider_enabled(session, "yoomoney"):
+            await callback.answer("Оплата через ЮMoney сейчас недоступна", show_alert=True)
+            return
+
     await callback.answer("⏳ Создаём счёт...")
 
     async with AsyncSessionLocal() as session:

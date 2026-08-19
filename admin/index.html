@@ -1040,11 +1040,22 @@ async function renderSettings() {
           </div>
           <div class="editor-card">
             <div class="dcard-title">Приём оплаты</div>
-            <div style="font-size:13px;color:#8A7A60;margin:4px 0 18px">Статус берётся из наличия ключей в .env — реальное состояние на сервере прямо сейчас.</div>
-            ${[['Telegram Stars', s.providers.stars], ['Банковская карта (Robokassa)', s.providers.card], ['ЮMoney', s.providers.yoomoney], ['Криптовалюта (@CryptoBot)', s.providers.crypto]].map(([label, on]) => `
+            <div style="font-size:13px;color:#8A7A60;margin:4px 0 18px">«Настроено» — есть ключи в .env. Переключатель — показывать ли способ пользователям (боту и сайту) прямо сейчас. Telegram Stars не выключается — это нативная оплата Telegram, работает всегда. Stars недоступны на сайте — только в боте.</div>
+            ${[['stars', 'Telegram Stars (только в боте)', s.providers.stars], ['card', 'Банковская карта (Robokassa)', s.providers.card], ['yoomoney', 'ЮMoney', s.providers.yoomoney], ['crypto', 'Криптовалюта (@CryptoBot)', s.providers.crypto]].map(([key, label, p]) => `
               <div class="provider-row">
                 <div style="flex:1;font-size:14px;font-weight:600;color:#EBE0CC">${label}</div>
-                <span class="chip ${on ? 'green' : 'grey'}">${on ? 'Настроено' : 'Не настроено'}</span>
+                <span class="chip ${p.configured ? 'green' : 'grey'}">${p.configured ? 'Настроено' : 'Не настроено'}</span>
+                ${key === 'stars' ? `
+                  <div class="toggle-track" style="background:rgba(255,184,0,.35);cursor:default" title="Всегда включено">
+                    <div class="toggle-knob" style="background:#FFB800;margin-left:auto"></div>
+                  </div>
+                ` : `
+                  <div class="toggle-track" data-provider="${key}" data-on="${p.enabled ? '1' : '0'}"
+                       style="background:${p.enabled ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'};cursor:pointer"
+                       onclick="togglePaymentProvider('${key}')" title="${p.enabled ? 'Выключить' : 'Включить'}">
+                    <div class="toggle-knob" style="background:${p.enabled ? '#FFB800' : '#5A5040'};margin-left:${p.enabled ? 'auto' : '0'}"></div>
+                  </div>
+                `}
               </div>
             `).join('')}
           </div>
@@ -1075,6 +1086,16 @@ async function renderSettings() {
   } catch (e) {
     c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
   }
+}
+
+async function togglePaymentProvider(provider) {
+  const track = document.querySelector(`.toggle-track[data-provider="${provider}"]`);
+  const nextEnabled = track ? track.dataset.on !== '1' : true;
+  try {
+    await api('POST', '/web/settings/payment-toggle', { provider, enabled: nextEnabled });
+    toast(nextEnabled ? 'Способ оплаты включён' : 'Способ оплаты выключен');
+    renderSettings();
+  } catch (e) { toast(e.message, true); }
 }
 
 /* ── Boot ──────────────────────────────────────────────────── */
