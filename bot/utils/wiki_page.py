@@ -2,16 +2,49 @@
 тема, что и у статичных статей в landing/wiki/, но собирается из БД."""
 
 import html
+import re
+
+_LINK_RE = re.compile(r'\[([^\]]+)\]\((https?://[^\s)]+)\)')
+_BOLD_RE = re.compile(r'\*\*(.+?)\*\*')
+_ITALIC_RE = re.compile(r'(?<!\*)\*([^*\n]+?)\*(?!\*)')
+
+
+def _inline_markdown(escaped_text: str) -> str:
+    """Применяет **bold**, *italic*, [text](url) к уже HTML-экранированному тексту."""
+    text = _LINK_RE.sub(
+        lambda m: f'<a href="{m.group(2)}" target="_blank" rel="noopener">{m.group(1)}</a>',
+        escaped_text,
+    )
+    text = _BOLD_RE.sub(lambda m: f'<strong>{m.group(1)}</strong>', text)
+    text = _ITALIC_RE.sub(lambda m: f'<em>{m.group(1)}</em>', text)
+    return text
+
+
+def _render_body(body: str) -> str:
+    """Абзацы разделяются пустой строкой. Блок, где каждая строка начинается
+    с "- " или "* ", рендерится как маркированный список. Внутри поддерживается
+    базовый markdown: **bold**, *italic*, [text](url)."""
+    parts = []
+    for block in body.split("\n\n"):
+        lines = [ln.strip() for ln in block.split("\n") if ln.strip()]
+        if not lines:
+            continue
+        if all(ln.startswith("- ") or ln.startswith("* ") for ln in lines):
+            items = "".join(
+                f"<li>{_inline_markdown(html.escape(ln[2:].strip()))}</li>" for ln in lines
+            )
+            parts.append(f"<ul>{items}</ul>")
+        else:
+            escaped = html.escape(block.strip()).replace("\n", "<br>")
+            parts.append(f"<p>{_inline_markdown(escaped)}</p>")
+    return "".join(parts)
 
 
 def render_wiki_article_page(*, slug: str, title: str, lede: str, body: str, section: str) -> str:
     safe_title = html.escape(title)
     safe_lede = html.escape(lede)
     safe_section = html.escape(section)
-    paragraphs = "".join(
-        f"<p>{html.escape(p.strip())}</p>"
-        for p in body.split("\n\n") if p.strip()
-    )
+    paragraphs = _render_body(body)
 
     return f"""<!DOCTYPE html>
 <html lang="ru">
@@ -54,6 +87,12 @@ body{{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-
 .doc-lede{{font-size:16px;color:var(--text2);max-width:60ch}}
 .doc-body{{padding:24px 0 96px;font-size:15.5px;color:var(--text2);line-height:1.9}}
 .doc-body p{{margin-bottom:16px}}
+.doc-body strong{{color:var(--text);font-weight:600}}
+.doc-body em{{color:var(--text);font-style:italic}}
+.doc-body a{{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-border)}}
+.doc-body a:hover{{border-color:var(--gold)}}
+.doc-body ul{{margin:0 0 16px;padding-left:22px}}
+.doc-body li{{margin-bottom:8px}}
 footer{{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align:center}}
 .footer-links{{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}}
 .footer-links a{{font-size:13px;color:var(--text3);text-decoration:none}}
