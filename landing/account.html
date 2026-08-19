@@ -234,12 +234,21 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 20px;background:rg
   <!-- Устройства -->
   <div class="tab-panel" id="tab-devices">
     <div id="devicesList"></div>
-    <div class="section-title">Добавить устройство</div>
+    <div class="section-title">Телефон / планшет</div>
     <div class="add-device-grid">
       <div class="add-device-btn" data-type="ios"><div class="ic">🍎</div><div class="lbl">iPhone / iPad</div></div>
       <div class="add-device-btn" data-type="android"><div class="ic">🤖</div><div class="lbl">Android</div></div>
-      <div class="add-device-btn" data-type="windows"><div class="ic">🖥</div><div class="lbl">Windows</div></div>
+    </div>
+    <div class="section-title">Компьютер</div>
+    <div class="add-device-grid">
       <div class="add-device-btn" data-type="macos"><div class="ic">💻</div><div class="lbl">macOS</div></div>
+      <div class="add-device-btn" data-type="windows"><div class="ic">🖥</div><div class="lbl">Windows</div></div>
+      <div class="add-device-btn" data-type="linux"><div class="ic">🐧</div><div class="lbl">Linux</div></div>
+    </div>
+    <div class="section-title">ТВ</div>
+    <div class="add-device-grid">
+      <div class="add-device-btn" data-type="appletv"><div class="ic">🍏</div><div class="lbl">Apple TV</div></div>
+      <div class="add-device-btn" data-type="androidtv"><div class="ic">📺</div><div class="lbl">Смарт-ТВ</div></div>
     </div>
     <div class="msg" id="devicesMsg"></div>
   </div>
@@ -405,8 +414,8 @@ async function activateTrial() {
 
 /* ── Устройства ─────────────────────────────────────────── */
 
-const DEVICE_ICONS = {ios: '🍎', android: '🤖', windows: '🖥', macos: '💻'};
-const DEVICE_LABELS = {ios: 'iPhone / iPad', android: 'Android', windows: 'Windows', macos: 'macOS'};
+const DEVICE_ICONS = {ios: '🍎', android: '🤖', windows: '🖥', macos: '💻', linux: '🐧', appletv: '🍏', androidtv: '📺'};
+const DEVICE_LABELS = {ios: 'iPhone / iPad', android: 'Android', windows: 'Windows', macos: 'macOS', linux: 'Linux', appletv: 'Apple TV', androidtv: 'Смарт-ТВ'};
 
 async function initDevices() {
   await loadDevices();

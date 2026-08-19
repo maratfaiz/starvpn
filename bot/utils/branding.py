@@ -19,7 +19,8 @@ DEVICE_LABELS: dict[str, str] = {
     "android":   f"{APP_NAME} · Android",
     "macos":     f"{APP_NAME} · macOS",
     "windows":   f"{APP_NAME} · Windows",
-    "androidtv": f"{APP_NAME} · Android TV",
+    "linux":     f"{APP_NAME} · Linux",
+    "androidtv": f"{APP_NAME} · Смарт-ТВ",
     "appletv":   f"{APP_NAME} · Apple TV",
 }
 

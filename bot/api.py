@@ -444,7 +444,7 @@ def _free_slot(devices: list[Device]) -> int | None:
     return None
 
 
-DEVICE_TYPES_API = {"ios", "android", "macos", "windows", "androidtv", "appletv"}
+DEVICE_TYPES_API = {"ios", "android", "macos", "windows", "linux", "androidtv", "appletv"}
 
 
 def _mz_username_for_type(

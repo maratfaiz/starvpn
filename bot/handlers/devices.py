@@ -3,7 +3,10 @@
 
 Флоу:
   📱 Мои устройства → список устройств + кнопка Добавить
-      ➕ Добавить → выбор типа (iOS / Android / macOS / Windows / Android TV / Apple TV)
+      ➕ Добавить → выбор типа, по группам:
+          Телефон/планшет — iOS, Android
+          Компьютер       — macOS, Windows, Linux
+          ТВ              — Apple TV, Смарт-ТВ (Android TV)
       [Тип] → создание в Marzban → QR + ключ
       [Устройство] → карточка: статус / трафик / онлайн + [🔑 Ключ] [🗑 Удалить]
 
@@ -41,8 +44,9 @@ DEVICE_TYPES: dict[str, dict] = {
     "android":   {"label": "Android",         "icon": "🤖"},
     "macos":     {"label": "macOS",            "icon": "💻"},
     "windows":   {"label": "Windows",          "icon": "🖥"},
-    "androidtv": {"label": "Android TV",       "icon": "📺"},
+    "linux":     {"label": "Linux",            "icon": "🐧"},
     "appletv":   {"label": "Apple TV",         "icon": "🍏"},
+    "androidtv": {"label": "Смарт-ТВ",         "icon": "📺"},
 }
 
 
@@ -60,7 +64,9 @@ def _type_icon(name: str) -> str:
         return "💻"
     if any(k in n for k in ("windows", "пк", "pc", "ноутбук", "laptop")):
         return "🖥"
-    if "tv" in n:
+    if "linux" in n:
+        return "🐧"
+    if "tv" in n or "тв" in n:
         return "📺"
     return "📱"
 
@@ -148,10 +154,11 @@ def _type_select_kb() -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton(text="💻 macOS",           callback_data="dev:add_type:macos"),
             InlineKeyboardButton(text="🖥 Windows",         callback_data="dev:add_type:windows"),
+            InlineKeyboardButton(text="🐧 Linux",           callback_data="dev:add_type:linux"),
         ],
         [
-            InlineKeyboardButton(text="📺 Android TV",      callback_data="dev:add_type:androidtv"),
             InlineKeyboardButton(text="🍏 Apple TV",        callback_data="dev:add_type:appletv"),
+            InlineKeyboardButton(text="📺 Смарт-ТВ",        callback_data="dev:add_type:androidtv"),
         ],
         [InlineKeyboardButton(text="◀️ Назад", callback_data="dev:list")],
     ])
@@ -264,7 +271,8 @@ async def dev_add_start(callback: CallbackQuery, session: AsyncSession) -> None:
         return
 
     await callback.message.edit_text(
-        "📱 <b>Выбери тип устройства</b>",
+        "📱 <b>Выбери тип устройства</b>\n\n"
+        "Телефон/планшет · Компьютер · ТВ",
         parse_mode="HTML",
         reply_markup=_type_select_kb(),
     )

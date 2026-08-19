@@ -58,7 +58,11 @@ footer{border-top:1px solid var(--gold-border);padding:44px 20px 32px;text-align
 
 /* Platform picker */
 .pick-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);opacity:.6;margin-bottom:12px;text-align:center}
-.pick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:32px}
+.group-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;color:var(--text2);margin:18px 2px 8px}
+.group-label:first-of-type{margin-top:0}
+.pick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.pick-grid.pick-grid-3{grid-template-columns:repeat(3,1fr)}
+.pick-grid:last-of-type{margin-bottom:32px}
 .pick-btn{background:var(--bg2);border:1.5px solid var(--gold-border);border-radius:16px;padding:18px 12px;cursor:pointer;transition:all .2s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
 .pick-btn:active{transform:scale(.97)}
 .pick-btn.selected{background:var(--gold-dim);border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
@@ -137,6 +141,8 @@ code{font-family:monospace;background:rgba(255,184,0,.1);border:1px solid var(--
 
   <!-- Platform picker -->
   <div class="pick-label">Выбери своё устройство</div>
+
+  <div class="group-label">📱 Телефон / планшет</div>
   <div class="pick-grid">
     <button class="pick-btn" onclick="showGuide('ios', this)">
       <div class="pick-btn-icon">🍎</div>
@@ -148,15 +154,38 @@ code{font-family:monospace;background:rgba(255,184,0,.1);border:1px solid var(--
       <div class="pick-btn-name">Android</div>
       <div class="pick-btn-app">v2rayNG</div>
     </button>
+  </div>
+
+  <div class="group-label">💻 Компьютер</div>
+  <div class="pick-grid pick-grid-3">
+    <button class="pick-btn" onclick="showGuide('macos', this)">
+      <div class="pick-btn-icon">💻</div>
+      <div class="pick-btn-name">macOS</div>
+      <div class="pick-btn-app">V2Box</div>
+    </button>
     <button class="pick-btn" onclick="showGuide('windows', this)">
       <div class="pick-btn-icon">🖥</div>
       <div class="pick-btn-name">Windows</div>
       <div class="pick-btn-app">v2rayN</div>
     </button>
-    <button class="pick-btn" onclick="showGuide('macos', this)">
-      <div class="pick-btn-icon">💻</div>
-      <div class="pick-btn-name">macOS</div>
-      <div class="pick-btn-app">V2Box</div>
+    <button class="pick-btn" onclick="showGuide('linux', this)">
+      <div class="pick-btn-icon">🐧</div>
+      <div class="pick-btn-name">Linux</div>
+      <div class="pick-btn-app">NekoRay</div>
+    </button>
+  </div>
+
+  <div class="group-label">📺 ТВ</div>
+  <div class="pick-grid">
+    <button class="pick-btn" onclick="showGuide('appletv', this)">
+      <div class="pick-btn-icon">🍏</div>
+      <div class="pick-btn-name">Apple TV</div>
+      <div class="pick-btn-app">Happ</div>
+    </button>
+    <button class="pick-btn" onclick="showGuide('androidtv', this)">
+      <div class="pick-btn-icon">📺</div>
+      <div class="pick-btn-name">Смарт-ТВ</div>
+      <div class="pick-btn-app">Happ</div>
     </button>
   </div>
 
@@ -393,6 +422,174 @@ code{font-family:monospace;background:rgba(255,184,0,.1);border:1px solid var(--
     <div class="done-badge">
       <div class="done-icon">✅</div>
       <div class="done-text"><b>Готово!</b> Весь трафик Mac защищён и зашифрован через STAR VPN.</div>
+    </div>
+  </div>
+
+  <!-- ── Linux ── -->
+  <div class="guide" id="guide-linux">
+    <div class="app-dl-card">
+      <div class="app-dl-icon">🐧</div>
+      <div class="app-dl-info">
+        <div class="app-dl-name">NekoRay</div>
+        <div class="app-dl-meta">Бесплатно · AppImage, любой дистрибутив</div>
+      </div>
+      <a class="app-dl-btn" href="https://github.com/MatsuriDayo/nekoray/releases/latest" target="_blank">GitHub ↗</a>
+    </div>
+
+    <div class="steps-title">Шаги подключения</div>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Скачай NekoRay</div>
+          <div class="step-text">На странице GitHub скачай файл <code>*.AppImage</code> (или архив <code>linux64.zip</code> для своего дистрибутива).</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Сделай файл исполняемым и запусти</div>
+          <div class="step-text">В терминале: <code>chmod +x NekoRay*.AppImage</code>, затем запусти файл двойным кликом или из терминала.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Скопируй ключ в боте</div>
+          <div class="step-text">В мини-приложении → <b>«Устройства»</b> → своё Linux-устройство → <b>«Ключ / QR»</b> → <b>«Скопировать»</b>.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Добавь профиль из буфера обмена</div>
+          <div class="step-text">В NekoRay: меню <b>«Program»</b> → <b>«Add profile from clipboard»</b>. Сервер STAR VPN появится в списке профилей.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">Включи VPN</div>
+          <div class="step-text">Выбери профиль двойным кликом, затем включи режим <b>«System Proxy»</b> или <b>«TUN Mode»</b> в верхней панели.</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="done-badge">
+      <div class="done-icon">✅</div>
+      <div class="done-text"><b>Готово!</b> Проверь на <a href="https://2ip.ru" target="_blank" style="color:var(--gold)">2ip.ru</a> — IP должен измениться.</div>
+    </div>
+  </div>
+
+  <!-- ── Apple TV ── -->
+  <div class="guide" id="guide-appletv">
+    <div class="app-dl-card">
+      <div class="app-dl-icon">🍏</div>
+      <div class="app-dl-info">
+        <div class="app-dl-name">Happ</div>
+        <div class="app-dl-meta">Бесплатно · tvOS</div>
+      </div>
+      <a class="app-dl-btn" href="https://apps.apple.com/app/happ-proxy-utility/id6504287215" target="_blank">App Store ↗</a>
+    </div>
+
+    <div class="steps-title">Шаги подключения</div>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Установи Happ на Apple TV</div>
+          <div class="step-text">На самом Apple TV: App Store → найди <b>Happ</b> → установи.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Скопируй ссылку-подписку</div>
+          <div class="step-text">На телефоне, в мини-приложении бота → <b>«Устройства»</b> → своё ТВ-устройство → <b>«Ключ / QR»</b> → используй ссылку-подписку (не одиночный ключ) — так проще ввести на пульте.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Добавь подписку в Happ</div>
+          <div class="step-text">В Happ на Apple TV: <b>«Добавить сервер»</b> → <b>«Добавить подписку»</b> → введи ссылку с пульта (или, если поддерживается, отсканируй QR-код с экрана телефона).</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Подключись</div>
+          <div class="step-text">Выбери сервер «STAR VPN» и нажми <b>«Подключиться»</b>.</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="done-badge">
+      <div class="done-icon">✅</div>
+      <div class="done-text"><b>Готово!</b> Трафик Apple TV идёт через STAR VPN.</div>
+    </div>
+  </div>
+
+  <!-- ── Смарт-ТВ / Android TV ── -->
+  <div class="guide" id="guide-androidtv">
+    <div class="app-dl-card">
+      <div class="app-dl-icon">📺</div>
+      <div class="app-dl-info">
+        <div class="app-dl-name">Happ</div>
+        <div class="app-dl-meta">Бесплатно · Android TV</div>
+      </div>
+      <a class="app-dl-btn" href="https://play.google.com/store/apps/details?id=com.happproxy" target="_blank">Google Play ↗</a>
+    </div>
+
+    <div class="steps-title">Шаги подключения</div>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Установи Happ на ТВ</div>
+          <div class="step-text">На самом телевизоре: Google Play (или магазин приложений вашей ТВ-платформы) → найди <b>Happ</b> → установи.</div>
+          <div class="step-tip"><span class="tip-icon">🔧</span> Нет Google Play на ТВ? Скачай APK с <a href="https://github.com/Happ-proxy/happ-android/releases" target="_blank" style="color:var(--gold)">GitHub</a> и установи через флешку или файловый менеджер ТВ.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Скопируй ссылку-подписку</div>
+          <div class="step-text">На телефоне, в мини-приложении бота → <b>«Устройства»</b> → своё ТВ-устройство → <b>«Ключ / QR»</b> → используй ссылку-подписку — её проще ввести с пульта, чем длинный ключ.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Добавь подписку в Happ</div>
+          <div class="step-text">В Happ на ТВ: <b>«Добавить сервер»</b> → <b>«Добавить подписку»</b> → введи ссылку с пульта (или отсканируй QR-код телефоном, если Happ на вашей ТВ это поддерживает).</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Подключись</div>
+          <div class="step-text">Выбери сервер «STAR VPN» и нажми <b>«Подключиться»</b>.</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="done-badge">
+      <div class="done-icon">✅</div>
+      <div class="done-text"><b>Готово!</b> Трафик ТВ идёт через STAR VPN.</div>
     </div>
   </div>
 

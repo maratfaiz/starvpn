@@ -16,8 +16,13 @@ DEVICE_MENU = InlineKeyboardMarkup(inline_keyboard=[
         InlineKeyboardButton(text="🤖 Android", callback_data="instr:android"),
     ],
     [
-        InlineKeyboardButton(text="💻 Windows", callback_data="instr:windows"),
         InlineKeyboardButton(text="🍎 macOS", callback_data="instr:macos"),
+        InlineKeyboardButton(text="💻 Windows", callback_data="instr:windows"),
+        InlineKeyboardButton(text="🐧 Linux", callback_data="instr:linux"),
+    ],
+    [
+        InlineKeyboardButton(text="🍏 Apple TV", callback_data="instr:appletv"),
+        InlineKeyboardButton(text="📺 Смарт-ТВ", callback_data="instr:androidtv"),
     ],
 ])
 
@@ -60,6 +65,29 @@ GUIDES: dict[str, str] = {
         "3. Вставь свою VLESS-ссылку (из раздела 🔗 Моё подключение)\n\n"
         "4. Нажми «Connect» — готово! 🎉\n\n"
         "✅ Разрешение системного расширения нужно подтвердить в Системных настройках."
+    ),
+    "linux": (
+        "🐧 <b>Инструкция для Linux</b>\n\n"
+        "1. Скачай <b>NekoRay</b> (AppImage):\n"
+        "   → <a href=\"https://github.com/MatsuriDayo/nekoray/releases\">Последний релиз на GitHub</a>\n\n"
+        "2. Сделай файл исполняемым: `chmod +x NekoRay*.AppImage` и запусти\n\n"
+        "3. Меню «Program» → «Add profile from clipboard», предварительно скопировав свою VLESS-ссылку\n\n"
+        "4. Выбери профиль двойным кликом, включи «System Proxy» или «TUN Mode» — готово! 🎉"
+    ),
+    "appletv": (
+        "🍏 <b>Инструкция для Apple TV</b>\n\n"
+        "1. На самом Apple TV: App Store → скачай <b>Happ</b>\n\n"
+        "2. На телефоне возьми ссылку-подписку из раздела 🔗 Моё подключение — она проще, чем длинный ключ\n\n"
+        "3. В Happ на Apple TV: «Добавить сервер» → «Добавить подписку» → введи ссылку с пульта\n\n"
+        "4. Выбери сервер «STAR VPN» и подключись — готово! 🎉"
+    ),
+    "androidtv": (
+        "📺 <b>Инструкция для Смарт-ТВ (Android TV)</b>\n\n"
+        "1. На самом телевизоре: Google Play (или магазин приложений ТВ) → скачай <b>Happ</b>\n"
+        "   Нет Google Play? APK можно взять на <a href=\"https://github.com/Happ-proxy/happ-android/releases\">GitHub</a>\n\n"
+        "2. На телефоне возьми ссылку-подписку из раздела 🔗 Моё подключение — её проще ввести с пульта\n\n"
+        "3. В Happ на ТВ: «Добавить сервер» → «Добавить подписку» → введи ссылку\n\n"
+        "4. Выбери сервер «STAR VPN» и подключись — готово! 🎉"
     ),
 }
 
