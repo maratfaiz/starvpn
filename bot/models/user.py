@@ -12,11 +12,25 @@ class Base(DeclarativeBase):
 
 
 class User(Base):
+    """
+    telegram_id остаётся PK и NOT NULL, но для веб-аккаунтов (вход по email,
+    без Telegram) ему присваивается синтетическое отрицательное значение —
+    реальные Telegram ID всегда положительные, так что коллизий не бывает.
+    Это позволяет email-аккаунтам работать со всей существующей моделью
+    (Device/Payment/GiftNotification, реферальная система, Marzban-логика)
+    без единой строчки изменений в FK или бизнес-логике. Проверяй
+    `user.telegram_id > 0`, чтобы узнать, привязан ли реальный Telegram.
+    """
+
     __tablename__ = "users"
 
     telegram_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     username: Mapped[str | None] = mapped_column(String(64), nullable=True)
     full_name: Mapped[str | None] = mapped_column(String(256), nullable=True)
+
+    # Веб-аккаунт (личный кабинет без Telegram) — вход по magic-link на email.
+    email: Mapped[str | None] = mapped_column(String(320), unique=True, nullable=True, index=True)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Marzban username (tg_{telegram_id})
     marzban_username: Mapped[str | None] = mapped_column(String(128), unique=True, nullable=True)

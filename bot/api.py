@@ -95,6 +95,24 @@ async def serve_connect():
     return _serve_html(_LANDING_DIR / "connect.html")
 
 
+@app.get("/login", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/login.html", response_class=HTMLResponse, include_in_schema=False)
+async def serve_login():
+    return _serve_html(_LANDING_DIR / "login.html")
+
+
+@app.get("/account", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/account.html", response_class=HTMLResponse, include_in_schema=False)
+async def serve_account():
+    return _serve_html(_LANDING_DIR / "account.html")
+
+
+@app.get("/support", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/support.html", response_class=HTMLResponse, include_in_schema=False)
+async def serve_support():
+    return _serve_html(_LANDING_DIR / "support.html")
+
+
 @app.get("/tariffs", response_class=HTMLResponse, include_in_schema=False)
 @app.get("/tariffs.html", response_class=HTMLResponse, include_in_schema=False)
 async def serve_tariffs():
@@ -227,6 +245,129 @@ def _tg_id(x_telegram_init_data: str | None) -> int:
         raise HTTPException(status_code=403, detail=f"Bad initData: {e}")
 
 
+async def _resolve_tg_id(request: Request, x_telegram_init_data: str | None, session) -> int:
+    """
+    Разрешает identity либо из Telegram Mini App (X-Telegram-Init-Data),
+    либо из cookie-сессии личного кабинета (/login) — единая точка входа,
+    чтобы /api/devices, /api/referral и оплата работали одинаково для
+    обоих способов подключения.
+    """
+    if x_telegram_init_data:
+        return _parse_tg_id(x_telegram_init_data)
+
+    from bot.utils.webauth import get_session_user, SESSION_COOKIE_NAME
+    user = await get_session_user(request.cookies.get(SESSION_COOKIE_NAME), session)
+    if user:
+        return user.telegram_id
+    raise HTTPException(status_code=401, detail="Not authenticated")
+
+
+# ─── Личный кабинет: вход по email (magic-link) ───────────────────────────────
+
+@app.post("/api/account/login")
+async def account_login(request: Request):
+    """Принимает email, отправляет magic-link на почту. Всегда отвечает {"ok": true}
+    (не раскрываем, зарегистрирован ли email — это будущий веб-аккаунт в любом случае)."""
+    from bot.utils.webauth import is_valid_email, create_magic_link
+    from bot.utils.mailer import send_magic_link_email
+
+    body = await request.json()
+    email = (body.get("email") or "").strip()
+    if not is_valid_email(email):
+        raise HTTPException(400, "Некорректный email")
+
+    async with AsyncSessionLocal() as session:
+        raw_token = await create_magic_link(email.lower(), session)
+
+    link = f"{settings.site_url.rstrip('/')}/account/verify?token={raw_token}"
+    try:
+        await send_magic_link_email(email.lower(), link)
+    except Exception as e:
+        logger.error("account_login: failed to send email to %s: %s", email, e)
+        raise HTTPException(502, "Не удалось отправить письмо. Попробуйте позже.")
+
+    return {"ok": True}
+
+
+@app.get("/account/verify", include_in_schema=False)
+async def account_verify(token: str = ""):
+    from bot.utils.webauth import verify_magic_link, create_web_session, SESSION_COOKIE_NAME, SESSION_TTL
+    from fastapi.responses import RedirectResponse
+
+    if not token:
+        return HTMLResponse(_LOGIN_LINK_INVALID_HTML, status_code=400)
+
+    async with AsyncSessionLocal() as session:
+        user = await verify_magic_link(token, session)
+        if not user:
+            return HTMLResponse(_LOGIN_LINK_INVALID_HTML, status_code=400)
+        session_token = await create_web_session(user, session)
+
+    resp = RedirectResponse(url="/account", status_code=302)
+    resp.set_cookie(
+        SESSION_COOKIE_NAME, session_token,
+        max_age=int(SESSION_TTL.total_seconds()),
+        httponly=True, secure=True, samesite="lax", path="/",
+    )
+    return resp
+
+
+_LOGIN_LINK_INVALID_HTML = """
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ссылка недействительна — STAR VPN</title>
+<style>
+body{background:#060606;color:#EBE0CC;font-family:system-ui,sans-serif;min-height:100vh;
+display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
+a{color:#FFB800;text-decoration:none;font-weight:600}
+</style></head><body>
+<div>
+  <h1 style="font-size:22px;margin-bottom:12px">Ссылка недействительна или устарела</h1>
+  <p style="color:#8A7A60;margin-bottom:20px">Ссылки для входа действуют 15 минут и работают только один раз.</p>
+  <a href="/login">Запросить новую ссылку →</a>
+</div>
+</body></html>
+"""
+
+
+@app.post("/api/account/logout")
+async def account_logout(request: Request):
+    from bot.utils.webauth import delete_web_session, SESSION_COOKIE_NAME
+    from fastapi.responses import JSONResponse
+
+    token = request.cookies.get(SESSION_COOKIE_NAME)
+    if token:
+        async with AsyncSessionLocal() as session:
+            await delete_web_session(token, session)
+
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie(SESSION_COOKIE_NAME, path="/")
+    return resp
+
+
+# ─── Личный кабинет: поддержка (тикеты) ────────────────────────────────────────
+
+@app.post("/api/account/support")
+async def create_support_ticket(request: Request, x_telegram_init_data: str | None = Header(default=None)):
+    from bot.models.support_ticket import SupportTicket
+
+    body = await request.json()
+    subject = (body.get("subject") or "").strip()[:200]
+    message = (body.get("message") or "").strip()[:4000]
+    platform = (body.get("platform") or "").strip()[:32] or None
+    if not subject or not message:
+        raise HTTPException(400, "Заполните тему и сообщение")
+
+    async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+        ticket = SupportTicket(user_id=tg_id, subject=subject, message=message, platform=platform)
+        session.add(ticket)
+        await session.commit()
+        await session.refresh(ticket)
+
+    return {"ok": True, "ticket_id": ticket.id}
+
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def _fmt_online(online_at: int | None, now_ts: int) -> str:
@@ -285,9 +426,9 @@ def _mz_username_for_type(
 # ─── GET /api/me ──────────────────────────────────────────────────────────────
 
 @app.get("/api/me")
-async def get_me(x_telegram_init_data: str | None = Header(default=None)):
-    tg_id = _tg_id(x_telegram_init_data)
+async def get_me(request: Request, x_telegram_init_data: str | None = Header(default=None)):
     async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         r = await session.execute(select(User).where(User.telegram_id == tg_id))
         user: User | None = r.scalar_one_or_none()
         if not user:
@@ -308,6 +449,8 @@ async def get_me(x_telegram_init_data: str | None = Header(default=None)):
     exp = user.subscription_expires_at
     return {
         "telegram_id": tg_id,
+        "telegram_linked": tg_id > 0,
+        "email": user.email or "",
         "full_name": user.full_name or "",
         "username": user.username or "",
         "subscription_expires_at": exp.isoformat() if exp else None,
@@ -336,12 +479,12 @@ async def get_me(x_telegram_init_data: str | None = Header(default=None)):
 # ─── GET /api/devices ─────────────────────────────────────────────────────────
 
 @app.get("/api/devices")
-async def get_devices(x_telegram_init_data: str | None = Header(default=None)):
-    tg_id = _tg_id(x_telegram_init_data)
+async def get_devices(request: Request, x_telegram_init_data: str | None = Header(default=None)):
     now_ts = int(datetime.utcnow().timestamp())
     result = []
 
     async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         devs = await _get_active_devices(tg_id, session)
         deactivated_any = False
 
@@ -398,13 +541,13 @@ async def get_devices(x_telegram_init_data: str | None = Header(default=None)):
 
 @app.post("/api/devices")
 async def create_device(request: Request, x_telegram_init_data: str | None = Header(default=None)):
-    tg_id = _tg_id(x_telegram_init_data)
     body = await request.json()
     type_key = (body.get("type") or "").strip().lower()
     if not type_key or type_key not in DEVICE_TYPES_API:
         raise HTTPException(400, f"Invalid device type. Must be one of: {', '.join(DEVICE_TYPES_API)}")
 
     async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         r = await session.execute(select(User).where(User.telegram_id == tg_id))
         user: User | None = r.scalar_one_or_none()
         if not user:
@@ -474,9 +617,9 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
 # ─── GET /api/devices/{id}/link ───────────────────────────────────────────────
 
 @app.get("/api/devices/{device_id}/link")
-async def get_device_link(device_id: int, x_telegram_init_data: str | None = Header(default=None)):
-    tg_id = _tg_id(x_telegram_init_data)
+async def get_device_link(device_id: int, request: Request, x_telegram_init_data: str | None = Header(default=None)):
     async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         r = await session.execute(select(Device).where(Device.id == device_id))
         dev: Device | None = r.scalar_one_or_none()
 
@@ -499,9 +642,9 @@ async def get_device_link(device_id: int, x_telegram_init_data: str | None = Hea
 # ─── DELETE /api/devices/{id} ─────────────────────────────────────────────────
 
 @app.delete("/api/devices/{device_id}")
-async def delete_device(device_id: int, x_telegram_init_data: str | None = Header(default=None)):
-    tg_id = _tg_id(x_telegram_init_data)
+async def delete_device(device_id: int, request: Request, x_telegram_init_data: str | None = Header(default=None)):
     async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         r = await session.execute(select(Device).where(Device.id == device_id))
         dev: Device | None = r.scalar_one_or_none()
         if not dev or dev.telegram_id != tg_id:
@@ -518,9 +661,9 @@ async def delete_device(device_id: int, x_telegram_init_data: str | None = Heade
 # ─── GET /api/referral ────────────────────────────────────────────────────────
 
 @app.get("/api/referral")
-async def get_referral(x_telegram_init_data: str | None = Header(default=None)):
-    tg_id = _tg_id(x_telegram_init_data)
+async def get_referral(request: Request, x_telegram_init_data: str | None = Header(default=None)):
     async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         r = await session.execute(select(User).where(User.telegram_id == tg_id))
         user: User | None = r.scalar_one_or_none()
         if not user:
@@ -1301,9 +1444,10 @@ async def crypto_webhook(request: Request):
 # ─── GET /api/card/plans ──────────────────────────────────────────────────────
 
 @app.get("/api/card/plans")
-async def get_card_plans(x_telegram_init_data: str | None = Header(default=None)):
+async def get_card_plans(request: Request, x_telegram_init_data: str | None = Header(default=None)):
     """Тарифы для оплаты картой (RUB). Возвращает [] если Robokassa не настроена."""
-    _tg_id(x_telegram_init_data)
+    async with AsyncSessionLocal() as session:
+        await _resolve_tg_id(request, x_telegram_init_data, session)
     from bot.utils.robokassa import robokassa, CARD_PLANS
     if not robokassa.configured:
         return []
@@ -1327,7 +1471,6 @@ async def create_card_invoice(
     x_telegram_init_data: str | None = Header(default=None),
 ):
     """Создаёт pending-платёж и подписанную ссылку Robokassa (мини-апп)."""
-    tg_id = _tg_id(x_telegram_init_data)
     body = await request.json()
     plan_key = body.get("plan")
 
@@ -1339,6 +1482,7 @@ async def create_card_invoice(
         raise HTTPException(status_code=503, detail="Оплата картой временно недоступна")
 
     async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         payment = Payment(
             order_id="",
             telegram_id=tg_id,
@@ -1372,9 +1516,10 @@ async def create_card_invoice(
 # ─── GET /api/yoomoney/plans, POST /api/invoice/yoomoney ─────────────────────
 
 @app.get("/api/yoomoney/plans")
-async def get_yoomoney_plans(x_telegram_init_data: str | None = Header(default=None)):
+async def get_yoomoney_plans(request: Request, x_telegram_init_data: str | None = Header(default=None)):
     """Тарифы для оплаты через ЮMoney (RUB). Возвращает [] если не настроена."""
-    _tg_id(x_telegram_init_data)
+    async with AsyncSessionLocal() as session:
+        await _resolve_tg_id(request, x_telegram_init_data, session)
     from bot.utils.yoomoney import yoomoney, CARD_PLANS
     if not yoomoney.configured:
         return []
@@ -1390,7 +1535,6 @@ async def create_yoomoney_invoice(
     x_telegram_init_data: str | None = Header(default=None),
 ):
     """Создаёт pending-платёж и ссылку Quickpay ЮMoney (мини-апп)."""
-    tg_id = _tg_id(x_telegram_init_data)
     body = await request.json()
     plan_key = body.get("plan")
 
@@ -1402,6 +1546,7 @@ async def create_yoomoney_invoice(
         raise HTTPException(status_code=503, detail="Оплата через ЮMoney временно недоступна")
 
     async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         payment = Payment(
             order_id="",
             telegram_id=tg_id,

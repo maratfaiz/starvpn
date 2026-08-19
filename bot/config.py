@@ -54,6 +54,14 @@ class Settings(BaseSettings):
     # Admin web panel
     admin_web_key: str = Field("", env="ADMIN_WEB_KEY")  # long random secret for web dashboard
 
+    # SMTP — отправка magic-link писем для входа в веб-аккаунт (/login)
+    smtp_host: str = Field("", env="SMTP_HOST")
+    smtp_port: int = Field(587, env="SMTP_PORT")
+    smtp_username: str = Field("", env="SMTP_USERNAME")
+    smtp_password: str = Field("", env="SMTP_PASSWORD")
+    smtp_from: str = Field("STAR VPN <noreply@starvpnservice.ru>", env="SMTP_FROM")
+    site_url: str = Field("https://starvpnservice.ru", env="SITE_URL")
+
     # Business config
     subscription_price_rub: int = Field(100, env="SUBSCRIPTION_PRICE_RUB")
     subscription_days: int = Field(30, env="SUBSCRIPTION_DAYS")
