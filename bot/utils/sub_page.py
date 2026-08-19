@@ -116,6 +116,9 @@ h2.section{{font-family:'Space Grotesk',sans-serif;font-size:20px;margin-bottom:
 
 .linkbox{{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;
   font-family:monospace;font-size:11px;color:var(--text2);word-break:break-all;margin-bottom:14px}}
+.alt-note{{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;
+  font-size:13px;color:var(--text2);line-height:1.65;margin-top:8px}}
+.alt-note a{{color:var(--gold);text-decoration:none}}
 
 footer{{text-align:center;margin-top:44px;color:var(--text3);font-size:12px}}
 footer a{{color:var(--gold);text-decoration:none}}
@@ -175,6 +178,13 @@ footer a{{color:var(--gold);text-decoration:none}}
       <div class="step-title">Подключитесь и используйте</div>
       <div class="step-text">В главном экране Happ нажмите большую кнопку включения — готово, вы под защитой STAR VPN.</div>
     </div>
+  </div>
+
+  <div class="alt-note">
+    Используете другое приложение — Streisand, v2rayNG, v2rayN, V2Box или NekoRay?
+    Скопируйте ссылку выше кнопкой 📋 и добавьте её как подписку в настройках приложения.
+    Пошаговые инструкции для каждого устройства — на странице
+    <a href="/connect">«Как подключиться»</a>.
   </div>
 
   <footer>
