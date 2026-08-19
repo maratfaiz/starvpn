@@ -15,6 +15,7 @@ import bot.models.guest_order   # noqa: F401
 import bot.models.magic_link    # noqa: F401
 import bot.models.web_session   # noqa: F401
 import bot.models.support_ticket       # noqa: F401
+import bot.models.wiki_article  # noqa: F401
 
 engine = create_async_engine(
     settings.sqlalchemy_database_url,

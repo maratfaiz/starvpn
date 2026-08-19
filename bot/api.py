@@ -132,9 +132,27 @@ async def serve_wiki_index():
 @app.get("/wiki/{slug}.html", response_class=HTMLResponse, include_in_schema=False)
 async def serve_wiki_article(slug: str):
     slug = slug.removesuffix(".html")
-    if slug not in _WIKI_SLUGS:
-        return HTMLResponse(content="<h1>Not found</h1>", status_code=404)
-    return _serve_html(_LANDING_DIR / "wiki" / f"{slug}.html")
+    if slug in _WIKI_SLUGS:
+        return _serve_html(_LANDING_DIR / "wiki" / f"{slug}.html")
+
+    # Не одна из 7 базовых статей — ищем среди созданных из админ-панели.
+    from bot.models.wiki_article import WikiArticle
+    from bot.utils.wiki_page import render_wiki_article_page
+
+    async with AsyncSessionLocal() as session:
+        r = await session.execute(
+            select(WikiArticle).where(WikiArticle.slug == slug, WikiArticle.is_published.is_(True))
+        )
+        article: WikiArticle | None = r.scalar_one_or_none()
+        if not article:
+            return HTMLResponse(content="<h1>Not found</h1>", status_code=404)
+        article.views = (article.views or 0) + 1
+        await session.commit()
+
+    return HTMLResponse(render_wiki_article_page(
+        slug=article.slug, title=article.title, lede=article.lede,
+        body=article.body, section=article.section,
+    ))
 
 
 # ─── GET /sub/{username} — подписка для VPN-клиентов (Happ, v2rayNG, ...) ────
@@ -262,6 +280,14 @@ async def _resolve_tg_id(request: Request, x_telegram_init_data: str | None, ses
     raise HTTPException(status_code=401, detail="Not authenticated")
 
 
+async def _resolve_tg_id_optional(request: Request, x_telegram_init_data: str | None, session) -> int | None:
+    """Как _resolve_tg_id, но не требует авторизации — для форм, доступных анонимно."""
+    try:
+        return await _resolve_tg_id(request, x_telegram_init_data, session)
+    except HTTPException:
+        return None
+
+
 # ─── Личный кабинет: вход по email (magic-link) ───────────────────────────────
 
 @app.post("/api/account/login")
@@ -345,27 +371,42 @@ async def account_logout(request: Request):
     return resp
 
 
-# ─── Личный кабинет: поддержка (тикеты) ────────────────────────────────────────
+# ─── Поддержка (тикеты) — форма на /support не требует входа ─────────────────
 
-@app.post("/api/account/support")
+_SUPPORT_TOPICS = {"connect", "payment", "account", "other"}
+
+
+@app.post("/api/support")
 async def create_support_ticket(request: Request, x_telegram_init_data: str | None = Header(default=None)):
     from bot.models.support_ticket import SupportTicket
 
     body = await request.json()
-    subject = (body.get("subject") or "").strip()[:200]
+    topic = (body.get("topic") or "other").strip()
+    if topic not in _SUPPORT_TOPICS:
+        topic = "other"
+    contact = (body.get("contact") or "").strip()[:320]
     message = (body.get("message") or "").strip()[:4000]
     platform = (body.get("platform") or "").strip()[:32] or None
-    if not subject or not message:
-        raise HTTPException(400, "Заполните тему и сообщение")
 
     async with AsyncSessionLocal() as session:
-        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
-        ticket = SupportTicket(user_id=tg_id, subject=subject, message=message, platform=platform)
+        # Если пользователь уже вошёл (Mini App или сессия личного кабинета) —
+        # привязываем тикет к аккаунту автоматически, но поле contact в форме
+        # остаётся обязательным для всех: это то, куда реально можно ответить.
+        tg_id = await _resolve_tg_id_optional(request, x_telegram_init_data, session)
+        if not contact and tg_id is None:
+            raise HTTPException(400, "Укажите email или @username для связи")
+        if len(message) < 10:
+            raise HTTPException(400, "Опишите проблему подробнее (от 10 символов)")
+
+        ticket = SupportTicket(
+            user_id=tg_id, contact=contact or None, topic=topic,
+            message=message, platform=platform,
+        )
         session.add(ticket)
         await session.commit()
         await session.refresh(ticket)
 
-    return {"ok": True, "ticket_id": ticket.id}
+    return {"ok": True, "id": f"S-{ticket.id:06d}"}
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -2188,6 +2229,218 @@ async def web_payments(limit: int = 50, offset: int = 0, authorization: str | No
     }
 
 
+# ─── Устройства (админка) ─────────────────────────────────────────────────────
+
+@app.get("/web/devices")
+async def web_devices(limit: int = 100, offset: int = 0, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    async with AsyncSessionLocal() as session:
+        query = (
+            select(Device, User)
+            .join(User, User.telegram_id == Device.telegram_id)
+            .where(Device.is_active.is_(True))
+            .order_by(Device.created_at.desc())
+        )
+        total = (await session.execute(
+            select(func.count(Device.id)).where(Device.is_active.is_(True))
+        )).scalar_one()
+        rows = (await session.execute(query.limit(limit).offset(offset))).all()
+    return {
+        "total": total,
+        "devices": [
+            {
+                "id": d.id,
+                "name": d.name,
+                "slot": d.slot,
+                "marzban_username": d.marzban_username,
+                "owner_id": u.telegram_id,
+                "owner_label": u.email or (f"@{u.username}" if u.username else str(u.telegram_id)),
+                "created_at": d.created_at.isoformat() if d.created_at else None,
+            }
+            for d, u in rows
+        ],
+    }
+
+
+# ─── Рефералы (админка) ────────────────────────────────────────────────────────
+
+@app.get("/web/referrals")
+async def web_referrals(limit: int = 100, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    async with AsyncSessionLocal() as session:
+        rows = (await session.execute(
+            select(User)
+            .where(User.referral_count > 0)
+            .order_by(User.referral_count.desc())
+            .limit(limit)
+        )).scalars().all()
+        totals = (await session.execute(
+            select(func.count(User.telegram_id), func.sum(User.referral_count), func.sum(User.extra_days_granted))
+            .where(User.referral_count > 0)
+        )).one()
+    return {
+        "referrers_count": totals[0] or 0,
+        "total_paid_referrals": int(totals[1] or 0),
+        "total_days_granted": int(totals[2] or 0),
+        "referrers": [
+            {
+                "telegram_id": u.telegram_id,
+                "label": u.email or (f"@{u.username}" if u.username else str(u.telegram_id)),
+                "referral_count": u.referral_count,
+                "extra_days_granted": u.extra_days_granted,
+            }
+            for u in rows
+        ],
+    }
+
+
+# ─── Wiki CRUD (админка) ───────────────────────────────────────────────────────
+
+@app.get("/web/wiki")
+async def web_wiki_list(authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.wiki_article import WikiArticle
+
+    async with AsyncSessionLocal() as session:
+        rows = (await session.execute(select(WikiArticle).order_by(WikiArticle.updated_at.desc()))).scalars().all()
+    return {
+        "articles": [
+            {
+                "id": a.id, "slug": a.slug, "title": a.title, "lede": a.lede,
+                "section": a.section, "keywords": a.keywords,
+                "is_published": a.is_published, "views": a.views,
+                "updated_at": a.updated_at.isoformat() if a.updated_at else None,
+            }
+            for a in rows
+        ]
+    }
+
+
+@app.get("/web/wiki/{article_id}")
+async def web_wiki_get(article_id: int, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.wiki_article import WikiArticle
+
+    async with AsyncSessionLocal() as session:
+        a = (await session.execute(select(WikiArticle).where(WikiArticle.id == article_id))).scalar_one_or_none()
+        if not a:
+            raise HTTPException(404, "Not found")
+    return {
+        "id": a.id, "slug": a.slug, "title": a.title, "lede": a.lede, "body": a.body,
+        "section": a.section, "keywords": a.keywords, "is_published": a.is_published,
+    }
+
+
+def _valid_wiki_slug(slug: str) -> bool:
+    import re
+    return bool(re.fullmatch(r"[a-z0-9][a-z0-9-]{1,62}[a-z0-9]", slug))
+
+
+@app.post("/web/wiki")
+async def web_wiki_create(request: Request, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.wiki_article import WikiArticle
+
+    body = await request.json()
+    slug = (body.get("slug") or "").strip().lower()
+    if slug in _WIKI_SLUGS or not _valid_wiki_slug(slug):
+        raise HTTPException(400, "Недопустимый или занятый slug (латиница, цифры, дефис)")
+    title = (body.get("title") or "").strip()[:200]
+    if not title:
+        raise HTTPException(400, "Заголовок обязателен")
+
+    async with AsyncSessionLocal() as session:
+        exists = (await session.execute(select(WikiArticle).where(WikiArticle.slug == slug))).scalar_one_or_none()
+        if exists:
+            raise HTTPException(400, "Статья с таким slug уже существует")
+        a = WikiArticle(
+            slug=slug, title=title,
+            lede=(body.get("lede") or "").strip()[:400],
+            body=(body.get("body") or "").strip()[:20000],
+            section=(body.get("section") or "О сервисе").strip()[:64],
+            keywords=(body.get("keywords") or "").strip()[:300],
+            is_published=bool(body.get("is_published", False)),
+        )
+        session.add(a)
+        await session.commit()
+        await session.refresh(a)
+    return {"ok": True, "id": a.id}
+
+
+@app.put("/web/wiki/{article_id}")
+async def web_wiki_update(article_id: int, request: Request, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.wiki_article import WikiArticle
+
+    body = await request.json()
+    async with AsyncSessionLocal() as session:
+        a = (await session.execute(select(WikiArticle).where(WikiArticle.id == article_id))).scalar_one_or_none()
+        if not a:
+            raise HTTPException(404, "Not found")
+        if "title" in body:
+            a.title = (body.get("title") or "").strip()[:200] or a.title
+        if "lede" in body:
+            a.lede = (body.get("lede") or "").strip()[:400]
+        if "body" in body:
+            a.body = (body.get("body") or "").strip()[:20000]
+        if "section" in body:
+            a.section = (body.get("section") or "О сервисе").strip()[:64]
+        if "keywords" in body:
+            a.keywords = (body.get("keywords") or "").strip()[:300]
+        if "is_published" in body:
+            a.is_published = bool(body.get("is_published"))
+        await session.commit()
+    return {"ok": True}
+
+
+@app.delete("/web/wiki/{article_id}")
+async def web_wiki_delete(article_id: int, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.wiki_article import WikiArticle
+
+    async with AsyncSessionLocal() as session:
+        a = (await session.execute(select(WikiArticle).where(WikiArticle.id == article_id))).scalar_one_or_none()
+        if not a:
+            raise HTTPException(404, "Not found")
+        await session.delete(a)
+        await session.commit()
+    return {"ok": True}
+
+
+# ─── Настройки (обзор — тарифы/лимиты/провайдеры сейчас read-only) ────────────
+
+@app.get("/web/settings/overview")
+async def web_settings_overview(authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.handlers.payment import PLANS
+    from bot.utils.robokassa import robokassa, CARD_PLANS
+    from bot.utils.yoomoney import yoomoney
+    from bot.models.device import MAX_DEVICES
+
+    tariffs = []
+    for key, plan in PLANS.items():
+        card = CARD_PLANS.get(key, {})
+        tariffs.append({
+            "key": key, "label": plan["label"], "days": plan["days"],
+            "stars": plan["stars"], "rub": float(card.get("rub", 0)),
+        })
+
+    return {
+        "tariffs": tariffs,
+        "providers": {
+            "stars": True,
+            "card": robokassa.configured,
+            "yoomoney": yoomoney.configured,
+            "crypto": bool(settings.cryptopay_token),
+        },
+        "limits": {"max_devices": MAX_DEVICES, "trial_days": settings.trial_days},
+        "admin_web_key_set": bool(settings.admin_web_key),
+        "admin_web_key_masked": (settings.admin_web_key[:4] + "…" + settings.admin_web_key[-4:]) if len(settings.admin_web_key) > 8 else "",
+        "bot_username": settings.bot_username,
+        "site_url": settings.site_url,
+    }
+
+
 @app.post("/web/broadcast")
 async def web_broadcast(request: Request, authorization: str | None = Header(default=None)):
     _web_auth(authorization)
@@ -2217,24 +2470,37 @@ async def web_broadcast(request: Request, authorization: str | None = Header(def
 
 # ─── Тикеты поддержки (админка) ───────────────────────────────────────────────
 
+TICKET_TOPIC_LABELS = {
+    "connect": "Не подключается", "payment": "Оплата",
+    "account": "Аккаунт", "other": "Другое",
+}
+
+
 @app.get("/web/tickets")
 async def web_tickets(status: str = "", authorization: str | None = Header(default=None)):
     _web_auth(authorization)
     from bot.models.support_ticket import SupportTicket
 
     async with AsyncSessionLocal() as session:
-        query = select(SupportTicket, User).join(User, User.telegram_id == SupportTicket.user_id)
+        query = select(SupportTicket, User).outerjoin(User, User.telegram_id == SupportTicket.user_id)
         if status:
             query = query.where(SupportTicket.status == status)
         rows = (await session.execute(query.order_by(SupportTicket.created_at.desc()).limit(300))).all()
+
+    def label(t: "SupportTicket", u: User | None) -> str:
+        if u:
+            return u.email or (f"@{u.username}" if u.username else str(u.telegram_id))
+        return t.contact or "—"
 
     return {
         "tickets": [
             {
                 "id": t.id,
+                "public_id": f"S-{t.id:06d}",
                 "user_id": t.user_id,
-                "user_label": u.email or u.username or (str(u.telegram_id) if u.telegram_id > 0 else "веб-аккаунт"),
-                "subject": t.subject,
+                "user_label": label(t, u),
+                "topic": t.topic,
+                "topic_label": TICKET_TOPIC_LABELS.get(t.topic, t.topic),
                 "message": t.message,
                 "platform": t.platform or "",
                 "status": t.status,
@@ -2265,22 +2531,25 @@ async def web_ticket_reply(ticket_id: int, request: Request, authorization: str 
         if reply:
             t.admin_reply = reply
         t.status = new_status
-        user_id = t.user_id
-        subject = t.subject
-        user = (await session.execute(select(User).where(User.telegram_id == user_id))).scalar_one_or_none()
+        user_id, contact, topic_label = t.user_id, t.contact, TICKET_TOPIC_LABELS.get(t.topic, t.topic)
+        user = (await session.execute(select(User).where(User.telegram_id == user_id))).scalar_one_or_none() if user_id else None
         await session.commit()
 
-    if reply and user:
-        # Telegram-аккаунт — шлём в бота. Веб-аккаунт (telegram_id синтетический,
-        # отрицательный) — Telegram недостижим, шлём на почту вместо этого.
-        if user.telegram_id > 0:
-            await _tg_send(user.telegram_id, f"💬 <b>Ответ поддержки по тикету «{subject}»:</b>\n\n{reply}")
-        elif user.email:
-            from bot.utils.mailer import send_ticket_reply_email
-            try:
-                await send_ticket_reply_email(user.email, subject, reply)
-            except Exception as e:
-                logger.error("Failed to email ticket reply to %s: %s", user.email, e)
+    if reply:
+        # Аккаунт с реальным Telegram — шлём в бота. Веб-аккаунт (telegram_id
+        # синтетический) или анонимное обращение с email-контактом — на почту.
+        # @username без привязанного аккаунта Bot API написать не даёт —
+        # для таких тикетов остаётся только ручной ответ через сам контакт.
+        if user and user.telegram_id > 0:
+            await _tg_send(user.telegram_id, f"💬 <b>Ответ поддержки по тикету «{topic_label}»:</b>\n\n{reply}")
+        else:
+            email = (user.email if user else None) or (contact if contact and "@" in contact and not contact.startswith("@") else None)
+            if email:
+                from bot.utils.mailer import send_ticket_reply_email
+                try:
+                    await send_ticket_reply_email(email, topic_label, reply)
+                except Exception as e:
+                    logger.error("Failed to email ticket reply to %s: %s", email, e)
     return {"ok": True}
 
 
