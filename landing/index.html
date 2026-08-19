@@ -469,6 +469,25 @@ section{padding:120px 0}
 }
 .tech-lbl{font-size:12px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase}
 
+/* ─── SERVER LOCATIONS ─────────────────────────────────────── */
+.locations-list{margin-top:28px;display:flex;flex-direction:column;gap:10px}
+.location-row{
+  display:flex;align-items:center;gap:16px;
+  background:var(--bg2);border:1px solid var(--gold-border);
+  border-radius:14px;padding:16px 20px;
+}
+.location-row.loc-example{opacity:.55}
+.loc-flag{font-size:22px;line-height:1;flex-shrink:0}
+.loc-info{flex:1;min-width:0}
+.loc-city{font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:600;color:var(--text)}
+.loc-note{font-size:12px;color:var(--text2);margin-top:2px}
+.loc-badge{
+  font-size:11.5px;font-weight:600;color:var(--text2);
+  border:1px solid var(--gold-border);border-radius:100px;
+  padding:5px 12px;flex-shrink:0;white-space:nowrap;
+}
+.loc-badge--live{color:#4ADE80;border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08)}
+
 /* ─── FAQ ──────────────────────────────────────────────────── */
 .faq-list{margin-top:56px;display:flex;flex-direction:column;gap:8px}
 .faq-item{
@@ -901,6 +920,46 @@ footer{
         <div class="tech-val">UDP</div>
         <div class="tech-lbl">Full support</div>
       </div>
+    </div>
+  </div>
+
+  <div class="reveal" style="margin-top:56px">
+    <div class="section-label">Инфраструктура</div>
+    <h2 class="section-h" style="font-size:clamp(24px,3vw,32px)">Локации <em>серверов</em></h2>
+    <p class="section-p">Сейчас в работе один дата-центр. Остальные — в планах расширения географии, показаны как пример.</p>
+  </div>
+  <div class="locations-list reveal">
+    <div class="location-row">
+      <span class="loc-flag">🇳🇱</span>
+      <div class="loc-info">
+        <div class="loc-city">Амстердам, Нидерланды</div>
+        <div class="loc-note">Основной сервер</div>
+      </div>
+      <span class="loc-badge loc-badge--live">● Активен</span>
+    </div>
+    <div class="location-row loc-example">
+      <span class="loc-flag">🇩🇪</span>
+      <div class="loc-info">
+        <div class="loc-city">Франкфурт, Германия</div>
+        <div class="loc-note">Пример — в планах</div>
+      </div>
+      <span class="loc-badge">Скоро</span>
+    </div>
+    <div class="location-row loc-example">
+      <span class="loc-flag">🇫🇮</span>
+      <div class="loc-info">
+        <div class="loc-city">Хельсинки, Финляндия</div>
+        <div class="loc-note">Пример — в планах</div>
+      </div>
+      <span class="loc-badge">Скоро</span>
+    </div>
+    <div class="location-row loc-example">
+      <span class="loc-flag">🇺🇸</span>
+      <div class="loc-info">
+        <div class="loc-city">Нью-Йорк, США</div>
+        <div class="loc-note">Пример — в планах</div>
+      </div>
+      <span class="loc-badge">Скоро</span>
     </div>
   </div>
 </div>
