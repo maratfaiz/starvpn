@@ -75,6 +75,13 @@ footer{border-top:1px solid var(--gold-border);padding:44px 20px 32px;text-align
 .guide.visible{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
+/* Client sub-tabs (multi-client platforms, e.g. iOS) */
+.client-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.client-tab{cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:600;padding:9px 16px;border-radius:10px;border:1.5px solid var(--gold-border);background:var(--bg2);color:var(--text2);transition:all .15s}
+.client-tab.selected{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+.client-panel{display:none}
+.client-panel.visible{display:block;animation:fadeIn .25s ease}
+
 /* App download card */
 .app-dl-card{display:flex;align-items:center;gap:14px;background:var(--bg2);border:1px solid var(--gold-border);border-radius:14px;padding:16px 18px;margin-bottom:28px}
 .app-dl-icon{font-size:36px;line-height:1;flex-shrink:0}
@@ -147,7 +154,7 @@ code{font-family:monospace;background:rgba(255,184,0,.1);border:1px solid var(--
     <button class="pick-btn" onclick="showGuide('ios', this)">
       <div class="pick-btn-icon">🍎</div>
       <div class="pick-btn-name">iPhone / iPad</div>
-      <div class="pick-btn-app">Streisand</div>
+      <div class="pick-btn-app">Happ</div>
     </button>
     <button class="pick-btn" onclick="showGuide('android', this)">
       <div class="pick-btn-icon">🤖</div>
@@ -191,64 +198,120 @@ code{font-family:monospace;background:rgba(255,184,0,.1);border:1px solid var(--
 
   <!-- ── iOS ── -->
   <div class="guide" id="guide-ios">
-    <div class="app-dl-card">
-      <div class="app-dl-icon">📱</div>
-      <div class="app-dl-info">
-        <div class="app-dl-name">Streisand</div>
-        <div class="app-dl-meta">Бесплатно · iOS 15+</div>
-      </div>
-      <a class="app-dl-btn" href="https://apps.apple.com/app/id6450534064" target="_blank">App Store ↗</a>
+    <div class="client-tabs">
+      <div class="client-tab selected" onclick="showClient('happ', this)">Happ</div>
+      <div class="client-tab" onclick="showClient('streisand', this)">Streisand</div>
+      <div class="client-tab" onclick="showClient('shadowrocket', this)">Shadowrocket</div>
     </div>
 
-    <div class="steps-title">Шаги подключения</div>
-    <div class="steps">
+    <!-- Happ — бесплатно, проще всего -->
+    <div class="client-panel visible" id="client-happ">
+      <div class="app-dl-card">
+        <div class="app-dl-icon">📱</div>
+        <div class="app-dl-info">
+          <div class="app-dl-name">Happ</div>
+          <div class="app-dl-meta">Бесплатно · проще всего · iOS 15+</div>
+        </div>
+        <a class="app-dl-btn" href="https://apps.apple.com/us/app/happ-proxy-utility/id6504287215" target="_blank">App Store ↗</a>
+      </div>
+      <div class="steps-title">Шаги подключения</div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <div class="step-title">Установи Happ из App Store</div>
+          <div class="step-text">Найди приложение по названию Happ и установи его как обычную программу.</div>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <div class="step-title">Скопируй ссылку подписки в боте</div>
+          <div class="step-text">В боте нажми <b>«Моя подписка»</b> и скопируй ссылку целиком, вместе с <code>https://</code>.</div>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <div class="step-title">Добавь подписку</div>
+          <div class="step-text">В Happ открой раздел добавления конфигурации и вставь ссылку. Приложение само загрузит список серверов.</div>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <div class="step-title">Разреши VPN-профиль</div>
+          <div class="step-text">При первом подключении iOS попросит добавить конфигурацию VPN — подтверди и введи код-пароль устройства.</div>
+        </div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-body">
+          <div class="step-title">Подключись</div>
+          <div class="step-text">Выбери сервер и нажми кнопку подключения. В строке состояния появится значок VPN.</div>
+        </div></div>
+      </div>
+      <div class="done-badge"><div class="done-icon">✅</div><div class="done-text"><b>Готово!</b> Ты защищён. Для проверки открой любой заблокированный сайт.</div></div>
+    </div>
 
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-body">
+    <!-- Streisand — бесплатно, больше настроек -->
+    <div class="client-panel" id="client-streisand">
+      <div class="app-dl-card">
+        <div class="app-dl-icon">📱</div>
+        <div class="app-dl-info">
+          <div class="app-dl-name">Streisand</div>
+          <div class="app-dl-meta">Бесплатно · больше настроек · iOS 15+</div>
+        </div>
+        <a class="app-dl-btn" href="https://apps.apple.com/app/id6450534064" target="_blank">App Store ↗</a>
+      </div>
+      <div class="steps-title">Шаги подключения</div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
           <div class="step-title">Скопируй ключ в боте</div>
           <div class="step-text">В мини-приложении бота перейди в раздел <b>«Устройства»</b> → нажми на своё устройство → <b>«Ключ / QR»</b> → нажми <b>«Скопировать»</b>.</div>
           <div class="step-tip"><span class="tip-icon">💡</span> Ключ начинается с <code>vless://</code> — он длинный, важно скопировать целиком.</div>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-body">
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
           <div class="step-title">Установи Streisand</div>
           <div class="step-text">Скачай приложение из App Store по кнопке выше и открой его.</div>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-body">
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
           <div class="step-title">Добавь конфигурацию</div>
           <div class="step-text">Нажми <b>«+»</b> → выбери <b>«Импорт из буфера обмена»</b>. Сервер появится в списке автоматически.</div>
           <div class="step-tip"><span class="tip-icon">⚠️</span> Если ничего не добавилось — убедись что ключ скопирован, и попробуй ещё раз.</div>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-body">
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
           <div class="step-title">Разреши создание VPN</div>
           <div class="step-text">iOS покажет запрос — нажми <b>«Разрешить»</b> и подтверди Face ID или пароль. Это нормально — так работает VPN на iPhone.</div>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-num">5</div>
-        <div class="step-body">
+        </div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-body">
           <div class="step-title">Нажми «Подключиться»</div>
           <div class="step-text">Выбери добавленный сервер и переведи тумблер в положение <b>ВКЛ</b>. В статусной строке появится значок <b>VPN</b>.</div>
-        </div>
+        </div></div>
       </div>
-
+      <div class="done-badge"><div class="done-icon">✅</div><div class="done-text"><b>Готово!</b> Ты защищён. Для проверки открой любой заблокированный сайт.</div></div>
     </div>
-    <div class="done-badge">
-      <div class="done-icon">✅</div>
-      <div class="done-text"><b>Готово!</b> Ты защищён. Для проверки открой любой заблокированный сайт.</div>
+
+    <!-- Shadowrocket — платный, для опытных -->
+    <div class="client-panel" id="client-shadowrocket">
+      <div class="app-dl-card">
+        <div class="app-dl-icon">🚀</div>
+        <div class="app-dl-info">
+          <div class="app-dl-name">Shadowrocket</div>
+          <div class="app-dl-meta">Платно · для опытных · iOS 15+</div>
+        </div>
+        <a class="app-dl-btn" href="https://apps.apple.com/app/shadowrocket/id932747118" target="_blank">App Store ↗</a>
+      </div>
+      <div class="steps-title">Шаги подключения</div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <div class="step-title">Купи и установи Shadowrocket</div>
+          <div class="step-text">Приложение платное; покупка происходит в App Store и к подписке STAR VPN отношения не имеет.</div>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <div class="step-title">Добавь подписку</div>
+          <div class="step-text">На главном экране нажми <b>«+»</b>, выбери тип <b>Subscribe</b> и вставь ссылку подписки из бота.</div>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <div class="step-title">Обнови список серверов</div>
+          <div class="step-text">Потяни список вниз — Shadowrocket загрузит актуальные конфигурации.</div>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <div class="step-title">Разреши VPN-профиль</div>
+          <div class="step-text">iOS запросит разрешение на добавление конфигурации VPN при первом включении.</div>
+        </div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-body">
+          <div class="step-title">Выбери режим</div>
+          <div class="step-text">Для полного туннеля поставь <b>Global</b>. Режим <b>Config</b> подойдёт, если нужно пускать через VPN только часть сайтов.</div>
+        </div></div>
+      </div>
+      <div class="done-badge"><div class="done-icon">✅</div><div class="done-text"><b>Готово!</b> Ты защищён. Для проверки открой любой заблокированный сайт.</div></div>
     </div>
   </div>
 
@@ -625,6 +688,14 @@ function showGuide(id, btn) {
   setTimeout(() => {
     document.getElementById('guide-' + id).scrollIntoView({behavior:'smooth', block:'start'});
   }, 50);
+}
+
+function showClient(id, tab) {
+  tab.closest('.client-tabs').querySelectorAll('.client-tab').forEach(t => t.classList.remove('selected'));
+  tab.classList.add('selected');
+  const guide = tab.closest('.guide');
+  guide.querySelectorAll('.client-panel').forEach(p => p.classList.remove('visible'));
+  guide.querySelector('#client-' + id).classList.add('visible');
 }
 
 // Starfield
