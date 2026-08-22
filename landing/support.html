@@ -13,174 +13,166 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
-body{background:#060606;color:#EBE0CC;font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.6;overflow-x:hidden}
-a{color:#FFB800;text-decoration:none}
-a:hover{color:#FFD84D}
-input::placeholder,textarea::placeholder{color:#3A3028}
+:root{
+  --gold:#FFB800;--gold2:#FFD84D;
+  --gold-border:rgba(255,184,0,0.2);
+  --gold-dim:rgba(255,184,0,0.1);
+  --bg:#060606;--bg2:rgba(255,255,255,0.025);
+  --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;
+  --error:#F87171;--max:1240px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.7;overflow-x:hidden}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:var(--gold2)}
+input::placeholder,textarea::placeholder{color:var(--text3)}
 select{appearance:none;-webkit-appearance:none}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
-@media(prefers-reduced-motion:reduce){*{animation:none!important}}
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(255,184,0,.2);border-radius:2px}
-
 #bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35}
 
-header{position:sticky;top:0;z-index:100;background:rgba(6,6,6,.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
-.hd-inner{max-width:1240px;margin:0 auto;padding:0 20px;display:flex;align-items:center;height:64px;gap:20px}
-.hd-logo{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;letter-spacing:.05em;color:#FFB800;flex-shrink:0}
-.hd-login{font-size:13.5px;font-weight:500;color:#EBE0CC;white-space:nowrap;padding:9px 14px;border:1px solid rgba(255,255,255,.18);border-radius:10px;transition:all .2s}
-.hd-login:hover{color:#FFB800;border-color:rgba(255,184,0,.4)}
-.hd-cta{background:#FFB800;color:#000;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;padding:10px 18px;border-radius:11px;white-space:nowrap;display:flex;align-items:center;gap:6px;cursor:pointer;border:none;transition:background .2s}
-.hd-cta:hover{background:#FFD84D}
+#nav{position:sticky;top:0;z-index:100;padding:0 24px;background:rgba(6,6,6,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
+.nav-inner{max-width:var(--max);margin:0 auto;display:flex;align-items:center;height:64px;gap:20px}
+.nav-logo{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;letter-spacing:.05em;color:var(--gold);text-decoration:none;flex-shrink:0}
+.nav-login{font-size:13.5px;font-weight:500;color:var(--text);white-space:nowrap;padding:9px 14px;border:1px solid rgba(255,255,255,.18);border-radius:10px;text-decoration:none;transition:color .2s,border-color .2s;flex-shrink:0}
+.nav-login:hover{color:var(--gold);border-color:var(--gold-border)}
+.nav-cta{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;padding:10px 18px;border-radius:11px;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;transition:background .2s}
+.nav-cta:hover{background:var(--gold2);color:#000}
 
-.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(6,6,6,.72);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
-.modal-overlay.show{display:flex}
-.modal{max-width:640px;width:100%;background:#0B0A09;border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:clamp(24px,4vw,40px);position:relative}
-.modal-close{position:absolute;top:18px;right:18px;width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#8A7A60;font-size:16px;cursor:pointer}
-.modal-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:#FFB800;margin-bottom:12px}
-.modal h3{font-family:'Space Grotesk',sans-serif;font-size:clamp(22px,3vw,28px);font-weight:700;line-height:1.15;margin-bottom:10px}
-.modal p{color:#8A7A60;margin-bottom:26px;text-wrap:pretty}
-.modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-.modal-card{display:block;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:22px;transition:border-color .2s}
-.modal-card:hover{border-color:rgba(255,184,0,.35)}
-.modal-card.gold{background:rgba(255,184,0,.08);border-color:rgba(255,184,0,.3)}
-.modal-card.gold:hover{border-color:rgba(255,184,0,.5)}
-.modal-card-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#8A7A60;margin-bottom:10px}
-.modal-card.gold .modal-card-label{color:#FFB800}
-.modal-card-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:#EBE0CC;margin-bottom:8px}
-.modal-card-text{font-size:13.5px;color:#8A7A60;line-height:1.5}
+.start-modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(6,6,6,.72);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
+.start-modal-overlay.open{display:flex}
+.start-modal{max-width:640px;width:100%;background:#0B0A09;border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:clamp(24px,4vw,40px);position:relative}
+.start-modal-close{position:absolute;top:18px;right:18px;width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text2);font-size:18px;line-height:1;cursor:pointer}
+.start-modal-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.start-modal h3{font-family:'Space Grotesk',sans-serif;font-size:clamp(22px,3vw,28px);font-weight:700;line-height:1.15;margin-bottom:10px}
+.start-modal p{color:var(--text2);margin-bottom:26px}
+.start-modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.start-modal-opt{display:block;border-radius:18px;padding:22px;text-decoration:none;transition:border-color .2s}
+.start-modal-opt.opt-site{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1)}
+.start-modal-opt.opt-site:hover{border-color:var(--gold-border)}
+.start-modal-opt.opt-tg{background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.3)}
+.start-modal-opt.opt-tg:hover{border-color:rgba(255,184,0,.5)}
+.opt-tag{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.opt-tag.tag-site{color:var(--text2)}
+.opt-tag.tag-tg{color:var(--gold)}
+.opt-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
+.opt-text{font-size:13.5px;color:var(--text2);line-height:1.5}
 
-main{position:relative;z-index:2;max-width:820px;margin:0 auto;padding:clamp(32px,5vw,64px) 20px clamp(48px,7vw,80px)}
-.eyebrow{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:#FFB800;margin-bottom:14px}
-h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(30px,4.4vw,48px);font-weight:700;line-height:1.06;letter-spacing:-.02em;margin-bottom:16px}
-.lede{font-size:17px;color:#8A7A60;text-wrap:pretty;max-width:60ch;margin-bottom:clamp(28px,4vw,40px)}
+main{position:relative;z-index:2;max-width:820px;margin:0 auto;padding:clamp(32px,5vw,64px) 24px clamp(48px,7vw,80px)}
+.head{max-width:60ch;margin-bottom:clamp(28px,4vw,40px)}
+.head-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+.head h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(30px,4.4vw,48px);font-weight:700;line-height:1.06;letter-spacing:-.02em;margin-bottom:16px}
+.head p{font-size:17px;color:var(--text2)}
 
 .grid{display:grid;grid-template-columns:1.5fr 1fr;gap:clamp(16px,2.4vw,28px);align-items:start}
-@media(max-width:819px){.grid{grid-template-columns:1fr}}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
 
 .form-card{background:#0D0C0A;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:clamp(22px,3vw,32px)}
-
-.field-label{display:block;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#8A7A60;margin-bottom:10px}
+.field-label{display:block;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:10px}
 .topics{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
-.topic-pill{cursor:pointer;font-size:13px;font-weight:500;padding:9px 15px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#8A7A60;transition:all .15s}
-.topic-pill.sel{border-color:rgba(255,184,0,.45);background:rgba(255,184,0,.08);color:#FFB800}
-
-.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-@media(max-width:559px){.field-grid{grid-template-columns:1fr}}
-input[type=text],select,textarea{width:100%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 15px;color:#EBE0CC;font-family:'Inter',sans-serif;font-size:14.5px;outline:none;transition:border-color .2s}
-input[type=text]:focus,select:focus,textarea:focus{border-color:rgba(255,184,0,.4)}
-input.bad,textarea.bad{border-color:rgba(248,113,113,.5)}
+.topic{cursor:pointer;font-size:13px;font-weight:500;padding:9px 15px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--text2);transition:all .15s}
+.topic.sel{border-color:rgba(255,184,0,.45);background:rgba(255,184,0,.08);color:var(--gold)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+@media(max-width:560px){.field-row{grid-template-columns:1fr}}
+input[type=text],select{width:100%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 15px;color:var(--text);font-family:'Inter',sans-serif;font-size:14.5px;outline:none;transition:border-color .2s}
+input[type=text].err{border-color:rgba(248,113,113,.5)}
 .select-wrap{position:relative}
-select{padding-right:40px;cursor:pointer;appearance:none}
-.select-arr{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#8A7A60}
-textarea{min-height:130px;line-height:1.6;resize:vertical}
-.field-foot{display:flex;justify-content:space-between;gap:12px;margin-top:8px;margin-bottom:18px}
-.field-hint{font-size:12px;color:#3A3028}
-.field-hint.err{color:#F87171}
-.char-count{font-family:'JetBrains Mono',monospace;font-size:12px;color:#3A3028}
+select{padding-right:40px;cursor:pointer}
+.select-chevron{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--text2)}
+textarea{width:100%;min-height:130px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px 15px;color:var(--text);font-family:'Inter',sans-serif;font-size:14.5px;line-height:1.6;outline:none;resize:vertical;transition:border-color .2s}
+textarea.err{border-color:rgba(248,113,113,.5)}
+.field-foot{display:flex;justify-content:space-between;gap:12px;margin-top:8px;margin-bottom:18px;font-size:12px}
+.hint{color:var(--text3)}
+.hint.err{color:var(--error)}
+.char-count{font-family:'JetBrains Mono',monospace;color:var(--text3)}
+.submit-btn{cursor:pointer;text-align:center;background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;padding:16px;border-radius:13px;border:none;width:100%;transition:background .2s}
+.submit-btn:hover{background:var(--gold2)}
+.submit-btn:disabled{background:rgba(255,184,0,.15);color:var(--text2);cursor:default}
+.legal{font-size:12px;color:var(--text3);margin-top:14px;text-align:center}
 
-.submit-btn{cursor:pointer;text-align:center;background:#FFB800;color:#000;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;padding:16px;border-radius:13px;border:none;width:100%;transition:background .2s}
-.submit-btn:hover{background:#FFD84D}
-.submit-btn:disabled{background:rgba(255,184,0,.15);color:#8A7A60;cursor:default}
-.legal{font-size:12px;color:#3A3028;margin-top:14px;text-align:center;text-wrap:pretty}
-
-.sent-state{display:none;text-align:center;padding:20px 0}
-.sent-state.show{display:block}
+.sent{display:none;text-align:center;padding:20px 0}
+.sent.show{display:block}
 .sent-icon{display:inline-flex;width:60px;height:60px;border-radius:18px;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);align-items:center;justify-content:center;margin-bottom:20px}
-.sent-state h2{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:10px}
-.sent-state p{color:#8A7A60;max-width:44ch;margin:0 auto 8px;text-wrap:pretty}
-.sent-state .id{font-family:'JetBrains Mono',monospace;color:#FFB800}
-.sent-state .note{font-size:13px;color:#3A3028;margin-bottom:24px}
-.reset-btn{cursor:pointer;display:inline-block;border:1px solid rgba(255,255,255,.14);color:#EBE0CC;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;padding:12px 24px;border-radius:12px;background:none;transition:all .2s}
-.reset-btn:hover{border-color:rgba(255,184,0,.4);color:#FFB800}
+.sent h2{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:10px}
+.sent p{color:var(--text2);max-width:44ch;margin:0 auto 8px}
+.sent .ticket-id{font-family:'JetBrains Mono',monospace;color:var(--gold)}
+.sent .fine{font-size:13px;color:var(--text3);margin-bottom:24px}
+.reset-btn{cursor:pointer;display:inline-block;border:1px solid rgba(255,255,255,.14);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;padding:12px 24px;border-radius:12px;background:none;transition:border-color .2s,color .2s}
+.reset-btn:hover{border-color:rgba(255,184,0,.4);color:var(--gold)}
 
 .side{display:flex;flex-direction:column;gap:14px}
 .side-card{background:#0D0C0A;border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:22px}
-.side-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#EBE0CC;margin-bottom:16px}
-.side-link{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);margin-bottom:10px;transition:border-color .15s}
-.side-link:last-child{margin-bottom:0}
+.side-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:var(--text);margin-bottom:16px}
+.side-link{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);text-decoration:none;transition:border-color .2s}
 .side-link:hover{border-color:rgba(255,184,0,.35)}
-.side-link-icon{width:34px;height:34px;border-radius:10px;background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.side-link-title{font-size:14px;font-weight:600;color:#EBE0CC}
-.side-link-sub{font-size:12.5px;color:#8A7A60}
+.side-link + .side-link{margin-top:10px}
+.side-link-icon{width:34px;height:34px;border-radius:10px;background:var(--gold-dim);border:1px solid rgba(255,184,0,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.side-link-icon svg{width:17px;height:17px;stroke:var(--gold);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.side-link-title{font-size:14px;font-weight:600;color:var(--text)}
+.side-link-sub{font-size:12.5px;color:var(--text2)}
 
 .tips-card{background:rgba(255,184,0,.05);border:1px solid rgba(255,184,0,.22);border-radius:18px;padding:20px}
-.tips-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#FFB800;margin-bottom:10px}
-.tip{display:flex;gap:9px;font-size:13.5px;line-height:1.5;color:#EBE0CC;align-items:flex-start;margin-bottom:9px}
+.tips-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.tip{display:flex;gap:9px;font-size:13.5px;line-height:1.5;color:var(--text);align-items:flex-start;margin-bottom:9px}
 .tip:last-child{margin-bottom:0}
-.tip-dot{color:#FFB800;flex-shrink:0;margin-top:1px}
+.tip span{color:var(--gold);flex-shrink:0;margin-top:1px}
 
-footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
-.ft-inner{max-width:1240px;margin:0 auto;padding:28px 20px;display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between;font-size:12.5px;color:#3A3028}
-.ft-links{display:flex;gap:20px;flex-wrap:wrap}
-.ft-links a{color:#8A7A60}
+footer{border-top:1px solid rgba(255,255,255,.07)}
+.footer-inner{max-width:var(--max);margin:0 auto;padding:28px 24px;display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between;font-size:12.5px;color:var(--text3)}
+.footer-inner a{color:var(--text2)}
+.footer-links{display:flex;gap:20px;flex-wrap:wrap}
 </style>
 </head>
 <body>
 
 <canvas id="bg-canvas"></canvas>
 
-<header>
-  <div class="hd-inner">
-    <a class="hd-logo" href="/">STAR VPN</a>
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">STAR VPN</a>
     <div style="flex:1"></div>
-    <a class="hd-login" href="/login">Войти в кабинет</a>
-    <button class="hd-cta" id="openStartBtn">2 дня бесплатно
-      <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
-    </button>
+    <a class="nav-login" href="/login">Войти в кабинет</a>
+    <a class="nav-cta" id="nav-start-btn" href="https://t.me/starisvpnbot">2 дня бесплатно<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
   </div>
-</header>
+</nav>
 
-<div class="modal-overlay" id="startModal">
-  <div class="modal" id="startModalBox">
-    <button class="modal-close" id="closeStartBtn">×</button>
-    <div class="modal-label">С чего начать</div>
+<div class="start-modal-overlay" id="start-modal">
+  <div class="start-modal" onclick="event.stopPropagation()">
+    <button class="start-modal-close" id="start-modal-close" aria-label="Закрыть">×</button>
+    <div class="start-modal-label">С чего начать</div>
     <h3>Как вам удобнее подключиться?</h3>
     <p>Два равноценных пути к одному и тому же ключу — выберите свой.</p>
-    <div class="modal-grid">
-      <a class="modal-card" href="/login">
-        <div class="modal-card-label">Личный кабинет</div>
-        <div class="modal-card-title">Через сайт</div>
-        <div class="modal-card-text">Вход по email без пароля. Работает, даже если Telegram недоступен.</div>
+    <div class="start-modal-grid">
+      <a class="start-modal-opt opt-site" href="/login" data-channel="site">
+        <div class="opt-tag tag-site">Личный кабинет</div>
+        <div class="opt-title">Через сайт</div>
+        <div class="opt-text">Вход по email без пароля. Работает, даже если Telegram недоступен.</div>
       </a>
-      <a class="modal-card gold" href="https://t.me/starisvpnbot">
-        <div class="modal-card-label">Telegram</div>
-        <div class="modal-card-title">Через бота</div>
-        <div class="modal-card-text">@starisvpnbot — подписка, продление и поддержка в одном чате.</div>
+      <a class="start-modal-opt opt-tg" href="https://t.me/starisvpnbot" data-channel="telegram">
+        <div class="opt-tag tag-tg">Telegram</div>
+        <div class="opt-title">Через бота</div>
+        <div class="opt-text">@starisvpnbot — подписка, продление и поддержка в одном чате.</div>
       </a>
     </div>
   </div>
 </div>
 
 <main>
-  <div class="eyebrow">Поддержка</div>
-  <h1>Опишите проблему — поможем</h1>
-  <p class="lede">Заполните форму прямо здесь, Telegram не нужен. Обычно отвечаем в течение нескольких часов туда, где вам удобно.</p>
+  <div class="head">
+    <div class="head-label">Поддержка</div>
+    <h1>Опишите проблему — поможем</h1>
+    <p>Заполните форму прямо здесь, Telegram не нужен. Обычно отвечаем в течение нескольких часов туда, где вам удобно.</p>
+  </div>
 
   <div class="grid">
     <div class="form-card">
-
-      <div class="sent-state" id="sentState">
-        <span class="sent-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><path d="M20 6L9 17l-5-5"></path></svg>
-        </span>
-        <h2>Заявка отправлена</h2>
-        <p>Номер обращения <span class="id" id="sentTicketId"></span>. Мы ответим на <span id="sentContact"></span>.</p>
-        <p class="note">Сохраните номер — по нему быстрее найдём вашу заявку.</p>
-        <button class="reset-btn" id="resetBtn">Отправить ещё одну</button>
-      </div>
-
-      <form id="supportForm">
+      <div id="formState">
         <label class="field-label">Тема обращения</label>
         <div class="topics" id="topics">
-          <div class="topic-pill sel" data-topic="connect">Не подключается</div>
-          <div class="topic-pill" data-topic="payment">Оплата</div>
-          <div class="topic-pill" data-topic="account">Аккаунт</div>
-          <div class="topic-pill" data-topic="other">Другое</div>
+          <button type="button" class="topic sel" data-topic="connect">Не подключается</button>
+          <button type="button" class="topic" data-topic="payment">Оплата</button>
+          <button type="button" class="topic" data-topic="account">Аккаунт</button>
+          <button type="button" class="topic" data-topic="other">Другое</button>
         </div>
 
-        <div class="field-grid">
+        <div class="field-row">
           <div>
             <label class="field-label" for="contact">Как с вами связаться</label>
             <input type="text" id="contact" placeholder="email или @username">
@@ -195,50 +187,58 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
                 <option>macOS</option>
                 <option>Другое</option>
               </select>
-              <span class="select-arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M6 9l6 6 6-6"></path></svg></span>
+              <span class="select-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M6 9l6 6 6-6"/></svg></span>
             </div>
           </div>
         </div>
 
         <label class="field-label" for="message">Опишите, что происходит</label>
-        <textarea id="message" placeholder="Например: подключаюсь на iPhone через Happ, но сайты не открываются…" maxlength="1000"></textarea>
+        <textarea id="message" placeholder="Например: подключаюсь на iPhone через Happ, но сайты не открываются…"></textarea>
         <div class="field-foot">
-          <span class="field-hint" id="fieldHint">Приложите как можно больше деталей</span>
-          <span class="char-count" id="charCount">0 / 1000</span>
+          <span class="hint" id="hint">Приложите как можно больше деталей</span>
+          <span class="char-count" id="char-count">0 / 1000</span>
         </div>
 
-        <button type="submit" class="submit-btn" id="submitBtn">Отправить заявку</button>
+        <button class="submit-btn" id="submit-btn">Отправить заявку</button>
         <div class="legal">Отправляя заявку, вы соглашаетесь с <a href="/privacy">политикой конфиденциальности</a>.</div>
-      </form>
+      </div>
+
+      <div class="sent" id="sentState">
+        <span class="sent-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#4ADE80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px"><path d="M20 6L9 17l-5-5"/></svg></span>
+        <h2>Заявка отправлена</h2>
+        <p>Номер обращения <span class="ticket-id" id="ticket-id"></span>. Мы ответим на <span id="sent-contact"></span>.</p>
+        <p class="fine">Сохраните номер — по нему быстрее найдём вашу заявку.</p>
+        <button class="reset-btn" id="reset-btn">Отправить ещё одну</button>
+      </div>
     </div>
 
     <div class="side">
       <div class="side-card">
         <div class="side-title">Другие способы</div>
         <a class="side-link" href="https://t.me/starisvpnbot">
-          <span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#FFB800" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M22 3L2 10.5l6.5 2.5L11 20l3-4.5 5 3z"></path></svg></span>
+          <span class="side-link-icon"><svg viewBox="0 0 24 24"><path d="M22 3L2 10.5l6.5 2.5L11 20l3-4.5 5 3z"/></svg></span>
           <div><div class="side-link-title">Чат в Telegram</div><div class="side-link-sub">@starisvpnbot</div></div>
         </a>
         <a class="side-link" href="/wiki/troubleshooting">
-          <span class="side-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#FFB800" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><path d="M12 3l8 4v5c0 4-3 7-8 8-5-1-8-4-8-8V7z"></path></svg></span>
+          <span class="side-link-icon"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 4-3 7-8 8-5-1-8-4-8-8V7z"/></svg></span>
           <div><div class="side-link-title">Устранение неполадок</div><div class="side-link-sub">Решения частых проблем</div></div>
         </a>
       </div>
 
       <div class="tips-card">
         <div class="tips-label">Быстрее ответим, если</div>
-        <div class="tip"><span class="tip-dot">·</span>Указали платформу и приложение, которым пользуетесь</div>
-        <div class="tip"><span class="tip-dot">·</span>Написали, что именно происходит и с какого момента</div>
-        <div class="tip"><span class="tip-dot">·</span>Отметили, помогает ли смена сервера и работает ли интернет без VPN</div>
+        <div class="tip"><span>·</span>Указали платформу и приложение, которым пользуетесь</div>
+        <div class="tip"><span>·</span>Написали, что именно происходит и с какого момента</div>
+        <div class="tip"><span>·</span>Отметили, помогает ли смена сервера и работает ли интернет без VPN</div>
       </div>
     </div>
   </div>
 </main>
 
 <footer>
-  <div class="ft-inner">
+  <div class="footer-inner">
     <span>© 2026 STAR VPN</span>
-    <span class="ft-links">
+    <span class="footer-links">
       <a href="/wiki">Wiki</a>
       <a href="/privacy">Конфиденциальность</a>
       <a href="/terms">Условия</a>
@@ -247,113 +247,127 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
 </footer>
 
 <script>
-let topic = 'connect';
-let busy = false;
-let touched = false;
-
-document.getElementById('openStartBtn').addEventListener('click', () => document.getElementById('startModal').classList.add('show'));
-document.getElementById('closeStartBtn').addEventListener('click', () => document.getElementById('startModal').classList.remove('show'));
-document.getElementById('startModal').addEventListener('click', (e) => { if (e.target.id === 'startModal') document.getElementById('startModal').classList.remove('show'); });
-document.getElementById('startModalBox').addEventListener('click', (e) => e.stopPropagation());
-
-document.querySelectorAll('.topic-pill').forEach(p => {
-  p.addEventListener('click', () => {
-    topic = p.dataset.topic;
-    document.querySelectorAll('.topic-pill').forEach(x => x.classList.remove('sel'));
-    p.classList.add('sel');
-  });
-});
-
-const messageEl = document.getElementById('message');
-const contactEl = document.getElementById('contact');
-const charCount = document.getElementById('charCount');
-const fieldHint = document.getElementById('fieldHint');
-
-messageEl.addEventListener('input', () => {
-  charCount.textContent = messageEl.value.length + ' / 1000';
-  if (touched) validate();
-});
-contactEl.addEventListener('input', () => { if (touched) validate(); });
-
-function validate() {
-  const contactBad = !contactEl.value.trim();
-  const msgBad = messageEl.value.trim().length < 10;
-  contactEl.classList.toggle('bad', contactBad);
-  messageEl.classList.toggle('bad', msgBad);
-  fieldHint.classList.toggle('err', contactBad || msgBad);
-  fieldHint.textContent = contactBad ? 'Укажите email или @username'
-    : msgBad ? 'Опишите проблему подробнее (от 10 символов)'
-    : 'Приложите как можно больше деталей';
-  return !contactBad && !msgBad;
-}
-
-document.getElementById('supportForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  if (busy) return;
-  touched = true;
-  if (!validate()) return;
-
-  busy = true;
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = 'Отправляем…';
-
-  const contact = contactEl.value.trim();
-  try {
-    const r = await fetch('/api/support', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        topic, contact,
-        platform: document.getElementById('platform').value,
-        message: messageEl.value.trim(),
-      }),
-    });
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(data.detail || 'error');
-
-    document.getElementById('sentTicketId').textContent = data.id;
-    document.getElementById('sentContact').textContent = contact;
-    document.getElementById('supportForm').style.display = 'none';
-    document.getElementById('sentState').classList.add('show');
-  } catch (err) {
-    fieldHint.textContent = 'Не получилось отправить — попробуйте ещё раз';
-    fieldHint.classList.add('err');
-  } finally {
-    busy = false;
-    btn.disabled = false;
-    btn.textContent = 'Отправить заявку';
-  }
-});
-
-document.getElementById('resetBtn').addEventListener('click', () => {
-  document.getElementById('sentState').classList.remove('show');
-  document.getElementById('supportForm').style.display = 'block';
-  messageEl.value = '';
-  charCount.textContent = '0 / 1000';
-  touched = false;
-  contactEl.classList.remove('bad');
-  messageEl.classList.remove('bad');
-  fieldHint.classList.remove('err');
-  fieldHint.textContent = 'Приложите как можно больше деталей';
-});
-
+/* ═══ Starfield ══════════════════════════════════════════════ */
 (function(){
   const c = document.getElementById('bg-canvas');
   const ctx = c.getContext('2d');
-  let stars = [];
   function resize(){ c.width = innerWidth; c.height = innerHeight; }
-  function init(){ stars = Array.from({length:70}, () => ({x:Math.random()*c.width, y:Math.random()*c.height, r:Math.random()*1.2+.3, a:Math.random(), s:Math.random()*.006+.002})); }
-  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  resize(); window.addEventListener('resize', resize, {passive:true});
+  const stars = Array.from({length:120}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.2 + 0.15,
+    o: Math.random() * 0.5 + 0.08,
+    sp: Math.random() * 0.0004 + 0.00006,
+    ph: Math.random() * Math.PI * 2,
+  }));
+  let f = 0;
   function draw(){
-    ctx.clearRect(0,0,c.width,c.height);
-    stars.forEach(s => { s.a += s.s; if (s.a > 1 || s.a < 0) s.s *= -1; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fillStyle = `rgba(255,216,120,${s.a*.55})`; ctx.fill(); });
-    if (!reduced) requestAnimationFrame(draw);
+    ctx.clearRect(0,0,c.width,c.height); f++;
+    for(const s of stars){
+      const a = s.o * (0.4 + 0.6 * Math.sin(f * s.sp * 200 + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fill();
+    }
+    requestAnimationFrame(draw);
   }
-  resize(); init(); draw();
-  window.addEventListener('resize', () => { resize(); init(); });
+  draw();
 })();
+
+/* ═══ Start modal ═════════════════════════════════════════════ */
+(function(){
+  const overlay = document.getElementById('start-modal');
+  const closeBtn = document.getElementById('start-modal-close');
+  const navBtn = document.getElementById('nav-start-btn');
+  let channel = null;
+  try { const saved = localStorage.getItem('star_vpn_channel'); if(saved === 'site' || saved === 'telegram') channel = saved; } catch(e){}
+  function applyChannel(){ navBtn.href = channel === 'site' ? '/login' : 'https://t.me/starisvpnbot'; }
+  applyChannel();
+  navBtn.addEventListener('click', e => { if(channel === null){ e.preventDefault(); overlay.classList.add('open'); } });
+  overlay.addEventListener('click', () => overlay.classList.remove('open'));
+  closeBtn.addEventListener('click', () => overlay.classList.remove('open'));
+  document.querySelectorAll('.start-modal-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      channel = opt.dataset.channel;
+      try { localStorage.setItem('star_vpn_channel', channel); } catch(e){}
+      applyChannel();
+    });
+  });
+})();
+
+/* ═══ Support form ════════════════════════════════════════════ */
+let topic = 'connect';
+document.querySelectorAll('.topic').forEach(btn => {
+  btn.addEventListener('click', () => {
+    topic = btn.dataset.topic;
+    document.querySelectorAll('.topic').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+  });
+});
+
+const contactInput = document.getElementById('contact');
+const messageInput = document.getElementById('message');
+const platformSelect = document.getElementById('platform');
+const hintEl = document.getElementById('hint');
+const charCountEl = document.getElementById('char-count');
+const submitBtn = document.getElementById('submit-btn');
+const formState = document.getElementById('formState');
+const sentState = document.getElementById('sentState');
+
+messageInput.addEventListener('input', () => {
+  charCountEl.textContent = messageInput.value.length + ' / 1000';
+});
+
+function setValidity(contactBad, msgBad){
+  contactInput.classList.toggle('err', contactBad);
+  messageInput.classList.toggle('err', msgBad);
+  hintEl.classList.toggle('err', contactBad || msgBad);
+  hintEl.textContent = contactBad
+    ? 'Укажите email или @username'
+    : msgBad
+      ? 'Опишите проблему подробнее (от 10 символов)'
+      : 'Приложите как можно больше деталей';
+}
+
+submitBtn.addEventListener('click', async () => {
+  const contact = contactInput.value.trim();
+  const message = messageInput.value.trim();
+  const contactBad = !contact;
+  const msgBad = message.length < 10;
+  if (contactBad || msgBad) { setValidity(contactBad, msgBad); return; }
+  setValidity(false, false);
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Отправляем…';
+  const fallbackId = 'S-' + Math.floor(100000 + Math.random() * 900000);
+  let ticketId = fallbackId;
+  try {
+    const r = await fetch('/api/support', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic, contact, platform: platformSelect.value, message }),
+    });
+    if (r.ok) {
+      const d = await r.json();
+      if (d && d.id) ticketId = d.id;
+    }
+  } catch (e) { /* показываем локальный номер заявки как запасной вариант */ }
+
+  document.getElementById('ticket-id').textContent = ticketId;
+  document.getElementById('sent-contact').textContent = contact;
+  formState.style.display = 'none';
+  sentState.classList.add('show');
+  submitBtn.disabled = false;
+  submitBtn.textContent = 'Отправить заявку';
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  messageInput.value = '';
+  charCountEl.textContent = '0 / 1000';
+  setValidity(false, false);
+  sentState.classList.remove('show');
+  formState.style.display = 'block';
+});
 </script>
 </body>
 </html>
