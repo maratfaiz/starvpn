@@ -1820,12 +1820,25 @@ async def guest_checkout(request: Request):
     """
     import uuid
     from bot.models.guest_order import GuestOrder
-    from bot.utils.robokassa import robokassa, CARD_PLANS, guest_inv_id
+    from bot.utils.robokassa import (
+        robokassa, CARD_PLANS, guest_inv_id,
+        CUSTOM_DAYS_MIN, CUSTOM_DAYS_MAX, custom_plan_price,
+    )
 
     body = await request.json()
-    plan = CARD_PLANS.get(body.get("plan"))
-    if not plan:
-        raise HTTPException(status_code=400, detail="Неизвестный тариф")
+    plan_key = body.get("plan")
+    if plan_key == "custom":
+        days = body.get("days")
+        if not isinstance(days, int) or not (CUSTOM_DAYS_MIN <= days <= CUSTOM_DAYS_MAX):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Срок должен быть от {CUSTOM_DAYS_MIN} до {CUSTOM_DAYS_MAX} дней",
+            )
+        plan = {"days": days, "rub": custom_plan_price(days), "label": f"{days} дней"}
+    else:
+        plan = CARD_PLANS.get(plan_key)
+        if not plan:
+            raise HTTPException(status_code=400, detail="Неизвестный тариф")
 
     provider = body.get("provider") or "robokassa"
     if provider not in ("robokassa", "yoomoney"):

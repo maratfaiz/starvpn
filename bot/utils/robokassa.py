@@ -44,6 +44,31 @@ CARD_PLANS: dict[str, dict] = {
     },
 }
 
+# ─── Произвольный срок (слайдер на /tariffs и /get-vpn) ───────────────────────
+# Цена за день падает со сроком — те же пороги, что и в дизайн-макете
+# (Тарифы.dc.html): 7-29 дней по 7₽/день, 30-89 по 6.6₽/день, 90-179 по
+# 5.5₽/день, 180+ по 5₽/день. Совпадает по краям с фиксированными тарифами
+# (30 дней = 198₽ ≈ 199₽ тарифа "1 месяц", 180 дней = 900₽ ≈ 899₽ тарифа
+# "6 месяцев").
+
+CUSTOM_DAYS_MIN = 7
+CUSTOM_DAYS_MAX = 180
+
+
+def custom_day_rate(days: int) -> Decimal:
+    if days >= 180:
+        return Decimal("5")
+    if days >= 90:
+        return Decimal("5.5")
+    if days >= 30:
+        return Decimal("6.6")
+    return Decimal("7")
+
+
+def custom_plan_price(days: int) -> Decimal:
+    """Итоговая цена в рублях за произвольный срок, округлённая до рубля."""
+    return (Decimal(days) * custom_day_rate(days)).quantize(Decimal("1"))
+
 
 class Robokassa:
     """Тонкий клиент для Robokassa: строит подписанные ссылки и проверяет
