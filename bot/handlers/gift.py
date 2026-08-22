@@ -72,10 +72,11 @@ async def _crypto_enabled() -> bool:
 
 @router.message(F.text == "🎁 Подарить VPN")
 async def gift_start(message: Message) -> None:
+    crypto_on = await _crypto_enabled()
     buttons = []
     for key, plan in PLANS.items():
         crypto = CRYPTO_PLANS.get(key, {})
-        usd_str = f" / ${crypto['usd']}" if crypto else ""
+        usd_str = f" / ${crypto['usd']}" if crypto and crypto_on else ""
         buttons.append([InlineKeyboardButton(
             text=f"{plan['label']} — {plan['stars']} ⭐{usd_str}",
             callback_data=f"gift_plan:{key}",
@@ -103,11 +104,12 @@ async def gift_choose_plan(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(GiftForm.pay_method)
 
     plan = PLANS[plan_key]
+    crypto_on = await _crypto_enabled()
     crypto = CRYPTO_PLANS.get(plan_key, {})
-    usd_str = f" / ${crypto['usd']}" if crypto else ""
+    usd_str = f" / ${crypto['usd']}" if crypto and crypto_on else ""
 
     rows = [[InlineKeyboardButton(text="⭐  Telegram Stars", callback_data="gift_method:stars")]]
-    if await _crypto_enabled():
+    if crypto_on:
         rows.append([InlineKeyboardButton(text="💎  Крипта  (USDT · TON · BTC · ETH)", callback_data="gift_method:crypto")])
     rows.append([InlineKeyboardButton(text="❌ Отмена", callback_data="gift:cancel")])
     kb = InlineKeyboardMarkup(inline_keyboard=rows)

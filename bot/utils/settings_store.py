@@ -3,8 +3,11 @@
 
 Stars не тумблится — это нативная валюта Telegram, всегда доступна в боте
 бесплатно для нас (комиссии нет), выключать её незачем. Card/ЮMoney/Crypto
-тумблятся независимо; по умолчанию (нет строки в БД) — включены, чтобы
-поведение не менялось, пока админ ничего не трогал.
+тумблятся независимо; по умолчанию (нет строки в БД) card/ЮMoney включены.
+
+Crypto по умолчанию ВЫКЛЮЧЕНА (продуктовое решение — криптовалюту больше
+не принимаем как способ оплаты). Код и вебхук намеренно не удалены —
+админ может снова включить приём крипты из панели при необходимости.
 """
 
 from sqlalchemy import select
@@ -18,6 +21,12 @@ PROVIDER_KEYS = {
     "crypto": "payment_crypto_enabled",
 }
 
+_DEFAULT_ENABLED = {
+    "card": True,
+    "yoomoney": True,
+    "crypto": False,
+}
+
 
 async def is_provider_enabled(session: AsyncSession, provider: str) -> bool:
     key = PROVIDER_KEYS.get(provider)
@@ -26,7 +35,7 @@ async def is_provider_enabled(session: AsyncSession, provider: str) -> bool:
     row = await session.execute(select(AppSetting).where(AppSetting.key == key))
     setting = row.scalar_one_or_none()
     if setting is None:
-        return True
+        return _DEFAULT_ENABLED.get(provider, True)
     return setting.value == "1"
 
 
