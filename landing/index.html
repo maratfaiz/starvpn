@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>STAR VPN — VPN нового поколения</title>
-<meta name="description" content="STAR VPN — высокоскоростной VPN на протоколе VLESS Reality. Невидим для DPI. 2 дня бесплатно. Оплата Telegram Stars или криптовалютой.">
+<title>STAR VPN — VPN, который не отваливается</title>
+<meta name="description" content="STAR VPN — VPN, который не отваливается: сайты и приложения открываются как раньше. История подключений не сохраняется, до 3 устройств, 2 дня бесплатно.">
 <link rel="icon" href="/logo.png" type="image/png">
 <link rel="apple-touch-icon" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Poppins:wght@600;700&family=Montserrat:wght@700;800&family=Archivo:wght@600;700&family=Raleway:wght@700;800&family=Rubik:wght@600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
 /* ─── Reset ────────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0}
@@ -45,7 +45,7 @@ body{
 
 /* ─── NAV ──────────────────────────────────────────────────── */
 #nav{
-  position:fixed;top:2px;left:0;right:0;z-index:100;
+  position:sticky;top:0;z-index:100;
   padding:0 24px;
   background:rgba(6,6,6,0.82);
   backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
@@ -82,7 +82,7 @@ body{
   transition:background .2s,transform .15s,box-shadow .2s;
 }
 .nav-cta:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 8px 24px rgba(255,184,0,0.3)}
-@media(max-width:768px){.nav-links{display:none}.nav-cta{padding:8px 16px;font-size:12px}}
+@media(max-width:768px){.nav-links{display:none}.nav-login{display:none}.nav-cta{padding:8px 16px;font-size:12px}}
 
 /* ─── Wrapper ──────────────────────────────────────────────── */
 .wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}
@@ -159,21 +159,6 @@ body{
 }
 .btn-ghost:hover{border-color:var(--gold-border);color:var(--gold);transform:translateY(-2px)}
 
-.hero-stats{
-  display:flex;gap:64px;margin-top:80px;
-  flex-wrap:wrap;justify-content:center;
-  animation:fadeUp .7s ease .4s both;
-}
-.h-stat-num{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:38px;font-weight:700;
-  color:var(--gold);line-height:1;
-  text-shadow:0 0 40px rgba(255,184,0,0.3);
-}
-.h-stat-lbl{
-  font-size:11px;font-weight:600;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--text3);margin-top:4px;
-}
 
 /* ─── Marquee ──────────────────────────────────────────────── */
 .marquee-wrap{
@@ -213,128 +198,7 @@ section{padding:120px 0}
 .section-p{font-size:16px;color:var(--text2);max-width:520px;line-height:1.75}
 .divider{height:1px;background:linear-gradient(90deg,transparent,var(--gold-border),transparent);position:relative;z-index:2}
 
-/* ─── FEATURES ─────────────────────────────────────────────── */
-.feat-grid{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:16px;margin-top:56px;
-}
-@media(max-width:900px){.feat-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:560px){.feat-grid{grid-template-columns:1fr}}
-
-.feat-card{
-  background:var(--bg2);border:1px solid var(--gold-border);
-  border-radius:var(--r);padding:28px 24px;
-  position:relative;overflow:hidden;
-  transition:transform .3s,border-color .3s,background .3s;
-}
-.feat-card::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(circle at 0 0,rgba(255,184,0,.09),transparent 60%);
-  opacity:0;transition:opacity .3s;pointer-events:none;
-}
-.feat-card:hover{transform:translateY(-5px);border-color:rgba(255,184,0,.4);background:rgba(255,184,0,.03)}
-.feat-card:hover::before{opacity:1}
-
-.feat-icon{
-  width:46px;height:46px;border-radius:12px;
-  background:var(--gold-dim);
-  display:flex;align-items:center;justify-content:center;
-  margin-bottom:20px;color:var(--gold);
-  transition:background .3s;
-}
-.feat-card:hover .feat-icon{background:rgba(255,184,0,.18)}
-.feat-icon svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.feat-title{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:17px;font-weight:600;
-  color:var(--text);margin-bottom:8px;
-}
-.feat-text{font-size:14px;color:var(--text2);line-height:1.7}
-
-/* ─── TRIAL BANNER ─────────────────────────────────────────── */
-.trial-banner{position:relative;z-index:2;padding:0 24px}
-.trial-inner{
-  max-width:var(--max);margin:0 auto;
-  background:linear-gradient(135deg,rgba(255,184,0,.1) 0%,rgba(255,212,77,.04) 100%);
-  border:1px solid rgba(255,184,0,.35);
-  border-radius:24px;padding:56px 56px;
-  display:flex;align-items:center;justify-content:space-between;gap:48px;
-  position:relative;overflow:hidden;
-}
-.trial-inner::after{
-  content:'';position:absolute;right:-80px;top:-80px;
-  width:320px;height:320px;
-  background:radial-gradient(circle,rgba(255,184,0,.14),transparent 65%);
-  pointer-events:none;
-}
-.trial-label{font-size:12px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
-.trial-h{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:clamp(28px,4vw,42px);font-weight:700;
-  color:var(--text);line-height:1.15;margin-bottom:10px;
-}
-.trial-p{font-size:15px;color:var(--text2)}
-@media(max-width:700px){.trial-inner{flex-direction:column;padding:40px 28px;text-align:center}}
-
-/* ─── HOW IT WORKS ─────────────────────────────────────────── */
-.how-grid{
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:80px;align-items:center;margin-top:56px;
-}
-@media(max-width:768px){.how-grid{grid-template-columns:1fr;gap:48px}}
-
-.steps{display:flex;flex-direction:column}
-.step{
-  display:flex;gap:24px;
-  padding:28px 0;border-bottom:1px solid rgba(255,184,0,.07);
-  transition:padding-left .25s;cursor:default;
-}
-.step:first-child{padding-top:0}.step:last-child{border-bottom:none}
-.step:hover{padding-left:8px}
-.step-num{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:42px;font-weight:700;letter-spacing:-.02em;
-  color:rgba(255,184,0,.14);line-height:1;
-  flex-shrink:0;width:60px;text-align:right;
-  transition:color .3s;
-}
-.step:hover .step-num{color:rgba(255,184,0,.4)}
-.step-title{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px;
-}
-.step-text{font-size:14px;color:var(--text2);line-height:1.7}
-.step-text a{color:var(--gold);text-decoration:none}
-.step-text a:hover{text-decoration:underline}
-
-.how-visual{
-  aspect-ratio:1;max-width:380px;width:100%;
-  margin:0 auto;position:relative;
-  display:flex;align-items:center;justify-content:center;
-}
-.vis-core{
-  width:140px;height:140px;border-radius:50%;
-  background:radial-gradient(circle at 38% 35%,#141414,#050505);
-  border:1px solid rgba(255,184,0,.2);
-  box-shadow:0 0 80px rgba(255,184,0,.07),inset 0 0 40px rgba(255,184,0,.03);
-  display:flex;align-items:center;justify-content:center;position:relative;z-index:1;
-}
-.vis-icon{font-size:54px;filter:drop-shadow(0 0 18px rgba(255,184,0,.5))}
-.vis-ring{
-  position:absolute;border-radius:50%;
-  border:1px dashed rgba(255,184,0,.14);
-  top:50%;left:50%;transform:translate(-50%,-50%);
-}
-.vr1{width:230px;height:230px;animation:spin 13s linear infinite}
-.vr2{width:320px;height:320px;animation:spin 22s linear infinite reverse}
-.vr3{width:400px;height:400px;border-style:dotted;animation:spin 32s linear infinite;opacity:.6}
 @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
-.v-dot{
-  position:absolute;width:10px;height:10px;border-radius:50%;
-  background:var(--gold);box-shadow:0 0 14px var(--gold);
-  top:-5px;left:50%;transform:translateX(-50%);
-}
-.vr2 .v-dot{background:#555;box-shadow:0 0 8px #555;top:auto;bottom:-5px}
 
 /* ─── PRICING ──────────────────────────────────────────────── */
 .plan-grid{
@@ -574,12 +438,210 @@ footer{
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,184,0,.2);border-radius:2px}
+
+/* ─── TOP BANNER ───────────────────────────────────────────── */
+.top-banner{
+  position:relative;z-index:110;
+  background:rgba(255,184,0,.09);border-bottom:1px solid var(--gold-border);
+}
+.top-banner-inner{
+  max-width:var(--max);margin:0 auto;padding:9px 24px;
+  display:flex;gap:14px;align-items:center;justify-content:center;
+  flex-wrap:wrap;font-size:12.5px;color:var(--text);letter-spacing:.01em;
+}
+.top-banner-inner svg{width:14px;height:14px;flex-shrink:0}
+.top-banner-inner a{font-weight:600;white-space:nowrap;color:var(--gold);text-decoration:none}
+.top-banner-inner a:hover{color:var(--gold2)}
+
+/* ─── NAV login pill ───────────────────────────────────────── */
+.nav-login{
+  font-size:13.5px;font-weight:500;color:var(--text);white-space:nowrap;
+  padding:9px 16px;border:1px solid rgba(255,255,255,.18);border-radius:11px;
+  text-decoration:none;transition:color .2s,border-color .2s;flex-shrink:0;
+}
+.nav-login:hover{color:var(--gold);border-color:var(--gold-border)}
+
+/* ─── START MODAL ──────────────────────────────────────────── */
+.start-modal-overlay{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(6,6,6,.72);backdrop-filter:blur(6px);
+  align-items:center;justify-content:center;padding:20px;
+}
+.start-modal-overlay.open{display:flex}
+.start-modal{
+  max-width:640px;width:100%;background:#0B0A09;
+  border:1px solid rgba(255,255,255,.1);border-radius:24px;
+  padding:clamp(24px,4vw,40px);position:relative;
+}
+.start-modal-close{
+  position:absolute;top:18px;right:18px;width:32px;height:32px;border-radius:9px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  color:var(--text2);font-size:18px;line-height:1;cursor:pointer;
+}
+.start-modal-label{
+  font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;
+}
+.start-modal h3{
+  font-family:'Space Grotesk',sans-serif;font-size:clamp(22px,3vw,28px);
+  font-weight:700;line-height:1.15;margin-bottom:10px;
+}
+.start-modal p{color:var(--text2);margin-bottom:26px}
+.start-modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.start-modal-opt{
+  display:block;border-radius:18px;padding:22px;text-decoration:none;
+  transition:border-color .2s;
+}
+.start-modal-opt.opt-site{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1)}
+.start-modal-opt.opt-site:hover{border-color:var(--gold-border)}
+.start-modal-opt.opt-tg{background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.3)}
+.start-modal-opt.opt-tg:hover{border-color:rgba(255,184,0,.5)}
+.opt-tag{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.opt-tag.tag-site{color:var(--text2)}
+.opt-tag.tag-tg{color:var(--gold)}
+.opt-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
+.opt-text{font-size:13.5px;color:var(--text2);line-height:1.5}
+
+/* ─── HERO (grid + device card) ────────────────────────────── */
+.hero{
+  min-height:auto;display:block;text-align:left;
+  padding:clamp(44px,6vw,84px) 24px clamp(40px,5vw,72px);
+}
+.hero-grid{
+  max-width:var(--max);margin:0 auto;
+  display:grid;grid-template-columns:1.05fr .95fr;
+  gap:clamp(32px,4vw,64px);align-items:center;
+}
+@media(max-width:900px){.hero-grid{grid-template-columns:1fr}}
+.hero-h1{font-size:clamp(38px,5.6vw,68px);line-height:1.03;text-align:left;margin-bottom:22px}
+.hero-sub{margin:0 0 30px;text-align:left;max-width:52ch}
+.hero-buttons{justify-content:flex-start;margin-bottom:28px}
+.hero-chips{display:flex;gap:20px;flex-wrap:wrap}
+.hero-chip{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--text2)}
+.hero-chip svg{width:16px;height:16px;flex-shrink:0;stroke:var(--gold)}
+
+.hero-card-wrap{position:relative}
+.hero-card-glow{
+  position:absolute;inset:-8% 0;
+  background:radial-gradient(circle at 60% 35%,rgba(255,184,0,.16),transparent 62%);
+  filter:blur(34px);pointer-events:none;
+}
+.device-card{
+  position:relative;background:linear-gradient(160deg,rgba(255,184,0,.13),rgba(255,255,255,.02));
+  border:1px solid rgba(255,184,0,.25);border-radius:24px;padding:24px;
+  backdrop-filter:blur(24px);box-shadow:0 30px 70px rgba(0,0,0,.5);
+}
+.device-card-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.device-status-pill{
+  display:flex;align-items:center;gap:7px;background:rgba(74,222,128,.12);
+  border:1px solid rgba(74,222,128,.3);border-radius:100px;padding:5px 12px;
+  font-size:11.5px;font-weight:600;color:#4ADE80;
+}
+.device-status-pill .dot{width:6px;height:6px;border-radius:50%;background:#4ADE80}
+.device-until{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2)}
+.device-days{display:flex;align-items:baseline;gap:9px;margin-bottom:4px}
+.device-days-num{font-family:'Space Grotesk',sans-serif;font-size:44px;font-weight:700;color:var(--text);line-height:1}
+.device-days-lbl{font-size:15px;color:var(--text2)}
+.device-plan{font-size:13px;color:var(--text2);margin-bottom:16px}
+.device-progress{height:6px;background:rgba(0,0,0,.4);border-radius:4px;overflow:hidden;margin-bottom:20px}
+.device-progress-fill{height:100%;width:68%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:4px}
+.device-sub-label{font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.device-sub-box{
+  display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.5);
+  border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:12px 14px;margin-bottom:16px;
+}
+.device-sub-url{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.device-copy{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;color:var(--gold);white-space:nowrap;cursor:pointer;background:none;border:none}
+.device-apps{display:flex;gap:9px;flex-wrap:wrap}
+.device-app-chip{
+  font-size:11.5px;color:var(--text2);border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;padding:6px 11px;font-family:'Space Grotesk',sans-serif;
+}
+
+/* ─── BENEFITS (design fold) ───────────────────────────────── */
+.benefits-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);
+  border-radius:22px;overflow:hidden;margin-top:56px;
+}
+.benefit-card{background:#080807;padding:30px 26px}
+.benefit-icon{
+  display:flex;align-items:center;justify-content:center;width:36px;height:36px;
+  border-radius:11px;background:var(--gold-dim);border:1px solid rgba(255,184,0,.25);margin-bottom:16px;
+}
+.benefit-icon svg{width:18px;height:18px;stroke:var(--gold);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.benefit-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;color:var(--text);margin-bottom:9px}
+.benefit-text{font-size:14px;line-height:1.65;color:var(--text2)}
+
+.mini-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:clamp(40px,5vw,64px)}
+.mini-step-card{background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:24px}
+.mini-step-num{
+  display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px;
+  background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;margin-bottom:14px;
+}
+.mini-step-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:var(--text);margin-bottom:7px}
+.mini-step-text{font-size:14px;line-height:1.6;color:var(--text2)}
+
+/* ─── COMPARE TABLE ────────────────────────────────────────── */
+.compare-wrap{
+  border:1px solid var(--gold-border);border-radius:20px;overflow:hidden;
+  background:rgba(255,255,255,.018);margin-top:56px;
+}
+.compare-scroll{overflow-x:auto}
+.compare-table{width:100%;border-collapse:collapse;min-width:640px}
+.compare-table th{
+  text-align:left;padding:18px 22px;font-family:'Space Grotesk',sans-serif;
+  font-size:13px;font-weight:600;color:var(--text2);border-bottom:1px solid var(--gold-border);
+}
+.compare-table th:first-child{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+.compare-table th.col-star{color:var(--gold);font-weight:700;background:var(--gold-dim)}
+.compare-table td{padding:16px 22px;font-size:13.5px;color:var(--text2);border-bottom:1px solid rgba(255,255,255,.05)}
+.compare-table td:first-child{font-size:14px;font-weight:500;color:var(--text)}
+.compare-table td.col-star{color:var(--text);background:var(--gold-dim)}
+.compare-note{font-size:12.5px;color:var(--text3);margin-top:14px}
+
+/* ─── APPS GRID ────────────────────────────────────────────── */
+.apps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:34px}
+@media(max-width:700px){.apps-grid{grid-template-columns:repeat(2,1fr)}}
+.app-tile{
+  display:flex;align-items:center;gap:10px;background:var(--bg2);
+  border:1px solid var(--gold-border);border-radius:16px;padding:14px 12px;
+  text-decoration:none;transition:border-color .2s,transform .2s;
+}
+.app-tile:hover{border-color:rgba(255,184,0,.35);transform:translateY(-3px)}
+.app-tile-icon{
+  width:38px;height:38px;border-radius:11px;background:var(--gold-dim);
+  border:1px solid rgba(255,184,0,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.app-tile-icon svg{width:19px;height:19px;stroke:var(--gold);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.app-tile-name{font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:700;color:var(--text)}
+
+/* ─── REFERRAL SPLIT ───────────────────────────────────────── */
+.ref-split{
+  background:var(--bg2);border:1px solid var(--gold-border);border-radius:22px;
+  padding:clamp(28px,4vw,48px);display:grid;grid-template-columns:1fr 1fr;
+  gap:clamp(24px,3vw,48px);align-items:center;margin-top:56px;
+}
+@media(max-width:768px){.ref-split{grid-template-columns:1fr}}
+.ref-rows{display:flex;flex-direction:column;gap:1px;background:rgba(255,255,255,.07);border-radius:16px;overflow:hidden}
+.ref-row{background:#0B0A09;padding:16px 20px;display:flex;justify-content:space-between;gap:16px;align-items:center}
+.ref-row-label{font-size:13.5px;color:var(--text2)}
+.ref-row-value{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600}
 </style>
 </head>
 <body>
 
 <div id="progress"></div>
 <canvas id="bg-canvas"></canvas>
+
+<!-- ═══ TOP BANNER ═══════════════════════════════════════════════ -->
+<div class="top-banner">
+  <div class="top-banner-inner">
+    <svg viewBox="0 0 24 24" fill="#FFB800"><path d="M21.5 4.5L2.7 12.1c-1.2.5-1.2 1.2-.2 1.5l4.6 1.4 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.4-2.3 4.9 3.6c.9.5 1.5.2 1.8-.8l3.2-15c.3-1.3-.4-1.8-1.5-1.3zM8.5 14.3l9.7-6.2c.5-.3.9-.1.5.2l-8.2 7.5-.3 3.3-1.5-4.6z"></path></svg>
+    <span>Telegram не открывается? Ключ можно купить прямо на сайте, без бота.</span>
+    <a href="/get-vpn">Купить без Telegram →</a>
+  </div>
+</div>
 
 <!-- ═══ NAV ═══════════════════════════════════════════════════ -->
 <nav id="nav">
@@ -589,222 +651,201 @@ footer{
       <span class="nav-logo-text">STAR VPN</span>
     </a>
     <div class="nav-links">
-      <a href="#features">Возможности</a>
+      <a href="#how">Преимущества</a>
+      <a href="#compare">Сравнение</a>
+      <a href="#apps">Устройства</a>
+      <a href="#faq">Вопросы</a>
       <a href="/tariffs">Тарифы</a>
-      <a href="/connect">Подключение</a>
       <a href="/wiki">Wiki</a>
-      <a href="#gift">Подарок</a>
-      <a href="/get-vpn">Купить без Telegram</a>
-      <a href="/login">Войти</a>
     </div>
-    <a class="nav-cta" href="https://t.me/starisvpnbot">Попробовать бесплатно</a>
+    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <a class="nav-login" href="/login">Войти в кабинет</a>
+      <a class="nav-cta" id="nav-start-btn" href="https://t.me/starisvpnbot">2 дня бесплатно</a>
+    </div>
   </div>
 </nav>
 
+<!-- ═══ START MODAL ═══════════════════════════════════════════════ -->
+<div class="start-modal-overlay" id="start-modal">
+  <div class="start-modal" onclick="event.stopPropagation()">
+    <button class="start-modal-close" id="start-modal-close" aria-label="Закрыть">×</button>
+    <div class="start-modal-label">С чего начать</div>
+    <h3>Как вам удобнее подключиться?</h3>
+    <p>Два равноценных пути к одному и тому же ключу — выберите свой.</p>
+    <div class="start-modal-grid">
+      <a class="start-modal-opt opt-site" href="/login" data-channel="site">
+        <div class="opt-tag tag-site">Личный кабинет</div>
+        <div class="opt-title">Через сайт</div>
+        <div class="opt-text">Вход по email без пароля. Работает, даже если Telegram недоступен.</div>
+      </a>
+      <a class="start-modal-opt opt-tg" href="https://t.me/starisvpnbot" data-channel="telegram">
+        <div class="opt-tag tag-tg">Telegram</div>
+        <div class="opt-title">Через бота</div>
+        <div class="opt-text">@starisvpnbot — подписка, продление и поддержка в одном чате.</div>
+      </a>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ HERO ═══════════════════════════════════════════════════ -->
 <section class="hero">
-  <div class="hero-badge">
-    <span class="badge-dot"></span>
-    VLESS Reality &nbsp;·&nbsp; Zero Logs &nbsp;·&nbsp; Telegram Native
-  </div>
+  <div class="hero-grid">
+    <div>
+      <h1 class="hero-h1">
+        <span class="l1">Интернет без границ —</span>
+        <span class="l2">и без следов</span>
+      </h1>
 
-  <h1 class="hero-h1">
-    <span class="l1">Свобода в сети.</span>
-    <span class="l2">Защита — везде.</span>
-  </h1>
+      <p class="hero-sub">
+        Ваше соединение выглядит для сети как обычный заход на сайт — поэтому его не блокируют. История подключений не сохраняется даже у нас.
+      </p>
 
-  <p class="hero-sub">
-    VPN на протоколе VLESS Reality — невидим для провайдера и DPI. Работает там, где другие заблокированы.
-  </p>
+      <div class="hero-buttons">
+        <a class="btn-gold" href="https://t.me/starisvpnbot" id="hero-primary-btn">
+          <span id="hero-primary-label">Подключиться</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a class="btn-ghost" href="/tariffs" id="hero-secondary-btn"><span id="hero-secondary-label">Смотреть тарифы</span></a>
+      </div>
 
-  <div class="hero-buttons">
-    <a class="btn-gold" href="https://t.me/starisvpnbot">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      Попробовать 2 дня бесплатно
-    </a>
-    <a class="btn-ghost" href="#pricing">Смотреть тарифы →</a>
-  </div>
-
-  <p style="margin-top:20px;font-size:13px;color:var(--text2)">
-    Не открывается Telegram? <a href="/get-vpn" style="color:var(--gold);text-decoration:none">Купи VPN прямо здесь →</a>
-  </p>
-
-  <div class="hero-stats">
-    <div class="h-stat">
-      <div class="h-stat-num" data-target="3">0</div>
-      <div class="h-stat-lbl">Устройства</div>
+      <div class="hero-chips">
+        <div class="hero-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a8 8 0 100 16 8 8 0 000-16zM12 8v4.5l3 1.8"/></svg>
+          2 дня бесплатно
+        </div>
+        <div class="hero-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1M17 7h4v8h-4"/></svg>
+          До 3 устройств
+        </div>
+        <div class="hero-chip">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5.5A2.5 2.5 0 0111.5 3h4A2.5 2.5 0 0118 5.5v13a2.5 2.5 0 01-2.5 2.5h-4A2.5 2.5 0 019 18.5M4 4l16 16"/></svg>
+          Без документов
+        </div>
+      </div>
     </div>
-    <div class="h-stat">
-      <div class="h-stat-num">VLESS</div>
-      <div class="h-stat-lbl">Протокол Reality</div>
-    </div>
-    <div class="h-stat">
-      <div class="h-stat-num">0</div>
-      <div class="h-stat-lbl">Логов трафика</div>
-    </div>
-    <div class="h-stat">
-      <div class="h-stat-num" data-target="2">0</div>
-      <div class="h-stat-lbl">Дня бесплатно</div>
+
+    <div class="hero-card-wrap">
+      <div class="hero-card-glow"></div>
+      <div class="device-card">
+        <div class="device-card-top">
+          <span class="device-status-pill"><span class="dot"></span>Активна</span>
+          <span class="device-until">пример подписки</span>
+        </div>
+        <div class="device-days">
+          <span class="device-days-num">61</span>
+          <span class="device-days-lbl">дн. осталось</span>
+        </div>
+        <div class="device-plan">Тариф «3 месяца» · VLESS + Reality</div>
+        <div class="device-progress"><div class="device-progress-fill"></div></div>
+        <div class="device-sub-label">Ссылка подписки</div>
+        <div class="device-sub-box">
+          <span class="device-sub-url">https://sub.starvpn/…/9f2c1a</span>
+          <button class="device-copy" type="button">копировать</button>
+        </div>
+        <div class="device-apps">
+          <span class="device-app-chip">Happ</span>
+          <span class="device-app-chip">v2rayNG</span>
+          <span class="device-app-chip">Hiddify</span>
+          <span class="device-app-chip">v2rayN</span>
+          <span class="device-app-chip">V2Box</span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- ═══ MARQUEE ════════════════════════════════════════════════ -->
 <div class="marquee-wrap">
-  <div class="marquee-track" id="marquee">
-    <div class="m-item"><span class="m-dot"></span>VLESS Reality</div>
-    <div class="m-item"><span class="m-dot"></span>Zero Logs</div>
-    <div class="m-item"><span class="m-dot"></span>DPI Protection</div>
-    <div class="m-item"><span class="m-dot"></span>Telegram Stars</div>
-    <div class="m-item"><span class="m-dot"></span>USDT · TON · BTC · ETH</div>
-    <div class="m-item"><span class="m-dot"></span>3 Устройства</div>
-    <div class="m-item"><span class="m-dot"></span>2 Дня бесплатно</div>
-    <div class="m-item"><span class="m-dot"></span>Xray-core</div>
-    <div class="m-item"><span class="m-dot"></span>TLS 1.3</div>
-    <div class="m-item"><span class="m-dot"></span>Подарить VPN</div>
-    <div class="m-item"><span class="m-dot"></span>Партнёрская программа</div>
+  <div class="marquee-track" id="marquee" style="animation-duration:34s">
+    <span class="m-item" style="font-family:'Poppins',sans-serif;font-weight:700;letter-spacing:-.02em">YouTube</span>
+    <span class="m-item" style="font-family:'Poppins',sans-serif;font-weight:600;letter-spacing:-.01em">Instagram</span>
+    <span class="m-item" style="font-family:'Poppins',sans-serif;font-weight:700;letter-spacing:-.03em">TikTok</span>
+    <span class="m-item" style="font-family:'Rubik',sans-serif;font-weight:700;letter-spacing:-.03em">Facebook</span>
+    <span class="m-item" style="font-family:'Rubik',sans-serif;font-weight:700;letter-spacing:-.01em">Discord</span>
+    <span class="m-item" style="font-family:'Montserrat',sans-serif;font-weight:800;letter-spacing:-.02em">Spotify</span>
+    <span class="m-item" style="font-family:'Archivo',sans-serif;font-weight:700;letter-spacing:-.01em;font-style:italic">Twitch</span>
+    <span class="m-item" style="font-family:'Bebas Neue',sans-serif;letter-spacing:.06em;text-transform:uppercase">NETFLIX</span>
+    <span class="m-item" style="font-family:'Archivo',sans-serif;font-weight:600;letter-spacing:.16em;text-transform:uppercase">STEAM</span>
+    <span class="m-item" style="font-family:'Inter',sans-serif;font-weight:600;letter-spacing:-.01em">Notion</span>
+    <span class="m-item" style="font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:-.01em">ChatGPT</span>
+    <span class="m-item" style="font-family:'Raleway',sans-serif;font-weight:800;letter-spacing:.01em">Figma</span>
+    <span class="m-item" style="font-family:'Montserrat',sans-serif;font-weight:700;letter-spacing:-.02em">LinkedIn</span>
+    <span class="m-item" style="font-family:'Poppins',sans-serif;font-weight:600;letter-spacing:-.01em">Pinterest</span>
+    <span class="m-item" style="font-family:'Archivo',sans-serif;font-weight:700;letter-spacing:-.02em">SoundCloud</span>
+    <span class="m-item" style="font-family:'Archivo',sans-serif;font-weight:700">X</span>
     <!-- дублируем для бесшовного скролла -->
-    <div class="m-item"><span class="m-dot"></span>VLESS Reality</div>
-    <div class="m-item"><span class="m-dot"></span>Zero Logs</div>
-    <div class="m-item"><span class="m-dot"></span>DPI Protection</div>
-    <div class="m-item"><span class="m-dot"></span>Telegram Stars</div>
-    <div class="m-item"><span class="m-dot"></span>USDT · TON · BTC · ETH</div>
-    <div class="m-item"><span class="m-dot"></span>3 Устройства</div>
-    <div class="m-item"><span class="m-dot"></span>2 Дня бесплатно</div>
-    <div class="m-item"><span class="m-dot"></span>Xray-core</div>
-    <div class="m-item"><span class="m-dot"></span>TLS 1.3</div>
-    <div class="m-item"><span class="m-dot"></span>Подарить VPN</div>
-    <div class="m-item"><span class="m-dot"></span>Партнёрская программа</div>
+    <span class="m-item" style="font-family:'Poppins',sans-serif;font-weight:700;letter-spacing:-.02em">YouTube</span>
+    <span class="m-item" style="font-family:'Poppins',sans-serif;font-weight:600;letter-spacing:-.01em">Instagram</span>
+    <span class="m-item" style="font-family:'Poppins',sans-serif;font-weight:700;letter-spacing:-.03em">TikTok</span>
+    <span class="m-item" style="font-family:'Rubik',sans-serif;font-weight:700;letter-spacing:-.03em">Facebook</span>
+    <span class="m-item" style="font-family:'Rubik',sans-serif;font-weight:700;letter-spacing:-.01em">Discord</span>
+    <span class="m-item" style="font-family:'Montserrat',sans-serif;font-weight:800;letter-spacing:-.02em">Spotify</span>
+    <span class="m-item" style="font-family:'Archivo',sans-serif;font-weight:700;letter-spacing:-.01em;font-style:italic">Twitch</span>
+    <span class="m-item" style="font-family:'Bebas Neue',sans-serif;letter-spacing:.06em;text-transform:uppercase">NETFLIX</span>
+    <span class="m-item" style="font-family:'Archivo',sans-serif;font-weight:600;letter-spacing:.16em;text-transform:uppercase">STEAM</span>
+    <span class="m-item" style="font-family:'Inter',sans-serif;font-weight:600;letter-spacing:-.01em">Notion</span>
+    <span class="m-item" style="font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:-.01em">ChatGPT</span>
+    <span class="m-item" style="font-family:'Raleway',sans-serif;font-weight:800;letter-spacing:.01em">Figma</span>
+    <span class="m-item" style="font-family:'Montserrat',sans-serif;font-weight:700;letter-spacing:-.02em">LinkedIn</span>
+    <span class="m-item" style="font-family:'Poppins',sans-serif;font-weight:600;letter-spacing:-.01em">Pinterest</span>
+    <span class="m-item" style="font-family:'Archivo',sans-serif;font-weight:700;letter-spacing:-.02em">SoundCloud</span>
+    <span class="m-item" style="font-family:'Archivo',sans-serif;font-weight:700">X</span>
   </div>
 </div>
 
 <div class="divider"></div>
 
-<!-- ═══ FEATURES ═══════════════════════════════════════════════ -->
-<section id="features">
-<div class="wrap">
-  <div class="reveal">
-    <div class="section-label">Возможности</div>
-    <h2 class="section-h">Почему <em>STAR VPN</em></h2>
-    <p class="section-p">Построен на технологии, которая делает VPN-трафик неотличимым от обычного HTTPS.</p>
-  </div>
-
-  <div class="feat-grid">
-    <!-- Невидимый трафик -->
-    <div class="feat-card reveal d1">
-      <div class="feat-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z"/><path d="M9 12l2 2 4-4"/></svg>
-      </div>
-      <div class="feat-title">Невидимый трафик</div>
-      <div class="feat-text">VLESS Reality маскирует VPN под реальный HTTPS-сайт. Ни один DPI-фильтр не обнаружит подключение.</div>
-    </div>
-
-    <!-- Скорость -->
-    <div class="feat-card reveal d2">
-      <div class="feat-icon">
-        <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      </div>
-      <div class="feat-title">Высокая скорость</div>
-      <div class="feat-text">Выделенный Marzban-сервер без переполненных пулов. Стабильная скорость без лимитов 24/7.</div>
-    </div>
-
-    <!-- Устройства -->
-    <div class="feat-card reveal d3">
-      <div class="feat-icon">
-        <svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><rect x="1" y="7" width="5" height="10" rx="1" stroke-width="1.5"/><line x1="12" y1="17.5" x2="12.01" y2="17.5" stroke-width="2.5"/></svg>
-      </div>
-      <div class="feat-title">До 3 устройств</div>
-      <div class="feat-text">Один аккаунт — три независимых ключа. iPhone, MacBook, Android — всё одновременно.</div>
-    </div>
-
-    <!-- Оплата -->
-    <div class="feat-card reveal d4">
-      <div class="feat-icon">
-        <svg viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
-      </div>
-      <div class="feat-title">Гибкая оплата</div>
-      <div class="feat-text">Telegram Stars — мгновенно прямо в боте. Или крипта: USDT · TON · BTC · ETH через @CryptoBot.</div>
-    </div>
-
-    <!-- 2 дня бесплатно -->
-    <div class="feat-card reveal d5">
-      <div class="feat-icon">
-        <svg viewBox="0 0 24 24"><path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
-      </div>
-      <div class="feat-title">2 дня бесплатно</div>
-      <div class="feat-text">Каждому новому пользователю — пробный период на 2 дня. Без карты, без регистрации.</div>
-    </div>
-
-    <!-- Партнёрка -->
-    <div class="feat-card reveal d6">
-      <div class="feat-icon">
-        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-      </div>
-      <div class="feat-title">Партнёрская программа</div>
-      <div class="feat-text">10% Stars с каждой покупки твоих рефералов. Выводи на баланс Telegram при накоплении 100 ⭐.</div>
-    </div>
-  </div>
-</div>
-</section>
-
-<!-- ═══ TRIAL BANNER ════════════════════════════════════════════ -->
-<div class="trial-banner reveal">
-  <div class="trial-inner">
-    <div>
-      <div class="trial-label">Начни прямо сейчас</div>
-      <h2 class="trial-h">Первые 2 дня —<br>совершенно бесплатно</h2>
-      <p class="trial-p">Никаких карт, личных данных и регистраций. Только Telegram.</p>
-    </div>
-    <a class="btn-gold" href="https://t.me/starisvpnbot" style="flex-shrink:0">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      Активировать
-    </a>
-  </div>
-</div>
-
-<div class="divider" style="margin-top:80px"></div>
-
-<!-- ═══ HOW IT WORKS ════════════════════════════════════════════ -->
+<!-- ═══ ПРЕИМУЩЕСТВА ═══════════════════════════════════════════ -->
 <section id="how">
 <div class="wrap">
   <div class="reveal">
-    <div class="section-label">Подключение</div>
-    <h2 class="section-h">Три шага <em>к свободе</em></h2>
-    <p class="section-p">Весь процесс — прямо в Telegram. Без сайтов, email и банковских карт.</p>
+    <div class="section-label">Преимущества</div>
+    <h2 class="section-h">Интернет, который <em>просто работает</em></h2>
+    <p class="section-p">Без настроек, без разбирательств с протоколами. Включили — и сайты, приложения и видео открываются как раньше.</p>
   </div>
 
-  <div class="how-grid">
-    <div class="steps reveal-left">
-      <div class="step">
-        <div class="step-num">01</div>
-        <div>
-          <div class="step-title">Запустить бота</div>
-          <div class="step-text">Открой <a href="https://t.me/starisvpnbot" target="_blank">@starisvpnbot</a> и нажми «Попробовать бесплатно» — 2 дня полного доступа мгновенно.</div>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">02</div>
-        <div>
-          <div class="step-title">Добавить устройство</div>
-          <div class="step-text">Выбери тип устройства в мини-приложении, получи VLESS-ссылку и QR-код. Импортируй в Streisand (iOS) или v2rayNG (Android).</div>
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">03</div>
-        <div>
-          <div class="step-title">Нажать Connect — и забыть</div>
-          <div class="step-text">Один тап в VPN-приложении. Готово. Интернет без границ и без тормозов на любой скорости.</div>
-        </div>
-      </div>
+  <div class="benefits-grid">
+    <div class="benefit-card reveal d1">
+      <span class="benefit-icon"><svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 100 16 8 8 0 000-16zM4.5 12h15M12 4c2 2.4 3 5 3 8s-1 5.6-3 8c-2-2.4-3-5-3-8s1-5.6 3-8z"/></svg></span>
+      <div class="benefit-title">Открывается всё</div>
+      <div class="benefit-text">Сайты, соцсети, магазины приложений и видео работают так же, как до блокировок. Ничего не нужно настраивать отдельно.</div>
     </div>
+    <div class="benefit-card reveal d2">
+      <span class="benefit-icon"><svg viewBox="0 0 24 24"><path d="M12 20h.01M5 12.5a10 10 0 0114 0M8 15.8a5.5 5.5 0 018 0M2 9.2a15 15 0 0120 0"/></svg></span>
+      <div class="benefit-title">Не отваливается</div>
+      <div class="benefit-text">Соединение выглядит как обычный вход на сайт, поэтому его не отключают вместе с другими VPN. Работает и на мобильном интернете.</div>
+    </div>
+    <div class="benefit-card reveal d3">
+      <span class="benefit-icon"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5.5c0 4.3-2.9 7.7-7 8.5-4.1-.8-7-4.2-7-8.5V6zM9.5 12l1.8 1.8 3.4-3.6"/></svg></span>
+      <div class="benefit-title">Никто не смотрит</div>
+      <div class="benefit-text">Мы не ведём журнал подключений: списка сайтов, времени и адресов просто не существует — их негде взять.</div>
+    </div>
+    <div class="benefit-card reveal d4">
+      <span class="benefit-icon"><svg viewBox="0 0 24 24"><path d="M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1M17 7h4v8h-4"/></svg></span>
+      <div class="benefit-title">Один ключ на всё</div>
+      <div class="benefit-text">Телефон, ноутбук и планшет — до трёх устройств на одной подписке. Доплачивать за каждое не нужно.</div>
+    </div>
+  </div>
 
-    <div class="how-visual reveal-right">
-      <div class="vis-ring vr3"><div class="v-dot"></div></div>
-      <div class="vis-ring vr2"><div class="v-dot"></div></div>
-      <div class="vis-ring vr1"><div class="v-dot"></div></div>
-      <div class="vis-core">
-        <div class="vis-icon">🛡</div>
-      </div>
+  <div class="reveal" style="margin-top:clamp(40px,5vw,64px);max-width:64ch">
+    <h2 class="section-h" style="font-size:clamp(22px,3vw,32px);margin-bottom:12px">Подключение занимает три минуты</h2>
+    <p class="section-p">Никаких настроек вручную: приложение всё делает само, от вас — три действия.</p>
+  </div>
+  <div class="mini-steps">
+    <div class="mini-step-card reveal d1">
+      <span class="mini-step-num">1</span>
+      <div class="mini-step-title">Получите доступ</div>
+      <div class="mini-step-text">Два дня бесплатно в боте или ключ на сайте — если Telegram не открывается.</div>
+    </div>
+    <div class="mini-step-card reveal d2">
+      <span class="mini-step-num">2</span>
+      <div class="mini-step-title">Поставьте приложение</div>
+      <div class="mini-step-text">Бесплатное, из App Store или Google Play. Мы подскажем, какое именно для вашего устройства.</div>
+    </div>
+    <div class="mini-step-card reveal d3">
+      <span class="mini-step-num">3</span>
+      <div class="mini-step-title">Нажмите «Подключить»</div>
+      <div class="mini-step-text">Вставляете свою ссылку — приложение настраивается само. Дальше просто переключатель.</div>
     </div>
   </div>
 </div>
@@ -954,12 +995,156 @@ footer{
       <span class="loc-badge">Скоро</span>
     </div>
     <div class="location-row loc-example">
+      <span class="loc-flag">🇸🇪</span>
+      <div class="loc-info">
+        <div class="loc-city">Стокгольм, Швеция</div>
+        <div class="loc-note">Пример — в планах</div>
+      </div>
+      <span class="loc-badge">Скоро</span>
+    </div>
+    <div class="location-row loc-example">
       <span class="loc-flag">🇺🇸</span>
       <div class="loc-info">
         <div class="loc-city">Нью-Йорк, США</div>
         <div class="loc-note">Пример — в планах</div>
       </div>
       <span class="loc-badge">Скоро</span>
+    </div>
+  </div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ СРАВНЕНИЕ ══════════════════════════════════════════════ -->
+<section id="compare">
+<div class="wrap">
+  <div class="reveal">
+    <div class="section-label">Сравнение</div>
+    <h2 class="section-h">Чем отличается <em>от обычных VPN</em></h2>
+    <p class="section-p">Привычные VPN тоже шифруют трафик, но их легко узнать со стороны — поэтому их и отключают. Наш способ подключения со стороны неотличим от обычного сёрфинга.</p>
+  </div>
+  <div class="compare-wrap reveal">
+    <div class="compare-scroll">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Параметр</th>
+            <th>Обычный VPN</th>
+            <th>Бесплатный прокси</th>
+            <th class="col-star">STAR VPN</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Заметен ли со стороны</td>
+            <td>Да, сразу видно, что это VPN</td>
+            <td>Чаще всего заметен</td>
+            <td class="col-star">Нет — выглядит как обычный сайт</td>
+          </tr>
+          <tr>
+            <td>Что бывает при блокировках</td>
+            <td>Отключается или сильно тормозит</td>
+            <td>Как повезёт</td>
+            <td class="col-star">Продолжает работать</td>
+          </tr>
+          <tr>
+            <td>Скорость</td>
+            <td>Заметно ниже обычной</td>
+            <td>Ближе к обычной</td>
+            <td class="col-star">Почти без потерь</td>
+          </tr>
+          <tr>
+            <td>Нужно ли настраивать</td>
+            <td>Обычно да</td>
+            <td>Обычно да</td>
+            <td class="col-star">Нет — вставили ссылку и готово</td>
+          </tr>
+          <tr>
+            <td>Сколько устройств</td>
+            <td>Зависит от сервиса</td>
+            <td>Зависит от сервиса</td>
+            <td class="col-star">До трёх на одной подписке</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="compare-note reveal">Сравниваем способы подключения в целом, а не конкретные сервисы.</p>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ УСТРОЙСТВА ═════════════════════════════════════════════ -->
+<section id="apps">
+<div class="wrap">
+  <div class="reveal">
+    <div class="section-label">Устройства</div>
+    <h2 class="section-h">Работает на <em>любом устройстве</em></h2>
+    <p class="section-p">Вставляете ссылку подписки в приложение — до трёх устройств на одном аккаунте.</p>
+  </div>
+  <div class="apps-grid reveal">
+    <a class="app-tile" href="/connect#guide-ios">
+      <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M7 3h10a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM10.5 18h3"/></svg></span>
+      <div class="app-tile-name">iOS</div>
+    </a>
+    <a class="app-tile" href="/connect#guide-android">
+      <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0112 0v9a1 1 0 01-1 1H7a1 1 0 01-1-1zM9 3.5L7.5 6M15 3.5L16.5 6M9.5 12h.01M14.5 12h.01"/></svg></span>
+      <div class="app-tile-name">Android</div>
+    </a>
+    <a class="app-tile" href="/connect#guide-windows">
+      <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M4 6l7-1v6H4zM11 5l9-1.3V11h-9zM4 12h7v5l-7-1zM11 12h9v7.3L11 18z"/></svg></span>
+      <div class="app-tile-name">Windows</div>
+    </a>
+    <a class="app-tile" href="/connect#guide-macos">
+      <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M12.5 8.5c-1.8-1.5-4.3-1-5.6.8-1.5 2-1.2 5.3.5 7.7C8.2 18 9 18.6 10 18.5c.9 0 1.2-.6 2.4-.6s1.5.6 2.4.5c1 0 1.7-.8 2.4-1.8.5-.7.8-1.4 1-1.9-2.3-1-2.6-4.2-.6-5.4-1.2-1.6-3.5-1.7-5-.6M15 5c.5-1.3 1.7-2.2 3-2.2"/></svg></span>
+      <div class="app-tile-name">macOS</div>
+    </a>
+    <a class="app-tile" href="/connect#guide-linux">
+      <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 015 5v2a5 7 0 01-10 0V7a5 5 0 015-5zM7 13c0 4 2 7 5 7s5-3 5-7"/></svg></span>
+      <div class="app-tile-name">Linux</div>
+    </a>
+    <a class="app-tile" href="/connect#guide-appletv">
+      <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zM9 20h6"/></svg></span>
+      <div class="app-tile-name">Apple TV</div>
+    </a>
+    <a class="app-tile" href="/connect">
+      <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M3 11h18v4a1 1 0 01-1 1H4a1 1 0 01-1-1zM7 16v3M17 16v3M6 11V8a2 2 0 012-2h8a2 2 0 012 2v3"/></svg></span>
+      <div class="app-tile-name">Роутер</div>
+    </a>
+    <a class="app-tile" href="/connect#guide-androidtv">
+      <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M3 5h18v11H3zM8 19h8M12 16v3"/></svg></span>
+      <div class="app-tile-name">Смарт-ТВ</div>
+    </a>
+  </div>
+</div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══ РЕФЕРАЛЫ ═══════════════════════════════════════════════ -->
+<section id="referrals">
+<div class="wrap">
+  <div class="ref-split reveal">
+    <div>
+      <div class="section-label">Рефералы</div>
+      <h2 class="section-h" style="font-size:clamp(24px,3.2vw,34px)">+30 дней за каждых <em>двух друзей</em></h2>
+      <p class="section-p">Дни добавляются к вашей подписке автоматически, как только двое друзей оформят платную подписку. Без баллов и вывода деньгами — только дни.</p>
+    </div>
+    <div class="ref-rows">
+      <div class="ref-row">
+        <span class="ref-row-label">Бонус за пару друзей</span>
+        <span class="ref-row-value" style="color:var(--gold)">+30 дней</span>
+      </div>
+      <div class="ref-row">
+        <span class="ref-row-label">Куда добавляется</span>
+        <span class="ref-row-value" style="color:var(--text)">к сроку вашей подписки</span>
+      </div>
+      <div class="ref-row">
+        <span class="ref-row-label">Следующий бонус</span>
+        <span class="ref-row-value" style="color:var(--text)">через 1 друга</span>
+      </div>
     </div>
   </div>
 </div>
@@ -978,58 +1163,50 @@ footer{
   <div class="faq-list reveal">
     <div class="faq-item">
       <button class="faq-btn">
-        Что такое VLESS и чем он лучше обычного VPN?
+        Это законно?
         <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
       </button>
-      <div class="faq-body"><p>VLESS — современный легковесный протокол из семейства Xray. В отличие от OpenVPN и WireGuard, он создан специально для обхода DPI-систем. Технология Reality «заимствует» TLS-сертификат реального HTTPS-сайта, поэтому провайдер видит обычный веб-трафик, а не VPN.</p></div>
+      <div class="faq-body"><p>Мы предоставляем шифрованный доступ в интернет и не контролируем, какие сайты вы открываете. Сервис не предназначен для доступа к контенту, запрещённому законом.</p></div>
     </div>
 
     <div class="faq-item">
       <button class="faq-btn">
-        На каких устройствах работает STAR VPN?
+        Почему обычные VPN блокируют, а этот нет?
         <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
       </button>
-      <div class="faq-body"><p>Работает на всех популярных платформах: телефон/планшет — iOS (Streisand), Android (v2rayNG); компьютер — Windows (v2rayN), macOS (V2Box), Linux (NekoRay); ТВ — Apple TV и Смарт-ТВ (Happ). Один аккаунт — до 3 устройств одновременно. Пошаговые инструкции доступны на странице <a href="/connect" style="color:var(--gold)">«Как подключиться»</a> и прямо в боте @starisvpnbot.</p></div>
+      <div class="faq-body"><p>Обычный VPN легко узнать со стороны — по этому признаку его и отключают. Наше соединение со стороны выглядит как заход на обычный сайт, поэтому отличать его не по чему.</p></div>
     </div>
 
     <div class="faq-item">
       <button class="faq-btn">
-        Вы ведёте логи активности пользователей?
+        Вы видите, какие сайты я открываю?
         <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
       </button>
-      <div class="faq-body"><p>Нет. Строгая политика нулевых логов. Мы не записываем IP-адреса, посещённые сайты, историю соединений или любую другую информацию об активности в сети. Сервер настроен без access-логов на уровне Xray-core.</p></div>
+      <div class="faq-body"><p>Нет. Запись истории подключений отключена на сервере: списка сайтов, времени и адресов не существует, поэтому и передать его некому.</p></div>
     </div>
 
     <div class="faq-item">
       <button class="faq-btn">
-        Как оплатить подписку?
+        Сколько устройств можно подключить?
         <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
       </button>
-      <div class="faq-body"><p>Два способа: Telegram Stars — мгновенно прямо в боте, без карт и регистраций. Или криптовалюта (USDT, TON, BTC, ETH) через @CryptoBot. Никаких автосписаний — вы платите только когда хотите продлить.</p></div>
+      <div class="faq-body"><p>До трёх на один аккаунт. Ссылка подписки одна: добавляете её в клиент на каждом устройстве, конфиги подтягиваются автоматически.</p></div>
     </div>
 
     <div class="faq-item">
       <button class="faq-btn">
-        Как работает функция «Подарить VPN»?
+        Нужен ли паспорт при оплате?
         <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
       </button>
-      <div class="faq-body"><p>В боте нажми «🎁 Подарить VPN», выбери тариф и способ оплаты (Stars или крипта), укажи @username или ID получателя. Можно отправить анонимно или от своего имени с личным сообщением. Подписка активируется автоматически после оплаты.</p></div>
+      <div class="faq-body"><p>Нет. Ни Telegram Stars, ни оплата картой через Robokassa, ни ЮMoney, ни криптовалюта через @CryptoBot не требуют от вас документов.</p></div>
     </div>
 
     <div class="faq-item">
       <button class="faq-btn">
-        Есть ли реферальная программа?
+        А если Telegram не открывается?
         <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
       </button>
-      <div class="faq-body"><p>Да! Вы получаете 10% Stars с каждой покупки приглашённого пользователя. Реферальная ссылка доступна в разделе «Партнёрка» в боте или мини-приложении. Накопленные Stars можно вывести (минимум 100 ⭐).</p></div>
-    </div>
-
-    <div class="faq-item">
-      <button class="faq-btn">
-        Что делать, если VPN работает медленно?
-        <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
-      </button>
-      <div class="faq-body"><p>Попробуйте переподключить VPN или пересоздать ключ в разделе «Устройства» в мини-приложении. Если скорость не улучшается — напишите в поддержку через бота. Отвечаем быстро.</p></div>
+      <div class="faq-body"><p>Для этого есть покупка ключа прямо на сайте: выбираете тариф, платите картой или через ЮMoney и получаете ссылку подписки — бот не нужен.</p></div>
     </div>
   </div>
 </div>
@@ -1042,31 +1219,66 @@ footer{
   <div class="cta-glow"></div>
   <div class="reveal">
     <div class="section-label">Начать прямо сейчас</div>
-    <h2 class="section-h" style="margin-bottom:16px">Первые 2 дня — <em>бесплатно</em></h2>
-    <p class="section-p" style="margin:0 auto 40px;max-width:440px">Никаких карт и регистраций. Просто открой Telegram и запусти бота.</p>
-    <a class="btn-gold" href="https://t.me/starisvpnbot" style="font-size:16px;padding:18px 48px">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      Открыть STAR VPN
-    </a>
+    <h2 class="section-h" style="margin-bottom:16px">Два дня бесплатно, <em>без карты</em></h2>
+    <p class="section-p" style="margin:0 auto 40px;max-width:440px">Пробный период даётся один раз на один аккаунт Telegram. Если Telegram недоступен — ключ можно купить прямо на сайте.</p>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
+      <a class="btn-gold" href="https://t.me/starisvpnbot" style="font-size:16px;padding:18px 48px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Открыть @starisvpnbot
+      </a>
+      <a class="btn-ghost" href="/get-vpn" style="font-size:16px;padding:17px 40px">Купить без Telegram</a>
+    </div>
   </div>
 </section>
 
 <!-- ═══ FOOTER ══════════════════════════════════════════════════ -->
 <footer>
-  <a class="footer-logo" href="#">
-    <img src="/logo.png" alt="STAR VPN">
-    <span class="footer-logo-text">STAR VPN</span>
-  </a>
-  <div class="footer-links">
-    <a href="https://t.me/starisvpnbot">@starisvpnbot</a>
-    <a href="/tariffs">Тарифы</a>
-    <a href="/wiki">Wiki</a>
-    <a href="/connect">Подключение</a>
-    <a href="/privacy">Конфиденциальность</a>
-    <a href="/terms">Условия</a>
-    <a href="https://t.me/hashprojects">Поддержка</a>
+  <div class="wrap" style="text-align:left;display:grid;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));gap:36px;padding-bottom:36px">
+    <div style="min-width:200px">
+      <a class="footer-logo" href="#" style="margin-bottom:14px">
+        <img src="/logo.png" alt="STAR VPN">
+        <span class="footer-logo-text" style="font-size:16px">STAR VPN</span>
+      </a>
+      <p style="font-size:13px;color:var(--text3);line-height:1.65;max-width:32ch">VPN, который не отваливается. История подключений не сохраняется.</p>
+      <a href="https://t.me/starisvpnbot" style="display:inline-block;margin-top:16px;font-size:13px;font-weight:600;color:var(--gold);text-decoration:none">@starisvpnbot</a>
+    </div>
+    <div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--text2);margin-bottom:15px">Продукт</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a href="/tariffs" style="font-size:13.5px;color:var(--text2);text-decoration:none">Тарифы</a>
+        <a href="/get-vpn" style="font-size:13.5px;color:var(--text2);text-decoration:none">Купить без Telegram</a>
+        <a href="#gift" style="font-size:13.5px;color:var(--text2);text-decoration:none">Подарить VPN</a>
+        <a href="https://t.me/starisvpnbot" style="font-size:13.5px;color:var(--text2);text-decoration:none">Бот @starisvpnbot</a>
+      </div>
+    </div>
+    <div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--text2);margin-bottom:15px">Подключение</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a href="/connect#guide-ios" style="font-size:13.5px;color:var(--text2);text-decoration:none">iOS</a>
+        <a href="/connect#guide-android" style="font-size:13.5px;color:var(--text2);text-decoration:none">Android</a>
+        <a href="/connect#guide-windows" style="font-size:13.5px;color:var(--text2);text-decoration:none">Windows</a>
+        <a href="/connect#guide-macos" style="font-size:13.5px;color:var(--text2);text-decoration:none">macOS</a>
+      </div>
+    </div>
+    <div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--text2);margin-bottom:15px">База знаний</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a href="/wiki" style="font-size:13.5px;color:var(--text2);text-decoration:none">VLESS + Reality</a>
+        <a href="/wiki" style="font-size:13.5px;color:var(--text2);text-decoration:none">Zero Logs</a>
+        <a href="/wiki" style="font-size:13.5px;color:var(--text2);text-decoration:none">Реферальная программа</a>
+        <a href="/wiki" style="font-size:13.5px;color:var(--text2);text-decoration:none">FAQ и неполадки</a>
+      </div>
+    </div>
+    <div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--text2);margin-bottom:15px">Правовое</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <a href="/privacy" style="font-size:13.5px;color:var(--text2);text-decoration:none">Политика конфиденциальности</a>
+        <a href="/terms" style="font-size:13.5px;color:var(--text2);text-decoration:none">Условия использования</a>
+        <a href="https://t.me/hashprojects" style="font-size:13.5px;color:var(--text2);text-decoration:none">Поддержка</a>
+      </div>
+    </div>
   </div>
-  <div class="footer-copy">© 2026 STAR VPN · VLESS Reality · Zero Logs</div>
+  <div class="footer-copy" style="border-top:1px solid var(--gold-border);padding-top:22px">© 2026 STAR VPN · Сервис не предназначен для доступа к запрещённому законом контенту</div>
 </footer>
 
 <script>
@@ -1167,6 +1379,69 @@ window.addEventListener('scroll', () => {
   nav.style.background = window.scrollY > 40
     ? 'rgba(6,6,6,0.95)' : 'rgba(6,6,6,0.82)';
 }, {passive:true});
+
+/* ═══ Start modal + channel choice (Telegram vs сайт) ═══════════ */
+(function(){
+  const overlay = document.getElementById('start-modal');
+  const closeBtn = document.getElementById('start-modal-close');
+  const heroBtn = document.getElementById('hero-primary-btn');
+  const heroLabel = document.getElementById('hero-primary-label');
+  const secBtn = document.getElementById('hero-secondary-btn');
+  const secLabel = document.getElementById('hero-secondary-label');
+  const navBtn = document.getElementById('nav-start-btn');
+
+  let channel = null;
+  try { const saved = localStorage.getItem('star_vpn_channel'); if(saved === 'site' || saved === 'telegram') channel = saved; } catch(e){}
+
+  function applyChannel(){
+    if(channel === 'telegram'){
+      heroBtn.href = 'https://t.me/starisvpnbot'; heroLabel.textContent = 'Начать в Telegram';
+      secBtn.href = '/login'; secLabel.textContent = 'Или войти по email';
+      navBtn.href = 'https://t.me/starisvpnbot';
+    } else if(channel === 'site'){
+      heroBtn.href = '/login'; heroLabel.textContent = 'Войти по email';
+      secBtn.href = 'https://t.me/starisvpnbot'; secLabel.textContent = 'Или открыть бота';
+      navBtn.href = '/login';
+    } else {
+      heroBtn.href = '#'; heroLabel.textContent = 'Подключиться';
+      secBtn.href = '/tariffs'; secLabel.textContent = 'Смотреть тарифы';
+      navBtn.href = '#';
+    }
+  }
+  applyChannel();
+
+  function openModal(){ overlay.classList.add('open'); }
+  function closeModal(){ overlay.classList.remove('open'); }
+
+  function onPrimaryClick(e){
+    if(channel === null){ e.preventDefault(); openModal(); }
+  }
+  heroBtn.addEventListener('click', onPrimaryClick);
+  navBtn.addEventListener('click', onPrimaryClick);
+
+  overlay.addEventListener('click', closeModal);
+  closeBtn.addEventListener('click', closeModal);
+
+  document.querySelectorAll('.start-modal-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      channel = opt.dataset.channel;
+      try { localStorage.setItem('star_vpn_channel', channel); } catch(e){}
+      applyChannel();
+    });
+  });
+})();
+
+/* ═══ Device card copy button ════════════════════════════════ */
+document.querySelectorAll('.device-copy').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const url = btn.closest('.device-sub-box').querySelector('.device-sub-url').textContent;
+    navigator.clipboard.writeText(url).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = 'скопировано';
+      setTimeout(() => { btn.textContent = orig; }, 1500);
+    }).catch(() => {});
+  });
+});
 </script>
 </body>
 </html>
