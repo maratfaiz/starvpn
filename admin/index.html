@@ -22,19 +22,25 @@ textarea{resize:vertical}
 ::-webkit-scrollbar-track{background:transparent}
 
 /* ── Login ─────────────────────────────────────────────────── */
-#login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#060606;z-index:1000}
-.login-box{width:360px;padding:40px 36px;background:#0D0C0A;border:1px solid rgba(255,184,0,.18);border-radius:20px;box-shadow:0 0 60px rgba(255,184,0,.06)}
-.login-logo{text-align:center;margin-bottom:28px}
-.login-logo-icon{width:56px;height:56px;border-radius:16px;margin:0 auto 12px;background:linear-gradient(135deg,#FFB800,#FFD84D);display:flex;align-items:center;justify-content:center;color:#000}
-.login-logo-icon svg{width:26px;height:26px}
-.login-logo h1{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;letter-spacing:.03em;color:#FFB800}
-.login-logo p{font-size:11.5px;color:#3A3028;text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
-.login-label{font-size:11px;font-weight:600;color:#8A7A60;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:block}
-.login-input{width:100%;padding:12px 14px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:11px;color:#EBE0CC;font-size:14px;outline:none;transition:border-color .15s;margin-bottom:16px}
+#login-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#060606;z-index:1000;padding:24px}
+#login-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.login-wrap{position:relative;z-index:2;width:100%;max-width:420px}
+.login-head{display:flex;flex-direction:column;align-items:center;text-align:center;margin-bottom:28px}
+.login-wordmark{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;letter-spacing:.05em;color:#FFB800;margin-bottom:22px}
+.login-badge{display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(255,184,0,.22);border-radius:100px;padding:7px 16px;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.14em;color:#FFB800;background:rgba(255,184,0,.07)}
+.login-badge svg{width:11px;height:11px;flex-shrink:0}
+.login-box{padding:clamp(26px,4vw,36px);background:#0D0C0A;border:1px solid rgba(255,255,255,.1);border-radius:24px;box-shadow:0 30px 70px rgba(0,0,0,.4)}
+.login-box h2{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:8px}
+.login-box .login-sub{font-size:13.5px;color:#8A7A60;margin-bottom:24px;text-wrap:pretty;line-height:1.6}
+.login-label{font-size:11px;font-weight:600;color:#8A7A60;text-transform:uppercase;letter-spacing:.1em;margin-bottom:9px;display:block}
+.login-input{width:100%;padding:14px 16px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:13px;color:#EBE0CC;font-size:15px;outline:none;transition:border-color .15s;margin-bottom:8px}
 .login-input:focus{border-color:rgba(255,184,0,.4)}
-.login-btn{width:100%;padding:13px;background:#FFB800;color:#000;border:none;border-radius:11px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;transition:background .15s}
+.login-btn{width:100%;padding:15px;background:#FFB800;color:#000;border:none;border-radius:13px;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;transition:background .15s;margin-top:8px}
 .login-btn:hover{background:#FFD84D}
-.login-err{color:#F87171;font-size:12.5px;margin-top:12px;text-align:center;min-height:16px}
+.login-err{color:#F87171;font-size:12.5px;margin-top:4px;min-height:16px}
+.login-note{font-size:12px;color:#3A3028;margin-top:16px;line-height:1.6;text-align:center}
+.login-back{display:block;text-align:center;margin-top:22px;font-size:13px;color:#3A3028}
+.login-back:hover{color:#8A7A60}
 
 /* ── Shell ─────────────────────────────────────────────────── */
 #app{display:none;grid-template-columns:248px 1fr;min-height:100vh;background:#060606}
@@ -237,16 +243,22 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 <body>
 
 <div id="login-screen">
-  <div class="login-box">
-    <div class="login-logo">
-      <div class="login-logo-icon"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.7 1.1 6.6L12 17.1l-5.8 3.2 1.1-6.6L2.5 9l6.6-.9z"/></svg></div>
-      <h1>STAR VPN</h1>
-      <p>Admin Portal</p>
+  <canvas id="login-canvas"></canvas>
+  <div class="login-wrap">
+    <div class="login-head">
+      <div class="login-wordmark">STAR VPN</div>
+      <div class="login-badge"><svg viewBox="0 0 24 24" fill="none" stroke="#FFB800" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 018 0v4"></path></svg>ДЛЯ АДМИНИСТРАТОРОВ</div>
     </div>
-    <label class="login-label">Ключ доступа</label>
-    <input class="login-input" type="password" id="login-key" placeholder="ADMIN_WEB_KEY" onkeydown="if(event.key==='Enter')doLogin()">
-    <button class="login-btn" onclick="doLogin()">Войти</button>
-    <div class="login-err" id="login-err"></div>
+    <div class="login-box">
+      <h2>Вход в админ-панель</h2>
+      <p class="login-sub">Доступ только для сотрудников с правами администратора. Обычным пользователям сюда не нужно — им в <a href="/login">личный кабинет</a>.</p>
+      <label class="login-label">Ключ доступа</label>
+      <input class="login-input" type="password" id="login-key" placeholder="ADMIN_WEB_KEY" onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="login-err" id="login-err"></div>
+      <button class="login-btn" onclick="doLogin()">Войти</button>
+      <div class="login-note">Вход логируется на сервере.</div>
+    </div>
+    <a class="login-back" href="/">← Вернуться на сайт</a>
   </div>
 </div>
 
@@ -298,6 +310,36 @@ let token = '';
 let section = 'dash';
 let query = '';
 let filter = 'all';
+
+/* ── Login starfield ───────────────────────────────────────── */
+(function initLoginCanvas() {
+  const c = document.getElementById('login-canvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  let stars = [];
+  const resize = () => { c.width = innerWidth; c.height = innerHeight; };
+  const init = () => {
+    stars = Array.from({ length: 120 }, () => ({
+      x: Math.random() * c.width, y: Math.random() * c.height,
+      r: Math.random() * 1.4 + .3, a: Math.random(), s: Math.random() * .008 + .002,
+    }));
+  };
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let raf;
+  const draw = () => {
+    if (document.hidden) { raf = requestAnimationFrame(draw); return; }
+    ctx.clearRect(0, 0, c.width, c.height);
+    stars.forEach(s => {
+      s.a += s.s; if (s.a > 1 || s.a < 0) s.s *= -1;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,216,120,${s.a * .6})`; ctx.fill();
+    });
+    if (!reduced) raf = requestAnimationFrame(draw);
+  };
+  const onResize = () => { resize(); init(); };
+  resize(); init(); draw();
+  window.addEventListener('resize', onResize);
+})();
 
 /* ── Auth ──────────────────────────────────────────────────── */
 async function doLogin() {
