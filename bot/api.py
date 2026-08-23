@@ -1447,10 +1447,11 @@ async def get_plans(x_telegram_init_data: str | None = Header(default=None)):
 # ─── GET /api/gift/pending ───────────────────────────────────────────────────
 
 @app.get("/api/gift/pending")
-async def gift_pending(x_telegram_init_data: str | None = Header(default=None)):
-    """Вернуть непрочитанное уведомление о подарке (или null)."""
-    tg_id = _tg_id(x_telegram_init_data)
+async def gift_pending(request: Request, x_telegram_init_data: str | None = Header(default=None)):
+    """Вернуть непрочитанное уведомление о подарке (или null).
+    Работает и для Mini App (initData), и для веб-аккаунта (star_session cookie)."""
     async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         r = await session.execute(
             select(GiftNotification)
             .where(
@@ -1478,12 +1479,13 @@ async def gift_pending(x_telegram_init_data: str | None = Header(default=None)):
 
 @app.post("/api/gift/seen")
 async def gift_seen(request: Request, x_telegram_init_data: str | None = Header(default=None)):
-    """Пометить уведомление о подарке как прочитанное."""
-    tg_id = _tg_id(x_telegram_init_data)
+    """Пометить уведомление о подарке как прочитанное.
+    Работает и для Mini App (initData), и для веб-аккаунта (star_session cookie)."""
     body = await request.json()
     notif_id = int(body.get("id", 0))
 
     async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         r = await session.execute(
             select(GiftNotification).where(
                 GiftNotification.id == notif_id,

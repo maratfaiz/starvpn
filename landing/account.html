@@ -207,6 +207,21 @@ main{min-width:0}
 .bottom-nav-item.active{color:var(--gold)}
 .bottom-nav-item svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .bottom-nav-item span{font-size:10px;font-weight:500}
+
+@keyframes giftpop{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+@keyframes confettifall{0%{transform:translateY(-30px) rotate(0);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:.85}}
+@keyframes giftglow{0%,100%{box-shadow:0 0 0 rgba(255,184,0,0)}50%{box-shadow:0 0 44px rgba(255,184,0,.45)}}
+@media(prefers-reduced-motion:reduce){.confetti-piece,.gift-modal{animation:none!important}}
+.gift-overlay{position:fixed;inset:0;z-index:400;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.gift-overlay.show{display:flex}
+.confetti-field{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.confetti-piece{position:absolute;top:-30px;animation:confettifall linear infinite}
+.gift-modal{position:relative;max-width:400px;width:100%;background:linear-gradient(170deg,#14110A,#0B0A08);border:1px solid rgba(255,184,0,.35);border-radius:24px;padding:clamp(28px,5vw,40px);text-align:center;animation:giftpop .5s cubic-bezier(.2,.8,.3,1) both,giftglow 2.6s ease-in-out infinite}
+.gift-modal-icon{width:72px;height:72px;border-radius:20px;background:rgba(255,184,0,.14);border:1px solid rgba(255,184,0,.35);display:inline-flex;align-items:center;justify-content:center;margin-bottom:20px}
+.gift-modal-icon svg{width:34px;height:34px;stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.gift-modal-kicker{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.gift-modal h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(26px,5vw,34px);font-weight:700;line-height:1.1;margin-bottom:10px}
+.gift-modal p{color:var(--text2);margin-bottom:18px;text-wrap:pretty}
 </style>
 </head>
 <body>
@@ -256,7 +271,6 @@ main{min-width:0}
         <button class="side-menu-item active" data-tab="subscription"><svg viewBox="0 0 24 24"><path d="M4 11.5L12 5l8 6.5V20a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1z"/></svg><span>Подписка</span></button>
         <button class="side-menu-item" data-tab="devices"><svg viewBox="0 0 24 24"><path d="M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1M17 7h4v8h-4"/></svg><span>Устройства</span><span class="side-menu-count" id="sideDeviceCount">—</span></button>
         <button class="side-menu-item" data-tab="referral"><svg viewBox="0 0 24 24"><path d="M6 14a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 7.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 21a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8.2 10.3l7.6-3.6M8.2 13.2l7.6 3.6"/></svg><span>Приглашения</span></button>
-        <button class="side-menu-item" data-tab="profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6"/></svg><span>Профиль</span></button>
       </div>
     </div>
 
@@ -286,7 +300,7 @@ main{min-width:0}
           <div class="overview-actions">
             <button class="btn" id="activateTrialBtn" style="display:none">Активировать пробный период</button>
             <button class="btn" data-goto="renew">Продлить подписку</button>
-            <a class="btn-ghost" href="/connect">Как подключить</a>
+            <a class="btn-ghost" href="/wiki">Как подключить</a>
           </div>
         </div>
         <div class="trial-note" id="trialNote" style="display:none">Пробный период — <span id="trialDaysLbl">2</span> дня, выдаётся один раз на аккаунт. Карта не нужна.</div>
@@ -414,6 +428,18 @@ main{min-width:0}
   </div>
 </div>
 
+<!-- Incoming gift popup -->
+<div class="gift-overlay" id="giftOverlay">
+  <div class="confetti-field" id="confettiField"></div>
+  <div class="gift-modal">
+    <span class="gift-modal-icon"><svg viewBox="0 0 24 24"><path d="M3 11h18v9a1 1 0 01-1 1H4a1 1 0 01-1-1zM2.5 7.5h19V11h-19zM12 7.5V21M12 7.5S10.5 3 8 3a2.2 2.2 0 000 4.5zM12 7.5S13.5 3 16 3a2.2 2.2 0 010 4.5z"/></svg></span>
+    <div class="gift-modal-kicker">Вам подарок</div>
+    <h2 id="giftModalDays">+0 дней подписки</h2>
+    <p id="giftModalFrom"></p>
+    <button class="btn" id="giftModalAccept">Забрать подарок</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -453,6 +479,47 @@ async function boot() {
   initTabs();
   initDevices();
   initAccountMenu();
+  checkPendingGift();
+}
+
+/* ── Подарок, ожидающий получателя ──────────────────────────── */
+
+async function checkPendingGift() {
+  const r = await API('/api/gift/pending');
+  if (!r.ok) return;
+  const data = await r.json();
+  if (!data.gift) return;
+  showGiftPopup(data.gift);
+}
+
+function showGiftPopup(gift) {
+  document.getElementById('giftModalDays').textContent = `+${gift.plan_days} дней подписки`;
+  document.getElementById('giftModalFrom').textContent = `Подарок от ${gift.sender_name} — тариф «${gift.plan_label}» уже добавлен к вашей подписке.`;
+  renderConfetti();
+  document.getElementById('giftOverlay').classList.add('show');
+  document.getElementById('giftModalAccept').onclick = async () => {
+    await API('/api/gift/seen', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({id: gift.id}),
+    });
+    document.getElementById('giftOverlay').classList.remove('show');
+    const me = await API('/api/me'); ME = await me.json(); renderStatus();
+  };
+}
+
+function renderConfetti() {
+  const field = document.getElementById('confettiField');
+  const colors = ['#FFB800', '#FFD84D', '#4ADE80', '#EBE0CC', '#F87171'];
+  field.innerHTML = Array.from({length: 24}, (_, i) => {
+    const size = 6 + (i % 3) * 3;
+    const left = Math.round((i * 4.3 + (i % 3) * 7) % 100);
+    const dur = (2.4 + (i % 4) * 0.5).toFixed(1);
+    const delay = ((i % 6) * 0.35).toFixed(2);
+    const radius = i % 2 ? '2px' : '50%';
+    const color = colors[i % colors.length];
+    return `<span class="confetti-piece" style="left:${left}%;width:${size}px;height:${size}px;background:${color};border-radius:${radius};animation-duration:${dur}s;animation-delay:${delay}s"></span>`;
+  }).join('');
 }
 
 function renderStatus() {
@@ -529,7 +596,14 @@ function initTabs() {
   }
 
   sideItems.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab)));
-  bottomItems.forEach(b => b.addEventListener('click', () => activate(b.dataset.tab)));
+  bottomItems.forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.tab === 'referral') {
+      const current = document.querySelector('.tab-panel.active').id.replace('tab-', '');
+      activate(current === 'referral' ? 'profile' : 'referral');
+    } else {
+      activate(b.dataset.tab);
+    }
+  }));
   dropdownItems.forEach(b => b.addEventListener('click', () => activate(b.dataset.goto)));
   document.querySelectorAll('[data-goto]').forEach(el => {
     if (el.classList.contains('dropdown-item')) return;
