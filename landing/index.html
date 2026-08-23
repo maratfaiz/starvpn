@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Poppins:wght@600;700&family=Montserrat:wght@700;800&family=Archivo:wght@600;700&family=Raleway:wght@700;800&family=Rubik:wght@600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="/world-dots.js"></script>
 <style>
 /* ─── Reset ────────────────────────────────────────────────── */
 *{box-sizing:border-box;margin:0;padding:0}
@@ -200,159 +201,26 @@ section{padding:120px 0}
 
 @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
 
-/* ─── PRICING ──────────────────────────────────────────────── */
-.plan-grid{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:16px;margin-top:56px;align-items:start;
+/* ─── SERVER MAP ───────────────────────────────────────────── */
+.map-grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(230px,.65fr);gap:clamp(24px,3vw,44px);align-items:center;margin-top:34px}
+@media(max-width:900px){.map-grid{grid-template-columns:1fr}}
+.map-canvas-wrap{position:relative;width:100%;aspect-ratio:1672/941}
+.map-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.map-markers{position:absolute;inset:0;pointer-events:none}
+.map-marker{
+  position:absolute;width:9px;height:9px;border-radius:50%;background:#FFD84D;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 0 3px rgba(255,184,0,.35),0 0 14px 5px rgba(255,184,0,.55),0 0 34px 12px rgba(255,184,0,.22);
 }
-@media(max-width:768px){.plan-grid{grid-template-columns:1fr}}
-
-.plan-card{
-  background:var(--bg2);border:1px solid var(--gold-border);
-  border-radius:var(--r);padding:32px 28px;
-  text-align:center;position:relative;
-  transition:transform .3s,border-color .3s;
+.map-locations{display:flex;flex-direction:column;gap:10px}
+.map-location{
+  display:flex;align-items:center;gap:10px;background:#0D0C0A;
+  border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;
 }
-.plan-card:hover{transform:translateY(-6px)}
-.plan-card.hot{
-  background:linear-gradient(160deg,rgba(255,184,0,.1),rgba(255,184,0,.04));
-  border-color:var(--gold);
-  box-shadow:0 0 60px rgba(255,184,0,.12),0 0 0 1px rgba(255,184,0,.18);
-  transform:scale(1.04);
-}
-.plan-card.hot:hover{transform:scale(1.04) translateY(-6px)}
-.plan-ribbon{
-  position:absolute;top:-14px;left:50%;transform:translateX(-50%);
-  background:var(--gold);color:#000;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  padding:4px 18px;border-radius:100px;white-space:nowrap;
-}
-.plan-period{
-  font-size:12px;font-weight:600;letter-spacing:.1em;
-  text-transform:uppercase;color:var(--text2);margin-bottom:16px;
-}
-.plan-price{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:60px;font-weight:700;letter-spacing:-.03em;
-  color:var(--gold);line-height:1;
-  text-shadow:0 0 40px rgba(255,184,0,.22);
-}
-.plan-unit{font-size:14px;color:var(--text2);margin-top:4px}
-.plan-chip{
-  display:inline-block;background:rgba(255,184,0,.12);color:var(--gold);
-  border-radius:8px;font-size:12px;font-weight:600;
-  padding:4px 12px;margin:12px 0;
-}
-.plan-desc{font-size:13px;color:var(--text3);margin-bottom:4px}
-.plan-crypto{font-size:12px;color:rgba(255,184,0,.4);margin-bottom:24px}
-.plan-btn{
-  display:block;width:100%;padding:13px;border-radius:10px;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:14px;font-weight:700;letter-spacing:.02em;
-  text-decoration:none;border:none;cursor:pointer;
-  transition:all .2s;
-}
-.plan-card.hot .plan-btn{
-  background:var(--gold);color:#000;
-  box-shadow:0 4px 24px rgba(255,184,0,.3);
-}
-.plan-card.hot .plan-btn:hover{background:var(--gold2);box-shadow:0 8px 36px rgba(255,184,0,.45)}
-.plan-card:not(.hot) .plan-btn{
-  background:transparent;color:var(--gold);
-  border:1px solid var(--gold-border);
-}
-.plan-card:not(.hot) .plan-btn:hover{border-color:var(--gold);background:var(--gold-dim)}
-.pricing-note{
-  text-align:center;margin-top:28px;
-  font-size:14px;color:var(--text2);
-}
-.pricing-note span{color:var(--gold)}
-
-/* ─── GIFT VPN ─────────────────────────────────────────────── */
-.gift-section{
-  background:var(--gold-dim);
-  border-top:1px solid var(--gold-border);
-  border-bottom:1px solid var(--gold-border);
-}
-.gift-grid{
-  display:grid;grid-template-columns:1fr 280px;
-  gap:80px;align-items:center;
-}
-@media(max-width:768px){.gift-grid{grid-template-columns:1fr;gap:40px}}
-.gift-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}
-.gift-tag{
-  background:var(--bg2);border:1px solid var(--gold-border);
-  border-radius:100px;padding:6px 16px;
-  font-size:13px;color:var(--text2);
-}
-.gift-visual{
-  width:280px;height:280px;
-  border-radius:50%;
-  background:radial-gradient(circle at 38% 35%,rgba(255,184,0,.1),rgba(255,184,0,.02));
-  border:1px solid var(--gold-border);
-  display:flex;align-items:center;justify-content:center;
-  position:relative;flex-shrink:0;
-  animation:float 5s ease-in-out infinite;
-}
-.gift-visual::before{
-  content:'';position:absolute;inset:-24px;border-radius:50%;
-  border:1px dashed rgba(255,184,0,.1);
-  animation:spin 20s linear infinite;
-}
-.gift-emoji{width:120px;height:120px;color:var(--gold);filter:drop-shadow(0 0 24px rgba(255,184,0,.4))}
-.gift-emoji svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
-@media(max-width:768px){.gift-visual{margin:0 auto}}
-
-/* ─── TECHNOLOGY ───────────────────────────────────────────── */
-.tech-block{
-  background:var(--bg2);border:1px solid var(--gold-border);
-  border-radius:24px;padding:48px;
-  position:relative;overflow:hidden;margin-top:56px;
-}
-.tech-block::before{
-  content:'';position:absolute;top:-100px;right:-100px;
-  width:340px;height:340px;
-  background:radial-gradient(circle,rgba(255,184,0,.07),transparent 65%);
-  pointer-events:none;
-}
-.tech-desc{
-  font-size:15px;color:var(--text2);
-  max-width:640px;line-height:1.8;
-}
-.tech-desc strong{color:var(--text)}
-.tech-grid{
-  display:grid;grid-template-columns:repeat(4,1fr);
-  gap:36px;margin-top:40px;
-}
-@media(max-width:768px){.tech-grid{grid-template-columns:repeat(2,1fr)}}
-.tech-item{text-align:center}
-.tech-val{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:30px;font-weight:700;color:var(--gold);margin-bottom:6px;
-}
-.tech-lbl{font-size:12px;color:var(--text2);letter-spacing:.08em;text-transform:uppercase}
-
-/* ─── SERVER LOCATIONS ─────────────────────────────────────── */
-.locations-list{margin-top:28px;display:flex;flex-direction:column;gap:10px}
-.location-row{
-  display:flex;align-items:center;gap:16px;
-  background:var(--bg2);border:1px solid var(--gold-border);
-  border-radius:14px;padding:16px 20px;
-}
-.location-row.loc-example{opacity:.55}
-.loc-flag{width:28px;height:20px;border-radius:3px;flex-shrink:0;overflow:hidden}
-.loc-flag svg{width:100%;height:100%;display:block}
-.loc-info{flex:1;min-width:0}
-.loc-city{font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:600;color:var(--text)}
-.loc-note{font-size:12px;color:var(--text2);margin-top:2px}
-.loc-badge{
-  font-size:11.5px;font-weight:600;color:var(--text2);
-  border:1px solid var(--gold-border);border-radius:100px;
-  padding:5px 12px;flex-shrink:0;white-space:nowrap;
-}
-.loc-badge--live{color:#4ADE80;border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08)}
+.map-location-flag{font-size:16px;line-height:1;flex-shrink:0}
+.map-location-info{flex:1;min-width:0}
+.map-location-city{font-size:13px;font-weight:600;color:var(--text)}
+.map-location-country{font-size:11.5px;color:var(--text2)}
 
 /* ─── FAQ ──────────────────────────────────────────────────── */
 .faq-list{margin-top:56px;display:flex;flex-direction:column;gap:8px}
@@ -855,162 +723,55 @@ footer{
 
 <div class="divider"></div>
 
-<!-- ═══ PRICING ════════════════════════════════════════════════ -->
-<section id="pricing">
+<!-- ═══ СЕРВЕРЫ (карта мира) ═══════════════════════════════════ -->
+<section id="servers">
 <div class="wrap">
   <div class="reveal">
-    <div class="section-label">Тарифы</div>
-    <h2 class="section-h">Выбери <em>план</em></h2>
-    <p class="section-p">Чем больше срок — тем выгоднее. Оплата — Telegram Stars, картой или через ЮMoney.</p>
+    <div class="section-label">Серверы</div>
+    <h2 class="section-h">Точки подключения <em>по всему миру</em></h2>
+    <p class="section-p">Подключение к ближайшей точке снижает задержку. Подписка одна — сервер можно менять в приложении в любой момент.</p>
   </div>
-
-  <div class="plan-grid">
-    <div class="plan-card reveal d1">
-      <div class="plan-period">1 месяц</div>
-      <div class="plan-price">99</div>
-      <div class="plan-unit"><svg viewBox="0 0 24 24" width="13" height="13" style="display:inline-block;vertical-align:-2px;margin-right:2px" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.7 1.1 6.6L12 17.1l-5.8 3.2 1.1-6.6L2.5 9l6.6-.9z"/></svg>Telegram Stars</div>
-      <div class="plan-desc">30 дней безлимитного VPN</div>
-      <div class="plan-crypto">или 199 ₽ картой / ЮMoney</div>
-      <a class="plan-btn" href="https://t.me/starisvpnbot">Выбрать →</a>
+  <div class="map-grid reveal">
+    <div class="map-canvas-wrap">
+      <canvas id="world-map-canvas"></canvas>
+      <div class="map-markers" id="world-map-markers"></div>
     </div>
-
-    <div class="plan-card hot reveal d2">
-      <div class="plan-ribbon">Популярный</div>
-      <div class="plan-period">3 месяца</div>
-      <div class="plan-price">249</div>
-      <div class="plan-unit"><svg viewBox="0 0 24 24" width="13" height="13" style="display:inline-block;vertical-align:-2px;margin-right:2px" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.7 1.1 6.6L12 17.1l-5.8 3.2 1.1-6.6L2.5 9l6.6-.9z"/></svg>Telegram Stars</div>
-      <div class="plan-chip">Скидка 16%</div>
-      <div class="plan-desc">90 дней · экономия 48 Stars</div>
-      <div class="plan-crypto">или 499 ₽ картой / ЮMoney</div>
-      <a class="plan-btn" href="https://t.me/starisvpnbot">Выбрать →</a>
-    </div>
-
-    <div class="plan-card reveal d3">
-      <div class="plan-period">6 месяцев</div>
-      <div class="plan-price">449</div>
-      <div class="plan-unit"><svg viewBox="0 0 24 24" width="13" height="13" style="display:inline-block;vertical-align:-2px;margin-right:2px" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.7 1.1 6.6L12 17.1l-5.8 3.2 1.1-6.6L2.5 9l6.6-.9z"/></svg>Telegram Stars</div>
-      <div class="plan-chip">Скидка 25%</div>
-      <div class="plan-desc">180 дней · максимальная выгода</div>
-      <div class="plan-crypto">или 899 ₽ картой / ЮMoney</div>
-      <a class="plan-btn" href="https://t.me/starisvpnbot">Выбрать →</a>
-    </div>
-  </div>
-
-  <p class="pricing-note reveal">
-    <svg viewBox="0 0 24 24" width="14" height="14" style="display:inline-block;vertical-align:-2px;margin-right:3px" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4"/><rect x="5" y="12" width="14" height="9"/><path d="M12 8v13"/><path d="M12 8c-1.5-4-6-4-6-1.5S9 8 12 8z"/><path d="M12 8c1.5-4 6-4 6-1.5S15 8 12 8z"/></svg>Новым пользователям — <span>2 дня бесплатно</span> · Без банковских карт · Без регистрации
-  </p>
-</div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ═══ GIFT VPN ════════════════════════════════════════════════ -->
-<section id="gift" class="gift-section">
-<div class="wrap">
-  <div class="gift-grid">
-    <div class="reveal-left">
-      <div class="section-label">Уникальная фишка</div>
-      <h2 class="section-h">Подари <em>VPN</em><br>другу</h2>
-      <p class="section-p">Единственный VPN-сервис в Telegram с функцией подарка. Выбери тариф, укажи получателя — и подписка появится у него автоматически после оплаты.</p>
-      <div class="gift-tags">
-        <span class="gift-tag"><svg viewBox="0 0 24 24" width="13" height="13" style="display:inline-block;vertical-align:-2px;margin-right:2px" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.7 1.1 6.6L12 17.1l-5.8 3.2 1.1-6.6L2.5 9l6.6-.9z"/></svg>Stars, картой или ЮMoney</span>
-        <span class="gift-tag">Анонимно или от имени</span>
-        <span class="gift-tag">Личное сообщение</span>
-        <span class="gift-tag">Мгновенная активация</span>
+    <div class="map-locations">
+      <div class="map-location">
+        <span class="map-location-flag">🇳🇱</span>
+        <div class="map-location-info">
+          <div class="map-location-city">Амстердам</div>
+          <div class="map-location-country">Нидерланды</div>
+        </div>
       </div>
-      <a class="btn-gold" href="https://t.me/starisvpnbot" style="display:inline-flex;margin-top:32px">
-        Подарить VPN →
-      </a>
-    </div>
-    <div class="gift-visual reveal-right">
-      <div class="gift-emoji"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4"/><rect x="5" y="12" width="14" height="9"/><path d="M12 8v13"/><path d="M12 8c-1.5-4-6-4-6-1.5S9 8 12 8z"/><path d="M12 8c1.5-4 6-4 6-1.5S15 8 12 8z"/></svg></div>
-    </div>
-  </div>
-</div>
-</section>
-
-<div class="divider"></div>
-
-<!-- ═══ TECHNOLOGY ══════════════════════════════════════════════ -->
-<section id="tech">
-<div class="wrap">
-  <div class="reveal">
-    <div class="section-label">Технология</div>
-    <h2 class="section-h">VLESS <em>Reality</em></h2>
-    <p class="section-p">Самый продвинутый VPN-протокол. Трафик неотличим от посещения реального HTTPS-сайта.</p>
-  </div>
-
-  <div class="tech-block reveal">
-    <p class="tech-desc">
-      STAR VPN работает на протоколе <strong>VLESS + Reality (Xray-core)</strong>.
-      Reality «заимствует» TLS-сертификат реального крупного сайта — глубокая инспекция пакетов (DPI) видит легитимное HTTPS-соединение, а не VPN.
-      Это делает блокировку технически невозможной на уровне провайдера.
-    </p>
-    <div class="tech-grid">
-      <div class="tech-item">
-        <div class="tech-val">TLS 1.3</div>
-        <div class="tech-lbl">Reality masking</div>
+      <div class="map-location">
+        <span class="map-location-flag">🇩🇪</span>
+        <div class="map-location-info">
+          <div class="map-location-city">Франкфурт</div>
+          <div class="map-location-country">Германия</div>
+        </div>
       </div>
-      <div class="tech-item">
-        <div class="tech-val">DPI</div>
-        <div class="tech-lbl">Не обнаруживает</div>
+      <div class="map-location">
+        <span class="map-location-flag">🇫🇮</span>
+        <div class="map-location-info">
+          <div class="map-location-city">Хельсинки</div>
+          <div class="map-location-country">Финляндия</div>
+        </div>
       </div>
-      <div class="tech-item">
-        <div class="tech-val">0 Logs</div>
-        <div class="tech-lbl">Нет логов трафика</div>
+      <div class="map-location">
+        <span class="map-location-flag">🇸🇪</span>
+        <div class="map-location-info">
+          <div class="map-location-city">Стокгольм</div>
+          <div class="map-location-country">Швеция</div>
+        </div>
       </div>
-      <div class="tech-item">
-        <div class="tech-val">UDP</div>
-        <div class="tech-lbl">Full support</div>
+      <div class="map-location">
+        <span class="map-location-flag">🇺🇸</span>
+        <div class="map-location-info">
+          <div class="map-location-city">Нью-Йорк</div>
+          <div class="map-location-country">США</div>
+        </div>
       </div>
-    </div>
-  </div>
-
-  <div class="reveal" style="margin-top:56px">
-    <div class="section-label">Инфраструктура</div>
-    <h2 class="section-h" style="font-size:clamp(24px,3vw,32px)">Локации <em>серверов</em></h2>
-    <p class="section-p">Сейчас в работе один дата-центр. Остальные — в планах расширения географии, показаны как пример.</p>
-  </div>
-  <div class="locations-list reveal">
-    <div class="location-row">
-      <span class="loc-flag"><svg viewBox="0 0 20 14"><rect width="20" height="4.67" fill="#AE1C28"/><rect y="4.67" width="20" height="4.67" fill="#fff"/><rect y="9.33" width="20" height="4.67" fill="#21468B"/></svg></span>
-      <div class="loc-info">
-        <div class="loc-city">Амстердам, Нидерланды</div>
-        <div class="loc-note">Основной сервер</div>
-      </div>
-      <span class="loc-badge loc-badge--live">● Активен</span>
-    </div>
-    <div class="location-row loc-example">
-      <span class="loc-flag"><svg viewBox="0 0 20 14"><rect width="20" height="4.67" fill="#1a1a1a"/><rect y="4.67" width="20" height="4.67" fill="#DD0000"/><rect y="9.33" width="20" height="4.67" fill="#FFCE00"/></svg></span>
-      <div class="loc-info">
-        <div class="loc-city">Франкфурт, Германия</div>
-        <div class="loc-note">Пример — в планах</div>
-      </div>
-      <span class="loc-badge">Скоро</span>
-    </div>
-    <div class="location-row loc-example">
-      <span class="loc-flag"><svg viewBox="0 0 20 14"><rect width="20" height="14" fill="#fff"/><rect x="6" width="3" height="14" fill="#002F6C"/><rect y="5.5" width="20" height="3" fill="#002F6C"/></svg></span>
-      <div class="loc-info">
-        <div class="loc-city">Хельсинки, Финляндия</div>
-        <div class="loc-note">Пример — в планах</div>
-      </div>
-      <span class="loc-badge">Скоро</span>
-    </div>
-    <div class="location-row loc-example">
-      <span class="loc-flag"><svg viewBox="0 0 20 14"><rect width="20" height="14" fill="#006AA7"/><rect x="6" width="3" height="14" fill="#FECC02"/><rect y="5.5" width="20" height="3" fill="#FECC02"/></svg></span>
-      <div class="loc-info">
-        <div class="loc-city">Стокгольм, Швеция</div>
-        <div class="loc-note">Пример — в планах</div>
-      </div>
-      <span class="loc-badge">Скоро</span>
-    </div>
-    <div class="location-row loc-example">
-      <span class="loc-flag"><svg viewBox="0 0 20 14"><rect width="20" height="14" fill="#B22234"/><g fill="#fff"><rect y="2" width="20" height="1.4"/><rect y="4.8" width="20" height="1.4"/><rect y="7.6" width="20" height="1.4"/><rect y="10.4" width="20" height="1.4"/></g><rect width="8" height="7.6" fill="#3C3B6E"/></svg></span>
-      <div class="loc-info">
-        <div class="loc-city">Нью-Йорк, США</div>
-        <div class="loc-note">Пример — в планах</div>
-      </div>
-      <span class="loc-badge">Скоро</span>
     </div>
   </div>
 </div>
@@ -1087,23 +848,23 @@ footer{
     <p class="section-p">Вставляете ссылку подписки в приложение — до трёх устройств на одном аккаунте.</p>
   </div>
   <div class="apps-grid reveal">
-    <a class="app-tile" href="/connect#guide-ios">
+    <a class="app-tile" href="/wiki/install-ios">
       <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M7 3h10a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM10.5 18h3"/></svg></span>
       <div class="app-tile-name">iOS</div>
     </a>
-    <a class="app-tile" href="/connect#guide-android">
+    <a class="app-tile" href="/wiki/install-android">
       <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0112 0v9a1 1 0 01-1 1H7a1 1 0 01-1-1zM9 3.5L7.5 6M15 3.5L16.5 6M9.5 12h.01M14.5 12h.01"/></svg></span>
       <div class="app-tile-name">Android</div>
     </a>
-    <a class="app-tile" href="/connect#guide-windows">
+    <a class="app-tile" href="/wiki/install-windows">
       <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M4 6l7-1v6H4zM11 5l9-1.3V11h-9zM4 12h7v5l-7-1zM11 12h9v7.3L11 18z"/></svg></span>
       <div class="app-tile-name">Windows</div>
     </a>
-    <a class="app-tile" href="/connect#guide-macos">
+    <a class="app-tile" href="/wiki/install-macos">
       <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M12.5 8.5c-1.8-1.5-4.3-1-5.6.8-1.5 2-1.2 5.3.5 7.7C8.2 18 9 18.6 10 18.5c.9 0 1.2-.6 2.4-.6s1.5.6 2.4.5c1 0 1.7-.8 2.4-1.8.5-.7.8-1.4 1-1.9-2.3-1-2.6-4.2-.6-5.4-1.2-1.6-3.5-1.7-5-.6M15 5c.5-1.3 1.7-2.2 3-2.2"/></svg></span>
       <div class="app-tile-name">macOS</div>
     </a>
-    <a class="app-tile" href="/connect#guide-linux">
+    <a class="app-tile" href="#">
       <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 015 5v2a5 7 0 01-10 0V7a5 5 0 015-5zM7 13c0 4 2 7 5 7s5-3 5-7"/></svg></span>
       <div class="app-tile-name">Linux</div>
     </a>
@@ -1200,7 +961,7 @@ footer{
         Нужен ли паспорт при оплате?
         <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
       </button>
-      <div class="faq-body"><p>Нет. Ни Telegram Stars, ни оплата картой через Robokassa, ни ЮMoney не требуют от вас документов.</p></div>
+      <div class="faq-body"><p>Нет. Ни Telegram Stars, ни оплата картой через Robokassa, ни ЮMoney не требуют от вас документов. Криптовалюту мы больше не принимаем.</p></div>
     </div>
 
     <div class="faq-item">
@@ -1249,25 +1010,25 @@ footer{
       <div style="display:flex;flex-direction:column;gap:10px">
         <a href="/tariffs" style="font-size:13.5px;color:var(--text2);text-decoration:none">Тарифы</a>
         <a href="/get-vpn" style="font-size:13.5px;color:var(--text2);text-decoration:none">Купить без Telegram</a>
-        <a href="#gift" style="font-size:13.5px;color:var(--text2);text-decoration:none">Подарить VPN</a>
+        <a href="/wiki/trial" style="font-size:13.5px;color:var(--text2);text-decoration:none">Пробный период</a>
         <a href="https://t.me/starisvpnbot" style="font-size:13.5px;color:var(--text2);text-decoration:none">Бот @starisvpnbot</a>
       </div>
     </div>
     <div>
       <div style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--text2);margin-bottom:15px">Подключение</div>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <a href="/connect#guide-ios" style="font-size:13.5px;color:var(--text2);text-decoration:none">iOS</a>
-        <a href="/connect#guide-android" style="font-size:13.5px;color:var(--text2);text-decoration:none">Android</a>
-        <a href="/connect#guide-windows" style="font-size:13.5px;color:var(--text2);text-decoration:none">Windows</a>
-        <a href="/connect#guide-macos" style="font-size:13.5px;color:var(--text2);text-decoration:none">macOS</a>
+        <a href="/wiki/install-ios" style="font-size:13.5px;color:var(--text2);text-decoration:none">iOS</a>
+        <a href="/wiki" style="font-size:13.5px;color:var(--text2);text-decoration:none">Android</a>
+        <a href="/wiki" style="font-size:13.5px;color:var(--text2);text-decoration:none">Windows</a>
+        <a href="/wiki" style="font-size:13.5px;color:var(--text2);text-decoration:none">macOS</a>
       </div>
     </div>
     <div>
       <div style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--text2);margin-bottom:15px">База знаний</div>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <a href="/wiki" style="font-size:13.5px;color:var(--text2);text-decoration:none">VLESS + Reality</a>
-        <a href="/wiki" style="font-size:13.5px;color:var(--text2);text-decoration:none">Zero Logs</a>
-        <a href="/wiki" style="font-size:13.5px;color:var(--text2);text-decoration:none">Реферальная программа</a>
+        <a href="/wiki/vless-reality" style="font-size:13.5px;color:var(--text2);text-decoration:none">VLESS + Reality</a>
+        <a href="/wiki/zero-logs" style="font-size:13.5px;color:var(--text2);text-decoration:none">Zero Logs</a>
+        <a href="/wiki/referrals" style="font-size:13.5px;color:var(--text2);text-decoration:none">Реферальная программа</a>
         <a href="/wiki" style="font-size:13.5px;color:var(--text2);text-decoration:none">FAQ и неполадки</a>
       </div>
     </div>
@@ -1276,7 +1037,6 @@ footer{
       <div style="display:flex;flex-direction:column;gap:10px">
         <a href="/privacy" style="font-size:13.5px;color:var(--text2);text-decoration:none">Политика конфиденциальности</a>
         <a href="/terms" style="font-size:13.5px;color:var(--text2);text-decoration:none">Условия использования</a>
-        <a href="https://t.me/hashprojects" style="font-size:13.5px;color:var(--text2);text-decoration:none">Поддержка</a>
       </div>
     </div>
   </div>
@@ -1284,6 +1044,52 @@ footer{
 </footer>
 
 <script>
+/* ═══ Server map (canvas dots + markers) ═══════════════════════ */
+(function(){
+  const c = document.getElementById('world-map-canvas');
+  if (!c) return;
+  const markersEl = document.getElementById('world-map-markers');
+  const markerPositions = [
+    { x: '51.4%', y: '20.9%' },
+    { x: '52.4%', y: '22.2%' },
+    { x: '57.0%', y: '16.6%' },
+    { x: '55.0%', y: '17.1%' },
+    { x: '29.4%', y: '27.4%' },
+  ];
+  markersEl.innerHTML = markerPositions.map(m =>
+    '<span class="map-marker" style="left:' + m.x + ';top:' + m.y + '"></span>'
+  ).join('');
+
+  function draw(){
+    const d = window.WORLD_DOTS;
+    if (!d) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = c.clientWidth, h = c.clientHeight;
+    if (!w || !h) return;
+    c.width = w * dpr; c.height = h * dpr;
+    const ctx = c.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    const cw = w / d.cols, ch = h / d.rows;
+    const r = Math.max(0.7, Math.min(cw, ch) * 0.36);
+    for (const [q, row] of d.dots) {
+      const t = 1 - Math.abs(row / d.rows - 0.45) * 0.85;
+      ctx.fillStyle = 'rgba(196,178,150,' + (0.30 + 0.42 * Math.max(0, t)).toFixed(3) + ')';
+      ctx.beginPath();
+      ctx.arc((q + 0.5) * cw, (row + 0.5) * ch, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  function waitForDots(tries){
+    tries = tries || 0;
+    if (window.WORLD_DOTS) { draw(); return; }
+    if (tries > 80) return;
+    setTimeout(() => waitForDots(tries + 1), 60);
+  }
+  waitForDots();
+  window.addEventListener('resize', draw, {passive:true});
+})();
+
 /* ═══ Reading progress ═══════════════════════════════════════ */
 const bar = document.getElementById('progress');
 window.addEventListener('scroll', () => {
