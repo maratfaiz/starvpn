@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Способы оплаты — STAR VPN Wiki</title>
+<title>Способы оплаты — Wiki STAR VPN</title>
 <meta name="description" content="Как оплатить STAR VPN: Telegram Stars, банковская карта через Robokassa и ЮMoney. Почему ни один способ не требует паспорт.">
 <link rel="icon" href="/logo.png" type="image/png">
 <link rel="apple-touch-icon" href="/logo.png">
@@ -19,28 +19,25 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smo
   --gold-dim:rgba(255,184,0,0.1);
   --bg:#060606;--bg2:rgba(255,255,255,0.025);
   --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;
-  --max:900px;--navmax:1160px;
+  --navmax:1320px;
 }
-body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.75;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.7;overflow-x:hidden}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.3}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,184,0,.2);border-radius:2px}
 
-#progress{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));z-index:9999;transition:width .08s linear}
-#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6}
-
-#nav{position:sticky;top:0;z-index:100;padding:0 24px;background:rgba(6,6,6,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
-.nav-inner{max-width:var(--navmax);margin:0 auto;display:flex;align-items:center;height:64px;gap:22px}
+#nav{position:sticky;top:0;z-index:100;padding:0 20px;background:rgba(6,6,6,.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
+.nav-inner{max-width:var(--navmax);margin:0 auto;display:flex;align-items:center;height:66px;gap:26px}
 .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
-.nav-logo img{width:30px;height:30px;border-radius:8px;object-fit:cover}
 .nav-logo-text{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
 .nav-links{display:flex;gap:6px;flex:1;flex-wrap:wrap}
 .nav-links a{font-size:13.5px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s;padding:9px 12px;border-radius:9px}
 .nav-links a:hover{color:var(--gold);background:rgba(255,255,255,.04)}
 .nav-links a.active{color:var(--gold)}
-.nav-login{font-size:13.5px;font-weight:500;color:var(--text);white-space:nowrap;padding:9px 14px;border:1px solid rgba(255,255,255,.18);border-radius:10px;text-decoration:none;transition:color .2s,border-color .2s;flex-shrink:0}
+.nav-login{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;padding:8px 13px;border:1px solid rgba(255,255,255,.18);border-radius:10px;text-decoration:none;transition:color .2s,border-color .2s;flex-shrink:0}
 .nav-login:hover{color:var(--gold);border-color:var(--gold-border)}
 .nav-cta{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;padding:10px 18px;border-radius:11px;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;transition:background .2s,transform .15s}
 .nav-cta:hover{background:var(--gold2);color:#000;transform:translateY(-1px)}
@@ -55,7 +52,7 @@ a:hover{color:var(--gold2)}
 .start-modal p{color:var(--text2);margin-bottom:26px}
 .start-modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
 .start-modal-opt{display:block;border-radius:18px;padding:22px;text-decoration:none;transition:border-color .2s}
-.start-modal-opt.opt-site{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1)}
+.start-modal-opt.opt-site{background:#0D0C0A;border:1px solid rgba(255,255,255,.1)}
 .start-modal-opt.opt-site:hover{border-color:var(--gold-border)}
 .start-modal-opt.opt-tg{background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.3)}
 .start-modal-opt.opt-tg:hover{border-color:rgba(255,184,0,.5)}
@@ -65,74 +62,48 @@ a:hover{color:var(--gold2)}
 .opt-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
 .opt-text{font-size:13.5px;color:var(--text2);line-height:1.5}
 
-.wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}
+.layout{position:relative;z-index:2;max-width:var(--navmax);margin:0 auto;padding:clamp(24px,3vw,44px) 20px 0;display:grid;grid-template-columns:1fr;gap:clamp(24px,3vw,48px);align-items:start}
+@media(min-width:1000px){.layout{grid-template-columns:250px minmax(0,1fr)}}
+@media(min-width:1240px){.layout{grid-template-columns:250px minmax(0,1fr) 210px}}
+.side-nav{display:none;position:sticky;top:88px;max-height:calc(100vh - 108px);overflow:auto;padding-bottom:24px}
+@media(min-width:1000px){.side-nav{display:block}}
+.side-group{margin-bottom:24px}
+.side-group-title{font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;padding-left:12px}
+.side-items{display:flex;flex-direction:column;gap:2px}
+.side-item{font-size:13.5px;line-height:1.45;padding:8px 12px;border-radius:9px;border:1px solid transparent;color:var(--text2)}
+.side-item:hover{color:var(--gold)}
+.side-item.current{border-color:rgba(255,184,0,.3);color:var(--gold);background:rgba(255,184,0,.07)}
 
-.back-nav{padding-top:40px}
-.back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);text-decoration:none;transition:color .2s}
-.back-link:hover{color:var(--gold)}
-.crumbs{font-size:12.5px;color:var(--text3);margin-top:18px;display:flex;gap:8px;flex-wrap:wrap}
+article{min-width:0;max-width:72ch;padding-bottom:60px}
+.crumbs{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--text3);margin-bottom:20px;flex-wrap:wrap}
 .crumbs a{color:var(--text2)}
+article h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(30px,4.4vw,50px);font-weight:700;line-height:1.08;letter-spacing:-.02em;margin-bottom:18px}
+.lede{font-size:18px;color:var(--text2);margin-bottom:22px}
+.doc-meta-row{display:flex;gap:16px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text3);padding-bottom:28px;margin-bottom:36px;border-bottom:1px solid rgba(255,255,255,.08)}
+article h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(23px,3vw,32px);font-weight:700;line-height:1.2;margin:40px 0 16px;scroll-margin-top:88px}
+article h2:first-of-type{margin-top:0}
+article p{margin-bottom:18px}
 
-.doc-hero{padding:28px 0 56px;text-align:center}
-.doc-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--gold-border);border-radius:100px;padding:6px 20px;margin-bottom:32px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);background:var(--gold-dim)}
-.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;animation:blink 1.8s ease-in-out infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.doc-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(36px,7vw,60px);font-weight:700;line-height:1.08;letter-spacing:-.02em;color:var(--text);margin-bottom:16px}
-.doc-title .gold{background:linear-gradient(135deg,var(--gold) 0%,var(--gold2) 50%,var(--gold) 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite}
-@keyframes shimmer{0%{background-position:0 center}100%{background-position:200% center}}
-.doc-date{font-size:14px;color:var(--text2);letter-spacing:.02em;margin-bottom:44px;max-width:520px;margin-left:auto;margin-right:auto}
-.doc-meta{display:flex;gap:1px;max-width:380px;margin:0 auto;border:1px solid var(--gold-border);border-radius:16px;background:var(--gold-border);overflow:hidden}
-.doc-meta-item{flex:1;background:rgba(6,6,6,.9);padding:16px 8px;text-align:center;backdrop-filter:blur(12px)}
-.doc-meta-val{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--gold);line-height:1;margin-bottom:4px}
-.doc-meta-lbl{font-size:10px;color:var(--text2);letter-spacing:.06em;text-transform:uppercase}
+.flow{display:flex;flex-direction:column;gap:1px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;margin-bottom:28px}
+.flow-row{background:#080807;padding:22px 24px}
+.flow-head{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px}
+.flow-head-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;color:var(--text)}
+.flow-head-where{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold)}
+.flow-text{font-size:14.5px;line-height:1.65;color:var(--text2)}
 
-.intro-banner{display:flex;align-items:center;gap:16px;background:rgba(255,184,0,.04);border:1px solid var(--gold-border);border-radius:16px;padding:20px 24px;margin:48px 0;position:relative;overflow:hidden}
-.intro-banner::before{content:'';position:absolute;right:-40px;top:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(255,184,0,.08),transparent 65%);pointer-events:none}
-.intro-icon{width:44px;height:44px;border-radius:12px;background:rgba(255,184,0,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.intro-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--gold);margin-bottom:3px}
-.intro-sub{font-size:13px;color:var(--text2);line-height:1.5}
-
-.doc-body{padding-bottom:56px}
-.doc-section{display:grid;grid-template-columns:72px 1fr;gap:36px;padding:52px 0;border-bottom:1px solid rgba(255,184,0,.07)}
-.doc-section:last-child{border-bottom:none}
-.doc-num{font-family:'Space Grotesk',sans-serif;font-size:56px;font-weight:700;color:rgba(255,184,0,.09);line-height:1;text-align:right;padding-top:4px;user-select:none;flex-shrink:0}
-.doc-content h2{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;color:var(--text);margin-bottom:20px;letter-spacing:-.01em}
-.doc-content p{color:var(--text2);font-size:15px;line-height:1.85;margin-bottom:14px}
-.doc-content p:last-child{margin-bottom:0}
-.doc-content .hl{color:var(--text);font-weight:500}
-.doc-content a{color:var(--gold);text-decoration:none}
-.doc-content a:hover{text-decoration:underline}
-.sub-item{position:relative;padding-left:22px;color:var(--text2);font-size:15px;line-height:1.85;margin-bottom:10px}
-.sub-item::before{content:'';position:absolute;left:0;top:.75em;width:6px;height:6px;border-radius:50%;border:1.5px solid rgba(255,184,0,.35)}
-
-.method-list{display:flex;flex-direction:column;gap:1px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;margin:20px 0 28px}
-.method-row{background:#080807;padding:22px 24px}
-.method-top{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px}
-.method-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;color:var(--text)}
-.method-where{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold)}
-.method-text{font-size:14.5px;line-height:1.65;color:var(--text2)}
-
-.doc-table{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--gold-border);border-radius:14px;overflow:hidden;margin:20px 0;font-size:14px}
-.doc-table th{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);background:rgba(255,184,0,.05);text-align:left;padding:13px 20px;border-bottom:1px solid var(--gold-border)}
-.doc-table td{color:var(--text2);padding:14px 20px;border-bottom:1px solid rgba(255,184,0,.05);vertical-align:top;line-height:1.7}
-.doc-table tr:last-child td{border-bottom:none}
-.doc-table td:first-child{color:var(--text);font-weight:500}
-.doc-table .yes{color:#4ADE80}
-
-.notice{display:flex;gap:16px;align-items:flex-start;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:16px;padding:20px 22px;margin:24px 0}
+.notice{display:flex;gap:16px;align-items:flex-start;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:16px;padding:20px 22px;margin:0 0 36px}
 .notice-icon{width:32px;height:32px;border-radius:10px;background:rgba(255,184,0,.12);border:1px solid rgba(255,184,0,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .notice-icon svg{width:16px;height:16px;stroke:var(--gold);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .notice-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
 .notice-text{font-size:14.5px;line-height:1.7;color:var(--text)}
 
-.contact-card{background:var(--bg2);border:1px solid var(--gold-border);border-radius:16px;padding:24px 28px;margin-top:24px;position:relative;overflow:hidden}
-.contact-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 0 0,rgba(255,184,0,.07),transparent 60%);pointer-events:none}
-.contact-card-label{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
-.contact-card p{margin-bottom:8px;position:relative;color:var(--text2);font-size:15px}
-.contact-card a{color:var(--gold);text-decoration:none}
-.contact-card a:hover{text-decoration:underline}
+.doc-table-wrap{border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;margin-bottom:28px;overflow-x:auto}
+.doc-table{width:100%;border-collapse:collapse;min-width:460px}
+.doc-table th{text-align:left;padding:15px 20px;font-family:'Space Grotesk',sans-serif;font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid rgba(255,255,255,.08)}
+.doc-table td{padding:14px 20px;font-size:14px;color:var(--text);border-bottom:1px solid rgba(255,255,255,.05)}
+.doc-table tr:last-child td{border-bottom:none}
 
-.doc-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;padding-top:32px;border-top:1px solid rgba(255,255,255,.08)}
+.doc-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:36px;padding-top:32px;border-top:1px solid rgba(255,255,255,.08)}
 .btn-gold{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:700;padding:14px 28px;border-radius:12px;text-decoration:none}
 .btn-gold:hover{background:var(--gold2);color:#000}
 .btn-ghost{border:1px solid rgba(255,255,255,.14);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:600;padding:13px 28px;border-radius:12px;text-decoration:none;transition:border-color .2s,color .2s}
@@ -144,36 +115,26 @@ a:hover{color:var(--gold2)}
 .next-kicker{font-size:11px;font-family:'Space Grotesk',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
 .next-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:var(--text)}
 
-footer{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align:center;position:relative;z-index:2}
-.footer-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:24px}
-.footer-logo img{width:32px;height:32px;border-radius:8px;object-fit:cover}
-.footer-logo-text{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
-.footer-links{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
-.footer-links a{font-size:13px;color:var(--text3);text-decoration:none;transition:color .2s}
-.footer-links a:hover{color:var(--gold)}
-.footer-copy{font-size:12px;color:var(--text3);letter-spacing:.05em}
+.toc{display:none;position:sticky;top:88px;padding-bottom:24px}
+@media(min-width:1240px){.toc{display:block}}
+.toc-label{font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.toc-items{display:flex;flex-direction:column;gap:9px;border-left:1px solid rgba(255,255,255,.09);padding-left:14px}
+.toc-items a{font-size:13px;line-height:1.45;color:var(--text2)}
+.toc-items a:hover{color:var(--gold)}
 
-@media(max-width:640px){
-  .back-nav{padding-top:24px}
-  .doc-section{grid-template-columns:1fr;gap:12px;padding:40px 0}
-  .doc-num{font-size:32px;text-align:left;color:rgba(255,184,0,.14)}
-  .doc-meta{max-width:100%}
-  .doc-table{display:block;overflow-x:auto}
-  .intro-banner{align-items:flex-start}
-}
+footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
+.footer-inner{max-width:var(--navmax);margin:0 auto;padding:36px 20px;display:flex;gap:22px;flex-wrap:wrap;justify-content:space-between;font-size:12.5px;color:var(--text3)}
+.footer-inner a{color:var(--text2)}
+.footer-links{display:flex;gap:20px;flex-wrap:wrap}
 </style>
 </head>
 <body>
 
-<div id="progress"></div>
 <canvas id="bg-canvas"></canvas>
 
 <nav id="nav">
   <div class="nav-inner">
-    <a class="nav-logo" href="/">
-      <img src="/logo.png" alt="STAR VPN">
-      <span class="nav-logo-text">STAR VPN</span>
-    </a>
+    <a class="nav-logo" href="/"><span class="nav-logo-text">STAR VPN</span></a>
     <div class="nav-links">
       <a href="/#how">Преимущества</a>
       <a href="/#compare">Сравнение</a>
@@ -208,203 +169,146 @@ footer{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align
   </div>
 </div>
 
-<main>
-<div class="wrap">
-
-  <div class="back-nav">
-    <a href="/wiki" class="back-link">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-      Назад в Wiki
-    </a>
-    <div class="crumbs"><a href="/wiki">Wiki</a><span>/</span><span>Оплата и аккаунт</span><span>/</span><span>Способы оплаты</span></div>
-  </div>
-
-  <!-- Hero -->
-  <div class="doc-hero">
-    <div class="doc-badge">
-      <div class="badge-dot"></div>
-      Wiki · Оплата и аккаунт
-    </div>
-    <h1 class="doc-title">Способы<br><span class="gold">оплаты</span></h1>
-    <div class="doc-date">Три способа заплатить за подписку — внутри Telegram и без него, и почему ни один не требует документы</div>
-    <div class="doc-meta">
-      <div class="doc-meta-item">
-        <div class="doc-meta-val">5</div>
-        <div class="doc-meta-lbl">разделов</div>
-      </div>
-      <div class="doc-meta-item">
-        <div class="doc-meta-val">~3</div>
-        <div class="doc-meta-lbl">мин чтения</div>
-      </div>
-      <div class="doc-meta-item">
-        <div class="doc-meta-val">3</div>
-        <div class="doc-meta-lbl">способа оплаты</div>
+<div class="layout">
+  <aside class="side-nav">
+    <div class="side-group">
+      <div class="side-group-title">Технологии</div>
+      <div class="side-items">
+        <a class="side-item" href="/wiki/vless-reality">VLESS + Reality</a>
+        <a class="side-item" href="/wiki/zero-logs">Zero Logs</a>
       </div>
     </div>
-  </div>
-
-  <!-- Intro banner -->
-  <div class="intro-banner">
-    <div class="intro-icon">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+    <div class="side-group">
+      <div class="side-group-title">Подключение</div>
+      <div class="side-items">
+        <a class="side-item" href="/wiki/install-ios">iOS — Happ, Streisand</a>
+        <a class="side-item" href="/wiki/install-android">Android — v2rayNG, Hiddify</a>
+        <a class="side-item" href="/wiki/install-windows">Windows — v2rayN</a>
+        <a class="side-item" href="/wiki/install-macos">macOS — V2Box</a>
+      </div>
     </div>
-    <div>
-      <div class="intro-title">Никаких обязательных подписок с автосписанием</div>
-      <div class="intro-sub">Каждая оплата — разовая покупка конкретного срока. Продлеваете сами, когда удобно.</div>
+    <div class="side-group">
+      <div class="side-group-title">Оплата и аккаунт</div>
+      <div class="side-items">
+        <a class="side-item current" href="/wiki/payment">Способы оплаты</a>
+        <a class="side-item" href="/wiki/referrals">Реферальная программа</a>
+        <a class="side-item" href="/wiki/trial">Пробный период</a>
+        <a class="side-item" href="/get-vpn">Покупка без Telegram</a>
+      </div>
     </div>
-  </div>
+    <div class="side-group">
+      <div class="side-group-title">Помощь</div>
+      <div class="side-items">
+        <a class="side-item" href="/wiki/faq">FAQ</a>
+        <a class="side-item" href="/wiki/troubleshooting">Устранение неполадок</a>
+      </div>
+    </div>
+  </aside>
 
-  <div class="doc-body">
+  <article>
+    <div class="crumbs"><a href="/wiki">Wiki</a><span>/</span><span>Оплата и аккаунт</span><span>/</span><span style="color:var(--text2)">Способы оплаты</span></div>
+    <h1>Способы оплаты и почему не нужен паспорт</h1>
+    <p class="lede">Три способа заплатить, одна и та же подписка. Ни один из них не требует от вас документы — разбираем, почему так и как это устроено.</p>
+    <div class="doc-meta-row"><span>6 мин чтения</span><span>·</span><span>Оплата</span><span>·</span><span>обновлено 08.2026</span></div>
 
-    <!-- 01 -->
-    <div class="doc-section" id="s1">
-      <div class="doc-num">01</div>
-      <div class="doc-content">
-        <h2>Три способа оплаты</h2>
-        <p>Функционально подписки не отличаются: какой бы способ вы ни выбрали, вы получаете тот же протокол, те же серверы и до трёх устройств. Разница — только в удобстве и в том, откуда вы платите.</p>
-        <div class="method-list">
-          <div class="method-row">
-            <div class="method-top"><span class="method-title">Telegram Stars</span><span class="method-where">в боте</span></div>
-            <div class="method-text">Внутренняя валюта Telegram: покупается в приложении, оплата проходит за секунды. Доступно только внутри Telegram.</div>
-          </div>
-          <div class="method-row">
-            <div class="method-top"><span class="method-title">Банковская карта</span><span class="method-where">Robokassa</span></div>
-            <div class="method-text">Visa, Mastercard и МИР. Платёж принимает Robokassa на своей защищённой странице — реквизиты карты вводятся там и к нам не передаются.</div>
-          </div>
-          <div class="method-row">
-            <div class="method-top"><span class="method-title">ЮMoney</span><span class="method-where">карта · СБП · кошелёк</span></div>
-            <div class="method-text">Оплата картой, через СБП или с кошелька ЮMoney. Удобная альтернатива, если карта не проходит через Robokassa.</div>
-          </div>
-        </div>
+    <h2 id="methods">Три способа оплаты</h2>
+    <p>Функционально подписки не отличаются: какой бы способ вы ни выбрали, вы получаете тот же протокол, те же серверы и до трёх устройств. Разница — только в удобстве и в том, откуда вы платите.</p>
+    <div class="flow">
+      <div class="flow-row"><div class="flow-head"><span class="flow-head-title">Telegram Stars</span><span class="flow-head-where">в боте</span></div><div class="flow-text">Внутренняя валюта Telegram: покупается в приложении, оплата проходит за секунды. Доступно только внутри Telegram.</div></div>
+      <div class="flow-row"><div class="flow-head"><span class="flow-head-title">Банковская карта</span><span class="flow-head-where">Robokassa</span></div><div class="flow-text">Visa, Mastercard и МИР. Платёж принимает Robokassa на своей защищённой странице — реквизиты карты вводятся там и к нам не передаются.</div></div>
+      <div class="flow-row"><div class="flow-head"><span class="flow-head-title">ЮMoney</span><span class="flow-head-where">карта · СБП · кошелёк</span></div><div class="flow-text">Оплата картой, через СБП или с кошелька ЮMoney. Удобная альтернатива, если карта не проходит через Robokassa.</div></div>
+    </div>
+
+    <h2 id="nopassport">Почему не нужен паспорт</h2>
+    <p>Подписка на VPN — это цифровая услуга с фиксированной небольшой ценой, а не финансовый продукт. Для такой покупки платёжные системы не требуют идентификации личности: вы платите ровно так же, как за подписку на музыку или игру.</p>
+    <p>Telegram Stars покупаются внутри самого Telegram, и мы видим только факт оплаты. При оплате картой через Robokassa и при оплате через ЮMoney реквизиты вводятся на стороне платёжного провайдера — к нам они не попадают, а провайдер не запрашивает у вас паспорт для разовой покупки такого размера.</p>
+    <p>Отдельно отметим: сочетание оплаты без документов и отключённых логов означает, что мы не связываем платёж с историей вашего трафика — просто потому, что этой истории не существует.</p>
+
+    <div class="notice">
+      <span class="notice-icon"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5h.01M12 3.6l8.5 15a1 1 0 01-.9 1.4H4.4a1 1 0 01-.9-1.4z"/></svg></span>
+      <div>
+        <div class="notice-label">Криптовалюты больше нет</div>
+        <div class="notice-text">Раньше можно было платить криптовалютой — этот способ убран. Остались три: Telegram Stars, банковская карта через Robokassa и ЮMoney. Если где-то встречаете упоминание оплаты криптой, это устаревшая страница.</div>
       </div>
     </div>
 
-    <!-- 02 -->
-    <div class="doc-section" id="s2">
-      <div class="doc-num">02</div>
-      <div class="doc-content">
-        <h2>Тарифы и стоимость</h2>
-        <p>Чем длиннее срок — тем выгоднее цена за день: 1 месяц, 3 месяца (со скидкой) и 6 месяцев (максимальная скидка). Кроме готовых тарифов, можно оформить подписку на любое произвольное количество дней от 7 до 180.</p>
-        <p>Актуальные цены — на странице <a href="/tariffs">Тарифы</a>, здесь мы их не дублируем, чтобы не разойтись при обновлении.</p>
-      </div>
+    <h2 id="where">Где какой способ доступен</h2>
+    <p>Способы оплаты одинаковы и в боте, и в личном кабинете на сайте. Единственное исключение — Telegram Stars: их можно купить только внутри Telegram.</p>
+    <div class="doc-table-wrap">
+      <table class="doc-table">
+        <thead><tr><th>Способ</th><th>В боте</th><th>На сайте</th></tr></thead>
+        <tbody>
+          <tr><td>Telegram Stars</td><td style="color:#4ADE80">Да</td><td style="color:var(--text2)">Нет</td></tr>
+          <tr><td>Карта (Robokassa)</td><td style="color:#4ADE80">Да</td><td style="color:#4ADE80">Да</td></tr>
+          <tr><td>ЮMoney</td><td style="color:#4ADE80">Да</td><td style="color:#4ADE80">Да</td></tr>
+        </tbody>
+      </table>
     </div>
 
-    <!-- 03 -->
-    <div class="doc-section" id="s3">
-      <div class="doc-num">03</div>
-      <div class="doc-content">
-        <h2>Почему не нужен паспорт</h2>
-        <p>Подписка на VPN — цифровая услуга с фиксированной небольшой ценой, а не финансовый продукт. Telegram Stars покупаются внутри самого Telegram, и мы видим только факт оплаты. При оплате картой через Robokassa и при оплате через ЮMoney реквизиты вводятся на стороне платёжного провайдера — к нам они не попадают, а провайдер не запрашивает паспорт для разовой покупки такого размера.</p>
-        <p>Сочетание оплаты без документов и отключённых логов означает, что мы не связываем платёж с историей вашего трафика — просто потому, что этой истории не существует.</p>
-        <div class="notice">
-          <span class="notice-icon"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5h.01M12 3.6l8.5 15a1 1 0 01-.9 1.4H4.4a1 1 0 01-.9-1.4z"/></svg></span>
-          <div>
-            <div class="notice-label">Криптовалюты нет</div>
-            <div class="notice-text">Оплаты криптовалютой в STAR VPN не предусмотрено. Доступны только Telegram Stars, банковская карта через Robokassa и ЮMoney.</div>
-          </div>
-        </div>
-      </div>
+    <div class="doc-cta">
+      <a class="btn-gold" href="/tariffs">Посмотреть тарифы</a>
+      <a class="btn-ghost" href="/get-vpn">Купить без Telegram</a>
     </div>
 
-    <!-- 04 -->
-    <div class="doc-section" id="s4">
-      <div class="doc-num">04</div>
-      <div class="doc-content">
-        <h2>Где какой способ доступен</h2>
-        <p>Способы оплаты одинаковы и в боте, и в личном кабинете на сайте — с одним исключением: Telegram Stars можно купить только внутри Telegram.</p>
-        <table class="doc-table">
-          <tr><th>Способ</th><th>В боте</th><th>На сайте</th></tr>
-          <tr><td>Telegram Stars</td><td class="yes">Да</td><td>Нет</td></tr>
-          <tr><td>Карта (Robokassa)</td><td class="yes">Да</td><td class="yes">Да</td></tr>
-          <tr><td>ЮMoney</td><td class="yes">Да</td><td class="yes">Да</td></tr>
-        </table>
-        <p>Если у вас нет доступа к Telegram, оформить подписку всё равно можно на отдельной странице <a href="/get-vpn">Купить без Telegram</a> — там доступны карта и ЮMoney, Telegram-аккаунт не требуется.</p>
-      </div>
+    <div class="next-grid">
+      <a class="next-card" href="/wiki/referrals">
+        <div class="next-kicker">Аккаунт</div>
+        <div class="next-title">Как считается реферальный бонус</div>
+      </a>
+      <a class="next-card" href="/get-vpn">
+        <div class="next-kicker">Доступ</div>
+        <div class="next-title">Покупка без Telegram</div>
+      </a>
     </div>
+  </article>
 
-    <!-- 05 -->
-    <div class="doc-section" id="s5">
-      <div class="doc-num">05</div>
-      <div class="doc-content">
-        <h2>Подарить VPN другу</h2>
-        <p>В боте есть функция <span class="hl">«Подарить»</span>: выбираете тариф, оплачиваете его Telegram Stars, указываете получателя (@username или Telegram ID) — подписка активируется на его аккаунте автоматически сразу после оплаты. Получатель должен быть зарегистрирован в боте (написать /start), чтобы получить уведомление.</p>
-        <p>То же самое можно сделать и в личном кабинете на сайте — во вкладке <span class="hl">«Подарить»</span>, оплата картой или через ЮMoney.</p>
-        <p>Возврат Telegram Stars возможен в течение <span class="hl">24 часов</span> с момента оплаты, если вы ещё не воспользовались сервисом. Возврат средств, оплаченных картой или ЮMoney, рассматривается индивидуально при обращении в поддержку. Подробности — в <a href="/terms">условиях использования</a>.</p>
-        <div class="contact-card">
-          <div class="contact-card-label">Вопросы по оплате</div>
-          <p>Бот: <a href="https://t.me/starisvpnbot">@starisvpnbot</a> — там же работает форма обращения в поддержку.</p>
-          <p>Сайт: раздел <a href="/support">Поддержка</a> в личном кабинете.</p>
-        </div>
-        <div class="doc-cta">
-          <a class="btn-gold" href="/tariffs">Посмотреть тарифы</a>
-          <a class="btn-ghost" href="/get-vpn">Купить без Telegram</a>
-        </div>
-      </div>
+  <aside class="toc">
+    <div class="toc-label">На этой странице</div>
+    <div class="toc-items">
+      <a href="#methods">Три способа оплаты</a>
+      <a href="#nopassport">Почему не нужен паспорт</a>
+      <a href="#where">Где какой способ доступен</a>
     </div>
-
-  </div><!-- /doc-body -->
-
-  <div class="next-grid">
-    <a class="next-card" href="/wiki/referrals">
-      <div class="next-kicker">Аккаунт</div>
-      <div class="next-title">Как считается реферальный бонус</div>
-    </a>
-    <a class="next-card" href="/get-vpn">
-      <div class="next-kicker">Доступ</div>
-      <div class="next-title">Покупка без Telegram</div>
-    </a>
-  </div>
-
-</div><!-- /wrap -->
-</main>
+  </aside>
+</div>
 
 <footer>
-  <a class="footer-logo" href="/">
-    <img src="/logo.png" alt="STAR VPN">
-    <span class="footer-logo-text">STAR VPN</span>
-  </a>
-  <div class="footer-links">
-    <a href="/wiki">Wiki</a>
-    <a href="/tariffs">Тарифы</a>
-    <a href="/connect">Подключение</a>
-    <a href="/privacy">Конфиденциальность</a>
-    <a href="/terms">Условия</a>
-    <a href="https://t.me/starisvpnbot">@starisvpnbot</a>
+  <div class="footer-inner">
+    <span>© 2026 STAR VPN</span>
+    <span class="footer-links">
+      <a href="/wiki">Wiki</a>
+      <a href="/tariffs">Тарифы</a>
+      <a href="/privacy">Конфиденциальность</a>
+      <a href="https://t.me/starisvpnbot">@starisvpnbot</a>
+    </span>
   </div>
-  <div class="footer-copy">© 2026 STAR VPN · VLESS Reality · Zero Logs</div>
 </footer>
 
 <script>
-/* ═══ Progress bar ══════════════════════════════════════════ */
-const bar = document.getElementById('progress');
-window.addEventListener('scroll', () => {
-  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
-  bar.style.width = Math.min(pct, 100) + '%';
-}, {passive:true});
-
 /* ═══ Starfield ══════════════════════════════════════════════ */
 (function(){
   const c = document.getElementById('bg-canvas');
   const ctx = c.getContext('2d');
   function resize(){ c.width = innerWidth; c.height = innerHeight; }
   resize(); window.addEventListener('resize', resize, {passive:true});
-  const stars = Array.from({length:200}, () => ({
+  const stars = Array.from({length:60}, () => ({
     x: Math.random(), y: Math.random(),
-    r: Math.random() * 1.2 + 0.1,
-    o: Math.random() * 0.5 + 0.08,
+    r: Math.random() * 1.2 + 0.15,
+    o: Math.random() * 0.5 + 0.1,
     sp: Math.random() * 0.0004 + 0.00006,
     ph: Math.random() * Math.PI * 2,
   }));
   let f = 0;
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function draw(){
     ctx.clearRect(0,0,c.width,c.height); f++;
     for(const s of stars){
       const a = s.o * (0.4 + 0.6 * Math.sin(f * s.sp * 200 + s.ph));
       ctx.beginPath();
       ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fill();
+      ctx.fillStyle = `rgba(255,216,120,${a})`; ctx.fill();
     }
-    requestAnimationFrame(draw);
+    if(!reduced) requestAnimationFrame(draw);
   }
   draw();
 })();
