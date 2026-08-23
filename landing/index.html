@@ -517,7 +517,6 @@ footer{
 <nav id="nav">
   <div class="nav-inner">
     <a class="nav-logo" href="#">
-      <img src="/logo.png" alt="STAR VPN">
       <span class="nav-logo-text">STAR VPN</span>
     </a>
     <div class="nav-links">
@@ -999,7 +998,6 @@ footer{
   <div class="wrap" style="text-align:left;display:grid;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));gap:36px;padding-bottom:36px">
     <div style="min-width:200px">
       <a class="footer-logo" href="#" style="margin-bottom:14px">
-        <img src="/logo.png" alt="STAR VPN">
         <span class="footer-logo-text" style="font-size:16px">STAR VPN</span>
       </a>
       <p style="font-size:13px;color:var(--text3);line-height:1.65;max-width:32ch">VPN, который не отваливается. История подключений не сохраняется.</p>
@@ -1103,10 +1101,10 @@ window.addEventListener('scroll', () => {
   const ctx = c.getContext('2d');
   function resize(){ c.width = innerWidth; c.height = innerHeight; }
   resize(); window.addEventListener('resize', resize, {passive:true});
-  const stars = Array.from({length:280}, () => ({
+  const stars = Array.from({length:340}, () => ({
     x: Math.random(), y: Math.random(),
-    r: Math.random() * 1.4 + 0.15,
-    o: Math.random() * 0.6 + 0.1,
+    r: Math.random() * 1.6 + 0.3,
+    o: Math.random() * 0.6 + 0.35,
     sp: Math.random() * 0.0004 + 0.00006,
     ph: Math.random() * Math.PI * 2,
   }));
@@ -1114,10 +1112,10 @@ window.addEventListener('scroll', () => {
   function draw(){
     ctx.clearRect(0,0,c.width,c.height); f++;
     for(const s of stars){
-      const a = s.o * (0.4 + 0.6 * Math.sin(f * s.sp * 200 + s.ph));
+      const a = s.o * (0.55 + 0.45 * Math.sin(f * s.sp * 200 + s.ph));
       ctx.beginPath();
       ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fill();
+      ctx.fillStyle = `rgba(255,216,120,${a})`; ctx.fill();
     }
     requestAnimationFrame(draw);
   }

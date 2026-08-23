@@ -103,7 +103,7 @@ footer{{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-alig
 <body>
 <nav id="nav">
   <div class="nav-inner">
-    <a class="nav-logo" href="/"><img src="/logo.png" alt="STAR VPN"><span class="nav-logo-text">STAR VPN</span></a>
+    <a class="nav-logo" href="/"><span class="nav-logo-text">STAR VPN</span></a>
     <div class="nav-links">
       <a href="/tariffs">Тарифы</a>
       <a href="/connect">Подключение</a>
