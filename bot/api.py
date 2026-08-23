@@ -90,10 +90,12 @@ async def serve_terms():
     return _serve_html(_LANDING_DIR / "terms.html")
 
 
-@app.get("/connect", response_class=HTMLResponse, include_in_schema=False)
-@app.get("/connect.html", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/connect", include_in_schema=False)
+@app.get("/connect.html", include_in_schema=False)
 async def serve_connect():
-    return _serve_html(_LANDING_DIR / "connect.html")
+    """Старый единый гайд по подключению — теперь 4 отдельные статьи Wiki."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/wiki", status_code=301)
 
 
 @app.get("/login", response_class=HTMLResponse, include_in_schema=False)
@@ -120,7 +122,10 @@ async def serve_tariffs():
     return _serve_html(_LANDING_DIR / "tariffs.html")
 
 
-_WIKI_SLUGS = {"vless-reality", "zero-logs", "payment", "trial", "referrals", "troubleshooting", "faq"}
+_WIKI_SLUGS = {
+    "vless-reality", "zero-logs", "payment", "trial", "referrals", "troubleshooting", "faq",
+    "install-ios", "install-android", "install-windows", "install-macos",
+}
 
 
 @app.get("/wiki", response_class=HTMLResponse, include_in_schema=False)
