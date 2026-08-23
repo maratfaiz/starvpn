@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wiki — STAR VPN</title>
-<meta name="description" content="База знаний STAR VPN: как работает VLESS Reality, Zero Logs, способы оплаты, пробный период, реферальная программа, решение неполадок, FAQ.">
+<meta name="description" content="База знаний STAR VPN: как работает VLESS Reality, Zero Logs, подключение на iOS/Android/Windows/macOS/Linux, способы оплаты, пробный период, реферальная программа, решение неполадок, FAQ.">
 <link rel="icon" href="/logo.png" type="image/png">
 <link rel="apple-touch-icon" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -91,12 +91,8 @@ input::placeholder{color:var(--text3)}
 .article-text{font-size:13px;color:var(--text2);line-height:1.6}
 .article-meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);margin-top:6px;display:block}
 
-.install-strip{display:flex;align-items:center;justify-content:space-between;gap:24px;background:linear-gradient(135deg,rgba(255,184,0,.08),rgba(255,184,0,.02));border:1px solid var(--gold-border);border-radius:18px;padding:28px 32px;margin-bottom:64px}
-.install-strip-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;margin-bottom:4px}
-.install-strip-text{font-size:13.5px;color:var(--text2)}
 .btn-gold{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;padding:13px 26px;border-radius:11px;text-decoration:none;white-space:nowrap;flex-shrink:0;transition:all .2s}
 .btn-gold:hover{background:var(--gold2);transform:translateY(-2px);color:#000}
-@media(max-width:600px){.install-strip{flex-direction:column;text-align:center}}
 
 .empty-note{display:none;border:1px dashed rgba(255,255,255,.12);border-radius:18px;padding:40px;text-align:center;color:var(--text2);margin-bottom:48px}
 .empty-note.show{display:block}
@@ -165,10 +161,10 @@ footer{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align
 <div class="hero">
   <div class="hero-badge"><span class="badge-dot"></span>База знаний</div>
   <h1>STAR VPN <em>Wiki</em></h1>
-  <p>Как устроен протокол, что происходит с логами, как оплатить и что делать, когда что-то не работает.</p>
+  <p>Как устроен протокол, что происходит с логами, как подключить каждую платформу и что делать, когда что-то не работает.</p>
   <div class="search-box">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
-    <input type="search" id="wiki-search" placeholder="Поиск: reality, логи, оплата, рефералы…">
+    <input type="search" id="wiki-search" placeholder="Поиск: reality, логи, hiddify, оплата…">
   </div>
   <div class="result-note" id="result-note"></div>
 </div>
@@ -176,16 +172,8 @@ footer{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align
 <section>
 <div class="wrap">
 
-  <div class="install-strip">
-    <div>
-      <div class="install-strip-title">Ищешь инструкцию по установке?</div>
-      <div class="install-strip-text">iOS, Android, Windows, macOS, Linux и TV — пошаговые гайды с картинками на одной странице.</div>
-    </div>
-    <a class="btn-gold" href="/connect">Открыть гайд →</a>
-  </div>
-
   <div class="group" data-group>
-    <div class="group-label">О сервисе</div>
+    <div class="group-label">Технологии</div>
     <div class="article-grid">
       <a class="article-card" href="/wiki/vless-reality" data-kw="reality vless dpi tls xray протокол блокировки обход рукопожатие">
         <div class="article-icon"><svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7L12 2z"/><path d="M9 12l2 2 4-4"/></svg></div>
@@ -203,20 +191,58 @@ footer{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align
           <span class="article-meta">~2 мин · приватность</span>
         </div>
       </a>
-      <a class="article-card" href="/wiki/trial" data-kw="триал пробный 2 дня бесплатно telegram_id email">
-        <div class="article-icon"><svg viewBox="0 0 24 24"><path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/></svg></div>
+    </div>
+  </div>
+
+  <div class="group" data-group>
+    <div class="group-label">Подключение</div>
+    <div class="article-grid">
+      <a class="article-card" href="/connect#guide-ios" data-kw="ios iphone ipad happ streisand shadowrocket установка подключение">
+        <div class="article-icon"><svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><line x1="10" y1="19" x2="14" y2="19"/></svg></div>
         <div>
-          <div class="article-title">Пробный период</div>
-          <div class="article-text">2 дня бесплатно — как активировать и что будет после окончания.</div>
-          <span class="article-meta">~2 мин · старт</span>
+          <div class="article-title">iOS — Happ, Streisand, Shadowrocket</div>
+          <div class="article-text">Три клиента на выбор: установка, импорт подписки, первый коннект.</div>
+          <span class="article-meta">~4 мин · iPhone, iPad</span>
         </div>
       </a>
-      <a class="article-card" href="/wiki/faq" data-kw="faq вопросы ответы устройства ключ отмена">
-        <div class="article-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <a class="article-card" href="/connect#guide-android" data-kw="android v2rayng hiddify apk google play установка подключение">
+        <div class="article-icon"><svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><line x1="10" y1="19" x2="14" y2="19"/><path d="M8 7h8"/></svg></div>
         <div>
-          <div class="article-title">Частые вопросы</div>
-          <div class="article-text">Устройства, смена ключа, отмена подписки и другие частые вопросы.</div>
-          <span class="article-meta">~5 мин · вопросы</span>
+          <div class="article-title">Android — v2rayNG, Hiddify</div>
+          <div class="article-text">Установка из Google Play или APK, импорт ссылки подписки.</div>
+          <span class="article-meta">~4 мин · Android</span>
+        </div>
+      </a>
+      <a class="article-card" href="/connect#guide-windows" data-kw="windows v2rayn прокси tun пк установка подключение">
+        <div class="article-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"/><line x1="8" y1="22" x2="16" y2="22"/><line x1="12" y1="18" x2="12" y2="22"/></svg></div>
+        <div>
+          <div class="article-title">Windows — v2rayN</div>
+          <div class="article-text">Распаковка, добавление подписки, системный прокси и режим TUN.</div>
+          <span class="article-meta">~4 мин · Windows</span>
+        </div>
+      </a>
+      <a class="article-card" href="/connect#guide-macos" data-kw="macos mac v2box app store установка подключение">
+        <div class="article-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg></div>
+        <div>
+          <div class="article-title">macOS — V2Box</div>
+          <div class="article-text">Установка из App Store, импорт подписки, разрешения системы.</div>
+          <span class="article-meta">~3 мин · Mac</span>
+        </div>
+      </a>
+      <a class="article-card" href="/connect#guide-linux" data-kw="linux nekoray ubuntu подключение установка">
+        <div class="article-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14c1 2 7 2 8 0"/><circle cx="9" cy="10" r=".6" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r=".6" fill="currentColor" stroke="none"/></svg></div>
+        <div>
+          <div class="article-title">Linux и Смарт-ТВ</div>
+          <div class="article-text">NekoRay на Linux, приложения для Apple TV и Android TV.</div>
+          <span class="article-meta">~3 мин · Linux, TV</span>
+        </div>
+      </a>
+      <a class="article-card" href="/wiki/faq#devices" data-kw="устройства лимит 3 три подписка одновременно">
+        <div class="article-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>
+        <div>
+          <div class="article-title">Три устройства на одной подписке</div>
+          <div class="article-text">Как один ключ работает одновременно на телефоне, ноутбуке и планшете.</div>
+          <span class="article-meta">~2 мин · аккаунт</span>
         </div>
       </a>
     </div>
@@ -241,12 +267,36 @@ footer{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align
           <span class="article-meta">~3 мин · бонусы</span>
         </div>
       </a>
+      <a class="article-card" href="/wiki/trial" data-kw="триал пробный 2 дня бесплатно telegram_id email">
+        <div class="article-icon"><svg viewBox="0 0 24 24"><path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/></svg></div>
+        <div>
+          <div class="article-title">Пробный период</div>
+          <div class="article-text">2 дня бесплатно — как активировать и что будет после окончания.</div>
+          <span class="article-meta">~2 мин · старт</span>
+        </div>
+      </a>
+      <a class="article-card" href="/get-vpn" data-kw="без телеграма сайт ключ россия недоступен покупка личный кабинет">
+        <div class="article-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 010 20 15 15 0 010-20z"/></svg></div>
+        <div>
+          <div class="article-title">Покупка без Telegram</div>
+          <div class="article-text">Сценарий для случаев, когда сам Telegram недоступен без VPN.</div>
+          <span class="article-meta">~3 мин · доступ</span>
+        </div>
+      </a>
     </div>
   </div>
 
   <div class="group" data-group>
     <div class="group-label">Помощь</div>
     <div class="article-grid">
+      <a class="article-card" href="/wiki/faq" data-kw="faq вопросы ответы устройства ключ отмена">
+        <div class="article-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div>
+          <div class="article-title">Частые вопросы</div>
+          <div class="article-text">Устройства, смена ключа, отмена подписки и другие частые вопросы.</div>
+          <span class="article-meta">~5 мин · вопросы</span>
+        </div>
+      </a>
       <a class="article-card" href="/wiki/troubleshooting" data-kw="проблема не работает ошибка медленно отваливается диагностика">
         <div class="article-icon"><svg viewBox="0 0 24 24"><path d="M12 9v4"/><line x1="12" y1="17" x2="12.01" y2="17"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
         <div>
@@ -363,7 +413,7 @@ footer{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align
       const anyVisible = g.querySelectorAll('.article-card:not([style*="display: none"])').length > 0;
       g.style.display = anyVisible ? '' : 'none';
     });
-    note.textContent = q ? `Найдено: ${visible}` : `${total} статей в трёх разделах`;
+    note.textContent = q ? `Найдено: ${visible}` : `${total} статей в четырёх разделах`;
     empty.classList.toggle('show', visible === 0);
   }
   input.addEventListener('input', filter);
