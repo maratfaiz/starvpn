@@ -73,7 +73,8 @@ input[type=email].err{border-color:rgba(248,113,113,.5)}
 
 .sent{display:none;text-align:center;padding:8px 0}
 .sent.show{display:block}
-.sent-icon{width:56px;height:56px;border-radius:16px;background:var(--gold-dim);border:1px solid rgba(255,184,0,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:26px}
+.sent-icon{width:56px;height:56px;border-radius:16px;background:var(--gold-dim);border:1px solid rgba(255,184,0,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:var(--gold)}
+.sent-icon svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .sent h2{font-family:'Space Grotesk',sans-serif;font-size:23px;font-weight:700;margin-bottom:12px}
 .sent p{color:var(--text2);margin-bottom:8px}
 .sent-email{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--gold);margin-bottom:24px;word-break:break-all}
@@ -152,7 +153,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
     </div>
 
     <div class="sent" id="sentState">
-      <div class="sent-icon">✉</div>
+      <div class="sent-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 6l10 7 10-7"/></svg></div>
       <h2>Проверьте почту</h2>
       <p>Ссылка для входа отправлена на</p>
       <div class="sent-email" id="sentEmail"></div>
