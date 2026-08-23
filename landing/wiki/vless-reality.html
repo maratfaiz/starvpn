@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VLESS + Reality: как это работает — STAR VPN Wiki</title>
-<meta name="description" content="Почему трафик STAR VPN неотличим от обычного HTTPS-сайта для DPI: как работает протокол VLESS + Reality и при чём тут Xray-core.">
+<title>VLESS + Reality — Wiki STAR VPN</title>
+<meta name="description" content="Как VLESS + Reality заимствует TLS-рукопожатие настоящего сайта и почему DPI не отличает такой трафик от обычного HTTPS.">
 <link rel="icon" href="/logo.png" type="image/png">
 <link rel="apple-touch-icon" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,28 +19,25 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smo
   --gold-dim:rgba(255,184,0,0.1);
   --bg:#060606;--bg2:rgba(255,255,255,0.025);
   --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;
-  --max:900px;--navmax:1160px;
+  --navmax:1320px;
 }
-body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.75;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.7;overflow-x:hidden}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.3}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,184,0,.2);border-radius:2px}
 
-#progress{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));z-index:9999;transition:width .08s linear}
-#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6}
-
-#nav{position:sticky;top:0;z-index:100;padding:0 24px;background:rgba(6,6,6,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
-.nav-inner{max-width:var(--navmax);margin:0 auto;display:flex;align-items:center;height:64px;gap:22px}
+#nav{position:sticky;top:0;z-index:100;padding:0 20px;background:rgba(6,6,6,.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
+.nav-inner{max-width:var(--navmax);margin:0 auto;display:flex;align-items:center;height:66px;gap:26px}
 .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
-.nav-logo img{width:30px;height:30px;border-radius:8px;object-fit:cover}
 .nav-logo-text{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
 .nav-links{display:flex;gap:6px;flex:1;flex-wrap:wrap}
 .nav-links a{font-size:13.5px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s;padding:9px 12px;border-radius:9px}
 .nav-links a:hover{color:var(--gold);background:rgba(255,255,255,.04)}
 .nav-links a.active{color:var(--gold)}
-.nav-login{font-size:13.5px;font-weight:500;color:var(--text);white-space:nowrap;padding:9px 14px;border:1px solid rgba(255,255,255,.18);border-radius:10px;text-decoration:none;transition:color .2s,border-color .2s;flex-shrink:0}
+.nav-login{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;padding:8px 13px;border:1px solid rgba(255,255,255,.18);border-radius:10px;text-decoration:none;transition:color .2s,border-color .2s;flex-shrink:0}
 .nav-login:hover{color:var(--gold);border-color:var(--gold-border)}
 .nav-cta{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;padding:10px 18px;border-radius:11px;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;transition:background .2s,transform .15s}
 .nav-cta:hover{background:var(--gold2);color:#000;transform:translateY(-1px)}
@@ -55,7 +52,7 @@ a:hover{color:var(--gold2)}
 .start-modal p{color:var(--text2);margin-bottom:26px}
 .start-modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
 .start-modal-opt{display:block;border-radius:18px;padding:22px;text-decoration:none;transition:border-color .2s}
-.start-modal-opt.opt-site{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1)}
+.start-modal-opt.opt-site{background:#0D0C0A;border:1px solid rgba(255,255,255,.1)}
 .start-modal-opt.opt-site:hover{border-color:var(--gold-border)}
 .start-modal-opt.opt-tg{background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.3)}
 .start-modal-opt.opt-tg:hover{border-color:rgba(255,184,0,.5)}
@@ -65,51 +62,30 @@ a:hover{color:var(--gold2)}
 .opt-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
 .opt-text{font-size:13.5px;color:var(--text2);line-height:1.5}
 
-.wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}
+.layout{position:relative;z-index:2;max-width:var(--navmax);margin:0 auto;padding:clamp(24px,3vw,44px) 20px 0;display:grid;grid-template-columns:1fr;gap:clamp(24px,3vw,48px);align-items:start}
+@media(min-width:1000px){.layout{grid-template-columns:250px minmax(0,1fr)}}
+@media(min-width:1240px){.layout{grid-template-columns:250px minmax(0,1fr) 210px}}
+.side-nav{display:none;position:sticky;top:88px;max-height:calc(100vh - 108px);overflow:auto;padding-bottom:24px}
+@media(min-width:1000px){.side-nav{display:block}}
+.side-group{margin-bottom:24px}
+.side-group-title{font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:10px;padding-left:12px}
+.side-items{display:flex;flex-direction:column;gap:2px}
+.side-item{font-size:13.5px;line-height:1.45;padding:8px 12px;border-radius:9px;border:1px solid transparent;color:var(--text2)}
+.side-item:hover{color:var(--gold)}
+.side-item.current{border-color:rgba(255,184,0,.3);color:var(--gold);background:rgba(255,184,0,.07)}
 
-.back-nav{padding-top:40px}
-.back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);text-decoration:none;transition:color .2s}
-.back-link:hover{color:var(--gold)}
-.crumbs{font-size:12.5px;color:var(--text3);margin-top:18px;display:flex;gap:8px;flex-wrap:wrap}
+article{min-width:0;max-width:72ch;padding-bottom:60px}
+.crumbs{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--text3);margin-bottom:20px;flex-wrap:wrap}
 .crumbs a{color:var(--text2)}
-
-.doc-hero{padding:28px 0 56px;text-align:center}
-.doc-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--gold-border);border-radius:100px;padding:6px 20px;margin-bottom:32px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);background:var(--gold-dim)}
-.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;animation:blink 1.8s ease-in-out infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.doc-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(36px,7vw,60px);font-weight:700;line-height:1.08;letter-spacing:-.02em;color:var(--text);margin-bottom:16px}
-.doc-title .gold{background:linear-gradient(135deg,var(--gold) 0%,var(--gold2) 50%,var(--gold) 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite}
-@keyframes shimmer{0%{background-position:0 center}100%{background-position:200% center}}
-.doc-date{font-size:14px;color:var(--text2);letter-spacing:.02em;margin-bottom:44px;max-width:520px;margin-left:auto;margin-right:auto}
-.doc-meta{display:flex;gap:1px;max-width:380px;margin:0 auto;border:1px solid var(--gold-border);border-radius:16px;background:var(--gold-border);overflow:hidden}
-.doc-meta-item{flex:1;background:rgba(6,6,6,.9);padding:16px 8px;text-align:center;backdrop-filter:blur(12px)}
-.doc-meta-val{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--gold);line-height:1;margin-bottom:4px}
-.doc-meta-lbl{font-size:10px;color:var(--text2);letter-spacing:.06em;text-transform:uppercase}
-
-.intro-banner{display:flex;align-items:center;gap:16px;background:rgba(255,184,0,.04);border:1px solid var(--gold-border);border-radius:16px;padding:20px 24px;margin:48px 0;position:relative;overflow:hidden}
-.intro-banner::before{content:'';position:absolute;right:-40px;top:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(255,184,0,.08),transparent 65%);pointer-events:none}
-.intro-icon{width:44px;height:44px;border-radius:12px;background:rgba(255,184,0,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.intro-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--gold);margin-bottom:3px}
-.intro-sub{font-size:13px;color:var(--text2);line-height:1.5}
-
-.doc-body{padding-bottom:56px}
-.doc-section{display:grid;grid-template-columns:72px 1fr;gap:36px;padding:52px 0;border-bottom:1px solid rgba(255,184,0,.07)}
-.doc-section:last-child{border-bottom:none}
-.doc-num{font-family:'Space Grotesk',sans-serif;font-size:56px;font-weight:700;color:rgba(255,184,0,.09);line-height:1;text-align:right;padding-top:4px;user-select:none;flex-shrink:0}
-.doc-content h2{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;color:var(--text);margin-bottom:20px;letter-spacing:-.01em}
-.doc-content p{color:var(--text2);font-size:15px;line-height:1.85;margin-bottom:14px}
-.doc-content p:last-child{margin-bottom:0}
-.doc-content .hl{color:var(--text);font-weight:500}
-.doc-content a{color:var(--gold);text-decoration:none}
-.doc-content a:hover{text-decoration:underline}
-.sub-item{position:relative;padding-left:22px;color:var(--text2);font-size:15px;line-height:1.85;margin-bottom:10px}
-.sub-item::before{content:'';position:absolute;left:0;top:.75em;width:6px;height:6px;border-radius:50%;border:1.5px solid rgba(255,184,0,.35)}
-
-.doc-table{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--gold-border);border-radius:14px;overflow:hidden;margin:20px 0;font-size:14px}
-.doc-table th{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);background:rgba(255,184,0,.05);text-align:left;padding:13px 20px;border-bottom:1px solid var(--gold-border)}
-.doc-table td{color:var(--text2);padding:14px 20px;border-bottom:1px solid rgba(255,184,0,.05);vertical-align:top;line-height:1.7}
-.doc-table tr:last-child td{border-bottom:none}
-.doc-table td:first-child{color:var(--text);font-weight:500;width:170px}
+article h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(30px,4.4vw,50px);font-weight:700;line-height:1.08;letter-spacing:-.02em;margin-bottom:18px}
+.lede{font-size:18px;color:var(--text2);margin-bottom:22px}
+.doc-meta-row{display:flex;gap:16px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text3);padding-bottom:28px;margin-bottom:36px;border-bottom:1px solid rgba(255,255,255,.08)}
+article h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(23px,3vw,32px);font-weight:700;line-height:1.2;margin:40px 0 16px;scroll-margin-top:88px}
+article h2:first-of-type{margin-top:0}
+article p{margin-bottom:18px}
+article p b{color:var(--text)}
+article a{color:var(--gold)}
+article a:hover{text-decoration:underline}
 
 .tech-card{display:flex;gap:16px;align-items:flex-start;background:#0D0C0A;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:20px 22px;margin:26px 0}
 .tech-icon{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -123,13 +99,20 @@ a:hover{color:var(--gold2)}
 .flow-title{font-family:'Space Grotesk',sans-serif;font-size:15.5px;font-weight:600;color:var(--text);margin-bottom:4px}
 .flow-text{font-size:14px;line-height:1.6;color:var(--text2)}
 
+.doc-table-wrap{border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;margin-bottom:26px;overflow-x:auto}
+.doc-table{width:100%;border-collapse:collapse;min-width:520px}
+.doc-table th{text-align:left;padding:15px 20px;font-family:'Space Grotesk',sans-serif;font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid rgba(255,255,255,.08)}
+.doc-table td{padding:14px 20px;font-size:14px;color:var(--text2);border-bottom:1px solid rgba(255,255,255,.05);vertical-align:top}
+.doc-table td:first-child{color:var(--text);width:38%}
+.doc-table tr:last-child td{border-bottom:none}
+
 .notice{display:flex;gap:16px;align-items:flex-start;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:16px;padding:20px 22px;margin:30px 0}
 .notice-icon{width:32px;height:32px;border-radius:10px;background:rgba(255,184,0,.12);border:1px solid rgba(255,184,0,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .notice-icon svg{width:16px;height:16px;stroke:var(--gold);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .notice-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
 .notice-text{font-size:14.5px;line-height:1.7;color:var(--text)}
 
-.doc-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;padding-top:32px;border-top:1px solid rgba(255,255,255,.08)}
+.doc-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:36px;padding-top:32px;border-top:1px solid rgba(255,255,255,.08)}
 .btn-gold{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:700;padding:14px 28px;border-radius:12px;text-decoration:none}
 .btn-gold:hover{background:var(--gold2);color:#000}
 .btn-ghost{border:1px solid rgba(255,255,255,.14);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:600;padding:13px 28px;border-radius:12px;text-decoration:none;transition:border-color .2s,color .2s}
@@ -141,36 +124,26 @@ a:hover{color:var(--gold2)}
 .next-kicker{font-size:11px;font-family:'Space Grotesk',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
 .next-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:var(--text)}
 
-footer{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align:center;position:relative;z-index:2}
-.footer-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:24px}
-.footer-logo img{width:32px;height:32px;border-radius:8px;object-fit:cover}
-.footer-logo-text{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
-.footer-links{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
-.footer-links a{font-size:13px;color:var(--text3);text-decoration:none;transition:color .2s}
-.footer-links a:hover{color:var(--gold)}
-.footer-copy{font-size:12px;color:var(--text3);letter-spacing:.05em}
+.toc{display:none;position:sticky;top:88px;padding-bottom:24px}
+@media(min-width:1240px){.toc{display:block}}
+.toc-label{font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.toc-items{display:flex;flex-direction:column;gap:9px;border-left:1px solid rgba(255,255,255,.09);padding-left:14px}
+.toc-items a{font-size:13px;line-height:1.45;color:var(--text2)}
+.toc-items a:hover{color:var(--gold)}
 
-@media(max-width:640px){
-  .back-nav{padding-top:24px}
-  .doc-section{grid-template-columns:1fr;gap:12px;padding:40px 0}
-  .doc-num{font-size:32px;text-align:left;color:rgba(255,184,0,.14)}
-  .doc-meta{max-width:100%}
-  .doc-table{display:block;overflow-x:auto}
-  .intro-banner{align-items:flex-start}
-}
+footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
+.footer-inner{max-width:var(--navmax);margin:0 auto;padding:36px 20px;display:flex;gap:22px;flex-wrap:wrap;justify-content:space-between;font-size:12.5px;color:var(--text3)}
+.footer-inner a{color:var(--text2)}
+.footer-links{display:flex;gap:20px;flex-wrap:wrap}
 </style>
 </head>
 <body>
 
-<div id="progress"></div>
 <canvas id="bg-canvas"></canvas>
 
 <nav id="nav">
   <div class="nav-inner">
-    <a class="nav-logo" href="/">
-      <img src="/logo.png" alt="STAR VPN">
-      <span class="nav-logo-text">STAR VPN</span>
-    </a>
+    <a class="nav-logo" href="/"><span class="nav-logo-text">STAR VPN</span></a>
     <div class="nav-links">
       <a href="/#how">Преимущества</a>
       <a href="/#compare">Сравнение</a>
@@ -205,199 +178,169 @@ footer{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align
   </div>
 </div>
 
-<main>
-<div class="wrap">
-
-  <div class="back-nav">
-    <a href="/wiki" class="back-link">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-      Назад в Wiki
-    </a>
-    <div class="crumbs"><a href="/wiki">Wiki</a><span>/</span><span>О сервисе</span><span>/</span><span>VLESS + Reality</span></div>
-  </div>
-
-  <!-- Hero -->
-  <div class="doc-hero">
-    <div class="doc-badge">
-      <div class="badge-dot"></div>
-      Wiki · О сервисе
-    </div>
-    <h1 class="doc-title">VLESS + Reality:<br><span class="gold">как это работает</span></h1>
-    <div class="doc-date">Почему DPI-системы провайдеров видят в трафике STAR VPN обычный заход на HTTPS-сайт, а не VPN-соединение</div>
-    <div class="doc-meta">
-      <div class="doc-meta-item">
-        <div class="doc-meta-val">5</div>
-        <div class="doc-meta-lbl">разделов</div>
-      </div>
-      <div class="doc-meta-item">
-        <div class="doc-meta-val">~4</div>
-        <div class="doc-meta-lbl">мин чтения</div>
-      </div>
-      <div class="doc-meta-item">
-        <div class="doc-meta-val">Reality</div>
-        <div class="doc-meta-lbl">протокол</div>
+<div class="layout">
+  <aside class="side-nav">
+    <div class="side-group">
+      <div class="side-group-title">Технологии</div>
+      <div class="side-items">
+        <a class="side-item current" href="/wiki/vless-reality">VLESS + Reality</a>
+        <a class="side-item" href="/wiki/zero-logs">Zero Logs</a>
       </div>
     </div>
-  </div>
-
-  <!-- Intro banner -->
-  <div class="intro-banner">
-    <div class="intro-icon">
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-    </div>
-    <div>
-      <div class="intro-title">Коротко: STAR VPN не «маскируется» под HTTPS — он им и является</div>
-      <div class="intro-sub">Reality использует настоящий TLS-сертификат стороннего популярного сайта, поэтому провайдеру нечего анализировать, кроме обычного HTTPS-соединения.</div>
-    </div>
-  </div>
-
-  <div class="doc-body">
-
-    <!-- 01 -->
-    <div class="doc-section" id="s1">
-      <div class="doc-num">01</div>
-      <div class="doc-content">
-        <h2>Почему обычные VPN блокируются</h2>
-        <p>Провайдеры и государственные системы фильтрации используют технологию <span class="hl">DPI (Deep Packet Inspection)</span> — глубокий анализ пакетов трафика прямо на сетевом оборудовании. DPI не обязательно «читает» содержимое зашифрованного соединения — ему достаточно распознать характерные признаки: специфичный вид TLS-рукопожатия, длину и ритм пакетов, поведение протокола при установке соединения.</p>
-        <p>Классические протоколы (обычный OpenVPN, IKEv2, «голый» VLESS без дополнительной маскировки) создают трафик с узнаваемым паттерном. Даже если содержимое зашифровано и его невозможно прочитать, сам факт «это похоже на VPN-туннель» DPI умеет распознавать — и по этому признаку соединение просто блокируется целиком, без анализа содержимого.</p>
+    <div class="side-group">
+      <div class="side-group-title">Подключение</div>
+      <div class="side-items">
+        <a class="side-item" href="/wiki/install-ios">iOS — Happ, Streisand</a>
+        <a class="side-item" href="/wiki/install-android">Android — v2rayNG, Hiddify</a>
+        <a class="side-item" href="/wiki/install-windows">Windows — v2rayN</a>
+        <a class="side-item" href="/wiki/install-macos">macOS — V2Box</a>
       </div>
     </div>
+    <div class="side-group">
+      <div class="side-group-title">Оплата и аккаунт</div>
+      <div class="side-items">
+        <a class="side-item" href="/wiki/payment">Способы оплаты</a>
+        <a class="side-item" href="/wiki/referrals">Реферальная программа</a>
+        <a class="side-item" href="/get-vpn">Покупка без Telegram</a>
+      </div>
+    </div>
+    <div class="side-group">
+      <div class="side-group-title">Помощь</div>
+      <div class="side-items">
+        <a class="side-item" href="/wiki/faq">FAQ</a>
+        <a class="side-item" href="/wiki/troubleshooting">Устранение неполадок</a>
+      </div>
+    </div>
+  </aside>
 
-    <!-- 02 -->
-    <div class="doc-section" id="s2">
-      <div class="doc-num">02</div>
-      <div class="doc-content">
-        <h2>Что делает VLESS</h2>
-        <p><span class="hl">VLESS</span> — лёгкий транспортный протокол проекта Xray. Его особенность — в том, чего в нём нет: VLESS не занимается собственным шифрованием и не добавляет лишних служебных полей, а берёт на себя только идентификацию пользователя и маршрутизацию. Защиту канала он оставляет тому слою, который для этого предназначен, — TLS.</p>
-        <p>У такого разделения два следствия. Меньше накладных расходов — нет двойного шифрования, задержки ниже. И у самого VLESS почти нет собственного «почерка»: если снаружи он завёрнут в настоящий TLS, отличать становится буквально нечего.</p>
-        <div class="tech-card">
-          <span class="tech-icon"><svg viewBox="0 0 24 24"><path d="M8.5 8.5L5 12l3.5 3.5M15.5 8.5L19 12l-3.5 3.5M13.5 5l-3 14"/></svg></span>
-          <div>
-            <div class="tech-label">Для технарей</div>
-            <div class="tech-text">VLESS передаёт UUID пользователя в открытой части заголовка внутри уже установленного TLS-канала. Снаружи это неотличимо от полезной нагрузки обычной HTTPS-сессии.</div>
-          </div>
-        </div>
+  <article>
+    <div class="crumbs"><a href="/wiki">Wiki</a><span>/</span><span>Технологии</span><span>/</span><span style="color:var(--text2)">VLESS + Reality</span></div>
+    <h1>VLESS + Reality: как трафик перестаёт быть похожим на VPN</h1>
+    <p class="lede">Разбираем, что именно видит система фильтрации, когда вы подключаетесь через STAR VPN, и почему в этом трафике нет ничего, за что можно зацепиться.</p>
+    <div class="doc-meta-row"><span>12 мин чтения</span><span>·</span><span>Технологии</span><span>·</span><span>обновлено 08.2026</span></div>
+
+    <h2 id="problem">Проблема не в шифровании</h2>
+    <p>Когда говорят «VPN заблокировали», почти никогда не имеют в виду, что кто-то расшифровал трафик. Шифрование у современных протоколов надёжное, и ломать его никто не пытается. Блокируют иначе: определяют, что перед ними именно VPN, и режут соединение целиком — не читая содержимое.</p>
+    <p>Занимается этим DPI — Deep Packet Inspection, оборудование на стороне провайдера, которое смотрит не только на адрес назначения, но и на форму трафика. У каждого протокола есть узнаваемые черты: порядок и размер первых пакетов, специфические поля в заголовках, характерное поведение при установке соединения. Этого достаточно, чтобы поставить метку «это туннель» и применить правило.</p>
+    <p>Отсюда следует неприятный вывод: чтобы VPN продолжал работать, он должен быть не столько «сильно зашифрованным», сколько <b>неотличимым от того, что и так ходит по сети постоянно</b>. Именно эту задачу решает связка VLESS + Reality, на которой работает STAR VPN.</p>
+
+    <h2 id="vless">Что такое VLESS</h2>
+    <p>VLESS — транспортный протокол проекта Xray, наследник VMess. Его главная особенность в том, чего в нём нет. VLESS не занимается собственным шифрованием и не добавляет лишних служебных полей: он берёт на себя только идентификацию пользователя и маршрутизацию, а защиту канала оставляет тому слою, который для этого предназначен, — TLS.</p>
+    <p>У такого разделения два практических следствия. Первое — меньше накладных расходов: нет двойного шифрования, нет дополнительной обвязки вокруг каждого пакета, поэтому задержки ниже, а скорость ближе к скорости канала. Второе, куда более важное, — у самого VLESS почти нет собственного «почерка». Если снаружи он завёрнут в настоящий TLS, отличать становится буквально нечего.</p>
+    <div class="tech-card">
+      <span class="tech-icon"><svg viewBox="0 0 24 24"><path d="M8.5 8.5L5 12l3.5 3.5M15.5 8.5L19 12l-3.5 3.5M13.5 5l-3 14"/></svg></span>
+      <div>
+        <div class="tech-label">Для технарей</div>
+        <div class="tech-text">VLESS передаёт UUID пользователя в открытой части заголовка внутри уже установленного TLS-канала. Снаружи это неотличимо от полезной нагрузки HTTPS-сессии, поэтому анализ на уровне пакетов ничего не даёт.</div>
       </div>
     </div>
 
-    <!-- 03 -->
-    <div class="doc-section" id="s3">
-      <div class="doc-num">03</div>
-      <div class="doc-content">
-        <h2>Reality: чужое рукопожатие</h2>
-        <p>Обычная маскировка под HTTPS упирается в сертификат: домен свежий, сертификат выпущен неделю назад бесплатным центром, на него никто не ходит — для DPI это яркий сигнал. <span class="hl">Reality</span> решает проблему радикально: вместо поддельного сертификата сервер STAR VPN использует настоящее рукопожатие настоящего популярного сайта в интернете и отдаёт клиенту его подлинные параметры.</p>
-        <p>Ключевой момент — проверка идёт в обе стороны. Доступ к туннелю получает только клиент с корректным публичным ключом и short ID. Все остальные, включая систему, которая решит «постучаться и проверить», получат ровно тот же ответ, что получил бы обычный посетитель сайта прикрытия. Сервер не выдаёт себя даже при активной проверке.</p>
-        <div class="flow">
-          <div class="flow-row"><span class="flow-num">01</span><div><div class="flow-title">Клиент начинает обычное TLS-рукопожатие</div><div class="flow-text">Приложение обращается к серверу так же, как браузер обращается к любому сайту по HTTPS.</div></div></div>
-          <div class="flow-row"><span class="flow-num">02</span><div><div class="flow-title">Сервер подставляет сайт прикрытия</div><div class="flow-text">Параметры рукопожатия и сертификат берутся у настоящего популярного ресурса — они подлинные.</div></div></div>
-          <div class="flow-row"><span class="flow-num">03</span><div><div class="flow-title">Проверка ключа</div><div class="flow-text">Клиент с корректным публичным ключом и short ID получает доступ к туннелю.</div></div></div>
-          <div class="flow-row"><span class="flow-num">04</span><div><div class="flow-title">Внутри работает VLESS</div><div class="flow-text">В установленном канале данные идут без дополнительных обёрток — минимум задержек.</div></div></div>
-        </div>
-      </div>
+    <h2 id="reality">Reality: чужое рукопожатие</h2>
+    <p>Обычная маскировка под HTTPS упирается в сертификат. Сервер должен предъявить клиенту сертификат домена — и вот тут маскировка ломается: домен свежий, сертификат выпущен неделю назад бесплатным центром, на него никто, кроме одного пользователя, не ходит. Для DPI это яркий сигнал, даже если сам трафик прочитать невозможно.</p>
+    <p>Reality решает проблему радикально: он не пытается изобразить TLS — он использует настоящее рукопожатие настоящего чужого сайта. При подключении сервер STAR VPN обращается к выбранному популярному ресурсу и отдаёт клиенту его подлинные параметры рукопожатия и его настоящий сертификат. Со стороны наблюдателя происходит совершенно обычная вещь: кто-то открыл известный сайт по HTTPS.</p>
+    <p>Ключевой момент — проверка идёт в обе стороны. Только клиент, у которого есть корректный публичный ключ и short ID, получает доступ к туннелю. Все остальные — включая систему, которая решит «постучаться и проверить, что это за сервер», — получат ровно то же, что получил бы обычный посетитель того самого сайта прикрытия. Сервер не выдаёт себя даже при активной проверке.</p>
+
+    <div class="flow">
+      <div class="flow-row"><span class="flow-num">01</span><div><div class="flow-title">Клиент начинает обычное TLS-рукопожатие</div><div class="flow-text">Приложение обращается к серверу так же, как браузер обращается к любому сайту по HTTPS. Ничего специфического в первых пакетах нет.</div></div></div>
+      <div class="flow-row"><span class="flow-num">02</span><div><div class="flow-title">Сервер подставляет сайт прикрытия</div><div class="flow-text">Параметры рукопожатия и сертификат берутся у настоящего популярного ресурса — они подлинные, а не сгенерированные для маскировки.</div></div></div>
+      <div class="flow-row"><span class="flow-num">03</span><div><div class="flow-title">Проверка ключа</div><div class="flow-text">Клиент с корректным публичным ключом и short ID получает доступ к туннелю. Посторонний получает обычный ответ сайта прикрытия.</div></div></div>
+      <div class="flow-row"><span class="flow-num">04</span><div><div class="flow-title">Внутри работает VLESS</div><div class="flow-text">В установленном канале данные идут без дополнительных обёрток — минимум накладных расходов и задержек.</div></div></div>
     </div>
 
-    <!-- 04 -->
-    <div class="doc-section" id="s4">
-      <div class="doc-num">04</div>
-      <div class="doc-content">
-        <h2>Что в итоге видит DPI</h2>
-        <p>Со стороны наблюдателя соединение STAR VPN выглядит идентично обычному визиту на HTTPS-сайт. Полезно посмотреть на ситуацию глазами фильтрующего оборудования:</p>
-        <table class="doc-table">
-          <tr><th>Признак</th><th>Что находит DPI</th></tr>
+    <h2 id="dpi">Что в итоге видит DPI</h2>
+    <p>Полезно посмотреть на ситуацию глазами фильтрующего оборудования: какие признаки оно ищет и что находит в случае Reality.</p>
+    <div class="doc-table-wrap">
+      <table class="doc-table">
+        <thead><tr><th>Признак</th><th>Что находит DPI</th></tr></thead>
+        <tbody>
           <tr><td>Протокол на транспорте</td><td>TLS 1.3 — как у любого HTTPS-соединения</td></tr>
           <tr><td>Домен в рукопожатии</td><td>Реальный сайт, к которому претензий нет</td></tr>
           <tr><td>Сертификат</td><td>Подлинный сертификат этого сайта, а не самоподписанный</td></tr>
           <tr><td>Сигнатура VPN</td><td>Отсутствует — нечего сопоставить с базой признаков</td></tr>
           <tr><td>Активная проверка сервера</td><td>Сервер отвечает как сайт прикрытия и не раскрывает себя</td></tr>
-        </table>
-        <p>Заблокировать такое соединение по сигнатуре нельзя — сигнатуры нет. Остаётся блокировать по адресу, но адрес принадлежит обычному хостингу, а рукопожатие ведёт к сайту, который блокировать никто не собирался. Честно: ни один протокол не даёт стопроцентной гарантии «навсегда», но на сегодня Reality — один из наиболее устойчивых к блокировкам широко доступных подходов.</p>
+        </tbody>
+      </table>
+    </div>
+    <p>Заблокировать такое соединение по сигнатуре нельзя — сигнатуры нет. Остаётся блокировать по адресу, но адрес принадлежит обычному хостингу, а рукопожатие ведёт к сайту, который блокировать никто не собирался.</p>
+
+    <h2 id="honest">Честно: чего Reality не делает</h2>
+    <p>Reality — это маскировка транспорта, а не магия. Он не делает вас анонимным перед сайтами, которые вы открываете: браузерные отпечатки, куки и вход в аккаунты работают ровно так же, как и без VPN. Он не ускоряет интернет сам по себе: скорость упирается в канал и расстояние до сервера. И он не защищает от того, что вы сами кому-то расскажете о себе.</p>
+    <p>Что он действительно делает — снимает вопрос «работает ли сегодня VPN». Плюс к этому в STAR VPN отключено логирование: <a href="/wiki/zero-logs">access и error в конфиге Xray выставлены в none</a>, поэтому истории подключений не существует и на нашей стороне.</p>
+
+    <div class="notice">
+      <span class="notice-icon"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5h.01M12 3.6l8.5 15a1 1 0 01-.9 1.4H4.4a1 1 0 01-.9-1.4z"/></svg></span>
+      <div>
+        <div class="notice-label">Коротко</div>
+        <div class="notice-text">VLESS убирает лишние слои и почерк протокола. Reality подставляет вместо собственного рукопожатия рукопожатие реального сайта. Вместе это даёт соединение, которое выглядит как обычный HTTPS и потому не попадает под фильтры по сигнатуре.</div>
       </div>
     </div>
 
-    <!-- 05 -->
-    <div class="doc-section" id="s5">
-      <div class="doc-num">05</div>
-      <div class="doc-content">
-        <h2>Xray-core под капотом и чего Reality не делает</h2>
-        <p>Всю фактическую работу — маршрутизацию, шифрование, обработку каждого соединения — выполняет <span class="hl">Xray-core</span>: активно развиваемый движок с открытым исходным кодом. STAR VPN не изобретает собственную криптографию — используется проверенный и постоянно обновляемый инструмент. На одну подписку доступно до <span class="hl">3 устройств</span>, у каждого свой независимый VLESS-ключ.</p>
-        <p>Reality — маскировка транспорта, а не магия анонимности: браузерные отпечатки, куки и вход в аккаунты работают ровно так же, как и без VPN, а скорость по-прежнему зависит от канала и расстояния до сервера. Что он действительно снимает — вопрос «работает ли сегодня VPN». Плюс в STAR VPN отключено логирование трафика — подробнее в статье <a href="/wiki/zero-logs">Zero Logs: что мы храним</a>.</p>
-        <div class="notice">
-          <span class="notice-icon"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5h.01M12 3.6l8.5 15a1 1 0 01-.9 1.4H4.4a1 1 0 01-.9-1.4z"/></svg></span>
-          <div>
-            <div class="notice-label">Коротко</div>
-            <div class="notice-text">VLESS убирает лишние слои и почерк протокола. Reality подставляет вместо собственного рукопожатия рукопожатие реального сайта. Вместе это даёт соединение, которое выглядит как обычный HTTPS и потому не попадает под фильтры по сигнатуре.</div>
-          </div>
-        </div>
-        <div class="doc-cta">
-          <a class="btn-gold" href="https://t.me/starisvpnbot">Попробовать 2 дня бесплатно</a>
-          <a class="btn-ghost" href="/connect">Как подключить</a>
-        </div>
-      </div>
+    <div class="doc-cta">
+      <a class="btn-gold" href="https://t.me/starisvpnbot">Попробовать 2 дня бесплатно</a>
+      <a class="btn-ghost" href="/wiki/install-ios">Как подключить</a>
     </div>
 
-  </div><!-- /doc-body -->
+    <div class="next-grid">
+      <a class="next-card" href="/wiki/zero-logs">
+        <div class="next-kicker">Следующая статья</div>
+        <div class="next-title">Zero Logs: что именно не пишется</div>
+      </a>
+      <a class="next-card" href="/wiki/install-ios">
+        <div class="next-kicker">Практика</div>
+        <div class="next-title">Подключение за 3 минуты</div>
+      </a>
+    </div>
+  </article>
 
-  <div class="next-grid">
-    <a class="next-card" href="/wiki/zero-logs">
-      <div class="next-kicker">Следующая статья</div>
-      <div class="next-title">Zero Logs: что именно не пишется</div>
-    </a>
-    <a class="next-card" href="/connect">
-      <div class="next-kicker">Практика</div>
-      <div class="next-title">Подключение за несколько минут</div>
-    </a>
-  </div>
-
-</div><!-- /wrap -->
-</main>
+  <aside class="toc">
+    <div class="toc-label">На этой странице</div>
+    <div class="toc-items">
+      <a href="#problem">Проблема не в шифровании</a>
+      <a href="#vless">Что такое VLESS</a>
+      <a href="#reality">Reality: чужое рукопожатие</a>
+      <a href="#dpi">Что видит DPI</a>
+      <a href="#honest">Чего Reality не делает</a>
+    </div>
+  </aside>
+</div>
 
 <footer>
-  <a class="footer-logo" href="/">
-    <img src="/logo.png" alt="STAR VPN">
-    <span class="footer-logo-text">STAR VPN</span>
-  </a>
-  <div class="footer-links">
-    <a href="/wiki">Wiki</a>
-    <a href="/tariffs">Тарифы</a>
-    <a href="/connect">Подключение</a>
-    <a href="/privacy">Конфиденциальность</a>
-    <a href="/terms">Условия</a>
-    <a href="https://t.me/starisvpnbot">@starisvpnbot</a>
+  <div class="footer-inner">
+    <span>© 2026 STAR VPN</span>
+    <span class="footer-links">
+      <a href="/wiki">Wiki</a>
+      <a href="/tariffs">Тарифы</a>
+      <a href="/privacy">Конфиденциальность</a>
+      <a href="https://t.me/starisvpnbot">@starisvpnbot</a>
+    </span>
   </div>
-  <div class="footer-copy">© 2026 STAR VPN · VLESS Reality · Zero Logs</div>
 </footer>
 
 <script>
-/* ═══ Progress bar ══════════════════════════════════════════ */
-const bar = document.getElementById('progress');
-window.addEventListener('scroll', () => {
-  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
-  bar.style.width = Math.min(pct, 100) + '%';
-}, {passive:true});
-
 /* ═══ Starfield ══════════════════════════════════════════════ */
 (function(){
   const c = document.getElementById('bg-canvas');
   const ctx = c.getContext('2d');
   function resize(){ c.width = innerWidth; c.height = innerHeight; }
   resize(); window.addEventListener('resize', resize, {passive:true});
-  const stars = Array.from({length:200}, () => ({
+  const stars = Array.from({length:60}, () => ({
     x: Math.random(), y: Math.random(),
-    r: Math.random() * 1.2 + 0.1,
-    o: Math.random() * 0.5 + 0.08,
+    r: Math.random() * 1.2 + 0.15,
+    o: Math.random() * 0.5 + 0.1,
     sp: Math.random() * 0.0004 + 0.00006,
     ph: Math.random() * Math.PI * 2,
   }));
   let f = 0;
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function draw(){
     ctx.clearRect(0,0,c.width,c.height); f++;
     for(const s of stars){
       const a = s.o * (0.4 + 0.6 * Math.sin(f * s.sp * 200 + s.ph));
       ctx.beginPath();
       ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fill();
+      ctx.fillStyle = `rgba(255,216,120,${a})`; ctx.fill();
     }
-    requestAnimationFrame(draw);
+    if(!reduced) requestAnimationFrame(draw);
   }
   draw();
 })();
