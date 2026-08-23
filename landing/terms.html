@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Условия использования — STAR VPN</title>
+<meta name="description" content="Условия использования сервиса STAR VPN. VPN на протоколе VLESS Reality, Zero Logs, оплата Telegram Stars, картой или ЮMoney.">
+<link rel="icon" href="/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ─── Variables ─────────────────────────────────────────────── */
+:root{
+  --gold:#FFB800;--gold2:#FFD84D;
+  --gold-border:rgba(255,184,0,0.18);
+  --gold-dim:rgba(255,184,0,0.08);
+  --bg:#060606;--bg2:rgba(255,255,255,0.025);
+  --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;
+  --r:18px;--max:860px;
+}
+
+/* ─── Reset & Base ──────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Inter',system-ui,sans-serif;
+  font-size:16px;line-height:1.75;overflow-x:hidden;
+}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,184,0,.2);border-radius:2px}
+
+/* ─── Progress bar ──────────────────────────────────────────── */
+#progress{
+  position:fixed;top:0;left:0;height:2px;width:0;
+  background:linear-gradient(90deg,var(--gold),var(--gold2));
+  z-index:9999;transition:width .08s linear;
+}
+
+/* ─── Starfield ─────────────────────────────────────────────── */
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6}
+
+/* ─── Nav ───────────────────────────────────────────────────── */
+#nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:0 24px;
+  background:rgba(6,6,6,.85);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  border-bottom:1px solid var(--gold-border);
+}
+.nav-inner{
+  max-width:var(--max);margin:0 auto;
+  display:flex;align-items:center;height:64px;gap:16px;
+}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.nav-logo img{width:28px;height:28px;border-radius:7px;object-fit:cover}
+.nav-logo-text{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:17px;font-weight:700;letter-spacing:.05em;color:var(--gold);
+}
+.nav-links{display:flex;gap:20px;flex:1}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--gold)}
+@media(max-width:600px){.nav-links{display:none}}
+.nav-home{
+  margin-left:auto;
+  display:inline-flex;align-items:center;gap:6px;
+  background:transparent;color:var(--text2);
+  border:1px solid var(--gold-border);
+  font-family:'Space Grotesk',sans-serif;
+  font-size:12px;font-weight:600;letter-spacing:.03em;
+  padding:8px 16px;border-radius:9px;
+  text-decoration:none;white-space:nowrap;
+  transition:all .2s;
+}
+.nav-home:hover{border-color:var(--gold);color:var(--gold);background:rgba(255,184,0,.06)}
+.nav-home svg{flex-shrink:0}
+
+/* ─── Wrap ──────────────────────────────────────────────────── */
+.wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}
+
+/* ─── Hero ──────────────────────────────────────────────────── */
+.doc-hero{padding:120px 0 56px;text-align:center}
+
+.doc-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  border:1px solid var(--gold-border);border-radius:100px;
+  padding:6px 20px;margin-bottom:32px;
+  font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--gold);background:var(--gold-dim);
+}
+.badge-dot{
+  width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;
+  animation:blink 1.8s ease-in-out infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+.doc-title{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(36px,7vw,68px);
+  font-weight:700;line-height:1.05;letter-spacing:-.02em;
+  color:var(--text);margin-bottom:16px;
+}
+.doc-title .gold{
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold2) 50%,var(--gold) 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:shimmer 3s linear infinite;
+}
+@keyframes shimmer{0%{background-position:0 center}100%{background-position:200% center}}
+
+.doc-date{font-size:13px;color:var(--text2);letter-spacing:.04em;margin-bottom:44px}
+
+.doc-meta{
+  display:flex;gap:1px;max-width:380px;margin:0 auto;
+  border:1px solid var(--gold-border);border-radius:16px;
+  background:var(--gold-border);overflow:hidden;
+}
+.doc-meta-item{
+  flex:1;background:rgba(6,6,6,.9);padding:16px 8px;text-align:center;
+  backdrop-filter:blur(12px);
+}
+.doc-meta-val{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:20px;font-weight:700;color:var(--gold);line-height:1;margin-bottom:4px;
+}
+.doc-meta-lbl{font-size:10px;color:var(--text2);letter-spacing:.06em;text-transform:uppercase}
+
+/* ─── Intro banner ──────────────────────────────────────────── */
+.intro-banner{
+  display:flex;align-items:center;gap:16px;
+  background:rgba(255,184,0,.04);
+  border:1px solid var(--gold-border);border-radius:16px;
+  padding:20px 24px;margin:48px 0;
+  position:relative;overflow:hidden;
+}
+.intro-banner::before{
+  content:'';position:absolute;right:-40px;top:-40px;
+  width:160px;height:160px;
+  background:radial-gradient(circle,rgba(255,184,0,.08),transparent 65%);
+  pointer-events:none;
+}
+.intro-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:rgba(255,184,0,.12);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.intro-title{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:14px;font-weight:700;color:var(--gold);margin-bottom:3px;
+}
+.intro-sub{font-size:13px;color:var(--text2);line-height:1.5}
+
+/* ─── Document body ─────────────────────────────────────────── */
+.doc-body{padding-bottom:96px}
+
+.doc-section{
+  display:grid;
+  grid-template-columns:72px 1fr;
+  gap:36px;
+  padding:52px 0;
+  border-bottom:1px solid rgba(255,184,0,.07);
+}
+.doc-section:last-child{border-bottom:none}
+
+.doc-num{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:56px;font-weight:700;
+  color:rgba(255,184,0,.09);line-height:1;
+  text-align:right;padding-top:4px;
+  user-select:none;flex-shrink:0;
+}
+
+.doc-content h2{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:21px;font-weight:700;
+  color:var(--text);margin-bottom:20px;letter-spacing:-.01em;
+}
+.doc-content p{
+  color:var(--text2);font-size:15px;line-height:1.85;margin-bottom:14px;
+}
+.doc-content p:last-child{margin-bottom:0}
+.doc-content .hl{color:var(--text);font-weight:500}
+.doc-content a{color:var(--gold);text-decoration:none}
+.doc-content a:hover{text-decoration:underline}
+
+.sub-item{
+  position:relative;padding-left:22px;
+  color:var(--text2);font-size:15px;line-height:1.85;margin-bottom:10px;
+}
+.sub-item::before{
+  content:'';position:absolute;left:0;top:.75em;
+  width:6px;height:6px;border-radius:50%;
+  border:1.5px solid rgba(255,184,0,.35);
+}
+
+/* ─── Table ─────────────────────────────────────────────────── */
+.doc-table{
+  width:100%;border-collapse:collapse;
+  background:var(--bg2);
+  border:1px solid var(--gold-border);border-radius:14px;
+  overflow:hidden;margin:20px 0;font-size:14px;
+}
+.doc-table th{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold);background:rgba(255,184,0,.05);
+  text-align:left;padding:13px 20px;
+  border-bottom:1px solid var(--gold-border);
+}
+.doc-table td{
+  color:var(--text2);padding:14px 20px;
+  border-bottom:1px solid rgba(255,184,0,.05);
+  vertical-align:top;line-height:1.7;
+}
+.doc-table tr:last-child td{border-bottom:none}
+.doc-table td:first-child{color:var(--text);font-weight:500;width:150px}
+
+/* ─── Contact card ──────────────────────────────────────────── */
+.contact-card{
+  background:var(--bg2);border:1px solid var(--gold-border);
+  border-radius:16px;padding:24px 28px;margin-top:24px;
+  position:relative;overflow:hidden;
+}
+.contact-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 0 0,rgba(255,184,0,.07),transparent 60%);
+  pointer-events:none;
+}
+.contact-card-label{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:14px;
+}
+.contact-card p{margin-bottom:8px}
+.contact-card a{color:var(--gold);text-decoration:none}
+.contact-card a:hover{text-decoration:underline}
+
+/* ─── Footer ────────────────────────────────────────────────── */
+footer{
+  border-top:1px solid var(--gold-border);
+  padding:44px 0;position:relative;z-index:2;
+}
+.footer-inner{
+  max-width:var(--max);margin:0 auto;padding:0 24px;text-align:center;
+}
+.footer-logo{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:19px;font-weight:700;letter-spacing:.08em;
+  color:var(--gold);text-decoration:none;
+  display:inline-block;margin-bottom:20px;
+}
+.footer-links{
+  display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;
+}
+.footer-links a{
+  font-size:12px;color:var(--text2);text-decoration:none;letter-spacing:.04em;
+  transition:color .2s;
+}
+.footer-links a:hover{color:var(--gold)}
+.footer-copy{font-size:12px;color:var(--text3)}
+
+/* ─── Responsive ────────────────────────────────────────────── */
+@media(max-width:640px){
+  .doc-hero{padding-top:96px}
+  .doc-section{grid-template-columns:1fr;gap:12px;padding:40px 0}
+  .doc-num{font-size:32px;text-align:left;color:rgba(255,184,0,.14)}
+  .doc-meta{max-width:100%}
+  .doc-table{display:block;overflow-x:auto}
+  .intro-banner{align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<canvas id="bg-canvas"></canvas>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <img src="/logo.png" alt="STAR VPN">
+      <span class="nav-logo-text">STAR VPN</span>
+    </a>
+    <div class="nav-links">
+      <a href="/tariffs">Тарифы</a>
+      <a href="/connect">Подключение</a>
+      <a href="/wiki">Wiki</a>
+      <a href="/login">Войти</a>
+    </div>
+    <a class="nav-home" href="/">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      На главную
+    </a>
+  </div>
+</nav>
+
+<main>
+<div class="wrap">
+
+  <!-- Hero -->
+  <div class="doc-hero">
+    <div class="doc-badge">
+      <div class="badge-dot"></div>
+      Правовой документ
+    </div>
+    <h1 class="doc-title">Условия<br><span class="gold">использования</span></h1>
+    <div class="doc-date">Редакция от 1 мая 2026 года</div>
+    <div class="doc-meta">
+      <div class="doc-meta-item">
+        <div class="doc-meta-val">10</div>
+        <div class="doc-meta-lbl">разделов</div>
+      </div>
+      <div class="doc-meta-item">
+        <div class="doc-meta-val">~4</div>
+        <div class="doc-meta-lbl">мин чтения</div>
+      </div>
+      <div class="doc-meta-item">
+        <div class="doc-meta-val">2026</div>
+        <div class="doc-meta-lbl">редакция</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Intro banner -->
+  <div class="intro-banner">
+    <div class="intro-icon">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+    </div>
+    <div>
+      <div class="intro-title">Сервис предназначен исключительно для законного использования</div>
+      <div class="intro-sub">Используя STAR VPN, вы подтверждаете, что ознакомились с настоящими Условиями и соглашаетесь их соблюдать.</div>
+    </div>
+  </div>
+
+  <div class="doc-body">
+
+    <!-- 01 -->
+    <div class="doc-section" id="s1">
+      <div class="doc-num">01</div>
+      <div class="doc-content">
+        <h2>Описание сервиса</h2>
+        <p><span class="hl">1.1.</span> STAR VPN предоставляет услугу виртуальной частной сети (VPN) на основе протокола VLESS + Reality, обеспечивающей шифрование интернет-трафика пользователя и подмену IP-адреса.</p>
+        <p><span class="hl">1.2.</span> Сервис доступен через Telegram-бот <a href="https://t.me/starisvpnbot">@starisvpnbot</a> и Telegram Mini App. Доступ к VPN предоставляется в виде конфигурационных ключей для совместимых клиентских приложений (Streisand, v2rayNG, v2rayN, V2Box, NekoRay, Happ и аналогов).</p>
+        <p><span class="hl">1.3.</span> Сервис работает в режиме подписки. Пробный период (2 дня) предоставляется однократно при первой активации.</p>
+      </div>
+    </div>
+
+    <!-- 02 -->
+    <div class="doc-section" id="s2">
+      <div class="doc-num">02</div>
+      <div class="doc-content">
+        <h2>Условия доступа</h2>
+        <p><span class="hl">2.1.</span> Для использования сервиса необходим активный аккаунт в Telegram и доступ к боту <a href="https://t.me/starisvpnbot">@starisvpnbot</a>.</p>
+        <p><span class="hl">2.2.</span> Пользователь обязан быть совершеннолетним либо использовать сервис с согласия законного представителя.</p>
+        <p><span class="hl">2.3.</span> Одна подписка позволяет подключить до <span class="hl">3 устройств</span> одновременно. Передача доступа третьим лицам запрещена.</p>
+        <p><span class="hl">2.4.</span> Пользователь несёт ответственность за сохранность своих ключей подключения и не вправе передавать их другим лицам.</p>
+      </div>
+    </div>
+
+    <!-- 03 -->
+    <div class="doc-section" id="s3">
+      <div class="doc-num">03</div>
+      <div class="doc-content">
+        <h2>Оплата и подписка</h2>
+        <p><span class="hl">3.1.</span> Оплата производится через Telegram Stars (XTR), банковскую карту (Robokassa) или ЮMoney. Telegram Stars доступны только внутри Telegram; на сайте — карта и ЮMoney. Оплата криптовалютой не поддерживается. Актуальная стоимость подписки отображается в боте и на странице «Тарифы».</p>
+        <p><span class="hl">3.2.</span> Подписка активируется автоматически после подтверждения платежа. Срок подписки отсчитывается с момента активации.</p>
+        <p><span class="hl">3.3.</span> Пробный период (2 дня) предоставляется бесплатно и однократно на аккаунт — как при регистрации через Telegram-бота, так и при входе на сайт по email. Повторная активация пробного периода на том же аккаунте невозможна.</p>
+        <p><span class="hl">3.4.</span> Возврат Telegram Stars возможен в течение 24 часов с момента оплаты при условии, что пользователь не воспользовался сервисом. Для возврата обратитесь в поддержку. Возврат средств, оплаченных картой или ЮMoney, рассматривается индивидуально при обращении в поддержку.</p>
+        <p><span class="hl">3.5.</span> STAR VPN оставляет за собой право изменять стоимость подписки с уведомлением пользователей не менее чем за 7 дней.</p>
+      </div>
+    </div>
+
+    <!-- 04 -->
+    <div class="doc-section" id="s4">
+      <div class="doc-num">04</div>
+      <div class="doc-content">
+        <h2>Реферальная программа</h2>
+        <p><span class="hl">4.1.</span> Пользователь вправе приглашать других пользователей по своей реферальной ссылке. Вознаграждение начисляется не деньгами и не Stars, а <span class="hl">дополнительными днями подписки</span>: +30 дней за каждые 2 приглашённых, оплативших подписку.</p>
+        <p><span class="hl">4.2.</span> Дополнительно начисляются бонусные дни за достижения по числу оплативших приглашённых: 1 — +5 дней, 5 — +20 дней, 10 — +50 дней, 25 — +150 дней. Актуальные условия отображаются в разделе «Партнёрка» бота и на сайте.</p>
+        <p><span class="hl">4.3.</span> Начисленные дни нельзя вывести, обменять на деньги или Stars — они добавляются напрямую к сроку действия подписки пользователя.</p>
+        <p><span class="hl">4.4.</span> Использование реферальной программы в мошеннических целях (накрутка, создание фиктивных аккаунтов) влечёт блокировку без возврата средств.</p>
+      </div>
+    </div>
+
+    <!-- 05 -->
+    <div class="doc-section" id="s5">
+      <div class="doc-num">05</div>
+      <div class="doc-content">
+        <h2>Запрещённые действия</h2>
+        <p>При использовании сервиса пользователю запрещается:</p>
+        <div class="sub-item">использовать VPN для совершения действий, нарушающих законодательство Российской Федерации или страны пребывания;</div>
+        <div class="sub-item">распространять вредоносное программное обеспечение, спам или вирусы;</div>
+        <div class="sub-item">осуществлять DDoS-атаки, сканирование портов и иные действия против третьих лиц;</div>
+        <div class="sub-item">осуществлять несанкционированный доступ к информационным системам и данным третьих лиц;</div>
+        <div class="sub-item">использовать сервис для распространения материалов, нарушающих авторские права;</div>
+        <div class="sub-item">перепродавать доступ к сервису или передавать ключи третьим лицам;</div>
+        <div class="sub-item">предпринимать попытки обойти технические ограничения сервиса.</div>
+        <p style="margin-top:20px">Нарушение данных правил влечёт немедленную блокировку без возврата уплаченных средств.</p>
+      </div>
+    </div>
+
+    <!-- 06 -->
+    <div class="doc-section" id="s6">
+      <div class="doc-num">06</div>
+      <div class="doc-content">
+        <h2>Ограничение ответственности</h2>
+        <p><span class="hl">6.1.</span> STAR VPN предоставляется «как есть». Мы не гарантируем бесперебойную работу сервиса, но стремимся к доступности 99,9% времени.</p>
+        <p><span class="hl">6.2.</span> STAR VPN не несёт ответственности за убытки, возникшие вследствие:</p>
+        <div class="sub-item">действий или бездействия пользователя при использовании сервиса;</div>
+        <div class="sub-item">временной недоступности сервиса по техническим причинам;</div>
+        <div class="sub-item">блокировки сервиса со стороны интернет-провайдеров или государственных органов;</div>
+        <div class="sub-item">утраты пользователем доступа к Telegram-аккаунту.</div>
+        <p><span class="hl">6.3.</span> Пользователь самостоятельно несёт ответственность за законность своих действий в сети Интернет при использовании VPN.</p>
+      </div>
+    </div>
+
+    <!-- 07 -->
+    <div class="doc-section" id="s7">
+      <div class="doc-num">07</div>
+      <div class="doc-content">
+        <h2>Качество сервиса</h2>
+        <table class="doc-table">
+          <tr>
+            <th>Параметр</th>
+            <th>Описание</th>
+          </tr>
+          <tr>
+            <td>Протокол</td>
+            <td>VLESS + Reality (TLS borrowing) — один из наиболее устойчивых к блокировкам протоколов</td>
+          </tr>
+          <tr>
+            <td>Логи</td>
+            <td>Zero Logs — подключения, трафик и IP не сохраняются</td>
+          </tr>
+          <tr>
+            <td>Устройства</td>
+            <td>До 3 одновременных подключений на одну подписку</td>
+          </tr>
+          <tr>
+            <td>Поддержка</td>
+            <td>Техническая поддержка через Telegram, режим 24/7</td>
+          </tr>
+          <tr>
+            <td>Доступность</td>
+            <td>Целевой показатель — 99,9% в месяц. Плановые работы проводятся с уведомлением</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 08 -->
+    <div class="doc-section" id="s8">
+      <div class="doc-num">08</div>
+      <div class="doc-content">
+        <h2>Изменение условий</h2>
+        <p><span class="hl">8.1.</span> STAR VPN оставляет за собой право изменять настоящие Условия в любое время. Об изменениях пользователь уведомляется через бот не менее чем за 7 дней до вступления в силу.</p>
+        <p><span class="hl">8.2.</span> Продолжение использования сервиса после вступления изменений в силу означает согласие с новыми Условиями.</p>
+        <p><span class="hl">8.3.</span> Актуальная версия Условий всегда доступна по адресу <a href="https://starvpnservice.ru/terms.html">starvpnservice.ru/terms.html</a>.</p>
+      </div>
+    </div>
+
+    <!-- 09 -->
+    <div class="doc-section" id="s9">
+      <div class="doc-num">09</div>
+      <div class="doc-content">
+        <h2>Применимое право</h2>
+        <p><span class="hl">9.1.</span> Настоящие Условия регулируются законодательством Российской Федерации.</p>
+        <p><span class="hl">9.2.</span> Все споры разрешаются путём переговоров. При невозможности достичь соглашения — в судебном порядке по месту нахождения Оператора.</p>
+      </div>
+    </div>
+
+    <!-- 10 -->
+    <div class="doc-section" id="s10">
+      <div class="doc-num">10</div>
+      <div class="doc-content">
+        <h2>Контакты</h2>
+        <p>По всем вопросам, связанным с настоящими Условиями, обращайтесь через любой из каналов ниже:</p>
+        <div class="contact-card">
+          <div class="contact-card-label">Служба поддержки</div>
+          <p style="color:var(--text2);font-size:15px">💬 Telegram: <a href="https://t.me/hashprojects">@hashprojects</a></p>
+          <p style="margin-top:8px;color:var(--text2);font-size:15px">🤖 Бот поддержки: <a href="https://t.me/starisvpnbot">@starisvpnbot</a></p>
+          <p style="margin-top:8px;color:var(--text2);font-size:15px">🌐 Сайт: <a href="https://starvpnservice.ru">starvpnservice.ru</a></p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /doc-body -->
+</div><!-- /wrap -->
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <a class="footer-logo" href="/">STAR VPN</a>
+    <div class="footer-links">
+      <a href="https://t.me/starisvpnbot">@starisvpnbot</a>
+      <a href="/tariffs.html">Тарифы</a>
+      <a href="/wiki.html">Wiki</a>
+      <a href="/connect.html">Подключение</a>
+      <a href="/privacy.html">Политика конфиденциальности</a>
+      <a href="https://t.me/hashprojects">Поддержка</a>
+    </div>
+    <div class="footer-copy">© 2026 STAR VPN · VLESS Reality · Zero Logs</div>
+  </div>
+</footer>
+
+<script>
+/* ═══ Progress bar ══════════════════════════════════════════ */
+const bar = document.getElementById('progress');
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  bar.style.width = Math.min(pct, 100) + '%';
+}, {passive:true});
+
+/* ═══ Starfield ══════════════════════════════════════════════ */
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize, {passive:true});
+  const stars = Array.from({length:200}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.2 + 0.1,
+    o: Math.random() * 0.5 + 0.08,
+    sp: Math.random() * 0.0004 + 0.00006,
+    ph: Math.random() * Math.PI * 2,
+  }));
+  let f = 0;
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height); f++;
+    for(const s of stars){
+      const a = s.o * (0.4 + 0.6 * Math.sin(f * s.sp * 200 + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>

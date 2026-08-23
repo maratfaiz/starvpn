@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Купить VPN-ключ без Telegram — STAR VPN</title>
+<meta name="description" content="Покупка ключа STAR VPN прямо на сайте: оплата картой через Robokassa или ЮMoney, ссылка подписки сразу после оплаты. Telegram не нужен.">
+<link rel="icon" href="/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+:root{
+  --gold:#FFB800;--gold2:#FFD84D;
+  --gold-border:rgba(255,184,0,0.2);
+  --gold-dim:rgba(255,184,0,0.1);
+  --bg:#060606;--bg2:rgba(255,255,255,0.025);
+  --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;
+  --max:1240px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.7;overflow-x:hidden}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:var(--gold2)}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.3}
+
+#nav{position:sticky;top:0;z-index:100;padding:0 24px;background:rgba(6,6,6,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
+.nav-inner{max-width:var(--max);margin:0 auto;display:flex;align-items:center;height:66px;gap:22px}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.nav-logo img{width:28px;height:28px;border-radius:8px;object-fit:cover}
+.nav-logo-text{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
+.nav-links{display:flex;gap:6px;flex:1;flex-wrap:wrap}
+.nav-links a{font-size:13.5px;font-weight:500;color:var(--text2);text-decoration:none;padding:9px 12px;border-radius:9px}
+.nav-links a:hover{color:var(--gold);background:rgba(255,255,255,.04)}
+.nav-login{font-size:13.5px;font-weight:500;color:var(--text);white-space:nowrap;padding:9px 14px;border:1px solid rgba(255,255,255,.18);border-radius:10px;text-decoration:none;transition:color .2s,border-color .2s;flex-shrink:0}
+.nav-login:hover{color:var(--gold);border-color:var(--gold-border)}
+@media(max-width:768px){.nav-links{display:none}}
+
+.wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}
+
+.hero{padding:clamp(40px,5.5vw,76px) 24px clamp(28px,4vw,44px);max-width:70ch}
+.hero-badge{display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(255,184,0,.22);border-radius:100px;padding:7px 16px;margin-bottom:24px;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--gold);background:var(--gold-dim)}
+.hero h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(32px,4.8vw,56px);font-weight:700;line-height:1.06;letter-spacing:-.02em;margin-bottom:18px}
+.hero p{font-size:17.5px;color:var(--text2)}
+
+.checkout-grid{padding-bottom:clamp(48px,6vw,80px);display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(20px,2.6vw,36px);align-items:start}
+@media(max-width:940px){.checkout-grid{grid-template-columns:1fr}}
+
+.checkout-card{background:#0D0C0A;border:1px solid rgba(255,255,255,.09);border-radius:22px;padding:clamp(22px,3vw,32px)}
+.step-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--text2);margin-bottom:16px}
+.plans{display:flex;flex-direction:column;gap:10px;margin-bottom:30px}
+.plan{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.02);border-radius:14px;padding:16px 18px;transition:border-color .15s,background .15s}
+.plan.sel{border-color:rgba(255,184,0,.45);background:rgba(255,184,0,.07)}
+.plan-label{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--text)}
+.plan-desc{font-size:12.5px;color:var(--text2);margin-top:2px}
+.plan-price{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:var(--gold);white-space:nowrap}
+#plans-empty{display:none;color:var(--text2);font-size:14px;padding:20px;text-align:center;border:1px dashed rgba(255,255,255,.12);border-radius:14px;margin-bottom:20px}
+
+.providers{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.provider{cursor:pointer;flex:1;min-width:150px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.02);border-radius:13px;padding:14px 16px;display:flex;align-items:center;gap:12px;transition:border-color .15s,background .15s}
+.provider.sel{border-color:rgba(255,184,0,.45);background:rgba(255,184,0,.07)}
+.provider-icon{width:32px;height:32px;border-radius:10px;background:var(--gold-dim);border:1px solid rgba(255,184,0,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.provider-icon svg{width:16px;height:16px;stroke:var(--gold);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.provider-label{font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:600;color:var(--text2)}
+.provider.sel .provider-label{color:var(--gold)}
+.provider-hint{font-size:12px;color:var(--text2);margin-top:2px}
+.pay-note{font-size:12.5px;color:var(--text3);margin-bottom:24px}
+
+.buy-btn{cursor:pointer;text-align:center;background:rgba(255,184,0,.15);color:var(--text2);border:1px solid rgba(255,184,0,.35);font-family:'Space Grotesk',sans-serif;font-size:15.5px;font-weight:700;padding:16px;border-radius:13px;width:100%}
+.buy-btn.ready{background:var(--gold);color:#000}
+.buy-btn.ready:hover{background:var(--gold2)}
+.buy-note{font-size:12px;color:var(--text3);margin-top:14px;text-align:center}
+
+.side{display:flex;flex-direction:column;gap:14px}
+.side-card{background:#0D0C0A;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:26px}
+.side-card-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:var(--text);margin-bottom:18px}
+.how-row{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px}
+.how-row:last-child{margin-bottom:0}
+.how-num{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;color:#000;background:var(--gold);width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.how-text{font-size:14px;line-height:1.6;color:var(--text2)}
+.notice{display:flex;gap:16px;align-items:flex-start;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:16px;padding:22px 24px}
+.notice-icon{width:32px;height:32px;border-radius:10px;background:rgba(255,184,0,.12);border:1px solid rgba(255,184,0,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.notice-icon svg{width:16px;height:16px;stroke:var(--gold);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.notice-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.notice-text{font-size:14px;line-height:1.65;color:var(--text)}
+.inc-row{display:flex;gap:10px;font-size:14px;color:var(--text2);align-items:flex-start;margin-bottom:10px}
+.inc-row:last-child{margin-bottom:0}
+.inc-row span{color:var(--gold);flex-shrink:0}
+
+.faq-section{padding-bottom:clamp(56px,7vw,96px)}
+.section-h{font-family:'Space Grotesk',sans-serif;font-size:clamp(24px,3.4vw,36px);font-weight:700;margin-bottom:24px}
+.faq-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.faq-card{background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px 24px}
+.faq-q{font-family:'Space Grotesk',sans-serif;font-size:15.5px;font-weight:600;color:var(--text);margin-bottom:7px}
+.faq-a{font-size:14px;line-height:1.65;color:var(--text2)}
+
+footer{border-top:1px solid rgba(255,255,255,.07)}
+.footer-inner{max-width:var(--max);margin:0 auto;padding:36px 24px;display:flex;gap:22px;flex-wrap:wrap;justify-content:space-between;font-size:12.5px;color:var(--text3)}
+.footer-inner a{color:var(--text2)}
+.footer-links{display:flex;gap:20px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <img src="/logo.png" alt="STAR VPN">
+      <span class="nav-logo-text">STAR VPN</span>
+    </a>
+    <div class="nav-links">
+      <a href="/#how">Преимущества</a>
+      <a href="/#compare">Сравнение</a>
+      <a href="/#apps">Устройства</a>
+      <a href="/#faq">Вопросы</a>
+      <a href="/tariffs">Тарифы</a>
+      <a href="/wiki">Wiki</a>
+    </div>
+    <a class="nav-login" href="/login">Войти в кабинет</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-badge">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:11px;height:11px"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+    БЕЗ БОТА И РЕГИСТРАЦИИ
+  </div>
+  <h1>Ключ прямо здесь, Telegram не нужен</h1>
+  <p>Иногда Telegram сам недоступен без VPN — замкнутый круг. На этот случай покупка работает на сайте: выбираете срок, платите картой или через ЮMoney и сразу получаете ссылку подписки.</p>
+</div>
+
+<div class="wrap">
+<div class="checkout-grid">
+
+  <div class="checkout-card">
+    <div class="step-label">Шаг 1 · Тариф</div>
+    <div class="plans" id="plans"></div>
+    <div id="plans-empty">Оплата временно недоступна. Загляни чуть позже.</div>
+
+    <div class="step-label">Шаг 2 · Способ оплаты</div>
+    <div class="providers" id="providers">
+      <div class="provider sel" data-provider="robokassa" onclick="selectProvider('robokassa', this)">
+        <span class="provider-icon"><svg viewBox="0 0 24 24"><path d="M2 9h20M4 5h16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2zM6 15h4"/></svg></span>
+        <div><div class="provider-label">Банковская карта</div><div class="provider-hint">Visa · Mastercard · МИР</div></div>
+      </div>
+      <div class="provider" data-provider="yoomoney" onclick="selectProvider('yoomoney', this)">
+        <span class="provider-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>
+        <div><div class="provider-label">ЮMoney</div><div class="provider-hint">карта, СБП или кошелёк</div></div>
+      </div>
+    </div>
+    <div class="pay-note" id="pay-note">Visa, Mastercard и МИР через Robokassa. Реквизиты вводятся на стороне провайдера.</div>
+
+    <button class="buy-btn" id="buy-btn" disabled>Выберите тариф</button>
+    <div class="buy-note">Оплата проходит на защищённой странице провайдера. Данные карты к нам не попадают.</div>
+  </div>
+
+  <div class="side">
+    <div class="side-card">
+      <div class="side-card-title">Как это работает</div>
+      <div class="how-row"><span class="how-num">1</span><div class="how-text">Выбираете срок и способ оплаты — регистрация и телефон не нужны.</div></div>
+      <div class="how-row"><span class="how-num">2</span><div class="how-text">Платёж проходит на защищённой странице Robokassa или ЮMoney.</div></div>
+      <div class="how-row"><span class="how-num">3</span><div class="how-text">После оплаты сайт показывает ссылку подписки — скопируйте её.</div></div>
+      <div class="how-row"><span class="how-num">4</span><div class="how-text">Вставляете ссылку в клиент на своих устройствах и подключаетесь.</div></div>
+    </div>
+    <div class="notice">
+      <span class="notice-icon"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5h.01M12 3.6l8.5 15a1 1 0 01-.9 1.4H4.4a1 1 0 01-.9-1.4z"/></svg></span>
+      <div>
+        <div class="notice-label">Сохраните ссылку</div>
+        <div class="notice-text">Ключ выдаётся один раз, сразу после оплаты. Он также сохраняется в личном кабинете — но на всякий случай скопируйте ссылку подписки в надёжное место.</div>
+      </div>
+    </div>
+    <div class="side-card">
+      <div class="side-card-title">Что входит</div>
+      <div class="inc-row"><span>·</span>VLESS + Reality — тот же протокол, что и в боте</div>
+      <div class="inc-row"><span>·</span>Zero Logs: история подключений не пишется</div>
+      <div class="inc-row"><span>·</span>До 3 устройств на один ключ</div>
+      <div class="inc-row"><span>·</span>Клиенты для iOS, Android, Windows и macOS</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="wrap faq-section">
+  <h2 class="section-h">Частые вопросы про покупку без бота</h2>
+  <div class="faq-grid">
+    <div class="faq-card"><div class="faq-q">Чем это отличается от покупки в боте?</div><div class="faq-a">Только способом выдачи ключа. Протокол, серверы и лимит устройств те же. В боте удобнее продлевать и видеть остаток дней.</div></div>
+    <div class="faq-card"><div class="faq-q">Нужен ли паспорт?</div><div class="faq-a">Нет. Ни Robokassa, ни ЮMoney не требуют от вас документов при оплате подписки.</div></div>
+    <div class="faq-card"><div class="faq-q">Можно ли потом перейти в бота?</div><div class="faq-a">Да, когда Telegram снова доступен — напишите в @starisvpnbot, ключ можно привязать к аккаунту.</div></div>
+    <div class="faq-card"><div class="faq-q">Работает ли здесь пробный период?</div><div class="faq-a">Пробные 2 дня выдаются один раз на telegram_id и активируются в боте. На сайте доступна только покупка.</div></div>
+    <div class="faq-card"><div class="faq-q">А криптовалютой?</div><div class="faq-a">Нет, оплата криптовалютой убрана. Остались Stars в боте, карта через Robokassa и ЮMoney.</div></div>
+    <div class="faq-card"><div class="faq-q">Что если платёж прошёл, а ссылки нет?</div><div class="faq-a">Сохраните номер заказа и напишите в поддержку через бота — ключ восстановим вручную.</div></div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 STAR VPN</span>
+    <span class="footer-links">
+      <a href="/wiki">Wiki</a>
+      <a href="/privacy">Конфиденциальность</a>
+      <a href="/terms">Условия</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+/* ═══ Starfield ══════════════════════════════════════════════ */
+(function () {
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  let stars = [];
+  function resize() { c.width = innerWidth; c.height = innerHeight; }
+  function init() {
+    stars = Array.from({ length: 90 }, () => ({
+      x: Math.random() * c.width, y: Math.random() * c.height,
+      r: Math.random() * 1.1 + .3, a: Math.random(),
+      s: Math.random() * .006 + .002,
+    }));
+  }
+  function draw() {
+    ctx.clearRect(0, 0, c.width, c.height);
+    stars.forEach(s => {
+      s.a += s.s; if (s.a > 1 || s.a < 0) s.s *= -1;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,216,120,${s.a * .65})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  resize(); init(); draw();
+  window.addEventListener('resize', () => { resize(); init(); });
+})();
+
+/* ═══ Тарифы + способ оплаты + чекаут ══════════════════════════ */
+function rateFor(days){
+  if(days >= 180) return 5;
+  if(days >= 90) return 5.5;
+  if(days >= 30) return 6.6;
+  return 7;
+}
+function priceFor(days){ return Math.round(days * rateFor(days)); }
+
+let selectedPlan = null;   // {key, days, rub, label, desc} — key "custom" for the days-param plan
+let selectedProvider = 'robokassa';
+const buyBtn = document.getElementById('buy-btn');
+const plansEl = document.getElementById('plans');
+const providersEl = document.getElementById('providers');
+const payNoteEl = document.getElementById('pay-note');
+
+const PAY_NOTES = {
+  robokassa: 'Visa, Mastercard и МИР через Robokassa. Реквизиты вводятся на стороне провайдера.',
+  yoomoney: 'Оплата картой, через СБП или с кошелька ЮMoney. Паспорт и другие документы не нужны.',
+};
+
+function renderPlanEl(p){
+  const el = document.createElement('div');
+  el.className = 'plan';
+  el.innerHTML = `<div><div class="plan-label">${p.label}</div><div class="plan-desc">${p.desc}</div></div><div class="plan-price">${p.rub} ₽</div>`;
+  el.addEventListener('click', () => selectPlan(p, el));
+  return el;
+}
+
+function selectPlan(p, el){
+  selectedPlan = p;
+  document.querySelectorAll('.plan').forEach(x => x.classList.remove('sel'));
+  el.classList.add('sel');
+  buyBtn.disabled = false;
+  buyBtn.classList.add('ready');
+  buyBtn.textContent = `Оплатить — ${p.rub} ₽`;
+}
+
+function selectProvider(provider, el){
+  selectedProvider = provider;
+  document.querySelectorAll('.provider').forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+  payNoteEl.textContent = PAY_NOTES[provider];
+}
+
+async function loadPlans(){
+  const params = new URLSearchParams(location.search);
+  const daysParam = parseInt(params.get('days'), 10);
+  const hasCustomDays = Number.isInteger(daysParam) && daysParam >= 7 && daysParam <= 180;
+
+  let plans = [];
+  try {
+    const res = await fetch('/api/guest/plans');
+    plans = await res.json();
+  } catch (e) { /* ниже покажем плейсхолдер, если ничего не осталось */ }
+
+  const items = plans.map(p => ({ key: p.key, days: p.days, rub: p.rub, label: p.label, desc: p.desc }));
+  let customItem = null;
+  if (hasCustomDays) {
+    customItem = { key: 'custom', days: daysParam, rub: priceFor(daysParam), label: `Свой срок`, desc: `${daysParam} дней` };
+    items.unshift(customItem);
+  }
+
+  if (!items.length) {
+    document.getElementById('plans-empty').style.display = 'block';
+    return;
+  }
+
+  plansEl.innerHTML = '';
+  let toSelect = null;
+  items.forEach(p => {
+    const el = renderPlanEl(p);
+    plansEl.appendChild(el);
+    if (customItem && p === customItem) toSelect = el;
+  });
+  if (toSelect) selectPlan(customItem, toSelect);
+}
+
+async function loadProviders(){
+  try {
+    const res = await fetch('/api/guest/providers');
+    const { robokassa, yoomoney } = await res.json();
+    const pills = providersEl.querySelectorAll('.provider');
+    let firstAvailable = null;
+    pills.forEach(el => {
+      const available = el.dataset.provider === 'robokassa' ? robokassa : yoomoney;
+      el.style.display = available ? 'flex' : 'none';
+      if (available && !firstAvailable) firstAvailable = el;
+    });
+    if (firstAvailable) selectProvider(firstAvailable.dataset.provider, firstAvailable);
+  } catch (e) { /* оставляем Robokassa по умолчанию */ }
+}
+
+buyBtn.addEventListener('click', async () => {
+  if (!selectedPlan) return;
+  buyBtn.disabled = true;
+  buyBtn.textContent = 'Создаём счёт…';
+  try {
+    const body = selectedPlan.key === 'custom'
+      ? { plan: 'custom', days: selectedPlan.days, provider: selectedProvider }
+      : { plan: selectedPlan.key, provider: selectedProvider };
+    const res = await fetch('/api/guest/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error('checkout failed');
+    const data = await res.json();
+    localStorage.setItem('star_vpn_guest_order', data.order_id);
+    window.location.href = data.url;
+  } catch (e) {
+    buyBtn.disabled = false;
+    buyBtn.textContent = 'Не получилось — попробуйте ещё раз';
+  }
+});
+
+loadPlans();
+loadProviders();
+</script>
+</body>
+</html>
