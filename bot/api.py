@@ -2241,6 +2241,7 @@ async def web_users(
     return {
         "total": total,
         "users": [{"telegram_id": u.telegram_id, "username": u.username or "", "full_name": u.full_name or "",
+                   "email": u.email or "",
                    "is_banned": bool(u.is_banned), "ban_reason": u.ban_reason or "",
                    "subscription_active": bool(u.subscription_expires_at and u.subscription_expires_at > now),
                    "subscription_expires_at": u.subscription_expires_at.isoformat() if u.subscription_expires_at else None,
@@ -2298,6 +2299,7 @@ async def web_user_detail(tg_id: int, authorization: str | None = Header(default
 
     return {
         "telegram_id": u.telegram_id, "username": u.username or "", "full_name": u.full_name or "",
+        "email": u.email or "",
         "is_banned": bool(u.is_banned), "ban_reason": u.ban_reason or "",
         "subscription_active": bool(u.subscription_expires_at and u.subscription_expires_at > now),
         "subscription_expires_at": u.subscription_expires_at.isoformat() if u.subscription_expires_at else None,

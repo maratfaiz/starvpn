@@ -540,7 +540,7 @@ async function renderTable(sec) {
         const st = userStatus(u);
         const [lbl, kind] = USER_STATUS[st];
         return { key: u.telegram_id, owner: u.telegram_id, cells: [
-          `<div>${esc(u.full_name || (u.username ? '@'+u.username : 'ID '+u.telegram_id))}</div><span class="sub">${u.telegram_id}</span>`,
+          `<div>${esc(u.full_name || (u.username ? '@'+u.username : (u.email || 'ID '+u.telegram_id)))}</div><span class="sub">${u.telegram_id > 0 ? u.telegram_id : esc(u.email || 'веб-аккаунт')}</span>`,
           `<span class="chip ${kind}">${lbl}</span>`,
           `<span class="mono" style="color:${u.days_left === 0 ? '#F87171' : '#8A7A60'}">${u.days_left}</span>`,
           `—`,
@@ -631,8 +631,8 @@ async function openUserDetail(tgId) {
       <div class="detail">
         <div class="detail-head">
           <div>
-            <div class="detail-title">${esc(u.full_name || (u.username ? '@'+u.username : 'ID '+u.telegram_id))}</div>
-            <div class="detail-sub">${u.telegram_id}${u.username ? ' · @'+esc(u.username) : ''}${u.marzban_username ? ' · mz: '+esc(u.marzban_username) : ''}</div>
+            <div class="detail-title">${esc(u.full_name || (u.username ? '@'+u.username : (u.email || 'ID '+u.telegram_id)))}</div>
+            <div class="detail-sub">${u.telegram_id > 0 ? u.telegram_id : 'веб-аккаунт'}${u.username ? ' · @'+esc(u.username) : ''}${u.email ? ' · '+esc(u.email) : ''}${u.marzban_username ? ' · mz: '+esc(u.marzban_username) : ''}</div>
             ${u.is_banned && u.ban_reason ? `<div class="detail-sub" style="color:#F87171;margin-top:6px">Причина бана: ${esc(u.ban_reason)}</div>` : ''}
           </div>
           <div class="detail-actions">
