@@ -203,7 +203,6 @@ async def show_link(callback: CallbackQuery, session: AsyncSession) -> None:
         return
 
     # Берём первое активное устройство
-    from bot.models.device import Device
     dev_r = await session.execute(
         select(Device).where(Device.telegram_id == tg_id, Device.is_active.is_(True))
         .order_by(Device.slot).limit(1)

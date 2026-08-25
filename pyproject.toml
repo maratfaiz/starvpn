@@ -1,0 +1,45 @@
+# Конфигурация инструментов Python для STAR VPN.
+# Пакет не собирается через pip — файл нужен только ruff/mypy/pytest.
+
+[tool.ruff]
+target-version = "py311"
+# Ориентир для нового кода. Существующие файлы (bot/api.py и часть
+# хендлеров) содержат длинные строки и НЕ переформатируются: правило E501
+# намеренно не включено в select ниже, чтобы линтер не падал на них.
+line-length = 120
+exclude = ["alembic/versions", "webapp", "landing", "admin"]
+
+[tool.ruff.lint]
+# Дефолтный набор ruff: E4 — импорты, E7 — стиль выражений, E9 —
+# синтаксис/IO, F — pyflakes. Ловит реальные дефекты (неиспользуемые
+# импорты, необъявленные имена, дубли ключей), не переформатируя код.
+select = ["E4", "E7", "E9", "F"]
+ignore = [
+    # `a = 1; b = 2` — сложившийся стиль в хендлерах, ~30 мест.
+    # Переформатирование дало бы огромный диff без пользы.
+    "E702",
+]
+
+[tool.ruff.lint.isort]
+# Порядок из CLAUDE.md: stdlib → third-party → local. Правило I001 не
+# включено в select: в существующих файлах импорты сгруппированы иначе, и
+# автосортировка переписала бы шапки 56 файлов. Конфиг оставлен для
+# ручного прогона `ruff check --select I --fix`, когда это будет уместно.
+known-first-party = ["bot"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["bot"]
+exclude = "alembic/versions"
+# Прагматичный режим: ловим явные ошибки типов, но не требуем аннотаций
+# в уже написанном коде. Ужесточать по мере покрытия аннотациями.
+ignore_missing_imports = true
+check_untyped_defs = false
+warn_redundant_casts = true
+warn_unused_ignores = false
+warn_unreachable = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"

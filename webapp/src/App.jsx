@@ -98,7 +98,6 @@ export default function App() {
       setLoading(false);
       api.checkGiftNotification().then(setPendingGift);
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [telegramOk]);
 
   // navigation

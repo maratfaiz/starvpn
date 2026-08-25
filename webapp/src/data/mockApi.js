@@ -237,7 +237,7 @@ export async function getAdminUser(tgId) {
   return { ...u };
 }
 
-export async function adminGrantDays(tgId, days) {
+export async function adminGrantDays(tgId, _days) {
   await delay(400);
   const u = store.adminUsers.find((x) => x.tg_id === tgId);
   if (u) u.subscription_active = true;

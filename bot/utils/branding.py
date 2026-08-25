@@ -24,7 +24,7 @@ DEVICE_LABELS: dict[str, str] = {
     "appletv":   f"{APP_NAME} · Apple TV",
 }
 
-EXPIRED_REMARK = f"⚠️ Подписка закончилась — продли в @{{bot_username}}"
+EXPIRED_REMARK = "⚠️ Подписка закончилась — продли в @{bot_username}"
 
 
 def set_vless_remark(link: str, device_name: str | None = None) -> str:

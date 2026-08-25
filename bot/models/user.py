@@ -3,7 +3,7 @@ SQLAlchemy ORM model — таблица пользователей.
 """
 
 from datetime import datetime
-from sqlalchemy import BigInteger, String, DateTime, Integer, ForeignKey, Boolean, Numeric
+from sqlalchemy import BigInteger, String, DateTime, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, backref
 
 

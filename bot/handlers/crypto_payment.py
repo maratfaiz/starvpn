@@ -21,7 +21,6 @@ from aiogram.types import (
     InlineKeyboardMarkup,
 )
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.models.payment import Payment
 from bot.models.user import User

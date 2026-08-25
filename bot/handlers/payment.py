@@ -35,7 +35,6 @@ from bot.models.device import Device
 from bot.models.payment import Payment
 from bot.models.user import User
 from bot.utils.marzban import marzban
-from bot.utils.qr import make_qr_photo
 from bot.handlers.gift import handle_gift_payment
 
 router = Router()
