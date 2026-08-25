@@ -30,12 +30,18 @@ See `ABOUT_PROJECT.md` for the full product specification.
 ## Coding Standards
 
 ### Python
-- Follow **PEP 8**. Max line length: **100** characters.
+- Follow **PEP 8**. Max line length for **new** code: **120** characters
+  (`line-length` в `pyproject.toml`). Существующие файлы содержат более
+  длинные строки и намеренно не переформатируются — правило `E501` не
+  включено в `ruff`, чтобы диффы оставались по существу.
 - All functions that touch I/O must be `async`.
 - Type-annotate every function signature.
 - Use f-strings, not `.format()` or `%`.
 - Never use `print()` in production code — use `logging`.
-- Imports order: stdlib → third-party → local. Use `isort`.
+- Imports order: stdlib → third-party → local (конфиг `tool.ruff.lint.isort`).
+  Правило `I001` не включено в CI: в существующих файлах импорты
+  сгруппированы иначе. Для нового кода порядок соблюдаем руками либо
+  точечно: `ruff check --select I --fix <файл>`.
 
 ### JavaScript / React
 - Functional components only. No class components.
@@ -74,9 +80,15 @@ See `ABOUT_PROJECT.md` for the full product specification.
   - Example: `feat(bot): add 24h trial activation on /start`
 
 ### After writing code
-- Run linter: `ruff check bot/` and `eslint webapp/src/`
-- Run type checker: `mypy bot/`
+- Run linter: `ruff check .` и `cd webapp && npm run lint`
+- Run type checker: `mypy` (информационно — см. `docs/CODE_QUALITY.md`)
+- Run tests: `pytest`
 - Write or update tests for changed logic.
+- Правил `webapp/src/` касался? Пересобери Mini App: `cd webapp && npm run build:app`
+  и закоммить обновившийся `webapp/app.html` — CI проверяет их совпадение.
+
+Всё перечисленное гоняется автоматически в `.github/workflows/ci.yml` на
+каждый push и pull request.
 
 ---
 

@@ -61,7 +61,6 @@ Marzban (VPN-ядро) разворачивается отдельно, не ч�
 | `webapp/app.html` | Собранный однофайловый бандл Mini App — именно этот файл реально открывается по `/app` | Коммитится в git, генерируется через `npm run build:app` |
 | `alembic/` | Миграции БД (PostgreSQL) | `alembic upgrade head` |
 | `infra/` | `docker-compose.yml`, `nginx.conf`, `xray_config.json` (Zero Logs), `deploy.sh` | Конфиги для продакшн-сервера |
-| `miniapp/` | ⚠️ Старый/неиспользуемый прототип Mini App (Netlify-заготовка). Ни один роут в `bot/api.py` на него не ссылается — не редактировать вместо `webapp/` | Не деплоится |
 | `.env.example` | Шаблон переменных окружения | Скопировать в `.env`, никогда не коммитить `.env` |
 
 ---
@@ -105,9 +104,14 @@ npm run build:app     # сборка → webapp/dist/index.html → копия �
 ```
 
 После `build:app` нужно закоммитить и запушить **обновившийся
-`webapp/app.html`** — именно он открывается на сервере по `/app`, а не
-`webapp/src/`. `webapp/dist/` в git не попадает (см. `.gitignore`), это
-чисто промежуточный артефакт сборки.
+`webapp/app.html`** — именно он открывается по `/app` при запуске без
+Docker. `webapp/dist/` в git не попадает (см. `.gitignore`), это чисто
+промежуточный артефакт сборки.
+
+Забыть пересборку больше нельзя: CI (`.github/workflows/ci.yml`) собирает
+бандл заново и падает, если он разошёлся с закоммиченным `app.html`. А в
+production `bot/Dockerfile` собирает Mini App сам (multi-stage), поэтому
+образ всегда содержит актуальную версию.
 
 ---
 
@@ -122,6 +126,20 @@ PostgreSQL 16 + SQLAlchemy 2.0 (async), миграции через Alembic
 alembic revision -m "описание"   # создать миграцию
 alembic upgrade head              # применить
 ```
+
+---
+
+## Проверки перед коммитом
+
+```bash
+ruff check .                       # линтер Python
+pytest                             # тесты
+cd webapp && npm run lint          # линтер Mini App
+```
+
+То же самое гоняется в CI на каждый push и pull request. Что именно
+настроено, какие правила осознанно выключены и какой остался долг по
+типам — в `docs/CODE_QUALITY.md`.
 
 ---
 
