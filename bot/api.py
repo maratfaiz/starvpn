@@ -10,7 +10,6 @@ import hashlib
 import hmac
 import json
 import logging
-import os
 import urllib.parse
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -27,6 +26,7 @@ from bot.models.device import Device, MAX_DEVICES
 from bot.models.gift_notification import GiftNotification
 from bot.models.payment import Payment
 from bot.models.user import User
+from bot.utils.branding import set_vless_remark as _set_vless_remark
 from bot.utils.database import AsyncSessionLocal
 from bot.utils.marzban import marzban
 
@@ -233,6 +233,12 @@ async def serve_logo_title():
 
 # ─── Auth ─────────────────────────────────────────────────────────────────────
 
+# Максимальный возраст initData. Подпись Telegram бессрочна, поэтому без
+# проверки auth_date перехваченная строка initData оставалась бы валидной
+# вечно — окно ограничивает окно повторного использования одними сутками.
+INIT_DATA_MAX_AGE = timedelta(hours=24)
+
+
 def _parse_tg_id(init_data: str) -> int:
     """Верифицирует Telegram initData HMAC и возвращает telegram_id."""
     parsed = dict(urllib.parse.parse_qsl(init_data, keep_blank_values=True))
@@ -246,11 +252,27 @@ def _parse_tg_id(init_data: str) -> int:
     if not hmac.compare_digest(expected, received_hash):
         raise HTTPException(status_code=403, detail="Invalid Telegram signature")
 
+    _check_init_data_age(parsed.get("auth_date"))
+
     user_obj = json.loads(parsed.get("user", "{}"))
     tg_id = user_obj.get("id")
     if not tg_id:
         raise HTTPException(status_code=403, detail="No user id in initData")
     return int(tg_id)
+
+
+def _check_init_data_age(auth_date_raw: str | None) -> None:
+    """Отклоняет initData старше INIT_DATA_MAX_AGE (защита от replay)."""
+    if not auth_date_raw:
+        raise HTTPException(status_code=403, detail="initData without auth_date")
+    try:
+        auth_date = datetime.utcfromtimestamp(int(auth_date_raw))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=403, detail="Malformed auth_date")
+
+    age = datetime.utcnow() - auth_date
+    if age > INIT_DATA_MAX_AGE:
+        raise HTTPException(status_code=403, detail="initData expired")
 
 
 def _tg_id(x_telegram_init_data: str | None) -> int:
@@ -423,9 +445,6 @@ def _fmt_online(online_at: int | None, now_ts: int) -> str:
     if diff < 86400:
         return f"{diff // 3600} ч. назад"
     return f"{diff // 86400} дн. назад"
-
-
-from bot.utils.branding import set_vless_remark as _set_vless_remark
 
 
 async def _get_active_devices(tg_id: int, session) -> list[Device]:
