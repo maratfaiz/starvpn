@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Пробный период — STAR VPN Wiki</title>
+<meta name="description" content="2 дня STAR VPN бесплатно: как активировать пробный период в боте или на сайте, какие есть ограничения и что происходит после его окончания.">
+<link rel="icon" href="/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+:root{
+  --gold:#FFB800;--gold2:#FFD84D;
+  --gold-border:rgba(255,184,0,0.2);
+  --gold-dim:rgba(255,184,0,0.1);
+  --bg:#060606;--bg2:rgba(255,255,255,0.025);
+  --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;
+  --max:900px;--navmax:1160px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.75;overflow-x:hidden}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:var(--gold2)}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,184,0,.2);border-radius:2px}
+
+#progress{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));z-index:9999;transition:width .08s linear}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.6}
+
+#nav{position:sticky;top:0;z-index:100;padding:0 24px;background:rgba(6,6,6,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
+.nav-inner{max-width:var(--navmax);margin:0 auto;display:flex;align-items:center;height:64px;gap:22px}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.nav-logo img{width:30px;height:30px;border-radius:8px;object-fit:cover}
+.nav-logo-text{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
+.nav-links{display:flex;gap:6px;flex:1;flex-wrap:wrap}
+.nav-links a{font-size:13.5px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s;padding:9px 12px;border-radius:9px}
+.nav-links a:hover{color:var(--gold);background:rgba(255,255,255,.04)}
+.nav-links a.active{color:var(--gold)}
+.nav-login{font-size:13.5px;font-weight:500;color:var(--text);white-space:nowrap;padding:9px 14px;border:1px solid rgba(255,255,255,.18);border-radius:10px;text-decoration:none;transition:color .2s,border-color .2s;flex-shrink:0}
+.nav-login:hover{color:var(--gold);border-color:var(--gold-border)}
+.nav-cta{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;padding:10px 18px;border-radius:11px;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;transition:background .2s,transform .15s}
+.nav-cta:hover{background:var(--gold2);color:#000;transform:translateY(-1px)}
+@media(max-width:768px){.nav-links{display:none}.nav-login{display:none}.nav-cta{padding:8px 16px;font-size:12px}}
+
+.start-modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(6,6,6,.72);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
+.start-modal-overlay.open{display:flex}
+.start-modal{max-width:640px;width:100%;background:#0B0A09;border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:clamp(24px,4vw,40px);position:relative}
+.start-modal-close{position:absolute;top:18px;right:18px;width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text2);font-size:18px;line-height:1;cursor:pointer}
+.start-modal-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.start-modal h3{font-family:'Space Grotesk',sans-serif;font-size:clamp(22px,3vw,28px);font-weight:700;line-height:1.15;margin-bottom:10px}
+.start-modal p{color:var(--text2);margin-bottom:26px}
+.start-modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.start-modal-opt{display:block;border-radius:18px;padding:22px;text-decoration:none;transition:border-color .2s}
+.start-modal-opt.opt-site{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1)}
+.start-modal-opt.opt-site:hover{border-color:var(--gold-border)}
+.start-modal-opt.opt-tg{background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.3)}
+.start-modal-opt.opt-tg:hover{border-color:rgba(255,184,0,.5)}
+.opt-tag{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.opt-tag.tag-site{color:var(--text2)}
+.opt-tag.tag-tg{color:var(--gold)}
+.opt-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
+.opt-text{font-size:13.5px;color:var(--text2);line-height:1.5}
+
+.wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}
+
+.back-nav{padding-top:40px}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);text-decoration:none;transition:color .2s}
+.back-link:hover{color:var(--gold)}
+.crumbs{font-size:12.5px;color:var(--text3);margin-top:18px;display:flex;gap:8px;flex-wrap:wrap}
+.crumbs a{color:var(--text2)}
+
+.doc-hero{padding:28px 0 56px;text-align:center}
+.doc-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--gold-border);border-radius:100px;padding:6px 20px;margin-bottom:32px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);background:var(--gold-dim)}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;animation:blink 1.8s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.doc-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(36px,7vw,60px);font-weight:700;line-height:1.08;letter-spacing:-.02em;color:var(--text);margin-bottom:16px}
+.doc-title .gold{background:linear-gradient(135deg,var(--gold) 0%,var(--gold2) 50%,var(--gold) 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 3s linear infinite}
+@keyframes shimmer{0%{background-position:0 center}100%{background-position:200% center}}
+.doc-date{font-size:14px;color:var(--text2);letter-spacing:.02em;margin-bottom:44px;max-width:520px;margin-left:auto;margin-right:auto}
+.doc-meta{display:flex;gap:1px;max-width:380px;margin:0 auto;border:1px solid var(--gold-border);border-radius:16px;background:var(--gold-border);overflow:hidden}
+.doc-meta-item{flex:1;background:rgba(6,6,6,.9);padding:16px 8px;text-align:center;backdrop-filter:blur(12px)}
+.doc-meta-val{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--gold);line-height:1;margin-bottom:4px}
+.doc-meta-lbl{font-size:10px;color:var(--text2);letter-spacing:.06em;text-transform:uppercase}
+
+.intro-banner{display:flex;align-items:center;gap:16px;background:rgba(255,184,0,.04);border:1px solid var(--gold-border);border-radius:16px;padding:20px 24px;margin:48px 0;position:relative;overflow:hidden}
+.intro-banner::before{content:'';position:absolute;right:-40px;top:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(255,184,0,.08),transparent 65%);pointer-events:none}
+.intro-icon{width:44px;height:44px;border-radius:12px;background:rgba(255,184,0,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.intro-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--gold);margin-bottom:3px}
+.intro-sub{font-size:13px;color:var(--text2);line-height:1.5}
+
+.num-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;margin-bottom:12px}
+@media(max-width:600px){.num-row{grid-template-columns:1fr}}
+.num-cell{background:#080807;padding:24px 22px}
+.num-val{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;color:var(--gold);line-height:1;margin-bottom:8px}
+.num-lbl{font-size:13.5px;color:var(--text2)}
+
+.doc-body{padding-bottom:56px}
+.doc-section{display:grid;grid-template-columns:72px 1fr;gap:36px;padding:52px 0;border-bottom:1px solid rgba(255,184,0,.07)}
+.doc-section:last-child{border-bottom:none}
+.doc-num{font-family:'Space Grotesk',sans-serif;font-size:56px;font-weight:700;color:rgba(255,184,0,.09);line-height:1;text-align:right;padding-top:4px;user-select:none;flex-shrink:0}
+.doc-content h2{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;color:var(--text);margin-bottom:20px;letter-spacing:-.01em}
+.doc-content p{color:var(--text2);font-size:15px;line-height:1.85;margin-bottom:14px}
+.doc-content p:last-child{margin-bottom:0}
+.doc-content .hl{color:var(--text);font-weight:500}
+.doc-content a{color:var(--gold);text-decoration:none}
+.doc-content a:hover{text-decoration:underline}
+
+.rule-list{display:flex;flex-direction:column;gap:11px;margin-bottom:8px}
+.rule-item{display:flex;gap:12px;background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 20px;align-items:flex-start}
+.rule-item span{color:var(--gold);flex-shrink:0;margin-top:2px}
+.rule-item div{font-size:14.5px;line-height:1.6;color:var(--text)}
+
+.flow{display:flex;flex-direction:column;gap:1px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;margin:20px 0 28px}
+.flow-row{background:#080807;padding:20px 24px;display:flex;gap:18px;align-items:flex-start}
+.flow-num{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#000;background:var(--gold);width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.flow-title{font-family:'Space Grotesk',sans-serif;font-size:15.5px;font-weight:600;color:var(--text);margin-bottom:4px}
+.flow-text{font-size:14px;line-height:1.6;color:var(--text2)}
+
+.tech-card{display:flex;gap:16px;align-items:flex-start;background:#0D0C0A;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:20px 22px;margin:26px 0}
+.tech-icon{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tech-icon svg{width:16px;height:16px;stroke:var(--text2);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tech-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--text2);margin-bottom:6px}
+.tech-text{font-size:14.5px;line-height:1.65;color:var(--text2)}
+
+.doc-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;padding-top:32px;border-top:1px solid rgba(255,255,255,.08)}
+.btn-gold{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:700;padding:14px 28px;border-radius:12px;text-decoration:none}
+.btn-gold:hover{background:var(--gold2);color:#000}
+.btn-ghost{border:1px solid rgba(255,255,255,.14);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:600;padding:13px 28px;border-radius:12px;text-decoration:none;transition:border-color .2s,color .2s}
+.btn-ghost:hover{border-color:rgba(255,184,0,.4);color:var(--gold)}
+
+.next-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:40px}
+.next-card{display:block;background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px 22px;text-decoration:none;transition:border-color .2s}
+.next-card:hover{border-color:rgba(255,184,0,.35)}
+.next-kicker{font-size:11px;font-family:'Space Grotesk',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.next-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:var(--text)}
+
+footer{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align:center;position:relative;z-index:2}
+.footer-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-bottom:24px}
+.footer-logo img{width:32px;height:32px;border-radius:8px;object-fit:cover}
+.footer-logo-text{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
+.footer-links{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.footer-links a{font-size:13px;color:var(--text3);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--gold)}
+.footer-copy{font-size:12px;color:var(--text3);letter-spacing:.05em}
+
+@media(max-width:640px){
+  .back-nav{padding-top:24px}
+  .doc-section{grid-template-columns:1fr;gap:12px;padding:40px 0}
+  .doc-num{font-size:32px;text-align:left;color:rgba(255,184,0,.14)}
+  .doc-meta{max-width:100%}
+  .intro-banner{align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<canvas id="bg-canvas"></canvas>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <img src="/logo.png" alt="STAR VPN">
+      <span class="nav-logo-text">STAR VPN</span>
+    </a>
+    <div class="nav-links">
+      <a href="/#how">Преимущества</a>
+      <a href="/#compare">Сравнение</a>
+      <a href="/#apps">Устройства</a>
+      <a href="/#faq">Вопросы</a>
+      <a href="/tariffs">Тарифы</a>
+      <a href="/wiki" class="active">Wiki</a>
+    </div>
+    <a class="nav-login" href="/login">Войти в кабинет</a>
+    <a class="nav-cta" id="nav-start-btn" href="https://t.me/starisvpnbot">2 дня бесплатно</a>
+  </div>
+</nav>
+
+<div class="start-modal-overlay" id="start-modal">
+  <div class="start-modal" onclick="event.stopPropagation()">
+    <button class="start-modal-close" id="start-modal-close" aria-label="Закрыть">×</button>
+    <div class="start-modal-label">С чего начать</div>
+    <h3>Как вам удобнее подключиться?</h3>
+    <p>Два равноценных пути к одному и тому же ключу — выберите свой.</p>
+    <div class="start-modal-grid">
+      <a class="start-modal-opt opt-site" href="/login" data-channel="site">
+        <div class="opt-tag tag-site">Личный кабинет</div>
+        <div class="opt-title">Через сайт</div>
+        <div class="opt-text">Вход по email без пароля. Работает, даже если Telegram недоступен.</div>
+      </a>
+      <a class="start-modal-opt opt-tg" href="https://t.me/starisvpnbot" data-channel="telegram">
+        <div class="opt-tag tag-tg">Telegram</div>
+        <div class="opt-title">Через бота</div>
+        <div class="opt-text">@starisvpnbot — подписка, продление и поддержка в одном чате.</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<main>
+<div class="wrap">
+
+  <div class="back-nav">
+    <a href="/wiki" class="back-link">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Назад в Wiki
+    </a>
+    <div class="crumbs"><a href="/wiki">Wiki</a><span>/</span><span>О сервисе</span><span>/</span><span>Пробный период</span></div>
+  </div>
+
+  <!-- Hero -->
+  <div class="doc-hero">
+    <div class="doc-badge">
+      <div class="badge-dot"></div>
+      Wiki · О сервисе
+    </div>
+    <h1 class="doc-title">Пробный<br><span class="gold">период</span></h1>
+    <div class="doc-date">2 дня полного доступа к STAR VPN бесплатно, без карты — в Telegram или на сайте</div>
+    <div class="doc-meta">
+      <div class="doc-meta-item">
+        <div class="doc-meta-val">4</div>
+        <div class="doc-meta-lbl">раздела</div>
+      </div>
+      <div class="doc-meta-item">
+        <div class="doc-meta-val">~2</div>
+        <div class="doc-meta-lbl">мин чтения</div>
+      </div>
+      <div class="doc-meta-item">
+        <div class="doc-meta-val">2</div>
+        <div class="doc-meta-lbl">дня бесплатно</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Intro banner -->
+  <div class="intro-banner">
+    <div class="intro-icon">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/></svg>
+    </div>
+    <div>
+      <div class="intro-title">Без карты — и в Telegram, и на сайте</div>
+      <div class="intro-sub">Пробный период даётся один раз на аккаунт и не требует никаких платёжных данных.</div>
+    </div>
+  </div>
+
+  <div class="num-row">
+    <div class="num-cell"><div class="num-val">2 дня</div><div class="num-lbl">бесплатного доступа</div></div>
+    <div class="num-cell"><div class="num-val">1 раз</div><div class="num-lbl">на один аккаунт</div></div>
+    <div class="num-cell"><div class="num-val">0 ₽</div><div class="num-lbl">карта для пробного не нужна</div></div>
+  </div>
+
+  <div class="doc-body">
+
+    <!-- 01 -->
+    <div class="doc-section" id="s1">
+      <div class="doc-num">01</div>
+      <div class="doc-content">
+        <h2>Что входит в пробный период</h2>
+        <p><span class="hl">2 дня</span> полноценного доступа к STAR VPN — тот же протокол VLESS + Reality, тот же лимит до <span class="hl">3 устройств</span>, никаких урезанных функций. Это полноценная возможность оценить скорость и стабильность сервиса перед покупкой.</p>
+        <div class="rule-list">
+          <div class="rule-item"><span>◆</span><div>Длительность — 2 дня с момента активации, полный доступ ко всем возможностям.</div></div>
+          <div class="rule-item"><span>◆</span><div>Выдаётся один раз на аккаунт: повторно тот же telegram_id или email бесплатные дни не получает.</div></div>
+          <div class="rule-item"><span>◆</span><div>Карту привязывать не нужно — после окончания ничего не списывается.</div></div>
+          <div class="rule-item"><span>◆</span><div>На время пробного действуют те же лимиты, что и в платной подписке: до 3 устройств.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02 -->
+    <div class="doc-section" id="s2">
+      <div class="doc-num">02</div>
+      <div class="doc-content">
+        <h2>Как активировать</h2>
+        <p><span class="hl">В Telegram:</span> откройте бота <a href="https://t.me/starisvpnbot">@starisvpnbot</a>, нажмите /start и кнопку «Попробовать бесплатно» — доступ включится сразу, без форм и подтверждений.</p>
+        <p><span class="hl">На сайте:</span> войдите в <a href="/login">личный кабинет</a> по email (вкладка «Подписка») и нажмите «Активировать пробный период» — работает так же, независимо от того, привязан ли Telegram. Проверка на повторную выдачу идёт по аккаунту, а не по каналу входа.</p>
+        <div class="flow">
+          <div class="flow-row"><span class="flow-num">1</span><div><div class="flow-title">Войдите — в боте или на сайте</div><div class="flow-text">Через /start в @starisvpnbot или через email на /login.</div></div></div>
+          <div class="flow-row"><span class="flow-num">2</span><div><div class="flow-title">Активируйте пробный период</div><div class="flow-text">Одна кнопка — подписка на 2 дня выдаётся сразу.</div></div></div>
+          <div class="flow-row"><span class="flow-num">3</span><div><div class="flow-title">Скопируйте ссылку подписки</div><div class="flow-text">Она понадобится для подключения клиента на ваших устройствах.</div></div></div>
+          <div class="flow-row"><span class="flow-num">4</span><div><div class="flow-title">Подключитесь</div><div class="flow-text">Вставьте ссылку в клиент по <a href="/connect">инструкции для вашей платформы</a> и проверьте соединение.</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 -->
+    <div class="doc-section" id="s3">
+      <div class="doc-num">03</div>
+      <div class="doc-content">
+        <h2>Ограничения</h2>
+        <p>Пробный период даётся <span class="hl">один раз на аккаунт</span> — будь то Telegram-аккаунт или веб-аккаунт, вошедший по email. После того как он был использован хотя бы однажды, повторно активировать его на этом же аккаунте нельзя — в том числе если удалить и заново добавить устройство.</p>
+        <div class="tech-card">
+          <span class="tech-icon"><svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 100 16 8 8 0 000-16zM12 11v5M12 8h.01"/></svg></span>
+          <div>
+            <div class="tech-label">Если Telegram недоступен</div>
+            <div class="tech-text">Пробный период можно активировать прямо в личном кабинете на сайте — Telegram для этого не обязателен. Если хотите начать сразу с подписки, её можно <a href="/get-vpn">купить без бота</a>, а пробные дни оставить на будущее.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 -->
+    <div class="doc-section" id="s4">
+      <div class="doc-num">04</div>
+      <div class="doc-content">
+        <h2>Что происходит после окончания</h2>
+        <p>По истечении 2 дней доступ к VPN приостанавливается, а бот или кабинет предложат выбрать один из платных тарифов. Никакого автоматического списания средств не происходит — все оплаты в STAR VPN разовые и вручную, карта или Stars-баланс сами по себе ни за что не списываются.</p>
+        <p>Посмотреть тарифы и оплатить подписку можно на странице <a href="/tariffs">Тарифы</a> или прямо в боте. Подробнее о доступных способах оплаты — в статье <a href="/wiki/payment">Способы оплаты</a>.</p>
+        <div class="doc-cta">
+          <a class="btn-gold" href="https://t.me/starisvpnbot">Активировать в @starisvpnbot</a>
+          <a class="btn-ghost" href="/login">Активировать на сайте</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /doc-body -->
+
+  <div class="next-grid">
+    <a class="next-card" href="/connect">
+      <div class="next-kicker">Практика</div>
+      <div class="next-title">Подключение за несколько минут</div>
+    </a>
+    <a class="next-card" href="/tariffs">
+      <div class="next-kicker">Оплата</div>
+      <div class="next-title">Тарифы и способы оплаты</div>
+    </a>
+  </div>
+
+</div><!-- /wrap -->
+</main>
+
+<footer>
+  <a class="footer-logo" href="/">
+    <img src="/logo.png" alt="STAR VPN">
+    <span class="footer-logo-text">STAR VPN</span>
+  </a>
+  <div class="footer-links">
+    <a href="/wiki">Wiki</a>
+    <a href="/tariffs">Тарифы</a>
+    <a href="/connect">Подключение</a>
+    <a href="/privacy">Конфиденциальность</a>
+    <a href="/terms">Условия</a>
+    <a href="https://t.me/starisvpnbot">@starisvpnbot</a>
+  </div>
+  <div class="footer-copy">© 2026 STAR VPN · VLESS Reality · Zero Logs</div>
+</footer>
+
+<script>
+/* ═══ Progress bar ══════════════════════════════════════════ */
+const bar = document.getElementById('progress');
+window.addEventListener('scroll', () => {
+  const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  bar.style.width = Math.min(pct, 100) + '%';
+}, {passive:true});
+
+/* ═══ Starfield ══════════════════════════════════════════════ */
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize, {passive:true});
+  const stars = Array.from({length:200}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.2 + 0.1,
+    o: Math.random() * 0.5 + 0.08,
+    sp: Math.random() * 0.0004 + 0.00006,
+    ph: Math.random() * Math.PI * 2,
+  }));
+  let f = 0;
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height); f++;
+    for(const s of stars){
+      const a = s.o * (0.4 + 0.6 * Math.sin(f * s.sp * 200 + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ═══ Start modal ═════════════════════════════════════════════ */
+(function(){
+  const overlay = document.getElementById('start-modal');
+  const closeBtn = document.getElementById('start-modal-close');
+  const navBtn = document.getElementById('nav-start-btn');
+  let channel = null;
+  try { const saved = localStorage.getItem('star_vpn_channel'); if(saved === 'site' || saved === 'telegram') channel = saved; } catch(e){}
+  function applyChannel(){
+    navBtn.href = channel === 'site' ? '/login' : 'https://t.me/starisvpnbot';
+  }
+  applyChannel();
+  function openModal(){ overlay.classList.add('open'); }
+  function closeModal(){ overlay.classList.remove('open'); }
+  navBtn.addEventListener('click', e => { if(channel === null){ e.preventDefault(); openModal(); } });
+  overlay.addEventListener('click', closeModal);
+  closeBtn.addEventListener('click', closeModal);
+  document.querySelectorAll('.start-modal-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      channel = opt.dataset.channel;
+      try { localStorage.setItem('star_vpn_channel', channel); } catch(e){}
+      applyChannel();
+    });
+  });
+})();
+</script>
+</body>
+</html>

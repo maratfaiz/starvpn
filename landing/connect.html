@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Как подключиться — STAR VPN</title>
+<meta name="description" content="Пошаговая инструкция по подключению STAR VPN. Выбери устройство и следуй шагам.">
+<link rel="icon" href="/logo.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+
+:root{
+  --gold:#FFB800;--gold2:#FFD84D;
+  --gold-border:rgba(255,184,0,0.18);
+  --gold-dim:rgba(255,184,0,0.09);
+  --bg:#060606;--bg2:rgba(255,255,255,0.03);--bg3:rgba(255,255,255,0.05);
+  --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;
+  --green:#3DFF8A;
+}
+
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* Stars */
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* Nav */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 20px;background:rgba(6,6,6,0.88);backdrop-filter:blur(24px);border-bottom:1px solid var(--gold-border)}
+.nav-inner{max-width:540px;margin:0 auto;display:flex;align-items:center;height:56px;gap:16px}
+.nav-logo{display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0}
+.nav-logo img{width:24px;height:24px;border-radius:6px}
+.nav-logo-text{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:.04em;color:var(--gold)}
+.nav-links{display:flex;gap:16px;flex:1}
+.nav-links a{font-size:12.5px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--gold)}
+.nav-back{margin-left:auto;font-size:13px;color:var(--text2);text-decoration:none;transition:color .2s;flex-shrink:0}
+.nav-back:hover{color:var(--gold)}
+@media(max-width:480px){.nav-links{display:none}}
+
+/* Footer */
+footer{border-top:1px solid var(--gold-border);padding:44px 20px 32px;text-align:center;position:relative;z-index:2;margin-top:24px}
+.footer-links{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.footer-links a{font-size:12px;color:var(--text3);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--gold)}
+.footer-copy{font-size:11.5px;color:var(--text3);letter-spacing:.05em}
+
+/* Page wrapper */
+.page{position:relative;z-index:2;max-width:540px;margin:0 auto;padding:80px 20px 60px}
+
+/* Hero */
+.hero{text-align:center;padding:32px 0 40px}
+.hero h1{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.15;margin-bottom:12px}
+.hero h1 span{background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:14px;color:var(--text2);line-height:1.6;max-width:340px;margin:0 auto}
+
+/* Platform picker */
+.pick-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);opacity:.6;margin-bottom:12px;text-align:center}
+.group-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;color:var(--text2);margin:18px 2px 8px;display:flex;align-items:center;gap:7px}
+.group-label:first-of-type{margin-top:0}
+.group-label svg{width:14px;height:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.pick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.pick-grid.pick-grid-3{grid-template-columns:repeat(3,1fr)}
+.pick-grid:last-of-type{margin-bottom:32px}
+.pick-btn{background:var(--bg2);border:1.5px solid var(--gold-border);border-radius:16px;padding:18px 12px;cursor:pointer;transition:all .2s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+.pick-btn:active{transform:scale(.97)}
+.pick-btn.selected{background:var(--gold-dim);border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.pick-btn-icon{width:30px;height:30px;color:var(--gold)}
+.pick-btn-icon svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.pick-btn-name{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--text)}
+.pick-btn-app{font-size:11px;color:var(--text2)}
+
+/* Guide panel */
+.guide{display:none;animation:fadeIn .3s ease}
+.guide.visible{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Client sub-tabs (multi-client platforms, e.g. iOS) */
+.client-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.client-tab{cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:600;padding:9px 16px;border-radius:10px;border:1.5px solid var(--gold-border);background:var(--bg2);color:var(--text2);transition:all .15s}
+.client-tab.selected{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+.client-panel{display:none}
+.client-panel.visible{display:block;animation:fadeIn .25s ease}
+
+/* App download card */
+.app-dl-card{display:flex;align-items:center;gap:14px;background:var(--bg2);border:1px solid var(--gold-border);border-radius:14px;padding:16px 18px;margin-bottom:28px}
+.app-dl-icon{width:34px;height:34px;flex-shrink:0;color:var(--gold)}
+.app-dl-icon svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.app-dl-info{flex:1;min-width:0}
+.app-dl-name{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;margin-bottom:2px}
+.app-dl-meta{font-size:12px;color:var(--text2)}
+.app-dl-btn{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;padding:10px 16px;border-radius:10px;text-decoration:none;white-space:nowrap;flex-shrink:0;transition:filter .2s}
+.app-dl-btn:hover{filter:brightness(1.08)}
+
+/* Steps */
+.steps-title{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);opacity:.6;margin-bottom:16px}
+.steps{display:flex;flex-direction:column;gap:0;position:relative}
+.steps::before{content:'';position:absolute;left:19px;top:40px;bottom:40px;width:1px;background:linear-gradient(to bottom,var(--gold-border),transparent)}
+.step{display:flex;gap:16px;padding-bottom:22px}
+.step:last-child{padding-bottom:0}
+.step-num{width:40px;height:40px;border-radius:50%;background:var(--gold-dim);border:1.5px solid var(--gold-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--gold);position:relative;z-index:1}
+.step-body{flex:1;padding-top:8px}
+.step-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;margin-bottom:5px;color:var(--text)}
+.step-text{font-size:13.5px;color:var(--text2);line-height:1.65}
+.step-text b{color:var(--text);font-weight:600}
+.step-tip{display:flex;gap:8px;background:rgba(255,184,0,.07);border:1px solid var(--gold-border);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:12.5px;color:var(--text2);line-height:1.55}
+.tip-icon{flex-shrink:0;color:var(--gold);width:15px;height:15px;margin-top:1.5px}
+.tip-icon svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+code{font-family:monospace;background:rgba(255,184,0,.1);border:1px solid var(--gold-border);border-radius:4px;padding:1px 5px;font-size:11.5px;color:var(--gold)}
+
+/* Done badge */
+.done-badge{display:flex;align-items:center;gap:10px;background:rgba(61,255,138,.07);border:1px solid rgba(61,255,138,.2);border-radius:12px;padding:14px 16px;margin-top:24px}
+.done-icon{width:22px;height:22px;flex-shrink:0;color:#3DFF8A}
+.done-icon svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.done-text{font-size:13.5px;color:var(--text2);line-height:1.5}
+.done-text b{color:var(--text);font-weight:600}
+
+/* Support */
+.support-block{margin-top:40px;text-align:center;padding-top:32px;border-top:1px solid var(--gold-border)}
+.support-block p{font-size:13px;color:var(--text2);margin-bottom:16px}
+.support-btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;padding:13px 28px;border-radius:12px;text-decoration:none;box-shadow:0 4px 24px rgba(255,184,0,.25);transition:all .2s}
+.support-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <img src="/logo.png" alt="STAR VPN">
+      <span class="nav-logo-text">STAR VPN</span>
+    </a>
+    <div class="nav-links">
+      <a href="/tariffs">Тарифы</a>
+      <a href="/wiki">Wiki</a>
+      <a href="/login">Войти</a>
+    </div>
+    <a class="nav-back" href="/">← Назад</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>Как подключиться<br>к <span>STAR VPN</span></h1>
+    <p>Полное руководство по настройке. Следуй шагам для своего устройства — займёт не больше 3 минут.</p>
+  </div>
+
+  <!-- Platform picker -->
+  <div class="pick-label">Выбери своё устройство</div>
+
+  <div class="group-label"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>Телефон / планшет</div>
+  <div class="pick-grid">
+    <button class="pick-btn" onclick="showGuide('ios', this)">
+      <div class="pick-btn-icon"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg></div>
+      <div class="pick-btn-name">iPhone / iPad</div>
+      <div class="pick-btn-app">Happ</div>
+    </button>
+    <button class="pick-btn" onclick="showGuide('android', this)">
+      <div class="pick-btn-icon"><svg viewBox="0 0 24 24"><rect x="7" y="4" width="10" height="18" rx="2"/><line x1="11" y1="19" x2="13" y2="19"/><line x1="9" y1="4" x2="7.5" y2="2"/><line x1="15" y1="4" x2="16.5" y2="2"/></svg></div>
+      <div class="pick-btn-name">Android</div>
+      <div class="pick-btn-app">v2rayNG</div>
+    </button>
+  </div>
+
+  <div class="group-label"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><line x1="2" y1="19" x2="22" y2="19"/></svg>Компьютер</div>
+  <div class="pick-grid pick-grid-3">
+    <button class="pick-btn" onclick="showGuide('macos', this)">
+      <div class="pick-btn-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><line x1="2" y1="19" x2="22" y2="19"/></svg></div>
+      <div class="pick-btn-name">macOS</div>
+      <div class="pick-btn-app">V2Box</div>
+    </button>
+    <button class="pick-btn" onclick="showGuide('windows', this)">
+      <div class="pick-btn-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="1.5"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/></svg></div>
+      <div class="pick-btn-name">Windows</div>
+      <div class="pick-btn-app">v2rayN</div>
+    </button>
+    <button class="pick-btn" onclick="showGuide('linux', this)">
+      <div class="pick-btn-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 9l4 3-4 3"/><line x1="12" y1="15" x2="17" y2="15"/></svg></div>
+      <div class="pick-btn-name">Linux</div>
+      <div class="pick-btn-app">NekoRay</div>
+    </button>
+  </div>
+
+  <div class="group-label"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20l1.5-3M16 20l-1.5-3"/></svg>ТВ</div>
+  <div class="pick-grid">
+    <button class="pick-btn" onclick="showGuide('appletv', this)">
+      <div class="pick-btn-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20l1.5-3M16 20l-1.5-3"/></svg></div>
+      <div class="pick-btn-name">Apple TV</div>
+      <div class="pick-btn-app">Happ</div>
+    </button>
+    <button class="pick-btn" onclick="showGuide('androidtv', this)">
+      <div class="pick-btn-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20l1.5-3M16 20l-1.5-3"/></svg></div>
+      <div class="pick-btn-name">Смарт-ТВ</div>
+      <div class="pick-btn-app">Happ</div>
+    </button>
+  </div>
+
+  <!-- ── iOS ── -->
+  <div class="guide" id="guide-ios">
+    <div class="client-tabs">
+      <div class="client-tab selected" onclick="showClient('happ', this)">Happ</div>
+      <div class="client-tab" onclick="showClient('streisand', this)">Streisand</div>
+      <div class="client-tab" onclick="showClient('shadowrocket', this)">Shadowrocket</div>
+    </div>
+
+    <!-- Happ — бесплатно, проще всего -->
+    <div class="client-panel visible" id="client-happ">
+      <div class="app-dl-card">
+        <div class="app-dl-icon"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="3"/><line x1="9" y1="19" x2="15" y2="19"/></svg></div>
+        <div class="app-dl-info">
+          <div class="app-dl-name">Happ</div>
+          <div class="app-dl-meta">Бесплатно · проще всего · iOS 15+</div>
+        </div>
+        <a class="app-dl-btn" href="https://apps.apple.com/us/app/happ-proxy-utility/id6504287215" target="_blank">App Store ↗</a>
+      </div>
+      <div class="steps-title">Шаги подключения</div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <div class="step-title">Установи Happ из App Store</div>
+          <div class="step-text">Найди приложение по названию Happ и установи его как обычную программу.</div>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <div class="step-title">Скопируй ссылку подписки в боте</div>
+          <div class="step-text">В боте нажми <b>«Моя подписка»</b> и скопируй ссылку целиком, вместе с <code>https://</code>.</div>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <div class="step-title">Добавь подписку</div>
+          <div class="step-text">В Happ открой раздел добавления конфигурации и вставь ссылку. Приложение само загрузит список серверов.</div>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <div class="step-title">Разреши VPN-профиль</div>
+          <div class="step-text">При первом подключении iOS попросит добавить конфигурацию VPN — подтверди и введи код-пароль устройства.</div>
+        </div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-body">
+          <div class="step-title">Подключись</div>
+          <div class="step-text">Выбери сервер и нажми кнопку подключения. В строке состояния появится значок VPN.</div>
+        </div></div>
+      </div>
+      <div class="done-badge"><div class="done-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/></svg></div><div class="done-text"><b>Готово!</b> Ты защищён. Для проверки открой любой заблокированный сайт.</div></div>
+    </div>
+
+    <!-- Streisand — бесплатно, больше настроек -->
+    <div class="client-panel" id="client-streisand">
+      <div class="app-dl-card">
+        <div class="app-dl-icon"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="3"/><line x1="9" y1="19" x2="15" y2="19"/></svg></div>
+        <div class="app-dl-info">
+          <div class="app-dl-name">Streisand</div>
+          <div class="app-dl-meta">Бесплатно · больше настроек · iOS 15+</div>
+        </div>
+        <a class="app-dl-btn" href="https://apps.apple.com/app/id6450534064" target="_blank">App Store ↗</a>
+      </div>
+      <div class="steps-title">Шаги подключения</div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <div class="step-title">Скопируй ключ в боте</div>
+          <div class="step-text">В мини-приложении бота перейди в раздел <b>«Устройства»</b> → нажми на своё устройство → <b>«Ключ / QR»</b> → нажми <b>«Скопировать»</b>.</div>
+          <div class="step-tip"><span class="tip-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0012 2z"/></svg></span> Ключ начинается с <code>vless://</code> — он длинный, важно скопировать целиком.</div>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <div class="step-title">Установи Streisand</div>
+          <div class="step-text">Скачай приложение из App Store по кнопке выше и открой его.</div>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <div class="step-title">Добавь конфигурацию</div>
+          <div class="step-text">Нажми <b>«+»</b> → выбери <b>«Импорт из буфера обмена»</b>. Сервер появится в списке автоматически.</div>
+          <div class="step-tip"><span class="tip-icon"><svg viewBox="0 0 24 24"><path d="M12 9v4"/><line x1="12" y1="17" x2="12.01" y2="17"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></span> Если ничего не добавилось — убедись что ключ скопирован, и попробуй ещё раз.</div>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <div class="step-title">Разреши создание VPN</div>
+          <div class="step-text">iOS покажет запрос — нажми <b>«Разрешить»</b> и подтверди Face ID или пароль. Это нормально — так работает VPN на iPhone.</div>
+        </div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-body">
+          <div class="step-title">Нажми «Подключиться»</div>
+          <div class="step-text">Выбери добавленный сервер и переведи тумблер в положение <b>ВКЛ</b>. В статусной строке появится значок <b>VPN</b>.</div>
+        </div></div>
+      </div>
+      <div class="done-badge"><div class="done-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/></svg></div><div class="done-text"><b>Готово!</b> Ты защищён. Для проверки открой любой заблокированный сайт.</div></div>
+    </div>
+
+    <!-- Shadowrocket — платный, для опытных -->
+    <div class="client-panel" id="client-shadowrocket">
+      <div class="app-dl-card">
+        <div class="app-dl-icon"><svg viewBox="0 0 24 24"><path d="M12 2c3 2 5 6 5 10 0 2-1 4-2 5l-1 3-2-2-2 2-1-3c-1-1-2-3-2-5 0-4 2-8 5-10z"/><circle cx="12" cy="10" r="1.6"/><path d="M9 16l-3 1 1-3M15 16l3 1-1-3"/></svg></div>
+        <div class="app-dl-info">
+          <div class="app-dl-name">Shadowrocket</div>
+          <div class="app-dl-meta">Платно · для опытных · iOS 15+</div>
+        </div>
+        <a class="app-dl-btn" href="https://apps.apple.com/app/shadowrocket/id932747118" target="_blank">App Store ↗</a>
+      </div>
+      <div class="steps-title">Шаги подключения</div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><div class="step-body">
+          <div class="step-title">Купи и установи Shadowrocket</div>
+          <div class="step-text">Приложение платное; покупка происходит в App Store и к подписке STAR VPN отношения не имеет.</div>
+        </div></div>
+        <div class="step"><div class="step-num">2</div><div class="step-body">
+          <div class="step-title">Добавь подписку</div>
+          <div class="step-text">На главном экране нажми <b>«+»</b>, выбери тип <b>Subscribe</b> и вставь ссылку подписки из бота.</div>
+        </div></div>
+        <div class="step"><div class="step-num">3</div><div class="step-body">
+          <div class="step-title">Обнови список серверов</div>
+          <div class="step-text">Потяни список вниз — Shadowrocket загрузит актуальные конфигурации.</div>
+        </div></div>
+        <div class="step"><div class="step-num">4</div><div class="step-body">
+          <div class="step-title">Разреши VPN-профиль</div>
+          <div class="step-text">iOS запросит разрешение на добавление конфигурации VPN при первом включении.</div>
+        </div></div>
+        <div class="step"><div class="step-num">5</div><div class="step-body">
+          <div class="step-title">Выбери режим</div>
+          <div class="step-text">Для полного туннеля поставь <b>Global</b>. Режим <b>Config</b> подойдёт, если нужно пускать через VPN только часть сайтов.</div>
+        </div></div>
+      </div>
+      <div class="done-badge"><div class="done-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/></svg></div><div class="done-text"><b>Готово!</b> Ты защищён. Для проверки открой любой заблокированный сайт.</div></div>
+    </div>
+  </div>
+
+  <!-- ── Android ── -->
+  <div class="guide" id="guide-android">
+    <div class="app-dl-card">
+      <div class="app-dl-icon"><svg viewBox="0 0 24 24"><rect x="7" y="4" width="10" height="18" rx="2"/><line x1="11" y1="19" x2="13" y2="19"/><line x1="9" y1="4" x2="7.5" y2="2"/><line x1="15" y1="4" x2="16.5" y2="2"/></svg></div>
+      <div class="app-dl-info">
+        <div class="app-dl-name">v2rayNG</div>
+        <div class="app-dl-meta">Бесплатно · Android 5.0+</div>
+      </div>
+      <a class="app-dl-btn" href="https://play.google.com/store/apps/details?id=com.v2ray.ang" target="_blank">Google Play ↗</a>
+    </div>
+
+    <div class="steps-title">Шаги подключения</div>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Скопируй ключ в боте</div>
+          <div class="step-text">В мини-приложении бота → <b>«Устройства»</b> → своё устройство → <b>«Ключ / QR»</b> → <b>«Скопировать»</b>.</div>
+          <div class="step-tip"><span class="tip-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0012 2z"/></svg></span> Ключ начинается с <code>vless://</code> — копируй целиком.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Установи v2rayNG</div>
+          <div class="step-text">Скачай из Google Play по кнопке выше и открой приложение.</div>
+          <div class="step-tip"><span class="tip-icon"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L2 19l3 3 7.3-7.3a4 4 0 005.4-5.4l-2.8 2.8-2-2z"/></svg></span> Нет Google Play? Скачай APK с <a href="https://github.com/2dust/v2rayNG/releases" target="_blank" style="color:var(--gold)">GitHub</a> — файл <code>v2rayNG_*.apk</code>.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Импортируй конфигурацию</div>
+          <div class="step-text">Нажми <b>«+»</b> (нижний правый угол) → выбери <b>«Импорт конфигурации из буфера обмена»</b>. Сервер добавится в список.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Запусти VPN</div>
+          <div class="step-text">Нажми кнопку <b>▶</b> в центре. Android спросит разрешение — нажми <b>«ОК»</b>. В шторке появится значок ключа <svg viewBox="0 0 24 24" width="14" height="14" style="display:inline-block;vertical-align:-2px" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M14 9l2 2"/></svg> — VPN активен.</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="done-badge">
+      <div class="done-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/></svg></div>
+      <div class="done-text"><b>Готово!</b> Проверь на <a href="https://2ip.ru" target="_blank" style="color:var(--gold)">2ip.ru</a> — IP должен измениться.</div>
+    </div>
+  </div>
+
+  <!-- ── Windows ── -->
+  <div class="guide" id="guide-windows">
+    <div class="app-dl-card">
+      <div class="app-dl-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="1.5"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/></svg></div>
+      <div class="app-dl-info">
+        <div class="app-dl-name">v2rayN</div>
+        <div class="app-dl-meta">Бесплатно · Windows 10 / 11</div>
+      </div>
+      <a class="app-dl-btn" href="https://github.com/2dust/v2rayN/releases/latest" target="_blank">GitHub ↗</a>
+    </div>
+
+    <div class="steps-title">Шаги подключения</div>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Скачай архив с ядром</div>
+          <div class="step-text">На странице GitHub найди и скачай файл <b><code>v2rayN-with-core.zip</code></b> — он уже содержит всё необходимое.</div>
+          <div class="step-tip"><span class="tip-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0012 2z"/></svg></span> Именно <code>-with-core.zip</code>, не просто <code>v2rayN.zip</code>.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Распакуй и запусти</div>
+          <div class="step-text">Распакуй в любую папку (например <code>C:\STARVPN\</code>) и запусти <b><code>v2rayN.exe</code></b>. Программа появится в системном трее рядом с часами.</div>
+          <div class="step-tip"><span class="tip-icon"><svg viewBox="0 0 24 24"><path d="M12 9v4"/><line x1="12" y1="17" x2="12.01" y2="17"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></span> Если Windows предупредит о неизвестном файле — нажми «Подробнее» → «Запустить». Это нормально.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Скопируй ключ в боте</div>
+          <div class="step-text">В мини-приложении → <b>«Устройства»</b> → своё Windows-устройство → <b>«Ключ / QR»</b> → <b>«Скопировать»</b>.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Добавь сервер</div>
+          <div class="step-text">В окне v2rayN: меню <b>«Серверы»</b> → <b>«Импорт URL из буфера обмена»</b>. Сервер STAR VPN появится в списке.</div>
+          <div class="step-tip"><span class="tip-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0012 2z"/></svg></span> Можно нажать <code>Ctrl+V</code> прямо в главном окне — работает так же.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">Включи VPN</div>
+          <div class="step-text">Выбери добавленный сервер → нажми <b>«Запустить»</b>. Затем кликни иконку в трее → <b>«Системный прокси»</b> → <b>«Авто-настройка»</b>. Готово.</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="done-badge">
+      <div class="done-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/></svg></div>
+      <div class="done-text"><b>Готово!</b> Весь трафик идёт через STAR VPN. Проверь на <a href="https://2ip.ru" target="_blank" style="color:var(--gold)">2ip.ru</a>.</div>
+    </div>
+  </div>
+
+  <!-- ── macOS ── -->
+  <div class="guide" id="guide-macos">
+    <div class="app-dl-card">
+      <div class="app-dl-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><line x1="2" y1="19" x2="22" y2="19"/></svg></div>
+      <div class="app-dl-info">
+        <div class="app-dl-name">V2Box</div>
+        <div class="app-dl-meta">Бесплатно · macOS 12+ · M1/M2/Intel</div>
+      </div>
+      <a class="app-dl-btn" href="https://apps.apple.com/app/id6446814690" target="_blank">Mac App Store ↗</a>
+    </div>
+
+    <div class="steps-title">Шаги подключения</div>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Скопируй ключ в боте</div>
+          <div class="step-text">В мини-приложении → <b>«Устройства»</b> → своё macOS-устройство → <b>«Ключ / QR»</b> → <b>«Скопировать»</b>.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Установи V2Box</div>
+          <div class="step-text">Скачай из Mac App Store по кнопке выше и открой. Приложение появится в строке меню вверху экрана.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Добавь конфигурацию</div>
+          <div class="step-text">Нажми иконку V2Box в строке меню → <b>«Profiles»</b> → <b>«+»</b> → <b>«Import from clipboard»</b>. Профиль добавится автоматически.</div>
+          <div class="step-tip"><span class="tip-icon"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0012 2z"/></svg></span> macOS попросит пароль для добавления VPN-профиля — это нормально, введи пароль компьютера.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Подключись</div>
+          <div class="step-text">Выбери добавленный профиль и нажми <b>«Connect»</b>. Иконка в menubar изменится — VPN активен.</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="done-badge">
+      <div class="done-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/></svg></div>
+      <div class="done-text"><b>Готово!</b> Весь трафик Mac защищён и зашифрован через STAR VPN.</div>
+    </div>
+  </div>
+
+  <!-- ── Linux ── -->
+  <div class="guide" id="guide-linux">
+    <div class="app-dl-card">
+      <div class="app-dl-icon"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 9l4 3-4 3"/><line x1="12" y1="15" x2="17" y2="15"/></svg></div>
+      <div class="app-dl-info">
+        <div class="app-dl-name">NekoRay</div>
+        <div class="app-dl-meta">Бесплатно · AppImage, любой дистрибутив</div>
+      </div>
+      <a class="app-dl-btn" href="https://github.com/MatsuriDayo/nekoray/releases/latest" target="_blank">GitHub ↗</a>
+    </div>
+
+    <div class="steps-title">Шаги подключения</div>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Скачай NekoRay</div>
+          <div class="step-text">На странице GitHub скачай файл <code>*.AppImage</code> (или архив <code>linux64.zip</code> для своего дистрибутива).</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Сделай файл исполняемым и запусти</div>
+          <div class="step-text">В терминале: <code>chmod +x NekoRay*.AppImage</code>, затем запусти файл двойным кликом или из терминала.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Скопируй ключ в боте</div>
+          <div class="step-text">В мини-приложении → <b>«Устройства»</b> → своё Linux-устройство → <b>«Ключ / QR»</b> → <b>«Скопировать»</b>.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Добавь профиль из буфера обмена</div>
+          <div class="step-text">В NekoRay: меню <b>«Program»</b> → <b>«Add profile from clipboard»</b>. Сервер STAR VPN появится в списке профилей.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">Включи VPN</div>
+          <div class="step-text">Выбери профиль двойным кликом, затем включи режим <b>«System Proxy»</b> или <b>«TUN Mode»</b> в верхней панели.</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="done-badge">
+      <div class="done-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/></svg></div>
+      <div class="done-text"><b>Готово!</b> Проверь на <a href="https://2ip.ru" target="_blank" style="color:var(--gold)">2ip.ru</a> — IP должен измениться.</div>
+    </div>
+  </div>
+
+  <!-- ── Apple TV ── -->
+  <div class="guide" id="guide-appletv">
+    <div class="app-dl-card">
+      <div class="app-dl-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20l1.5-3M16 20l-1.5-3"/></svg></div>
+      <div class="app-dl-info">
+        <div class="app-dl-name">Happ</div>
+        <div class="app-dl-meta">Бесплатно · tvOS</div>
+      </div>
+      <a class="app-dl-btn" href="https://apps.apple.com/app/happ-proxy-utility/id6504287215" target="_blank">App Store ↗</a>
+    </div>
+
+    <div class="steps-title">Шаги подключения</div>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Установи Happ на Apple TV</div>
+          <div class="step-text">На самом Apple TV: App Store → найди <b>Happ</b> → установи.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Скопируй ссылку-подписку</div>
+          <div class="step-text">На телефоне, в мини-приложении бота → <b>«Устройства»</b> → своё ТВ-устройство → <b>«Ключ / QR»</b> → используй ссылку-подписку (не одиночный ключ) — так проще ввести на пульте.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Добавь подписку в Happ</div>
+          <div class="step-text">В Happ на Apple TV: <b>«Добавить сервер»</b> → <b>«Добавить подписку»</b> → введи ссылку с пульта (или, если поддерживается, отсканируй QR-код с экрана телефона).</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Подключись</div>
+          <div class="step-text">Выбери сервер «STAR VPN» и нажми <b>«Подключиться»</b>.</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="done-badge">
+      <div class="done-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/></svg></div>
+      <div class="done-text"><b>Готово!</b> Трафик Apple TV идёт через STAR VPN.</div>
+    </div>
+  </div>
+
+  <!-- ── Смарт-ТВ / Android TV ── -->
+  <div class="guide" id="guide-androidtv">
+    <div class="app-dl-card">
+      <div class="app-dl-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20l1.5-3M16 20l-1.5-3"/></svg></div>
+      <div class="app-dl-info">
+        <div class="app-dl-name">Happ</div>
+        <div class="app-dl-meta">Бесплатно · Android TV</div>
+      </div>
+      <a class="app-dl-btn" href="https://play.google.com/store/apps/details?id=com.happproxy" target="_blank">Google Play ↗</a>
+    </div>
+
+    <div class="steps-title">Шаги подключения</div>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Установи Happ на ТВ</div>
+          <div class="step-text">На самом телевизоре: Google Play (или магазин приложений вашей ТВ-платформы) → найди <b>Happ</b> → установи.</div>
+          <div class="step-tip"><span class="tip-icon"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 00-5.4 5.4L2 19l3 3 7.3-7.3a4 4 0 005.4-5.4l-2.8 2.8-2-2z"/></svg></span> Нет Google Play на ТВ? Скачай APK с <a href="https://github.com/Happ-proxy/happ-android/releases" target="_blank" style="color:var(--gold)">GitHub</a> и установи через флешку или файловый менеджер ТВ.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Скопируй ссылку-подписку</div>
+          <div class="step-text">На телефоне, в мини-приложении бота → <b>«Устройства»</b> → своё ТВ-устройство → <b>«Ключ / QR»</b> → используй ссылку-подписку — её проще ввести с пульта, чем длинный ключ.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Добавь подписку в Happ</div>
+          <div class="step-text">В Happ на ТВ: <b>«Добавить сервер»</b> → <b>«Добавить подписку»</b> → введи ссылку с пульта (или отсканируй QR-код телефоном, если Happ на вашей ТВ это поддерживает).</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Подключись</div>
+          <div class="step-text">Выбери сервер «STAR VPN» и нажми <b>«Подключиться»</b>.</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="done-badge">
+      <div class="done-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/></svg></div>
+      <div class="done-text"><b>Готово!</b> Трафик ТВ идёт через STAR VPN.</div>
+    </div>
+  </div>
+
+  <!-- Support -->
+  <div class="support-block">
+    <p>Что-то не получилось? Напишем и поможем настроить за 5 минут.</p>
+    <a class="support-btn" href="https://t.me/starisvpnbot"><svg viewBox="0 0 24 24" width="14" height="14" style="display:inline-block;vertical-align:-2px;margin-right:2px" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 6l10 7 10-7"/></svg>Написать в поддержку</a>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-links">
+    <a href="https://t.me/starisvpnbot">@starisvpnbot</a>
+    <a href="/tariffs.html">Тарифы</a>
+    <a href="/wiki.html">Wiki</a>
+    <a href="/privacy.html">Конфиденциальность</a>
+    <a href="/terms.html">Условия</a>
+    <a href="https://t.me/hashprojects">Поддержка</a>
+  </div>
+  <div class="footer-copy">© 2026 STAR VPN · VLESS Reality · Zero Logs</div>
+</footer>
+
+<script>
+function showGuide(id, btn) {
+  // Buttons
+  document.querySelectorAll('.pick-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  // Guides
+  document.querySelectorAll('.guide').forEach(g => g.classList.remove('visible'));
+  document.getElementById('guide-' + id).classList.add('visible');
+  // Scroll to guide
+  setTimeout(() => {
+    document.getElementById('guide-' + id).scrollIntoView({behavior:'smooth', block:'start'});
+  }, 50);
+}
+
+function showClient(id, tab) {
+  tab.closest('.client-tabs').querySelectorAll('.client-tab').forEach(t => t.classList.remove('selected'));
+  tab.classList.add('selected');
+  const guide = tab.closest('.guide');
+  guide.querySelectorAll('.client-panel').forEach(p => p.classList.remove('visible'));
+  guide.querySelector('#client-' + id).classList.add('visible');
+}
+
+// Starfield
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  let stars=[], W, H;
+  function resize(){ W=c.width=window.innerWidth; H=c.height=window.innerHeight; }
+  function init(){
+    stars=[];
+    for(let i=0;i<90;i++) stars.push({x:Math.random()*W, y:Math.random()*H, r:Math.random()*.9+.2, a:Math.random()*.45+.1, d:(Math.random()*.003+.001)*(Math.random()<.5?1:-1)});
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(s=>{
+      s.a+=s.d; if(s.a>.6||s.a<.07) s.d*=-1;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(255,184,0,${s.a*.4})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  resize(); init(); draw();
+  window.addEventListener('resize',()=>{resize();init();});
+})();
+</script>
+</body>
+</html>
