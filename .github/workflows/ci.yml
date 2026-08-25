@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  python:
+    name: Python — ruff + pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r bot/requirements.txt ruff mypy pytest
+
+      - name: Ruff
+        run: ruff check .
+
+      - name: Pytest
+        run: pytest
+
+      - name: Mypy (информационно)
+        # Не блокирует сборку: в коде есть известный запас необработанных
+        # Optional-веток (см. docs/CODE_QUALITY.md). Вывод виден в логе,
+        # чтобы новые ошибки типов не терялись.
+        continue-on-error: true
+        run: mypy
+
+  webapp:
+    name: Mini App — eslint + актуальность app.html
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: webapp/package-lock.json
+
+      - name: Install dependencies
+        working-directory: webapp
+        run: npm ci --no-audit --no-fund
+
+      - name: ESLint
+        working-directory: webapp
+        run: npm run lint
+
+      - name: Собрать Mini App
+        working-directory: webapp
+        run: npm run build
+
+      - name: app.html совпадает со сборкой src/
+        working-directory: webapp
+        # webapp/app.html — это то, что реально отдаётся по /app при
+        # запуске без Docker. Файл коммитится руками, поэтому легко забыть
+        # пересобрать его после правки src/ — проверка ловит именно это.
+        run: |
+          if ! diff -q dist/index.html app.html > /dev/null; then
+            echo "::error file=webapp/app.html::app.html отстал от webapp/src/."
+            echo "Выполни:  cd webapp && npm run build:app  — и закоммить app.html."
+            exit 1
+          fi
+          echo "app.html актуален."
+
+  docker:
+    name: Docker — образ собирается
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        # Ловит поломки вида «в Dockerfile COPY на удалённую папку»:
+        # именно так сайт и админка однажды выпали из образа.
+        run: docker build -f bot/Dockerfile -t starvpn-bot:ci .

@@ -1,0 +1,14 @@
+# Контекст сборки — корень репозитория; всё лишнее сюда тащить не нужно.
+.git
+.github
+**/node_modules
+webapp/dist
+tests
+docs
+.env
+*.md
+__pycache__
+*.py[cod]
+.ruff_cache
+.mypy_cache
+.pytest_cache
