@@ -142,6 +142,14 @@ Mini App: `http://localhost:8080/app` (нужен собранный `webapp/app
 Xray Reality-ключи, поднимает `docker compose`). `infra/nginx.conf` —
 шаблон реверс-прокси HTTPS → `127.0.0.1:8080`.
 
+**Доступ к серверу по SSH с мака** (вместо браузерной консоли FirstVDS) —
+`docs/SERVER_ACCESS.md`. Автоматическая настройка ключа и алиаса `starvpn`:
+
+```bash
+bash scripts/mac-setup-ssh.sh    # запускать на маке
+ssh starvpn                       # после этого — вход одной командой
+```
+
 ---
 
 ## Прочее
