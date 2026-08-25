@@ -1,9 +1,10 @@
-version: "3.9"
-
 # ─────────────────────────────────────────────
 #  STAR VPN — Docker Compose
 #  Services: bot | db
-#  NOTE: Marzban runs separately in /opt/marzban
+#  NOTE: Marzban + Xray-core живут ОТДЕЛЬНО в /opt/marzban со своим
+#        docker-compose (ставится штатным установщиком Marzban) и в этот
+#        файл намеренно не включены: свой жизненный цикл и свои апдейты.
+#        Бот ходит в его API по MARZBAN_URL из .env.
 # ─────────────────────────────────────────────
 
 services:
@@ -34,7 +35,9 @@ services:
     restart: unless-stopped
     env_file: ../.env
     ports:
-      - "8080:8080"   # Mini App API → Netlify proxy
+      # Только loopback: наружу порт отдаёт nginx (infra/nginx.conf) по HTTPS.
+      # Публикация на 0.0.0.0 открыла бы сайт и API по голому HTTP мимо TLS.
+      - "127.0.0.1:8080:8080"
     depends_on:
       db:
         condition: service_healthy
