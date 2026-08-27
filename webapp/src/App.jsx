@@ -24,8 +24,6 @@ import InstructionsSheet from "./sheets/InstructionsSheet.jsx";
 
 import * as api from "./data/mockApi.js";
 import {
-  server,
-  speedValue,
   referral,
   daysHistoryInitial,
   account,
@@ -105,7 +103,6 @@ export default function App() {
 
   // mutable app state (mock, no backend yet)
   const [daysHistory, setDaysHistory] = useState(daysHistoryInitial);
-  const [autoServer, setAutoServer] = useState(true);
   const [trialActivating, setTrialActivating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -296,6 +293,15 @@ export default function App() {
     setSubSheet({ name: device.name, subUrl: sub_url });
   };
 
+  // Копирование прямо с главной: шторку не открываем, ключ берём тем же
+  // вызовом, что и для QR.
+  const copyKeyFromHome = async (device) => {
+    haptic("light");
+    const { link } = await api.getDeviceLink(device.id);
+    navigator.clipboard?.writeText(link).catch(() => {});
+    showToast("✅ Ключ скопирован");
+  };
+
   const copyDeviceLink = () => {
     navigator.clipboard?.writeText(linkSheet.link).catch(() => {});
     showToast("✅ Ссылка скопирована!");
@@ -325,11 +331,6 @@ export default function App() {
       navigator.clipboard?.writeText(link).catch(() => {});
       showToast("Ссылка скопирована");
     }
-  };
-
-  const toggleAutoServer = () => {
-    haptic("light");
-    setAutoServer((v) => !v);
   };
 
   const logout = () => {
@@ -393,11 +394,12 @@ export default function App() {
           {activeTab === "home" && (
             <HomeScreen
               subscription={subscription}
-              server={server}
-              speedValue={speedValue}
+              devices={devices}
+              devicesLimit={maxDevices}
               trafficUsedTotal={totalTrafficGb.toFixed(1)}
-              autoServer={autoServer}
-              onToggleAutoServer={toggleAutoServer}
+              onShowKey={showDeviceLink}
+              onCopyKey={copyKeyFromHome}
+              onAddDevice={openAddDevice}
               onOpenRenew={openRenew}
               onOpenGift={openGift}
               onActivateTrial={activateTrial}

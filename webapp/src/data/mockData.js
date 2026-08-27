@@ -2,14 +2,14 @@
 // No backend calls yet — this feeds the fully interactive frontend
 // until the real API (bot/api.py) is wired in.
 
+// Локация приходит из /api/me (server_flag / server_city / server_protocol).
+// Пинг и скорость отсюда удалены: мини-апп не держит туннель и измерить их
+// не может — раньше это были константы 34 и "184".
 export const server = {
   flag: "🇳🇱",
-  name: "Амстердам #2",
-  ping: 34,
-  protocol: "VLESS Reality",
+  city: "Амстердам",
+  protocol: "VLESS + Reality",
 };
-
-export const speedValue = "184";
 
 export const referral = {
   code: "STAR-9X4K2",

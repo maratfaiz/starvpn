@@ -1,18 +1,60 @@
-import { StarIcon, BoltIcon, GiftIcon, LocationIcon } from "../components/icons.jsx";
+import { StarIcon, BoltIcon, GiftIcon } from "../components/icons.jsx";
+
+const stroke = {
+  fill: "none",
+  strokeWidth: 1.7,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+};
+
+const KeyIcon = ({ size = 17 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" stroke="#FFB800" {...stroke}>
+    <circle cx="7.5" cy="15.5" r="4" />
+    <path d="M10.5 12.5L20 3M17 6l2.5 2.5M14.5 8.5L17 11" />
+  </svg>
+);
+
+const QrIcon = ({ size = 15 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" stroke="#FFB800" {...stroke}>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <path d="M14 14h3v3h-3zM20 14v1M14 20h3M20 19v2" />
+  </svg>
+);
+
+const CopyIcon = ({ size = 15 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" stroke="#EBE0CC" {...stroke}>
+    <rect x="9" y="9" width="11" height="11" rx="2" />
+    <path d="M5 15V5a2 2 0 012-2h10" />
+  </svg>
+);
+
+const PlusIcon = ({ size = 15 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" stroke="#FFB800" {...stroke} strokeWidth={2.2}>
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
 
 export default function HomeScreen({
   subscription,
-  server,
-  speedValue,
+  devices,
+  devicesLimit,
   trafficUsedTotal,
-  autoServer,
-  onToggleAutoServer,
+  onShowKey,
+  onCopyKey,
+  onAddDevice,
   onOpenRenew,
   onOpenGift,
   onActivateTrial,
   trialActivating,
 }) {
   const active = subscription.active;
+  // Ключ показываем для первого слота — он же используется чаще всего.
+  // Остальные устройства живут на вкладке «Устройства».
+  const primary = devices[0] || null;
+  const slotsLeft = devicesLimit - devices.length;
   const percentPassed = active
     ? Math.round(((subscription.totalDays - subscription.daysLeft) / subscription.totalDays) * 100)
     : 0;
@@ -62,34 +104,73 @@ export default function HomeScreen({
         </div>
       </div>
 
-      {/* server + quick stats bento */}
+      {/* Ключ и подключение — то, что нужно сразу после оплаты.
+          Раньше здесь стояли карточка сервера с пингом, кнопка «Сменить»
+          и спидометр: ни пинг, ни скорость приложение измерить не может,
+          а второго сервера и эндпоинта смены не существует. */}
       {active && (
-        <div className="grid grid-cols-[1.3fr_1fr] grid-rows-2 gap-2.5">
-          <div className="row-span-2 bg-app-card border border-white/[.06] rounded-[18px] p-4 flex flex-col justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm">{server.flag}</span>
-              <span className="font-semibold text-xs text-ink/50">текущий сервер</span>
-            </div>
-            <div>
-              <div className="font-display font-bold text-base text-ink">{server.name}</div>
-              <div className="font-medium text-[11.5px] text-ink/40 mt-0.5">
-                {server.ping} мс · {server.protocol}
+        <>
+          {primary ? (
+            <div className="bg-app-card border border-white/[.06] rounded-[18px] p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-[11px] tracking-[.14em] uppercase text-ink/40">
+                  Ваш ключ
+                </span>
+                <span className="font-medium text-[11.5px] text-ink/35">
+                  {devices.length} из {devicesLimit} устройств
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-[11px] bg-white/[.05] flex items-center justify-center flex-shrink-0">
+                  <KeyIcon />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-[13.5px] text-ink truncate">{primary.name}</div>
+                  <div className="font-medium text-[11.5px] text-ink/40">слот {primary.slot}</div>
+                </div>
+              </div>
+
+              <div className="flex gap-2.5">
+                <button
+                  onClick={() => onShowKey(primary)}
+                  className="flex-1 py-3 rounded-[14px] bg-gold/[.10] border border-gold/30 flex items-center justify-center gap-2"
+                >
+                  <QrIcon />
+                  <span className="font-display font-bold text-[13px] text-gold">Показать QR</span>
+                </button>
+                <button
+                  onClick={() => onCopyKey(primary)}
+                  className="flex-1 py-3 rounded-[14px] bg-white/[.05] border border-white/[.08] flex items-center justify-center gap-2"
+                >
+                  <CopyIcon />
+                  <span className="font-display font-bold text-[13px] text-ink/75">Копировать</span>
+                </button>
               </div>
             </div>
-            <span className="font-display font-bold text-xs text-gold">Сменить →</span>
-          </div>
-          <div className="bg-app-card border border-white/[.06] rounded-[18px] p-3.5">
-            <div className="font-display font-extrabold text-[22px] text-ink">{speedValue}</div>
-            <div className="font-medium text-[10.5px] text-ink/40 mt-0.5">Мбит/с сейчас</div>
-          </div>
-          <div className="bg-app-card border border-white/[.06] rounded-[18px] p-3.5">
-            <div className="font-display font-extrabold text-[22px] text-ink">
+          ) : (
+            /* Подписка есть, а устройств нет — самый важный момент:
+               человеку нужен первый ключ, всё остальное подождёт. */
+            <button
+              onClick={onAddDevice}
+              className="rounded-[18px] border-[1.5px] border-gold/40 bg-gold/[.07] px-4 py-5 flex flex-col items-center gap-2"
+            >
+              <QrIcon size={26} />
+              <span className="font-display font-bold text-[15px] text-gold">Подключить устройство</span>
+              <span className="font-medium text-[12px] text-ink/45 text-center">
+                Получи ключ и вставь его в VPN-клиент
+              </span>
+            </button>
+          )}
+
+          <div className="flex items-center justify-between px-4 py-3 bg-app-card border border-white/[.06] rounded-2xl">
+            <span className="font-medium text-[12.5px] text-ink/50">Трафик за месяц</span>
+            <span className="font-display font-bold text-[14px] text-ink">
               {trafficUsedTotal}
-              <span className="text-[13px] text-ink/40"> ГБ</span>
-            </div>
-            <div className="font-medium text-[10.5px] text-ink/40 mt-0.5">за этот месяц</div>
+              <span className="text-[11.5px] text-ink/40"> ГБ</span>
+            </span>
           </div>
-        </div>
+        </>
       )}
 
       <div className="flex gap-2.5">
@@ -109,6 +190,18 @@ export default function HomeScreen({
         </button>
       </div>
 
+      {active && primary && slotsLeft > 0 && (
+        <button
+          onClick={onAddDevice}
+          className="border-[1.5px] border-dashed border-gold/35 py-3.5 rounded-2xl bg-gold/[.05] flex items-center justify-center gap-2"
+        >
+          <PlusIcon />
+          <span className="font-display font-bold text-[13.5px] text-gold">
+            Подключить ещё устройство
+          </span>
+        </button>
+      )}
+
       {showTrialCard && (
         <div className="rounded-2xl border border-gold/40 bg-app-card text-center px-4 py-5">
           <div className="text-[28px] mb-2">🎁</div>
@@ -127,30 +220,6 @@ export default function HomeScreen({
         </div>
       )}
 
-      {active && (
-        <div className="flex items-center justify-between px-4 py-3.5 bg-app-card border border-white/[.06] rounded-2xl">
-          <div className="flex items-center gap-2.5">
-            <div className="w-[34px] h-[34px] rounded-[10px] bg-white/[.05] flex items-center justify-center">
-              <LocationIcon />
-            </div>
-            <div>
-              <div className="font-medium text-[13px] text-ink">Авто-выбор сервера</div>
-              <div className="font-medium text-[11px] text-ink/40">Подключает самый быстрый узел</div>
-            </div>
-          </div>
-          <button
-            onClick={onToggleAutoServer}
-            className="w-[42px] h-6 rounded-full relative flex-shrink-0"
-            style={{ background: autoServer ? "linear-gradient(135deg,#FFB800,#D99B00)" : "rgba(255,255,255,.1)" }}
-            aria-pressed={autoServer}
-          >
-            <div
-              className="absolute top-0.5 w-5 h-5 rounded-full bg-[#1A1408] transition-all"
-              style={{ left: autoServer ? "20px" : "2px" }}
-            />
-          </button>
-        </div>
-      )}
     </div>
   );
 }
