@@ -1,7 +1,7 @@
 import BottomSheet from "../components/BottomSheet.jsx";
 import { BoltIcon, StarIcon, CheckIcon } from "../components/icons.jsx";
 
-const CardIcon = ({ size = 14, color = "#5FD068" }) => (
+const CardIcon = ({ size = 14, color = "#4ADE80" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="5" width="20" height="14" rx="2" />
     <line x1="2" y1="10" x2="22" y2="10" />
@@ -38,7 +38,7 @@ export default function RenewSheet({
       <BottomSheet open={open} onClose={onClose} maxHeight="82%">
         <div className="flex flex-col items-center text-center pt-5 pb-1.5">
           <div className="w-16 h-16 rounded-full bg-success/[.12] border border-success/30 flex items-center justify-center mb-4">
-            <CheckIcon size={28} color="#2ED9A6" />
+            <CheckIcon size={28} color="#4ADE80" />
           </div>
           <div className="font-display font-extrabold text-[17px] text-ink">Подписка продлена!</div>
           <div className="font-medium text-[13.5px] text-ink/45 mt-1.5 max-w-[260px]">
@@ -59,7 +59,7 @@ export default function RenewSheet({
     <BottomSheet open={open} onClose={onClose} maxHeight="86%">
       <div className="flex items-center justify-between mb-4 -mt-1">
         <div className="flex items-center gap-2">
-          <BoltIcon size={18} color="#F7CE68" />
+          <BoltIcon size={18} color="#FFB800" />
           <span className="font-display font-extrabold text-base text-ink">Продлить подписку</span>
         </div>
       </div>
@@ -68,16 +68,16 @@ export default function RenewSheet({
         <button
           onClick={() => onSelectMethod("stars")}
           className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-display font-semibold text-[12.5px]"
-          style={{ background: method === "stars" ? "rgba(247,206,104,.14)" : "transparent", color: method === "stars" ? "#F7CE68" : "rgba(245,243,238,.5)" }}
+          style={{ background: method === "stars" ? "rgba(255,184,0,.14)" : "transparent", color: method === "stars" ? "#FFB800" : "rgba(235,224,204,.5)" }}
         >
-          <StarIcon size={12} color={method === "stars" ? "#F7CE68" : "rgba(245,243,238,.5)"} /> Stars
+          <StarIcon size={12} color={method === "stars" ? "#FFB800" : "rgba(235,224,204,.5)"} /> Stars
         </button>
         <button
           onClick={() => onSelectMethod("card")}
           className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-display font-semibold text-[12.5px]"
-          style={{ background: method === "card" ? "rgba(95,208,104,.14)" : "transparent", color: method === "card" ? "#5FD068" : "rgba(245,243,238,.5)" }}
+          style={{ background: method === "card" ? "rgba(95,208,104,.14)" : "transparent", color: method === "card" ? "#4ADE80" : "rgba(235,224,204,.5)" }}
         >
-          <CardIcon size={12} color={method === "card" ? "#5FD068" : "rgba(245,243,238,.5)"} /> Карта ₽
+          <CardIcon size={12} color={method === "card" ? "#4ADE80" : "rgba(235,224,204,.5)"} /> Карта ₽
         </button>
       </div>
 
@@ -90,8 +90,8 @@ export default function RenewSheet({
               onClick={() => onSelectPlan(p.id)}
               className="relative flex items-center justify-between px-4 py-[15px] rounded-2xl"
               style={{
-                background: selected ? "rgba(247,206,104,.1)" : "#12151C",
-                border: `1.5px solid ${selected ? "rgba(247,206,104,.5)" : "rgba(255,255,255,.06)"}`,
+                background: selected ? "rgba(255,184,0,.1)" : "#0D0C0A",
+                border: `1.5px solid ${selected ? "rgba(255,184,0,.5)" : "rgba(255,255,255,.06)"}`,
               }}
             >
               {p.popular && (
@@ -110,7 +110,7 @@ export default function RenewSheet({
                     <span className="font-display font-extrabold text-base text-gold">{p.price}</span>
                   </>
                 ) : (
-                  <span className="font-display font-extrabold text-base text-[#5FD068]">{p.rub} ₽</span>
+                  <span className="font-display font-extrabold text-base text-[#4ADE80]">{p.rub} ₽</span>
                 )}
               </div>
             </button>
@@ -121,8 +121,8 @@ export default function RenewSheet({
           onClick={() => onSelectPlan("custom")}
           className="relative flex items-center justify-between px-4 py-[15px] rounded-2xl"
           style={{
-            background: isCustom ? "rgba(247,206,104,.1)" : "#12151C",
-            border: `1.5px solid ${isCustom ? "rgba(247,206,104,.5)" : "rgba(255,255,255,.06)"}`,
+            background: isCustom ? "rgba(255,184,0,.1)" : "#0D0C0A",
+            border: `1.5px solid ${isCustom ? "rgba(255,184,0,.5)" : "rgba(255,255,255,.06)"}`,
           }}
         >
           <div className="text-left">
@@ -136,7 +136,7 @@ export default function RenewSheet({
                 <span className="font-display font-extrabold text-base text-gold">{customStars}</span>
               </>
             ) : (
-              <span className="font-display font-extrabold text-base text-[#5FD068]">{customRub} ₽</span>
+              <span className="font-display font-extrabold text-base text-[#4ADE80]">{customRub} ₽</span>
             )}
           </div>
         </button>
@@ -167,7 +167,7 @@ export default function RenewSheet({
       <button
         onClick={onSubmit}
         className="w-full mt-[18px] border-none py-4 rounded-2xl flex items-center justify-center gap-2"
-        style={{ background: method === "stars" ? "linear-gradient(135deg,#F7CE68,#C9962F)" : "linear-gradient(135deg,#5FD068,#3AA84A)" }}
+        style={{ background: method === "stars" ? "linear-gradient(135deg,#FFB800,#D99B00)" : "linear-gradient(135deg,#4ADE80,#2F9E58)" }}
       >
         {method === "stars" ? (
           <>
@@ -176,8 +176,8 @@ export default function RenewSheet({
           </>
         ) : (
           <>
-            <CardIcon size={14} color="#0A0D13" />
-            <span className="font-display font-bold text-[15px] text-[#0A0D13]">Оплатить {selectedPlan.rub} ₽</span>
+            <CardIcon size={14} color="#0A0908" />
+            <span className="font-display font-bold text-[15px] text-[#0A0908]">Оплатить {selectedPlan.rub} ₽</span>
           </>
         )}
       </button>

@@ -32,7 +32,7 @@ export default function SettingsSheet({
               <span className="font-medium text-[13.5px] text-ink">{t.label}</span>
               <div
                 className="w-10 h-[23px] rounded-full relative"
-                style={{ background: t.on ? "linear-gradient(135deg,#F7CE68,#C9962F)" : "rgba(255,255,255,.1)" }}
+                style={{ background: t.on ? "linear-gradient(135deg,#FFB800,#D99B00)" : "rgba(255,255,255,.1)" }}
               >
                 <div
                   className="absolute top-0.5 w-[19px] h-[19px] rounded-full bg-[#1A1408] transition-all"

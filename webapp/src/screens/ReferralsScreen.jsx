@@ -2,14 +2,14 @@ import { StarIcon, ShareIcon } from "../components/icons.jsx";
 
 const HISTORY_ICON = {
   referral: (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F7CE68" strokeWidth="2">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFB800" strokeWidth="2">
       <circle cx="9" cy="8" r="3.2" />
       <path d="M2.5 19c0-3.2 2.9-5.5 6.5-5.5s6.5 2.3 6.5 5.5" />
     </svg>
   ),
   bonus: <StarIcon size={14} />,
   purchase: (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F7CE68" strokeWidth="2">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFB800" strokeWidth="2">
       <path d="M13 2L3 14h7l-1 8 11-13h-7l1-7z" />
     </svg>
   ),
@@ -18,7 +18,7 @@ const HISTORY_ICON = {
 export default function ReferralsScreen({ referral, daysHistory, copied, onCopyCode, onShare }) {
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative rounded-3xl p-[22px] overflow-hidden border border-gold/30 bg-[linear-gradient(160deg,#1A1408_0%,#13161D_60%)]">
+      <div className="relative rounded-3xl p-[22px] overflow-hidden border border-gold/30 bg-[linear-gradient(160deg,#1A1408_0%,#100E0A_60%)]">
         <StarIcon size={10} className="absolute top-4 right-5 animate-[starTwinkle_2.4s_ease-in-out_infinite]" />
         <div className="font-display font-extrabold text-[19px] text-ink leading-tight max-w-[230px]">
           Приглашайте друзей — получайте дни VPN бесплатно

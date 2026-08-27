@@ -3,11 +3,11 @@ import BottomSheet from "../components/BottomSheet.jsx";
 import { DeviceIcon } from "../components/icons.jsx";
 
 const STATUS_COLOR = {
-  Онлайн: "#2ED9A6",
+  Онлайн: "#4ADE80",
 };
 
 const ROWS = [
-  ["Статус", (d) => d.status_label, (d) => STATUS_COLOR[d.status_label] || "rgba(245,243,238,.4)"],
+  ["Статус", (d) => d.status_label, (d) => STATUS_COLOR[d.status_label] || "rgba(235,224,204,.4)"],
   ["Трафик", (d) => `${d.traffic_gb.toFixed(2)} ГБ`],
   ["Последняя активность", (d) => d.last_online],
   ["Слот", (d) => d.slot],
@@ -67,7 +67,7 @@ export default function DeviceSheet({ open, device, onClose, onDelete, onShowLin
             className={`flex justify-between px-3.5 py-3 ${i < ROWS.length - 1 ? "border-b border-white/[.05]" : ""}`}
           >
             <span className="font-medium text-[12.5px] text-ink/45">{label}</span>
-            <span className="font-semibold text-[12.5px]" style={{ color: getColor ? getColor(device) : "#F5F3EE" }}>
+            <span className="font-semibold text-[12.5px]" style={{ color: getColor ? getColor(device) : "#EBE0CC" }}>
               {getValue(device)}
             </span>
           </div>

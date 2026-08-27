@@ -16,17 +16,17 @@ export default {
         },
         // STAR VPN dark/gold design system
         app: {
-          bg: "#05070A",
-          card: "#12151C",
-          sheet: "#0E1116",
+          bg: "#060606",
+          card: "#0D0C0A",
+          sheet: "#0A0908",
         },
         gold: {
-          DEFAULT: "#F7CE68",
-          dark: "#C9962F",
+          DEFAULT: "#FFB800",
+          dark: "#D99B00",
         },
-        ink: "#F5F3EE",
-        success: "#2ED9A6",
-        danger: "#E2554F",
+        ink: "#EBE0CC",
+        success: "#4ADE80",
+        danger: "#F87171",
       },
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],

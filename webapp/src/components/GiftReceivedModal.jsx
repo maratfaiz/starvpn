@@ -48,7 +48,7 @@ export default function GiftReceivedModal({ gift, onClose }) {
   return (
     <div className="fixed inset-0 z-[90] bg-black/60 flex items-center justify-center p-5" onClick={onClose}>
       <div
-        className="relative w-full max-w-[340px] rounded-3xl border border-gold/30 bg-[linear-gradient(160deg,#1A1408_0%,#13161D_60%)] p-6 overflow-hidden"
+        className="relative w-full max-w-[340px] rounded-3xl border border-gold/30 bg-[linear-gradient(160deg,#1A1408_0%,#100E0A_60%)] p-6 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <Confetti />

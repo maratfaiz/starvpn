@@ -11,7 +11,7 @@ export default function DeviceLinkSheet({ open, deviceName, link, onClose, onCop
       return;
     }
     let cancelled = false;
-    QRCode.toDataURL(link, { width: 240, margin: 1, color: { dark: "#0A0D13", light: "#F7CE68" } })
+    QRCode.toDataURL(link, { width: 240, margin: 1, color: { dark: "#0A0908", light: "#FFB800" } })
       .then((url) => {
         if (!cancelled) setQrDataUrl(url);
       })

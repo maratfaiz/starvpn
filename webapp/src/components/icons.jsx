@@ -1,7 +1,7 @@
 // Shared inline SVG icons for the STAR VPN Mini App.
 // Kept as simple functional components so screens/sheets stay declarative.
 
-export function StarIcon({ size = 16, color = "#F7CE68", className = "" }) {
+export function StarIcon({ size = 16, color = "#FFB800", className = "" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={color} className={className}>
       <path d="M12 1l3.09 6.26L22 8.27l-5 4.87 1.18 6.88L12 16.9l-6.18 3.12L7 13.14 2 8.27l6.91-1.01L12 1z" />
@@ -9,7 +9,7 @@ export function StarIcon({ size = 16, color = "#F7CE68", className = "" }) {
   );
 }
 
-export function CloseIcon({ size = 12, color = "rgba(245,243,238,.6)" }) {
+export function CloseIcon({ size = 12, color = "rgba(235,224,204,.6)" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.4">
       <line x1="4" y1="4" x2="20" y2="20" />
@@ -18,7 +18,7 @@ export function CloseIcon({ size = 12, color = "rgba(245,243,238,.6)" }) {
   );
 }
 
-export function CheckIcon({ size = 16, color = "#F7CE68", strokeWidth = "2.4" }) {
+export function CheckIcon({ size = 16, color = "#FFB800", strokeWidth = "2.4" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
       <polyline points="20 6 9 17 4 12" />
@@ -29,12 +29,12 @@ export function CheckIcon({ size = 16, color = "#F7CE68", strokeWidth = "2.4" })
 export function ChevronIcon() {
   return (
     <svg width="7" height="12" viewBox="0 0 8 14" fill="none">
-      <path d="M1 1l6 6-6 6" stroke="rgba(245,243,238,.25)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M1 1l6 6-6 6" stroke="rgba(235,224,204,.25)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-export function TrashIcon({ size = 15, color = "rgba(245,243,238,.3)" }) {
+export function TrashIcon({ size = 15, color = "rgba(235,224,204,.3)" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <polyline points="3 6 5 6 21 6" />
@@ -52,7 +52,7 @@ export function BoltIcon({ size = 15, color = "#1A1408" }) {
   );
 }
 
-export function GiftIcon({ size = 15, color = "#F7CE68" }) {
+export function GiftIcon({ size = 15, color = "#FFB800" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <path d="M20 12v10H4V12" />
@@ -76,7 +76,7 @@ export function ShareIcon({ size = 14, color = "#1A1408" }) {
   );
 }
 
-export function LocationIcon({ size = 16, color = "#F5F3EE" }) {
+export function LocationIcon({ size = 16, color = "#EBE0CC" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <path d="M12 22s8-7.5 8-13a8 8 0 10-16 0c0 5.5 8 13 8 13z" />
@@ -85,7 +85,7 @@ export function LocationIcon({ size = 16, color = "#F5F3EE" }) {
   );
 }
 
-export function DeviceIcon({ type, size, color = "#F5F3EE" }) {
+export function DeviceIcon({ type, size, color = "#EBE0CC" }) {
   if (type === "laptop") {
     return (
       <svg width={size ?? 18} height={size ?? 18} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
@@ -110,7 +110,7 @@ export function DeviceIcon({ type, size, color = "#F5F3EE" }) {
   );
 }
 
-export function SettingIcon({ name, size = 14, color = "#F5F3EE" }) {
+export function SettingIcon({ name, size = 14, color = "#EBE0CC" }) {
   switch (name) {
     case "bell":
       return (
@@ -191,7 +191,7 @@ export function NavIcon({ name, color, size = 21 }) {
   }
 }
 
-export function GearIcon({ size = 16, color = "rgba(245,243,238,.35)" }) {
+export function GearIcon({ size = 16, color = "rgba(235,224,204,.35)" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.5a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.73l.15-.1a2 2 0 00.73-2.72l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z" />

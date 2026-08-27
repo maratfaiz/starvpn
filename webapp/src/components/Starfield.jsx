@@ -30,7 +30,7 @@ export default function Starfield() {
         if (s.a > 1 || s.a < 0) s.s *= -1;
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(247,206,104,${s.a * 0.7})`;
+        ctx.fillStyle = `rgba(255,184,0,${s.a * 0.7})`;
         ctx.fill();
       });
       raf = requestAnimationFrame(draw);
