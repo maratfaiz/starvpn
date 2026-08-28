@@ -30,6 +30,13 @@ const CopyIcon = ({ size = 15 }) => (
   </svg>
 );
 
+const TrafficIcon = ({ size = 21 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" stroke="#FFB800" {...stroke} strokeWidth={1.8}>
+    <path d="M7 20V8M7 8L3.5 11.5M7 8l3.5 3.5" />
+    <path d="M17 4v12M17 16l3.5-3.5M17 16l-3.5-3.5" />
+  </svg>
+);
+
 const PlusIcon = ({ size = 15 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" stroke="#FFB800" {...stroke} strokeWidth={2.2}>
     <line x1="12" y1="5" x2="12" y2="19" />
@@ -55,8 +62,10 @@ export default function HomeScreen({
   // Остальные устройства живут на вкладке «Устройства».
   const primary = devices[0] || null;
   const slotsLeft = devicesLimit - devices.length;
-  const percentPassed = active
-    ? Math.round(((subscription.totalDays - subscription.daysLeft) / subscription.totalDays) * 100)
+  // Полоса заполнена настолько, сколько подписки ОСТАЛОСЬ: заполненная
+  // шкала у свежей подписки читается лучше, чем «сколько уже прошло».
+  const percentLeft = active && subscription.totalDays
+    ? Math.max(0, Math.min(100, Math.round((subscription.daysLeft / subscription.totalDays) * 100)))
     : 0;
   const showTrialCard = !active && !subscription.trialUsed;
 
@@ -96,12 +105,42 @@ export default function HomeScreen({
           {active ? `Подписка действует до ${subscription.expiryDate}` : "Оформи подписку, чтобы подключиться"}
         </div>
 
-        <div className="mt-4 h-1.5 rounded-full bg-white/[.07] overflow-hidden">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-gold-dark to-gold"
-            style={{ width: `${percentPassed}%` }}
-          />
-        </div>
+        {active && (
+          <>
+            <div className="relative flex items-center justify-between mt-4 mb-1.5">
+              <span className="font-medium text-[11.5px] text-ink/40">Осталось</span>
+              <span className="font-display font-bold text-[12px] text-gold tabular-nums">
+                {percentLeft}%
+              </span>
+            </div>
+            <div className="relative h-1.5 rounded-full bg-white/[.07] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-gold-dark to-gold"
+                style={{ width: `${percentLeft}%` }}
+              />
+            </div>
+
+            {/* Действия живут в той же карточке, что и срок: продлевают
+                именно его, отдельным блоком ниже они читались как не
+                связанные с подпиской. */}
+            <div className="relative flex gap-2.5 mt-[18px]">
+              <button
+                onClick={onOpenRenew}
+                className="flex-1 py-3.5 rounded-2xl bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center gap-2"
+              >
+                <BoltIcon size={14} />
+                <span className="font-display font-bold text-[13.5px] text-[#1A1408]">Продлить</span>
+              </button>
+              <button
+                onClick={onOpenGift}
+                className="flex-1 py-3.5 rounded-2xl border-[1.5px] border-gold/35 bg-gold/[.08] flex items-center justify-center gap-2"
+              >
+                <GiftIcon size={14} />
+                <span className="font-display font-bold text-[13.5px] text-gold">Подарить</span>
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Ключ и подключение — то, что нужно сразу после оплаты.
@@ -163,32 +202,22 @@ export default function HomeScreen({
             </button>
           )}
 
-          <div className="flex items-center justify-between px-4 py-3 bg-app-card border border-white/[.06] rounded-2xl">
-            <span className="font-medium text-[12.5px] text-ink/50">Трафик за месяц</span>
-            <span className="font-display font-bold text-[14px] text-ink">
-              {trafficUsedTotal}
-              <span className="text-[11.5px] text-ink/40"> ГБ</span>
-            </span>
+          <div className="flex items-center gap-3.5 px-4 py-4 bg-app-card border border-white/[.06] rounded-[18px]">
+            <div className="w-11 h-11 rounded-[13px] bg-gold/[.10] border border-gold/20 flex items-center justify-center flex-shrink-0">
+              <TrafficIcon />
+            </div>
+            <div className="min-w-0">
+              <div className="font-medium text-[11.5px] tracking-[.12em] uppercase text-ink/40">
+                Трафик за месяц
+              </div>
+              <div className="font-display font-extrabold text-[26px] leading-tight text-ink tabular-nums">
+                {trafficUsedTotal}
+                <span className="font-bold text-[15px] text-ink/45"> ГБ</span>
+              </div>
+            </div>
           </div>
         </>
       )}
-
-      <div className="flex gap-2.5">
-        <button
-          onClick={onOpenRenew}
-          className="flex-1 py-4 rounded-[18px] bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center gap-2"
-        >
-          <BoltIcon size={15} />
-          <span className="font-display font-bold text-[14.5px] text-[#1A1408]">Продлить</span>
-        </button>
-        <button
-          onClick={onOpenGift}
-          className="flex-1 py-4 rounded-[18px] border-[1.5px] border-gold/35 bg-gold/[.08] flex items-center justify-center gap-2"
-        >
-          <GiftIcon size={15} />
-          <span className="font-display font-bold text-[14.5px] text-gold">Подарить VPN</span>
-        </button>
-      </div>
 
       {active && primary && slotsLeft > 0 && (
         <button

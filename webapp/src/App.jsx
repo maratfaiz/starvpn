@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import BottomNav from "./components/BottomNav.jsx";
+import TopBar from "./components/TopBar.jsx";
 import Toast from "./components/Toast.jsx";
 import Starfield from "./components/Starfield.jsx";
 import Onboarding, { onboardingSeen } from "./components/Onboarding.jsx";
@@ -390,6 +391,7 @@ export default function App() {
     <div className="relative flex flex-col h-screen bg-app-bg overflow-hidden">
       <Starfield />
       <div className="relative z-[1] flex flex-col h-full">
+        <TopBar />
         <div className="flex-1 overflow-y-auto px-5 pt-5 pb-6">
           {activeTab === "home" && (
             <HomeScreen
