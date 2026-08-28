@@ -1,4 +1,4 @@
-import { StarIcon, SettingIcon, ChevronIcon } from "../components/icons.jsx";
+import { SettingIcon, ChevronIcon } from "../components/icons.jsx";
 
 function openExternal(url) {
   const tg = window.Telegram?.WebApp;
@@ -79,10 +79,8 @@ const Group = ({ children }) => (
 
 export default function AccountScreen({
   account,
-  subscription,
   settingsRows,
   onOpenSetting,
-  onManageSubscription,
   onLogout,
   onOpenInstructions,
   onRefresh,
@@ -106,82 +104,6 @@ export default function AccountScreen({
         <div className="flex-1 min-w-0">
           <div className="font-display font-bold text-[17px] text-ink truncate">{account.name}</div>
           <div className="font-medium text-[13px] text-ink/45 truncate">{account.username}</div>
-        </div>
-      </div>
-
-      {/* Подписка: статус, срок, способ оплаты */}
-      <div>
-        <SectionTitle>Подписка</SectionTitle>
-        <div className="rounded-[18px] p-[18px] border border-gold/25 bg-[linear-gradient(160deg,#1A1408_0%,#100E0A_60%)]">
-          <div className="flex items-center justify-between mb-3">
-            <span className="flex items-center gap-1.5">
-              <span
-                className="w-[7px] h-[7px] rounded-full"
-                style={{ background: subscription.active ? "#4ADE80" : "rgba(235,224,204,.35)" }}
-              />
-              <span
-                className="font-semibold text-[13px]"
-                style={{ color: subscription.active ? "#4ADE80" : "rgba(235,224,204,.45)" }}
-              >
-                {subscription.active ? "Активна" : "Не активна"}
-              </span>
-            </span>
-            <span className="font-display font-bold text-[12.5px] text-gold bg-gold/[.12] px-2.5 py-1 rounded-lg">
-              {subscription.planName}
-            </span>
-          </div>
-
-          <div className="flex justify-between items-center py-1.5 border-t border-white/[.06]">
-            <span className="font-medium text-[12.5px] text-ink/40">Действует до</span>
-            <span className="font-semibold text-[13px] text-ink">{subscription.expiryDate}</span>
-          </div>
-          <div className="flex justify-between items-center py-1.5 border-t border-white/[.06]">
-            <span className="font-medium text-[12.5px] text-ink/40">Способ оплаты</span>
-            <span className="flex items-center gap-1 font-semibold text-[13px] text-ink">
-              <StarIcon size={11} /> Telegram Stars
-            </span>
-          </div>
-
-          <button
-            onClick={onManageSubscription}
-            className="w-full mt-3.5 border border-gold/35 bg-gold/[.08] py-2.5 rounded-[13px] font-display font-bold text-[13px] text-gold"
-          >
-            Продлить подписку
-          </button>
-        </div>
-      </div>
-
-      {/* Помощь: то, за чем сюда заходят чаще всего */}
-      <div>
-        <SectionTitle>Помощь</SectionTitle>
-        <div className="flex flex-col gap-2.5">
-          <button
-            onClick={onOpenInstructions}
-            className="w-full flex items-center gap-3 bg-app-card border border-gold/20 rounded-2xl px-4 py-3.5 text-left"
-          >
-            <div className="w-9 h-9 rounded-[10px] bg-gold/[.08] border border-gold/20 flex items-center justify-center flex-shrink-0">
-              <SettingIcon name="info" color="#FFB800" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-[13.5px] text-ink">Как подключиться</div>
-              <div className="font-medium text-[11px] text-ink/40">Пошагово для каждой системы</div>
-            </div>
-            <ChevronIcon />
-          </button>
-
-          <button
-            onClick={() => openTelegram(account.supportUrl)}
-            className="w-full flex items-center gap-3 bg-app-card border border-gold/20 rounded-2xl px-4 py-3.5 text-left"
-          >
-            <div className="w-9 h-9 rounded-[10px] bg-gold/[.08] border border-gold/20 flex items-center justify-center flex-shrink-0">
-              <SettingIcon name="help" color="#FFB800" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-[13.5px] text-ink">Написать в поддержку</div>
-              <div className="font-medium text-[11px] text-ink/40">Отвечаем в Telegram</div>
-            </div>
-            <ChevronIcon />
-          </button>
         </div>
       </div>
 
@@ -224,6 +146,40 @@ export default function AccountScreen({
             />
           )}
         </Group>
+      </div>
+
+      {/* Помощь: то, за чем сюда заходят чаще всего */}
+      <div>
+        <SectionTitle>Помощь</SectionTitle>
+        <div className="flex flex-col gap-2.5">
+          <button
+            onClick={onOpenInstructions}
+            className="w-full flex items-center gap-3 bg-app-card border border-gold/20 rounded-2xl px-4 py-3.5 text-left"
+          >
+            <div className="w-9 h-9 rounded-[10px] bg-gold/[.08] border border-gold/20 flex items-center justify-center flex-shrink-0">
+              <SettingIcon name="info" color="#FFB800" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-[13.5px] text-ink">Как подключиться</div>
+              <div className="font-medium text-[11px] text-ink/40">Пошагово для каждой системы</div>
+            </div>
+            <ChevronIcon />
+          </button>
+
+          <button
+            onClick={() => openTelegram(account.supportUrl)}
+            className="w-full flex items-center gap-3 bg-app-card border border-gold/20 rounded-2xl px-4 py-3.5 text-left"
+          >
+            <div className="w-9 h-9 rounded-[10px] bg-gold/[.08] border border-gold/20 flex items-center justify-center flex-shrink-0">
+              <SettingIcon name="help" color="#FFB800" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-[13.5px] text-ink">Написать в поддержку</div>
+              <div className="font-medium text-[11px] text-ink/40">Отвечаем в Telegram</div>
+            </div>
+            <ChevronIcon />
+          </button>
+        </div>
       </div>
 
       {/* Служебное */}

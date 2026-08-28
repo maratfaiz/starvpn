@@ -456,10 +456,8 @@ export default function App() {
           {activeTab === "account" && (
             <AccountScreen
               account={accountFromTelegram(account, tgUser)}
-              subscription={subscription}
               settingsRows={settingsRows}
               onOpenSetting={openSetting}
-              onManageSubscription={openRenew}
               onLogout={logout}
               onOpenInstructions={() => setInstructionsOpen(true)}
               onRefresh={refreshAll}
