@@ -14,12 +14,17 @@ export default function BottomSheet({ open, onClose, title, maxHeight = "80%", c
         style={{ opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none" }}
       />
       <div
-        className="fixed left-0 right-0 bottom-0 z-50 bg-app-sheet border-t border-gold/25 rounded-t-3xl px-5 pt-2.5 shadow-sheet overflow-y-auto"
+        className="fixed left-0 right-0 bottom-0 z-50 bg-app-sheet border-t border-gold/25 rounded-t-3xl px-5 pt-2.5 overflow-y-auto"
         style={{
           maxHeight,
           paddingBottom: "calc(26px + env(safe-area-inset-bottom, 0px))",
           transform: open ? "translateY(0)" : "translateY(100%)",
           transition: "transform .3s cubic-bezier(.32,.72,0,1)",
+          // Тень только у поднятой шторки. Закрытая панель остаётся в DOM
+          // (иначе не проиграть анимацию закрытия) и стоит вплотную к нижней
+          // кромке экрана, а тень «0 -20px 50px» бьёт вверх — все восемь
+          // шторок вместе затемняли полосу над таб-баром до чёрного.
+          boxShadow: open ? "0 -20px 50px rgba(0,0,0,.5)" : "none",
         }}
       >
         <div className="w-9 h-1 rounded-full bg-white/15 mx-auto mb-4" />
