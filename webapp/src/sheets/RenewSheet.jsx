@@ -1,5 +1,6 @@
 import BottomSheet from "../components/BottomSheet.jsx";
 import { BoltIcon, StarIcon, CheckIcon } from "../components/icons.jsx";
+import { dayWord } from "../utils/plural.js";
 
 const CardIcon = ({ size = 14, color = "#4ADE80" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -7,6 +8,15 @@ const CardIcon = ({ size = 14, color = "#4ADE80" }) => (
     <line x1="2" y1="10" x2="22" y2="10" />
   </svg>
 );
+
+// Диапазон и пресеты повторяют блок «Свой срок» на сайте
+// (landing/tariffs.html): от 7 до 180 дней по той же дневной ставке.
+const CUSTOM_MIN = 7;
+const CUSTOM_MAX = 180;
+const CUSTOM_PRESETS = [7, 30, 90, 180];
+
+const clampDays = (raw) =>
+  Math.max(CUSTOM_MIN, Math.min(CUSTOM_MAX, Number(raw) || CUSTOM_MIN));
 
 export default function RenewSheet({
   open,
@@ -30,7 +40,7 @@ export default function RenewSheet({
   const customRub = Math.max(1, Math.round(customDays * rubPerDay));
 
   const selectedPlan = isCustom
-    ? { label: `${customDays} дней`, days: customDays, price: customStars, rub: customRub }
+    ? { label: `${customDays} ${dayWord(customDays)}`, days: customDays, price: customStars, rub: customRub }
     : plans.find((p) => p.id === selectedPlanId) || basePlan;
 
   if (step === "success") {
@@ -127,7 +137,7 @@ export default function RenewSheet({
         >
           <div className="text-left">
             <div className="font-display font-bold text-[14.5px] text-ink">Свой срок</div>
-            <div className="font-medium text-[11.5px] text-ink/40 mt-0.5">Укажи количество дней</div>
+            <div className="font-medium text-[11.5px] text-ink/40 mt-0.5">От {CUSTOM_MIN} до {CUSTOM_MAX} дней</div>
           </div>
           <div className="flex items-center gap-1.5">
             {method === "stars" ? (
@@ -142,24 +152,85 @@ export default function RenewSheet({
         </button>
 
         {isCustom && (
-          <div className="flex items-center gap-3 bg-app-card border border-white/10 rounded-2xl px-4 py-3">
+          <div className="bg-app-card border border-gold/20 rounded-2xl px-4 py-4">
+            {/* Число дней и цена в одной строке — то же построение, что в
+                блоке «Свой срок» на странице тарифов сайта. */}
+            <div className="flex items-end justify-between gap-3 mb-3">
+              <div className="flex items-baseline gap-2 min-w-0">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={CUSTOM_MIN}
+                  max={CUSTOM_MAX}
+                  value={customDays}
+                  onChange={(e) => onCustomDaysChange(clampDays(e.target.value))}
+                  aria-label="Количество дней"
+                  // Ширина по числу цифр, иначе между «7» и словом «дней»
+                  // остаётся дыра шириной в трёхзначное число.
+                  style={{ width: `${String(customDays).length + 0.6}ch` }}
+                  className="bg-transparent border-0 p-0 font-display font-extrabold text-[38px] leading-none text-ink outline-none tabular-nums focus:text-gold"
+                />
+                <span className="font-medium text-[14px] text-ink/45">{dayWord(customDays)}</span>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <div className="flex items-center justify-end gap-1.5">
+                  {method === "stars" ? (
+                    <>
+                      <StarIcon size={13} />
+                      <span className="font-display font-extrabold text-[22px] text-gold leading-none tabular-nums">
+                        {customStars}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-display font-extrabold text-[22px] text-[#4ADE80] leading-none tabular-nums">
+                      {customRub} ₽
+                    </span>
+                  )}
+                </div>
+                <div className="font-medium text-[11px] text-ink/35 mt-1 tabular-nums">
+                  {method === "stars"
+                    ? `${(customStars / customDays).toFixed(1)} ⭐ в день`
+                    : `${(customRub / customDays).toFixed(1)} ₽ в день`}
+                </div>
+              </div>
+            </div>
+
             <input
               type="range"
-              min="1"
-              max="730"
+              min={CUSTOM_MIN}
+              max={CUSTOM_MAX}
               value={customDays}
               onChange={(e) => onCustomDaysChange(Number(e.target.value))}
-              className="flex-1 accent-gold"
+              aria-label="Срок подписки в днях"
+              className="star-slider"
             />
-            <input
-              type="number"
-              min="1"
-              max="730"
-              value={customDays}
-              onChange={(e) => onCustomDaysChange(Math.max(1, Math.min(730, Number(e.target.value) || 1)))}
-              className="w-16 bg-white/[.05] border border-white/10 rounded-lg px-2 py-1.5 text-center font-display font-bold text-sm text-ink outline-none"
-            />
-            <span className="font-medium text-xs text-ink/40 flex-shrink-0">дней</span>
+            <div className="flex justify-between font-mono text-[10.5px] text-ink/30 mt-0.5 mb-3">
+              <span>{CUSTOM_MIN} дней</span>
+              <span>90 дней</span>
+              <span>{CUSTOM_MAX} дней</span>
+            </div>
+
+            {/* Пресеты: попасть пальцем в точное значение на узком экране
+                тяжело, а эти четыре срока покрывают почти все случаи. */}
+            <div className="grid grid-cols-4 gap-2">
+              {CUSTOM_PRESETS.map((d) => {
+                const picked = customDays === d;
+                return (
+                  <button
+                    key={d}
+                    onClick={() => onCustomDaysChange(d)}
+                    className="py-2 rounded-xl font-display font-bold text-[12.5px] transition-colors"
+                    style={{
+                      background: picked ? "rgba(255,184,0,.14)" : "rgba(255,255,255,.04)",
+                      border: `1px solid ${picked ? "rgba(255,184,0,.45)" : "rgba(255,255,255,.07)"}`,
+                      color: picked ? "#FFB800" : "rgba(235,224,204,.55)",
+                    }}
+                  >
+                    {d} дн.
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>

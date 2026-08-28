@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import BottomNav from "./components/BottomNav.jsx";
 import TopBar from "./components/TopBar.jsx";
+import { dayWord } from "./utils/plural.js";
 import Toast from "./components/Toast.jsx";
 import Starfield from "./components/Starfield.jsx";
 import Onboarding, { onboardingSeen } from "./components/Onboarding.jsx";
@@ -133,7 +134,8 @@ export default function App() {
   const [renewStep, setRenewStep] = useState("form");
   const [renewPlanId, setRenewPlanId] = useState(2);
   const [renewMethod, setRenewMethod] = useState("stars");
-  const [customDays, setCustomDays] = useState(14);
+  // 90 дней — как выбрано по умолчанию в блоке «Свой срок» на сайте.
+  const [customDays, setCustomDays] = useState(90);
   const [lastAddedDays, setLastAddedDays] = useState(0);
   const [justRenewed, setJustRenewed] = useState(false);
 
@@ -206,7 +208,7 @@ export default function App() {
     const rubPerDay = basePlan.rub / basePlan.days;
     const plan =
       renewPlanId === "custom"
-        ? { label: `${customDays} дней`, days: customDays, price: Math.max(1, Math.round(customDays * pricePerDay)), rub: Math.max(1, Math.round(customDays * rubPerDay)) }
+        ? { label: `${customDays} ${dayWord(customDays)}`, days: customDays, price: Math.max(1, Math.round(customDays * pricePerDay)), rub: Math.max(1, Math.round(customDays * rubPerDay)) }
         : renewPlans.find((p) => p.id === renewPlanId) || basePlan;
 
     haptic("notification");
