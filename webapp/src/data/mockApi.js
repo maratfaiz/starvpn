@@ -17,7 +17,7 @@ const nextId = () => ++seq;
 const store = {
   me: {
     subscription_active: true,
-    plan_name: "Premium",
+    plan_name: "3 месяца",
     days_left: 23,
     total_days: 30,
     expires_at: "2026-08-04",
@@ -155,7 +155,7 @@ export async function activateTrial() {
   await delay(500);
   store.me.subscription_active = true;
   store.me.trial_used = true;
-  store.me.plan_name = "Trial";
+  store.me.plan_name = "Пробный";
   store.me.days_left = 2;
   store.me.total_days = 2;
   return { ...store.me };
