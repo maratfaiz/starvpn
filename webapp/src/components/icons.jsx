@@ -94,6 +94,14 @@ export function DeviceIcon({ type, size, color = "#EBE0CC" }) {
       </svg>
     );
   }
+  if (type === "tv") {
+    return (
+      <svg width={size ?? 18} height={size ?? 18} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round">
+        <rect x="2" y="5" width="20" height="13" rx="2" />
+        <path d="M8 21h8M12 18v3" />
+      </svg>
+    );
+  }
   if (type === "tablet") {
     return (
       <svg width={size ?? 17} height={size ?? 17} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
