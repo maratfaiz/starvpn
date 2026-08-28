@@ -66,6 +66,30 @@ function meToSubscription(me) {
   };
 }
 
+/**
+ * Профиль для экрана «Аккаунт»: имя и @username берём из Telegram, если
+ * они пришли. Раньше имя собиралось как `${tgUser.first_name}...` без
+ * проверки, и при отсутствии поля в шапку попадала строка "undefined";
+ * username вообще не подставлялся и всегда показывал мок.
+ */
+function accountFromTelegram(base, tgUser) {
+  const name = [tgUser?.first_name, tgUser?.last_name].filter(Boolean).join(" ").trim();
+  const display = name || base.name;
+  const initials = display
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+
+  return {
+    ...base,
+    name: display,
+    username: tgUser?.username ? `@${tgUser.username}` : base.username,
+    initials: initials || base.initials,
+  };
+}
+
 export default function App() {
   const [telegramOk] = useState(hasTelegramSession);
   const [showOnboarding, setShowOnboarding] = useState(() => telegramOk && !onboardingSeen());
@@ -431,7 +455,7 @@ export default function App() {
           )}
           {activeTab === "account" && (
             <AccountScreen
-              account={{ ...account, name: tgUser ? `${tgUser.first_name}${tgUser.last_name ? " " + tgUser.last_name : ""}` : account.name }}
+              account={accountFromTelegram(account, tgUser)}
               subscription={subscription}
               settingsRows={settingsRows}
               onOpenSetting={openSetting}
