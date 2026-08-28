@@ -274,7 +274,7 @@ main{min-width:0}
     <!-- Подписка -->
     <div class="tab-panel active" id="tab-subscription">
       <div class="page-title">Подписка</div>
-      <div class="page-sub">Статус, срок и быстрый доступ к ключу.</div>
+      <div class="page-sub">Статус, срок и подключённый сервер.</div>
 
       <div class="overview-card" id="overviewCard">
         <div class="overview-top">
@@ -292,13 +292,23 @@ main{min-width:0}
         <div class="trial-note" id="trialNote" style="display:none">Пробный период — <span id="trialDaysLbl">2</span> дня, выдаётся один раз на аккаунт. Карта не нужна.</div>
       </div>
 
-      <div class="card" id="quickKeyCard">
-        <div class="card-title">Ваш ключ</div>
-        <div id="quickKeyBody"><div class="empty">Загружаем…</div></div>
+      <div class="card">
+        <div class="card-title">Сервер</div>
+        <div class="profile-row"><span class="k">Локация</span><span class="v" id="srvLoc">—</span></div>
+        <div class="profile-row"><span class="k">Протокол</span><span class="v" id="srvProto">—</span></div>
+        <div class="profile-row"><span class="k">Шифрование</span><span class="v" id="srvTls">—</span></div>
+        <div class="profile-row"><span class="k">Логи трафика</span><span class="v" style="color:var(--success)">0 · Zero Logs</span></div>
       </div>
 
-      <div class="stat-grid" id="subStats"></div>
-
+      <div class="card">
+        <div class="card-title">Другие локации</div>
+        <p style="color:var(--text2);font-size:12.5px;line-height:1.6;margin-bottom:12px">Сейчас работает только Амстердам. Ниже — пример того, куда расширяемся дальше.</p>
+        <div class="locations-grid">
+          <div class="location-row"><span class="location-flag"><svg viewBox="0 0 20 14"><rect width="20" height="4.67" fill="#1a1a1a"/><rect y="4.67" width="20" height="4.67" fill="#DD0000"/><rect y="9.33" width="20" height="4.67" fill="#FFCE00"/></svg></span><div><div class="location-city">Франкфурт</div><div class="location-badge">Скоро</div></div></div>
+          <div class="location-row"><span class="location-flag"><svg viewBox="0 0 20 14"><rect width="20" height="14" fill="#fff"/><rect x="6" width="3" height="14" fill="#002F6C"/><rect y="5.5" width="20" height="3" fill="#002F6C"/></svg></span><div><div class="location-city">Хельсинки</div><div class="location-badge">Скоро</div></div></div>
+          <div class="location-row"><span class="location-flag"><svg viewBox="0 0 20 14"><rect width="20" height="14" fill="#B22234"/><g fill="#fff"><rect y="2" width="20" height="1.4"/><rect y="4.8" width="20" height="1.4"/><rect y="7.6" width="20" height="1.4"/><rect y="10.4" width="20" height="1.4"/></g><rect width="8" height="7.6" fill="#3C3B6E"/></svg></span><div><div class="location-city">Нью-Йорк</div><div class="location-badge">Скоро</div></div></div>
+        </div>
+      </div>
     </div>
 
     <!-- Устройства -->
@@ -440,7 +450,6 @@ async function boot() {
   document.getElementById('page').style.display = 'grid';
   renderStatus();
   renderProfile();
-  renderQuickKey();
   initTabs();
   initDevices();
   initAccountMenu();
@@ -478,60 +487,10 @@ function renderStatus() {
     ? `Действует до ${fmtDate(ME.subscription_expires_at)}`
     : 'Продлите подписку, чтобы пользоваться VPN';
 
-  renderSubStats();
-}
-
-/** Короткая дата для плитки: «28.08.2026». */
-function fmtShortDate(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  const p = (n) => String(n).padStart(2, '0');
-  return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`;
-}
-
-/**
- * Четыре плитки под карточкой срока. Все значения приходят из /api/me —
- * ничего не считается на глазок.
- */
-function renderSubStats() {
-  document.getElementById('subStats').innerHTML = `
-    <div class="stat-box"><div class="val">${ME.device_count} / ${ME.max_devices}</div><div class="lbl">устройств подключено</div></div>
-    <div class="stat-box"><div class="val">${ME.traffic_gb} ГБ</div><div class="lbl">трафик за месяц</div></div>
-    <div class="stat-box"><div class="val">${ME.referral_count}</div><div class="lbl">друзей приглашено</div></div>
-    <div class="stat-box"><div class="val">${fmtShortDate(ME.created_at)}</div><div class="lbl">с нами с</div></div>
-  `;
-}
-
-/**
- * Быстрый доступ к ключу прямо на вкладке «Подписка»: раньше за ним
- * нужно было идти на «Устройства». Показываем первый слот, остальные
- * по-прежнему живут в своём разделе.
- */
-async function renderQuickKey() {
-  const body = document.getElementById('quickKeyBody');
-  const r = await API('/api/devices');
-  if (!r.ok) { body.innerHTML = '<div class="empty">Не удалось загрузить ключ</div>'; return; }
-  const devices = await r.json();
-  if (!devices.length) {
-    body.innerHTML = `
-      <div class="empty">Ни одного устройства ещё не подключено</div>
-      <button class="btn" data-goto="devices" style="margin-top:12px">Подключить устройство</button>`;
-    body.querySelector('[data-goto]').addEventListener('click', () => {
-      // Переключение вкладок живёт в замыкании initTabs, поэтому
-      // переиспользуем настоящий пункт меню вместо своего обработчика.
-      const item = document.querySelector('.side-menu-item[data-tab="devices"]')
-        || document.querySelector('.bottom-nav-item[data-tab="devices"]');
-      item?.click();
-    });
-    return;
-  }
-  const d = devices[0];
-  body.innerHTML = `
-    <div class="profile-row"><span class="k">${DEVICE_LABELS[d.name] || d.name} · слот ${d.slot}</span>
-      <span class="v"><button class="pill-btn" id="quickKeyBtn">Ключ / QR</button></span></div>
-    <p style="color:var(--text2);font-size:12.5px;line-height:1.6;margin-top:10px">
-      Ключ один на подписку — вставьте его в VPN-клиент. Остальные устройства на вкладке «Устройства».</p>`;
-  document.getElementById('quickKeyBtn').addEventListener('click', () => showDeviceLink(d.id));
+  const srvFlag = COUNTRY_FLAGS[ME.server_country] || '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px"><circle cx="10" cy="7" r="6" fill="none" stroke="currentColor" stroke-width="1.4"></circle><path d="M4 7h12M10 1a9 9 0 010 12M10 1a9 9 0 000 12" fill="none" stroke="currentColor" stroke-width="1.4"></path></svg>';
+  document.getElementById('srvLoc').innerHTML = `${srvFlag} ${ME.server_city}, ${ME.server_country}`;
+  document.getElementById('srvProto').textContent = ME.server_protocol;
+  document.getElementById('srvTls').textContent = ME.server_tls;
 }
 
 function renderProfile() {
@@ -619,6 +578,16 @@ const DEVICE_ICONS = {
 };
 const DEVICE_ICON_FALLBACK = '<svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"></rect><line x1="11" y1="18" x2="13" y2="18"></line></svg>';
 
+const COUNTRY_FLAGS = {
+  'Нидерланды': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="4.67" fill="#AE1C28"></rect><rect y="4.67" width="20" height="4.67" fill="#fff"></rect><rect y="9.33" width="20" height="4.67" fill="#21468B"></rect></svg>',
+  'Netherlands': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="4.67" fill="#AE1C28"></rect><rect y="4.67" width="20" height="4.67" fill="#fff"></rect><rect y="9.33" width="20" height="4.67" fill="#21468B"></rect></svg>',
+  'Германия': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="4.67" fill="#1a1a1a"></rect><rect y="4.67" width="20" height="4.67" fill="#DD0000"></rect><rect y="9.33" width="20" height="4.67" fill="#FFCE00"></rect></svg>',
+  'Germany': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="4.67" fill="#1a1a1a"></rect><rect y="4.67" width="20" height="4.67" fill="#DD0000"></rect><rect y="9.33" width="20" height="4.67" fill="#FFCE00"></rect></svg>',
+  'Финляндия': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="14" fill="#fff"></rect><rect x="6" width="3" height="14" fill="#002F6C"></rect><rect y="5.5" width="20" height="3" fill="#002F6C"></rect></svg>',
+  'Finland': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="14" fill="#fff"></rect><rect x="6" width="3" height="14" fill="#002F6C"></rect><rect y="5.5" width="20" height="3" fill="#002F6C"></rect></svg>',
+  'США': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="14" fill="#B22234"></rect><g fill="#fff"><rect y="2" width="20" height="1.4"></rect><rect y="4.8" width="20" height="1.4"></rect><rect y="7.6" width="20" height="1.4"></rect><rect y="10.4" width="20" height="1.4"></rect></g><rect width="8" height="7.6" fill="#3C3B6E"></rect></svg>',
+  'USA': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="14" fill="#B22234"></rect><g fill="#fff"><rect y="2" width="20" height="1.4"></rect><rect y="4.8" width="20" height="1.4"></rect><rect y="7.6" width="20" height="1.4"></rect><rect y="10.4" width="20" height="1.4"></rect></g><rect width="8" height="7.6" fill="#3C3B6E"></rect></svg>',
+};
 const DEVICE_LABELS = {ios: 'iPhone / iPad', android: 'Android', windows: 'Windows', macos: 'macOS', linux: 'Linux', appletv: 'Apple TV', androidtv: 'Смарт-ТВ'};
 
 async function initDevices() {
