@@ -142,7 +142,14 @@ main{min-width:0}
 .pill-btn.danger{color:var(--error);border-color:rgba(248,113,113,.25)}
 .pill-btn.danger:hover{background:rgba(248,113,113,.1)}
 
+.add-device-cta{width:100%;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;border:1px dashed rgba(255,184,0,.45);background:rgba(255,184,0,.04);border-radius:14px;padding:16px;min-height:52px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--gold);transition:background .15s,border-color .15s}
+.add-device-cta:hover:not(:disabled){background:rgba(255,184,0,.08);border-color:rgba(255,184,0,.7)}
+.add-device-cta:disabled{cursor:default;color:var(--text2);border-color:rgba(255,255,255,.12);background:transparent}
+.add-device-cta .plus{font-size:17px;line-height:1}
 .add-device-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:8px}
+.modal-back{position:absolute;top:14px;left:14px;background:none;border:none;color:var(--text2);cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:600;padding:0}
+.modal-back:hover{color:var(--gold)}
+.modal-step-sub{font-size:12.5px;color:var(--text2);margin:-6px 0 16px}
 .add-device-btn{cursor:pointer;display:flex;align-items:center;gap:11px;border:1px solid rgba(255,255,255,.09);background:#141310;border-radius:12px;padding:14px 16px;min-height:44px;color:var(--text);transition:border-color .2s}
 .add-device-btn:hover{border-color:rgba(255,184,0,.4)}
 .add-device-btn .ic{width:20px;height:20px;flex-shrink:0;color:var(--gold)}
@@ -335,23 +342,9 @@ a.profile-row .k .sub{display:block;margin-top:2px;font-size:11.5px;font-weight:
       <div class="page-title">Устройства</div>
       <div class="page-sub" id="devicesSub">Ключ и ссылка ведут к одной подписке — выберите то, что удобнее приложению.</div>
       <div id="devicesList"></div>
-      <div class="section-title">Телефон / планшет</div>
-      <div class="add-device-grid">
-        <div class="add-device-btn" data-type="ios"><div class="ic"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg></div><div class="lbl">iPhone / iPad</div></div>
-        <div class="add-device-btn" data-type="android"><div class="ic"><svg viewBox="0 0 24 24"><rect x="7" y="4" width="10" height="18" rx="2"/><line x1="11" y1="19" x2="13" y2="19"/><line x1="9" y1="4" x2="7.5" y2="2"/><line x1="15" y1="4" x2="16.5" y2="2"/></svg></div><div class="lbl">Android</div></div>
-      </div>
-      <div class="section-title">Компьютер</div>
-      <div class="add-device-grid">
-        <div class="add-device-btn" data-type="macos"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><line x1="2" y1="19" x2="22" y2="19"/></svg></div><div class="lbl">macOS</div></div>
-        <div class="add-device-btn" data-type="windows"><div class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="1.5"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/></svg></div><div class="lbl">Windows</div></div>
-        <div class="add-device-btn" data-type="linux"><div class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 9l4 3-4 3"/><line x1="12" y1="15" x2="17" y2="15"/></svg></div><div class="lbl">Linux</div></div>
-      </div>
-      <div class="section-title">ТВ</div>
-      <div class="add-device-grid">
-        <div class="add-device-btn" data-type="appletv"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20l1.5-3M16 20l-1.5-3"/></svg></div><div class="lbl">Apple TV</div></div>
-        <div class="add-device-btn" data-type="androidtv"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20l1.5-3M16 20l-1.5-3"/></svg></div><div class="lbl">Смарт-ТВ</div></div>
-      </div>
-      <div class="msg" id="devicesMsg"></div>
+      <button class="add-device-cta" id="addDeviceBtn">
+        <span class="plus">+</span> Добавить устройство
+      </button>
     </div>
 
     <!-- Продление -->
@@ -438,6 +431,18 @@ a.profile-row .k .sub{display:block;margin-top:2px;font-size:11.5px;font-weight:
   <button class="bottom-nav-item" data-tab="renew"><svg viewBox="0 0 24 24"><path d="M3 6h18v12H3zM3 10h18M6.5 14.5h3"/></svg><span>Продление</span></button>
   <button class="bottom-nav-item" data-tab="gift"><svg viewBox="0 0 24 24"><path d="M3 11h18v9a1 1 0 01-1 1H4a1 1 0 01-1-1zM2.5 7.5h19V11h-19zM12 7.5V21"/></svg><span>Подарить</span></button>
   <button class="bottom-nav-item" data-tab="referral"><svg viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg><span>Ещё</span></button>
+</div>
+
+<!-- Add device modal -->
+<div class="modal-overlay" id="addDeviceModal">
+  <div class="modal">
+    <button class="modal-back" id="addDeviceBack" style="display:none">← Назад</button>
+    <button class="modal-close" id="closeAddDevice"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h3 id="addDeviceTitle">Что подключаем?</h3>
+    <div class="modal-step-sub" id="addDeviceSub">Выберите тип устройства</div>
+    <div class="add-device-grid" id="addDeviceOptions"></div>
+    <div class="msg" id="addDeviceMsg"></div>
+  </div>
 </div>
 
 <!-- Device link modal -->
@@ -727,12 +732,70 @@ const DEVICE_LABELS = {ios: 'iPhone / iPad', android: 'Android', windows: 'Windo
 
 async function initDevices() {
   await loadDevices();
-  document.querySelectorAll('.add-device-btn').forEach(btn => {
-    btn.addEventListener('click', () => addDevice(btn.dataset.type));
-  });
+  document.getElementById('addDeviceBtn').addEventListener('click', openAddDevice);
+  document.getElementById('closeAddDevice').addEventListener('click', closeAddDevice);
+  document.getElementById('addDeviceBack').addEventListener('click', () => renderAddStep(null));
   document.getElementById('closeLinkModal').addEventListener('click', () => {
     document.getElementById('linkModal').classList.remove('show');
   });
+}
+
+/* Выбор устройства — как в мини-приложении: сначала тип, потом система.
+   Раньше все семь систем лежали простынёй прямо на странице. */
+const DEVICE_CATEGORIES = [
+  {id: 'phone', label: 'Телефон', icon: 'ios', systems: [
+    {type: 'ios', label: 'iPhone'}, {type: 'android', label: 'Android'},
+  ]},
+  {id: 'tablet', label: 'Планшет', icon: 'ios', systems: [
+    {type: 'ios', label: 'iPad'}, {type: 'android', label: 'Android'},
+  ]},
+  {id: 'computer', label: 'Компьютер', icon: 'macos', systems: [
+    {type: 'macos', label: 'macOS'}, {type: 'windows', label: 'Windows'}, {type: 'linux', label: 'Linux'},
+  ]},
+  {id: 'tv', label: 'Телевизор', icon: 'appletv', systems: [
+    {type: 'appletv', label: 'Apple TV'}, {type: 'androidtv', label: 'Смарт-ТВ'},
+  ]},
+];
+
+function addDeviceOption(iconKey, label, onClick) {
+  const el = document.createElement('div');
+  el.className = 'add-device-btn';
+  el.innerHTML = `<div class="ic">${DEVICE_ICONS[iconKey] || DEVICE_ICON_FALLBACK}</div><div class="lbl">${label}</div>`;
+  el.addEventListener('click', onClick);
+  return el;
+}
+
+function renderAddStep(category) {
+  const box = document.getElementById('addDeviceOptions');
+  const back = document.getElementById('addDeviceBack');
+  box.innerHTML = '';
+  document.getElementById('addDeviceMsg').className = 'msg';
+
+  if (!category) {
+    back.style.display = 'none';
+    document.getElementById('addDeviceTitle').textContent = 'Что подключаем?';
+    document.getElementById('addDeviceSub').textContent = 'Выберите тип устройства';
+    DEVICE_CATEGORIES.forEach(c => box.appendChild(
+      addDeviceOption(c.icon, c.label, () => renderAddStep(c)),
+    ));
+    return;
+  }
+
+  back.style.display = '';
+  document.getElementById('addDeviceTitle').textContent = category.label;
+  document.getElementById('addDeviceSub').textContent = 'Какая система?';
+  category.systems.forEach(sys => box.appendChild(
+    addDeviceOption(sys.type, sys.label, () => addDevice(sys.type)),
+  ));
+}
+
+function openAddDevice() {
+  renderAddStep(null);
+  document.getElementById('addDeviceModal').classList.add('show');
+}
+
+function closeAddDevice() {
+  document.getElementById('addDeviceModal').classList.remove('show');
 }
 
 async function loadDevices() {
@@ -741,6 +804,14 @@ async function loadDevices() {
   if (!r.ok) { list.innerHTML = '<div class="empty">Не удалось загрузить устройства</div>'; return; }
   const devices = await r.json();
   document.getElementById('devicesSub').textContent = `Привязано ${devices.length} из ${ME.max_devices}. Ключ и ссылка ведут к одной подписке — выберите то, что удобнее приложению.`;
+  // На лимите кнопка гаснет: раньше страница предлагала семь систем, любая
+  // из которых отвечала «Достигнут лимит устройств».
+  const addBtn = document.getElementById('addDeviceBtn');
+  const full = devices.length >= ME.max_devices;
+  addBtn.disabled = full;
+  addBtn.innerHTML = full
+    ? 'Все слоты заняты — удалите устройство, чтобы добавить новое'
+    : '<span class="plus">+</span> Добавить устройство';
   if (!devices.length) {
     list.innerHTML = '<div class="empty">Пока нет ни одного устройства — добавьте первое ниже</div>';
     return;
@@ -770,7 +841,7 @@ const DEVICE_ERROR_RU = {
 };
 
 async function addDevice(type) {
-  const msg = document.getElementById('devicesMsg');
+  const msg = document.getElementById('addDeviceMsg');
   msg.className = 'msg';
   const r = await API('/api/devices', {
     method: 'POST',
@@ -785,6 +856,7 @@ async function addDevice(type) {
     return;
   }
   const dev = await r.json();
+  closeAddDevice();
   await loadDevices();
   const me = await API('/api/me'); ME = await me.json(); renderStatus();
   openLinkModal(DEVICE_LABELS[type] || type, dev.link, dev.qr_url);
