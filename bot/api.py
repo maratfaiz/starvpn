@@ -26,7 +26,7 @@ from bot.models.device import Device, MAX_DEVICES
 from bot.models.gift_notification import GiftNotification
 from bot.models.payment import Payment
 from bot.models.user import User
-from bot.utils.branding import set_vless_remark as _set_vless_remark
+from bot.utils.branding import set_vless_remark as _set_vless_remark, subscription_url
 from bot.utils.database import AsyncSessionLocal
 from bot.utils.marzban import marzban
 
@@ -593,6 +593,10 @@ async def get_devices(request: Request, x_telegram_init_data: str | None = Heade
                 "last_online": last_online,
                 "status_label": status_label,
                 "created_at": d.created_at.isoformat() if d.created_at else None,
+                # Ссылка подписки — просто отформатированный URL, Marzban для неё
+                # не нужен. Отдаём её здесь, чтобы кабинет мог показать ссылку,
+                # даже когда /devices/{id}/link недоступен из-за Marzban.
+                "sub_url": subscription_url(d.marzban_username),
             })
 
         if deactivated_any:
@@ -666,7 +670,6 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
         f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(link)}"
         if link else ""
     )
-    from bot.utils.branding import subscription_url
     return {
         "id": dev.id,
         "slot": slot,
@@ -699,7 +702,6 @@ async def get_device_link(device_id: int, request: Request, x_telegram_init_data
         raise HTTPException(500, str(e))
 
     qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(link)}" if link else ""
-    from bot.utils.branding import subscription_url
     return {"link": link, "qr_url": qr_url, "name": dev.name, "sub_url": subscription_url(dev.marzban_username)}
 
 
