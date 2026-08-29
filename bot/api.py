@@ -466,6 +466,28 @@ def _free_slot(devices: list[Device]) -> int | None:
 
 DEVICE_TYPES_API = {"ios", "android", "macos", "windows", "linux", "androidtv", "appletv"}
 
+# Название по умолчанию, если пользователь его не ввёл. Совпадает с тем,
+# что показывают кабинет и мини-приложение в списке выбора системы.
+DEVICE_TYPE_LABELS = {
+    "ios": "iPhone / iPad",
+    "android": "Android",
+    "macos": "macOS",
+    "windows": "Windows",
+    "linux": "Linux",
+    "appletv": "Apple TV",
+    "androidtv": "Смарт-ТВ",
+}
+
+DEVICE_NAME_MAX = 64
+
+
+def _clean_device_name(raw: object, type_key: str) -> str:
+    """Название устройства: обрезанное по длине или ярлык типа по умолчанию."""
+    name = raw.strip() if isinstance(raw, str) else ""
+    if not name:
+        return DEVICE_TYPE_LABELS.get(type_key, type_key)
+    return name[:DEVICE_NAME_MAX]
+
 
 def _mz_username_for_type(
     type_key: str,
@@ -587,6 +609,8 @@ async def get_devices(request: Request, x_telegram_init_data: str | None = Heade
             result.append({
                 "id": d.id,
                 "slot": d.slot,
+                # Тип нужен интерфейсу для иконки, название пишет пользователь.
+                "type": d.device_type,
                 "name": d.name,
                 "traffic_gb": traffic_gb,
                 "online": online,
@@ -613,6 +637,7 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
     type_key = (body.get("type") or "").strip().lower()
     if not type_key or type_key not in DEVICE_TYPES_API:
         raise HTTPException(400, f"Invalid device type. Must be one of: {', '.join(DEVICE_TYPES_API)}")
+    device_name = _clean_device_name(body.get("name"), type_key)
 
     async with AsyncSessionLocal() as session:
         tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
@@ -659,7 +684,8 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
         dev = Device(
             telegram_id=tg_id,
             slot=slot,
-            name=type_key,
+            device_type=type_key,
+            name=device_name,
             marzban_username=mz_username,
         )
         session.add(dev)
@@ -674,7 +700,7 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
         "id": dev.id,
         "slot": slot,
         "type": type_key,
-        "name": type_key,
+        "name": device_name,
         "link": link,
         "qr_url": qr_url,
         "sub_url": subscription_url(mz_username),
@@ -697,12 +723,18 @@ async def get_device_link(device_id: int, request: Request, x_telegram_init_data
         mz_user = await marzban.get_user(dev.marzban_username)
         link = marzban.extract_vless_link(mz_user) or ""
         if link:
-            link = _set_vless_remark(link, dev.name)
+            link = _set_vless_remark(link, dev.device_type)
     except Exception as e:
         raise HTTPException(500, str(e))
 
     qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(link)}" if link else ""
-    return {"link": link, "qr_url": qr_url, "name": dev.name, "sub_url": subscription_url(dev.marzban_username)}
+    return {
+        "link": link,
+        "qr_url": qr_url,
+        "type": dev.device_type,
+        "name": dev.name,
+        "sub_url": subscription_url(dev.marzban_username),
+    }
 
 
 # ─── DELETE /api/devices/{id} ─────────────────────────────────────────────────

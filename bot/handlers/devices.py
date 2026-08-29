@@ -124,7 +124,7 @@ def _fmt_online(online_at: int | None, now_ts: int) -> str:
 def _list_kb(devices: list[Device], has_sub: bool) -> InlineKeyboardMarkup:
     rows = []
     for dev in devices:
-        icon = _type_icon(dev.name)
+        icon = _type_icon(dev.device_type)
         label = _type_label(dev.name)
         rows.append([InlineKeyboardButton(
             text=f"{icon} {label}",
@@ -209,7 +209,8 @@ async def show_devices_screen(
         dev = Device(
             telegram_id=tg_id,
             slot=1,
-            name="ios",
+            device_type="ios",
+            name="iPhone / iPad",
             marzban_username=user.marzban_username,
         )
         session.add(dev)
@@ -221,7 +222,7 @@ async def show_devices_screen(
 
     if devices:
         lines = [
-            f"{_type_icon(d.name)} {_type_label(d.name)}"
+            f"{_type_icon(d.device_type)} {_type_label(d.name)}"
             for d in devices
         ]
         devices_text = "\n".join(lines)
@@ -349,7 +350,8 @@ async def dev_add_type(callback: CallbackQuery, session: AsyncSession) -> None:
     dev = Device(
         telegram_id=tg_id,
         slot=slot,
-        name=type_key,
+        device_type=type_key,
+        name=dt["label"],
         marzban_username=mz_username,
     )
     session.add(dev)
@@ -387,7 +389,7 @@ async def dev_info(callback: CallbackQuery, session: AsyncSession) -> None:
 
     await callback.answer("⏳")
 
-    icon = _type_icon(dev.name)
+    icon = _type_icon(dev.device_type)
     label = _type_label(dev.name)
     now_ts = int(datetime.utcnow().timestamp())
     added = dev.created_at.strftime("%d.%m.%Y") if dev.created_at else "—"
@@ -454,7 +456,7 @@ async def dev_show_link(callback: CallbackQuery, session: AsyncSession) -> None:
 
     try:
         mz = await marzban.get_or_create_user(dev.marzban_username, dev.telegram_id, days_left)
-        link = set_vless_remark(marzban.extract_vless_link(mz), dev.name)
+        link = set_vless_remark(marzban.extract_vless_link(mz), dev.device_type)
     except Exception as e:
         logger.error("dev:link failed for %s: %s", dev.marzban_username, e)
         await callback.message.answer(
@@ -468,7 +470,7 @@ async def dev_show_link(callback: CallbackQuery, session: AsyncSession) -> None:
 
     from bot.handlers.payment import _instructions_kb
 
-    icon = _type_icon(dev.name)
+    icon = _type_icon(dev.device_type)
     label = _type_label(dev.name)
     qr = make_qr_photo(link, f"dev_{dev.id}.png")
     await callback.message.answer_photo(
@@ -496,7 +498,7 @@ async def dev_show_sublink(callback: CallbackQuery, session: AsyncSession) -> No
         return
 
     await callback.answer()
-    icon = _type_icon(dev.name)
+    icon = _type_icon(dev.device_type)
     label = _type_label(dev.name)
     await callback.message.answer(
         f"🔗 <b>Ссылка-подписка — {icon} {label}</b>\n\n"
@@ -520,7 +522,7 @@ async def dev_delete_confirm(callback: CallbackQuery, session: AsyncSession) -> 
         await callback.answer("Устройство не найдено.", show_alert=True)
         return
 
-    icon = _type_icon(dev.name)
+    icon = _type_icon(dev.device_type)
     label = _type_label(dev.name)
     await callback.message.edit_text(
         f"🗑 Удалить <b>{icon} {label}</b>?\n\n"
@@ -544,7 +546,7 @@ async def dev_delete_ok(callback: CallbackQuery, session: AsyncSession) -> None:
         await callback.answer("Устройство не найдено.", show_alert=True)
         return
 
-    icon = _type_icon(dev.name)
+    icon = _type_icon(dev.device_type)
     label = _type_label(dev.name)
 
     dev.is_active = False

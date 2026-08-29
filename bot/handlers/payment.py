@@ -133,7 +133,8 @@ async def _grant_subscription(user: User, days: int, session: AsyncSession) -> N
         dev = Device(
             telegram_id=user.telegram_id,
             slot=1,
-            name="ios",
+            device_type="ios",
+            name="iPhone / iPad",
             marzban_username=user.marzban_username,
         )
         session.add(dev)

@@ -441,6 +441,10 @@ a.profile-row .k .sub{display:block;margin-top:2px;font-size:11.5px;font-weight:
     <h3 id="addDeviceTitle">Что подключаем?</h3>
     <div class="modal-step-sub" id="addDeviceSub">Выберите тип устройства</div>
     <div class="add-device-grid" id="addDeviceOptions"></div>
+    <div id="addDeviceNameStep" style="display:none">
+      <input id="addDeviceName" class="field-input" type="text" maxlength="64" placeholder="Название устройства" style="margin-bottom:12px">
+      <button class="btn" id="addDeviceSubmit">Добавить</button>
+    </div>
     <div class="msg" id="addDeviceMsg"></div>
   </div>
 </div>
@@ -463,6 +467,14 @@ const API = (path, opts = {}) => fetch(path, {credentials: 'same-origin', ...opt
 let ME = null;
 // Версия кабинета — та же, что показывает мини-приложение (account.appVersion).
 const APP_VERSION = '1.2.0';
+
+// Название устройства пишет пользователь, а список рисуется через
+// innerHTML — без экранирования кавычки и теги в имени ломали бы разметку.
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => (
+    {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]
+  ));
+}
 
 function showToast(text) {
   const t = document.getElementById('toast');
@@ -728,13 +740,19 @@ const DEVICE_ICONS = {
 };
 const DEVICE_ICON_FALLBACK = '<svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"></rect><line x1="11" y1="18" x2="13" y2="18"></line></svg>';
 
-const DEVICE_LABELS = {ios: 'iPhone / iPad', android: 'Android', windows: 'Windows', macos: 'macOS', linux: 'Linux', appletv: 'Apple TV', androidtv: 'Смарт-ТВ'};
 
 async function initDevices() {
   await loadDevices();
   document.getElementById('addDeviceBtn').addEventListener('click', openAddDevice);
   document.getElementById('closeAddDevice').addEventListener('click', closeAddDevice);
-  document.getElementById('addDeviceBack').addEventListener('click', () => renderAddStep(null));
+  document.getElementById('addDeviceBack').addEventListener('click', () => {
+    // С шага имени — назад к выбору системы, с него — к выбору типа.
+    renderAddStep(addDeviceState.system ? addDeviceState.category : null);
+  });
+  document.getElementById('addDeviceSubmit').addEventListener('click', submitAddDevice);
+  document.getElementById('addDeviceName').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitAddDevice();
+  });
   document.getElementById('closeLinkModal').addEventListener('click', () => {
     document.getElementById('linkModal').classList.remove('show');
   });
@@ -744,16 +762,21 @@ async function initDevices() {
    Раньше все семь систем лежали простынёй прямо на странице. */
 const DEVICE_CATEGORIES = [
   {id: 'phone', label: 'Телефон', icon: 'ios', systems: [
-    {type: 'ios', label: 'iPhone'}, {type: 'android', label: 'Android'},
+    {type: 'ios', label: 'iPhone', suggest: 'iPhone'},
+    {type: 'android', label: 'Android', suggest: 'Телефон Android'},
   ]},
   {id: 'tablet', label: 'Планшет', icon: 'ios', systems: [
-    {type: 'ios', label: 'iPad'}, {type: 'android', label: 'Android'},
+    {type: 'ios', label: 'iPad', suggest: 'iPad'},
+    {type: 'android', label: 'Android', suggest: 'Планшет Android'},
   ]},
   {id: 'computer', label: 'Компьютер', icon: 'macos', systems: [
-    {type: 'macos', label: 'macOS'}, {type: 'windows', label: 'Windows'}, {type: 'linux', label: 'Linux'},
+    {type: 'macos', label: 'macOS', suggest: 'Мой Mac'},
+    {type: 'windows', label: 'Windows', suggest: 'Компьютер'},
+    {type: 'linux', label: 'Linux', suggest: 'Linux'},
   ]},
   {id: 'tv', label: 'Телевизор', icon: 'appletv', systems: [
-    {type: 'appletv', label: 'Apple TV'}, {type: 'androidtv', label: 'Смарт-ТВ'},
+    {type: 'appletv', label: 'Apple TV', suggest: 'Apple TV'},
+    {type: 'androidtv', label: 'Смарт-ТВ', suggest: 'Телевизор'},
   ]},
 ];
 
@@ -765,16 +788,26 @@ function addDeviceOption(iconKey, label, onClick) {
   return el;
 }
 
-function renderAddStep(category) {
+// Шаги выбора: null → тип, {category} → система, {category, system} → имя.
+let addDeviceState = {category: null, system: null};
+
+function renderAddStep(category, system) {
+  addDeviceState = {category: category || null, system: system || null};
+
   const box = document.getElementById('addDeviceOptions');
+  const nameStep = document.getElementById('addDeviceNameStep');
   const back = document.getElementById('addDeviceBack');
+  const title = document.getElementById('addDeviceTitle');
+  const sub = document.getElementById('addDeviceSub');
   box.innerHTML = '';
+  box.style.display = '';
+  nameStep.style.display = 'none';
   document.getElementById('addDeviceMsg').className = 'msg';
 
   if (!category) {
     back.style.display = 'none';
-    document.getElementById('addDeviceTitle').textContent = 'Что подключаем?';
-    document.getElementById('addDeviceSub').textContent = 'Выберите тип устройства';
+    title.textContent = 'Что подключаем?';
+    sub.textContent = 'Выберите тип устройства';
     DEVICE_CATEGORIES.forEach(c => box.appendChild(
       addDeviceOption(c.icon, c.label, () => renderAddStep(c)),
     ));
@@ -782,11 +815,32 @@ function renderAddStep(category) {
   }
 
   back.style.display = '';
-  document.getElementById('addDeviceTitle').textContent = category.label;
-  document.getElementById('addDeviceSub').textContent = 'Какая система?';
-  category.systems.forEach(sys => box.appendChild(
-    addDeviceOption(sys.type, sys.label, () => addDevice(sys.type)),
-  ));
+
+  if (!system) {
+    title.textContent = category.label;
+    sub.textContent = 'Какая система?';
+    category.systems.forEach(sys => box.appendChild(
+      addDeviceOption(sys.type, sys.label, () => renderAddStep(category, sys)),
+    ));
+    return;
+  }
+
+  // Шаг 3 — название. Подставляем подсказку, но её можно стереть.
+  box.style.display = 'none';
+  nameStep.style.display = '';
+  title.textContent = 'Как назовём?';
+  sub.textContent = `${category.label} · ${system.label}`;
+  const input = document.getElementById('addDeviceName');
+  input.value = system.suggest;
+  input.placeholder = system.suggest;
+  input.focus();
+  input.select();
+}
+
+function submitAddDevice() {
+  const {system} = addDeviceState;
+  if (!system) return;
+  addDevice(system.type, document.getElementById('addDeviceName').value);
 }
 
 function openAddDevice() {
@@ -819,9 +873,9 @@ async function loadDevices() {
   list.innerHTML = devices.map(d => `
     <div class="device-row">
       <div class="device-left">
-        <div class="device-icon">${DEVICE_ICONS[d.name] || DEVICE_ICON_FALLBACK}</div>
+        <div class="device-icon">${DEVICE_ICONS[d.type] || DEVICE_ICON_FALLBACK}</div>
         <div>
-          <div class="device-name">${DEVICE_LABELS[d.name] || d.name} · слот ${d.slot}</div>
+          <div class="device-name">${esc(d.name)} · слот ${d.slot}</div>
           <div class="device-meta">${d.status_label} · ${d.traffic_gb} ГБ · ${d.online ? 'онлайн' : d.last_online}</div>
         </div>
       </div>
@@ -840,13 +894,13 @@ const DEVICE_ERROR_RU = {
   'No active subscription': 'Нет активной подписки — сначала продлите её на вкладке «Продление».',
 };
 
-async function addDevice(type) {
+async function addDevice(type, name) {
   const msg = document.getElementById('addDeviceMsg');
   msg.className = 'msg';
   const r = await API('/api/devices', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({type}),
+    body: JSON.stringify({type, name: (name || '').trim()}),
   });
   if (!r.ok) {
     const data = await r.json().catch(() => ({}));
@@ -859,14 +913,14 @@ async function addDevice(type) {
   closeAddDevice();
   await loadDevices();
   const me = await API('/api/me'); ME = await me.json(); renderStatus();
-  openLinkModal(DEVICE_LABELS[type] || type, dev.link, dev.qr_url);
+  openLinkModal(dev.name, dev.link, dev.qr_url);
 }
 
 async function showDeviceLink(id) {
   const r = await API(`/api/devices/${id}/link`);
   if (!r.ok) { showToast('Не удалось получить ключ'); return; }
   const data = await r.json();
-  openLinkModal(DEVICE_LABELS[data.name] || data.name, data.link, data.qr_url);
+  openLinkModal(data.name, data.link, data.qr_url);
 }
 
 function openLinkModal(title, link, qrUrl) {

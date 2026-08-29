@@ -21,10 +21,13 @@ class Device(Base):
         BigInteger, ForeignKey("users.telegram_id"), nullable=False, index=True
     )
     slot: Mapped[int] = mapped_column(Integer, nullable=False)          # 1, 2 или 3
-    name: Mapped[str] = mapped_column(String(64), nullable=False)       # "iPhone 15"
+    # Тип и название — разные вещи: тип выбирает интерфейс из фиксированного
+    # списка (ios, macos, androidtv, ...), название пишет сам пользователь.
+    device_type: Mapped[str] = mapped_column(String(32), nullable=False)  # "ios"
+    name: Mapped[str] = mapped_column(String(64), nullable=False)         # "iPhone 15"
     marzban_username: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     def __repr__(self) -> str:
-        return f"<Device #{self.id} tg={self.telegram_id} slot={self.slot} name={self.name!r}>"
+        return f"<Device #{self.id} tg={self.telegram_id} slot={self.slot} type={self.device_type} name={self.name!r}>"

@@ -431,7 +431,8 @@ async def handle_gift_payment(
             dev = Device(
                 telegram_id=recipient_id,
                 slot=1,
-                name="ios",
+                device_type="ios",
+                name="iPhone / iPad",
                 marzban_username=mz["username"],
             )
             session.add(dev)
