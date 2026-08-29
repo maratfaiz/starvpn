@@ -875,7 +875,7 @@ async function loadDevices() {
       <div class="device-left">
         <div class="device-icon">${DEVICE_ICONS[d.type] || DEVICE_ICON_FALLBACK}</div>
         <div>
-          <div class="device-name">${esc(d.name)} · слот ${d.slot}</div>
+          <div class="device-name">${esc(d.name)}</div>
           <div class="device-meta">${d.status_label} · ${d.traffic_gb} ГБ · ${d.online ? 'онлайн' : d.last_online}</div>
         </div>
       </div>
