@@ -170,6 +170,21 @@ main{min-width:0}
 .ref-link-box{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;margin-bottom:8px;flex-wrap:wrap}
 .ref-link-box span{flex:1;min-width:120px;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ref-copy{cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;color:#000;background:var(--gold);padding:8px 14px;border-radius:9px;border:none}
+a.profile-row{text-decoration:none;transition:background .15s}
+a.profile-row:hover{background:rgba(255,184,0,.04)}
+a.profile-row .v{color:var(--gold)}
+a.profile-row .k{font-size:13.5px;font-weight:500;color:var(--text)}
+a.profile-row .k .sub{display:block;margin-top:2px;font-size:11.5px;font-weight:400;color:var(--text3)}
+.profile-head{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.profile-avatar{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--gold2),var(--gold));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:800;color:#1A1408}
+.profile-name{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--text)}
+.profile-username{font-size:13px;color:var(--text2);margin-top:1px}
+.profile-foot{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:18px}
+.profile-foot button{background:none;border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;padding:8px 12px}
+.profile-refresh{font-size:12px;font-weight:500;color:var(--text2)}
+.profile-refresh:disabled{opacity:.5}
+.profile-logout{font-size:13px;font-weight:600;color:var(--error)}
+.profile-ver{font-size:11px;color:var(--text3);padding-top:2px}
 .sublink-row{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px 14px;margin-bottom:10px}
 .sublink-url{flex:1;min-width:0;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sublink-actions{display:flex;gap:8px;flex-shrink:0}
@@ -389,14 +404,40 @@ main{min-width:0}
     <div class="tab-panel" id="tab-profile">
       <div class="page-title">Профиль</div>
       <div class="page-sub">Вход по почте, без пароля: каждый раз присылаем одноразовую ссылку.</div>
+
+      <div class="profile-head">
+        <div class="profile-avatar" id="profInitials">—</div>
+        <div>
+          <div class="profile-name" id="profName">—</div>
+          <div class="profile-username" id="profUsername">—</div>
+        </div>
+      </div>
+
       <div class="card">
+        <div class="card-title">Аккаунт</div>
         <div class="profile-row"><span class="k">Почта для входа</span><span class="v" id="profEmail">—</span></div>
         <div class="profile-row"><span class="k">Дата регистрации</span><span class="v" id="profCreated">—</span></div>
         <div class="profile-row"><span class="k">Telegram</span><span class="v" id="profTg">—</span></div>
       </div>
-      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
-        <a class="btn-ghost" href="/support" style="flex:1">Написать в поддержку</a>
-        <button class="btn-ghost" id="logoutBtn" style="flex:1;color:var(--error);border-color:rgba(248,113,113,.3)">Выйти</button>
+
+      <div class="card">
+        <div class="card-title">О сервисе</div>
+        <a class="profile-row" href="/"><span class="k">Сайт</span><span class="v">→</span></a>
+        <a class="profile-row" href="/privacy"><span class="k">Политика конфиденциальности</span><span class="v">→</span></a>
+        <a class="profile-row" href="/terms"><span class="k">Условия использования</span><span class="v">→</span></a>
+        <div class="profile-row"><span class="k">О приложении</span><span class="v" id="profVersionRow">—</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Помощь</div>
+        <a class="profile-row" href="/connect"><span class="k">Как подключиться<span class="sub">Пошагово для каждой системы</span></span><span class="v">→</span></a>
+        <a class="profile-row" href="/support" id="profSupport"><span class="k">Написать в поддержку<span class="sub">Отвечаем в Telegram</span></span><span class="v">→</span></a>
+      </div>
+
+      <div class="profile-foot">
+        <button class="profile-refresh" id="profRefreshBtn">Обновить данные</button>
+        <button class="profile-logout" id="logoutBtn">Выйти из аккаунта</button>
+        <div class="profile-ver">STAR VPN · версия <span id="profVersion"></span></div>
       </div>
     </div>
 
@@ -427,6 +468,8 @@ main{min-width:0}
 <script>
 const API = (path, opts = {}) => fetch(path, {credentials: 'same-origin', ...opts});
 let ME = null;
+// Версия кабинета — та же, что показывает мини-приложение (account.appVersion).
+const APP_VERSION = '1.2.0';
 
 function showToast(text) {
   const t = document.getElementById('toast');
@@ -575,10 +618,54 @@ async function renderSubLink() {
   });
 }
 
+function profileInitials(name) {
+  return name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '\u2605';
+}
+
 function renderProfile() {
+  // Шапка как в мини-приложении: аватар с инициалами, имя и @username.
+  // У веб-аккаунта Telegram может быть не привязан — тогда имя берём из
+  // почты, а второй строкой показываем саму почту.
+  const emailName = (ME.email || '').split('@')[0];
+  const name = (ME.full_name || '').trim() || emailName || 'Аккаунт';
+  document.getElementById('profInitials').textContent = profileInitials(name);
+  document.getElementById('profName').textContent = name;
+  document.getElementById('profUsername').textContent = ME.username ? '@' + ME.username : (ME.email || '—');
+
   document.getElementById('profEmail').textContent = ME.email || '—';
   document.getElementById('profTg').textContent = ME.telegram_linked ? (ME.username ? '@' + ME.username : 'Привязан') : 'Не привязан';
   document.getElementById('profCreated').textContent = fmtDate(ME.created_at);
+  document.getElementById('profVersionRow').textContent = APP_VERSION;
+  document.getElementById('profVersion').textContent = APP_VERSION;
+
+  // В мини-приложении поддержка открывает чат в Telegram, а не страницу
+  // сайта — на вебе делаем так же, если бэкенд отдал ссылку.
+  if (ME.support_url) {
+    const link = document.getElementById('profSupport');
+    link.href = ME.support_url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+  }
+}
+
+async function refreshProfile() {
+  const btn = document.getElementById('profRefreshBtn');
+  btn.disabled = true;
+  btn.textContent = 'Обновляем…';
+  try {
+    const r = await API('/api/me');
+    if (!r.ok) throw new Error('Не удалось обновить');
+    ME = await r.json();
+    renderStatus();
+    renderProfile();
+    renderSubLink();
+    showToast('Данные обновлены');
+  } catch (e) {
+    showToast(e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Обновить данные';
+  }
 }
 
 function initAccountMenu() {
@@ -620,6 +707,7 @@ function initTabs() {
 
   document.getElementById('logoutLink').addEventListener('click', logout);
   document.getElementById('logoutBtn').addEventListener('click', logout);
+  document.getElementById('profRefreshBtn').addEventListener('click', refreshProfile);
   document.getElementById('activateTrialBtn').addEventListener('click', activateTrial);
 }
 

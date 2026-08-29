@@ -72,21 +72,28 @@ function meToSubscription(me) {
  * проверки, и при отсутствии поля в шапку попадала строка "undefined";
  * username вообще не подставлялся и всегда показывал мок.
  */
-function accountFromTelegram(base, tgUser) {
+function accountFromTelegram(base, tgUser, me) {
   const name = [tgUser?.first_name, tgUser?.last_name].filter(Boolean).join(" ").trim();
-  const display = name || base.name;
+  const display = name || me?.full_name || base.name;
   const initials = display
     .split(/\s+/)
     .slice(0, 2)
     .map((w) => w[0])
     .join("")
     .toUpperCase();
+  const username = tgUser?.username || me?.username;
 
   return {
     ...base,
     name: display,
-    username: tgUser?.username ? `@${tgUser.username}` : base.username,
+    username: username ? `@${username}` : base.username,
     initials: initials || base.initials,
+    // Те же факты, что показывает раздел «Аккаунт» в кабинете на сайте.
+    email: me?.email || "",
+    createdAt: me?.created_at
+      ? new Date(me.created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" })
+      : "",
+    telegram: me?.telegram_linked === false ? "Не привязан" : username ? `@${username}` : "Привязан",
   };
 }
 
@@ -97,6 +104,7 @@ export default function App() {
 
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState(null);
+  const [me, setMe] = useState(null);
   const [devices, setDevices] = useState([]);
   const [maxDevices, setMaxDevices] = useState(3);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -104,6 +112,7 @@ export default function App() {
 
   const loadAll = async () => {
     const [me, devs, admin] = await Promise.all([api.getMe(), api.getDevices(), api.adminCheck()]);
+    setMe(me);
     setSubscription(meToSubscription(me));
     setMaxDevices(me.max_devices);
     setDevices(devs);
@@ -455,7 +464,7 @@ export default function App() {
           )}
           {activeTab === "account" && (
             <AccountScreen
-              account={accountFromTelegram(account, tgUser)}
+              account={accountFromTelegram(account, tgUser, me)}
               settingsRows={settingsRows}
               onOpenSetting={openSetting}
               onLogout={logout}

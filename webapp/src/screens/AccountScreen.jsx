@@ -71,6 +71,18 @@ const Row = ({ icon, label, detail, onClick, last }) => (
   </button>
 );
 
+/** Строка «ключ — значение»: те же факты, что в разделе «Аккаунт» на сайте. */
+const InfoRow = ({ label, value, last }) => (
+  <div
+    className={`flex items-center justify-between gap-3 px-4 py-3.5 ${
+      last ? "" : "border-b border-white/[.05]"
+    }`}
+  >
+    <span className="font-medium text-[13px] text-ink/45">{label}</span>
+    <span className="font-semibold text-[13px] text-ink truncate">{value}</span>
+  </div>
+);
+
 const Group = ({ children }) => (
   <div className="bg-app-card border border-white/[.06] rounded-[18px] overflow-hidden">
     {children}
@@ -105,6 +117,16 @@ export default function AccountScreen({
           <div className="font-display font-bold text-[17px] text-ink truncate">{account.name}</div>
           <div className="font-medium text-[13px] text-ink/45 truncate">{account.username}</div>
         </div>
+      </div>
+
+      {/* Факты аккаунта — один в один с кабинетом на сайте */}
+      <div>
+        <SectionTitle>Аккаунт</SectionTitle>
+        <Group>
+          <InfoRow label="Почта для входа" value={account.email || "—"} />
+          <InfoRow label="Дата регистрации" value={account.createdAt || "—"} />
+          <InfoRow label="Telegram" value={account.telegram || "—"} last />
+        </Group>
       </div>
 
       {/* Настройки приложения */}

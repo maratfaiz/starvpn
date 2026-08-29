@@ -17,6 +17,13 @@ const nextId = () => ++seq;
 const store = {
   me: {
     subscription_active: true,
+    // Факты аккаунта — те же поля, что отдаёт GET /api/me и показывает
+    // личный кабинет на сайте.
+    email: "marat@example.com",
+    full_name: "Марат К.",
+    username: "helloimmarat",
+    telegram_linked: true,
+    created_at: "2026-03-02",
     plan_name: "3 месяца",
     days_left: 23,
     total_days: 30,
