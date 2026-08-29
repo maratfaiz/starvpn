@@ -175,10 +175,6 @@ a.profile-row:hover{background:rgba(255,184,0,.04)}
 a.profile-row .v{color:var(--gold)}
 a.profile-row .k{font-size:13.5px;font-weight:500;color:var(--text)}
 a.profile-row .k .sub{display:block;margin-top:2px;font-size:11.5px;font-weight:400;color:var(--text3)}
-.profile-head{display:flex;align-items:center;gap:14px;margin-bottom:20px}
-.profile-avatar{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--gold2),var(--gold));display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:800;color:#1A1408}
-.profile-name{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--text)}
-.profile-username{font-size:13px;color:var(--text2);margin-top:1px}
 .profile-foot{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:18px}
 .profile-foot button{background:none;border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;padding:8px 12px}
 .profile-refresh{font-size:12px;font-weight:500;color:var(--text2)}
@@ -405,14 +401,6 @@ a.profile-row .k .sub{display:block;margin-top:2px;font-size:11.5px;font-weight:
       <div class="page-title">Профиль</div>
       <div class="page-sub">Вход по почте, без пароля: каждый раз присылаем одноразовую ссылку.</div>
 
-      <div class="profile-head">
-        <div class="profile-avatar" id="profInitials">—</div>
-        <div>
-          <div class="profile-name" id="profName">—</div>
-          <div class="profile-username" id="profUsername">—</div>
-        </div>
-      </div>
-
       <div class="card">
         <div class="card-title">Аккаунт</div>
         <div class="profile-row"><span class="k">Почта для входа</span><span class="v" id="profEmail">—</span></div>
@@ -618,20 +606,7 @@ async function renderSubLink() {
   });
 }
 
-function profileInitials(name) {
-  return name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '\u2605';
-}
-
 function renderProfile() {
-  // Шапка как в мини-приложении: аватар с инициалами, имя и @username.
-  // У веб-аккаунта Telegram может быть не привязан — тогда имя берём из
-  // почты, а второй строкой показываем саму почту.
-  const emailName = (ME.email || '').split('@')[0];
-  const name = (ME.full_name || '').trim() || emailName || 'Аккаунт';
-  document.getElementById('profInitials').textContent = profileInitials(name);
-  document.getElementById('profName').textContent = name;
-  document.getElementById('profUsername').textContent = ME.username ? '@' + ME.username : (ME.email || '—');
-
   document.getElementById('profEmail').textContent = ME.email || '—';
   document.getElementById('profTg').textContent = ME.telegram_linked ? (ME.username ? '@' + ME.username : 'Привязан') : 'Не привязан';
   document.getElementById('profCreated').textContent = fmtDate(ME.created_at);
