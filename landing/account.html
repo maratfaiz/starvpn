@@ -370,12 +370,21 @@ main{min-width:0}
       <div class="page-sub">Оплачиваете срок — получатель активирует его сам. На вашу подписку это не влияет.</div>
       <div class="card">
         <div class="card-title">Кому дарим</div>
-        <p style="color:var(--text2);font-size:13px;line-height:1.6;margin-bottom:12px">Получатель должен быть зарегистрирован в боте — он получит уведомление и подписку сразу после оплаты.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <input type="text" id="giftRecipient" class="field-input" placeholder="@username или Telegram ID" style="flex:1;min-width:180px">
-          <button class="btn-ghost" id="giftCheckBtn" style="flex-shrink:0">Проверить</button>
+        <div class="provider-toggle" style="margin-bottom:14px">
+          <div class="provider-btn selected" id="giftModeUser" data-gmode="user">Знаю получателя</div>
+          <div class="provider-btn" id="giftModeLink" data-gmode="link">Пришлю ссылкой</div>
         </div>
-        <div class="msg" id="giftLookupMsg"></div>
+        <div id="giftRecipientBlock">
+          <p style="color:var(--text2);font-size:13px;line-height:1.6;margin-bottom:12px">Получатель должен быть зарегистрирован в боте — он получит уведомление и подписку сразу после оплаты.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input type="text" id="giftRecipient" class="field-input" placeholder="@username или Telegram ID" style="flex:1;min-width:180px">
+            <button class="btn-ghost" id="giftCheckBtn" style="flex-shrink:0">Проверить</button>
+          </div>
+          <div class="msg" id="giftLookupMsg"></div>
+        </div>
+        <div id="giftLinkBlock" style="display:none">
+          <p style="color:var(--text2);font-size:13px;line-height:1.6">Оплатите тариф и получите ссылку — отправьте её кому угодно, даже если человек ещё не запускал бота. Ссылка одноразовая и заработает сразу после оплаты.</p>
+        </div>
       </div>
 
       <div class="card" id="giftFormCard" style="display:none">
@@ -389,6 +398,16 @@ main{min-width:0}
         </label>
         <button class="btn" id="giftSubmitBtn">Подарить</button>
         <div class="msg" id="giftSubmitMsg"></div>
+      </div>
+
+      <div class="card" id="giftLinkResult" style="display:none">
+        <div class="card-title">Ссылка на подарок готова</div>
+        <p style="color:var(--text2);font-size:13px;line-height:1.6;margin-bottom:12px">Сначала оплатите тариф — ссылка станет рабочей сразу после оплаты. Скопируйте её уже сейчас, чтобы не потерять.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+          <input type="text" id="giftLinkUrl" class="field-input" readonly style="flex:1;min-width:180px">
+          <button class="btn-ghost" id="giftLinkCopyBtn" style="flex-shrink:0">Скопировать</button>
+        </div>
+        <a class="btn" id="giftLinkPayBtn" href="#">Оплатить</a>
       </div>
     </div>
 
@@ -481,6 +500,24 @@ async function boot() {
   initDevices();
   initAccountMenu();
   checkPendingGift();
+  claimPendingGiftLink();
+}
+
+/* ── Подарок по ссылке, отложенный до входа (см. /gift/{code}) ── */
+
+async function claimPendingGiftLink() {
+  let code = null;
+  try { code = localStorage.getItem('star_vpn_pending_gift'); } catch (e) {}
+  if (!code) return;
+  try {
+    const r = await API(`/api/gift/link/${encodeURIComponent(code)}/claim`, {method: 'POST'});
+    try { localStorage.removeItem('star_vpn_pending_gift'); } catch (e) {}
+    if (r.ok) {
+      // Клейм создал настоящую GiftNotification — пусть обычный флоу её и покажет.
+      await checkPendingGift();
+      const me = await API('/api/me'); ME = await me.json(); renderStatus();
+    }
+  } catch (e) { /* тихо игнорируем — можно забрать ещё раз со страницы /gift/{code} */ }
 }
 
 /* ── Подарок, ожидающий получателя ──────────────────────────── */
@@ -837,10 +874,34 @@ async function submitRenew(provider, plan) {
 let giftRecipientInfo = null;
 let giftSelectedProvider = null;
 let giftSelectedPlan = null;
+let giftMode = 'user'; // 'user' | 'link'
 
 function initGift() {
   document.getElementById('giftCheckBtn').addEventListener('click', giftCheckRecipient);
   document.getElementById('giftSubmitBtn').addEventListener('click', submitGift);
+  document.getElementById('giftModeUser').addEventListener('click', () => setGiftMode('user'));
+  document.getElementById('giftModeLink').addEventListener('click', () => setGiftMode('link'));
+  document.getElementById('giftLinkCopyBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(document.getElementById('giftLinkUrl').value);
+  });
+}
+
+function setGiftMode(mode) {
+  if (giftMode === mode) return;
+  giftMode = mode;
+  document.getElementById('giftModeUser').classList.toggle('selected', mode === 'user');
+  document.getElementById('giftModeLink').classList.toggle('selected', mode === 'link');
+  document.getElementById('giftRecipientBlock').style.display = mode === 'user' ? '' : 'none';
+  document.getElementById('giftLinkBlock').style.display = mode === 'link' ? '' : 'none';
+  document.getElementById('giftLinkResult').style.display = 'none';
+  document.getElementById('giftFormCard').style.display = 'none';
+  document.getElementById('giftLookupMsg').textContent = '';
+  giftRecipientInfo = null;
+  if (mode === 'link') {
+    giftRecipientInfo = {display_name: 'по ссылке'};
+    document.getElementById('giftFormCard').style.display = 'block';
+    loadGiftPlans();
+  }
 }
 
 async function giftCheckRecipient() {
@@ -947,7 +1008,7 @@ async function submitGift() {
     body: JSON.stringify({
       provider: giftSelectedProvider,
       plan: giftSelectedPlan,
-      recipient: document.getElementById('giftRecipient').value.trim(),
+      recipient: giftMode === 'link' ? '' : document.getElementById('giftRecipient').value.trim(),
       anon: document.getElementById('giftAnon').checked,
       message: document.getElementById('giftMessage').value.trim(),
     }),
@@ -961,6 +1022,15 @@ async function submitGift() {
     return;
   }
   const data = await r.json();
+  btn.disabled = false;
+  btn.textContent = 'Подарить';
+
+  if (giftMode === 'link' && data.gift_link) {
+    document.getElementById('giftLinkUrl').value = data.gift_link;
+    document.getElementById('giftLinkPayBtn').href = data.url;
+    document.getElementById('giftLinkResult').style.display = 'block';
+    return;
+  }
   window.location.href = data.url;
 }
 

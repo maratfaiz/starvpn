@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тебе подарок — STAR VPN</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="Кто-то подарил тебе подписку STAR VPN. Открой подарок и забери дни VPN на свой аккаунт.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+:root{
+  --gold:#FFB800;--gold2:#FFD84D;
+  --gold-border:rgba(255,184,0,0.2);
+  --gold-dim:rgba(255,184,0,0.1);
+  --green:#4ADE80;
+  --bg:#060606;
+  --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;
+  --max:1240px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.7;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:var(--gold2)}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.confetti-field{position:fixed;inset:0;z-index:5;pointer-events:none;overflow:hidden}
+@keyframes confetti-fall{0%{transform:translateY(-10vh) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(540deg);opacity:0}}
+.confetti-piece{position:absolute;top:0}
+@media(prefers-reduced-motion:reduce){.confetti-piece{animation:none!important;display:none}}
+
+#nav{position:sticky;top:0;z-index:100;padding:0 24px;background:rgba(6,6,6,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
+.nav-inner{max-width:var(--max);margin:0 auto;display:flex;align-items:center;height:64px}
+.nav-logo{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
+
+main{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px;text-align:center}
+.wrap{max-width:460px;width:100%}
+
+/* ── Box ── */
+.box-stage{position:relative;width:150px;height:130px;margin:0 auto 30px;perspective:600px}
+.box-base{position:absolute;left:15px;right:15px;bottom:0;height:88px;background:linear-gradient(160deg,#D99A1F,#8A5E10);border-radius:8px 8px 4px 4px;box-shadow:0 18px 50px rgba(255,184,0,.18),inset 0 -8px 14px rgba(0,0,0,.25)}
+.box-base::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:20px;margin-left:-10px;background:linear-gradient(160deg,#FFD84D,#C98A1B)}
+.box-lid{position:absolute;left:6px;right:6px;top:26px;height:34px;background:linear-gradient(160deg,#FFD84D,#C98A1B);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.3);transform-origin:50% 100%;transition:transform .7s cubic-bezier(.34,1.56,.64,1),opacity .5s ease .1s}
+.box-lid::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:22px;margin-left:-11px;background:linear-gradient(160deg,#FFF3C9,#E8B23A)}
+.box-lid::after{content:"";position:absolute;left:50%;top:-9px;width:26px;height:20px;margin-left:-13px;background:#FFF3C9;border-radius:40% 40% 10% 10%;box-shadow:-16px 6px 0 -4px #FFF3C9,16px 6px 0 -4px #FFF3C9}
+.box-glow{position:absolute;left:50%;top:10%;width:220px;height:220px;margin-left:-110px;border-radius:50%;background:radial-gradient(circle,rgba(255,216,120,.5),transparent 70%);opacity:0;transition:opacity .5s ease;pointer-events:none}
+.box-stage.open .box-lid{transform:rotate(-100deg) translateY(-6px);opacity:0}
+.box-stage.open .box-glow{opacity:1}
+.box-stage.muted .box-base{filter:grayscale(.6) brightness(.6)}
+.box-stage.muted .box-lid{transform:rotate(-70deg) translateY(-4px);opacity:.35;filter:grayscale(.6)}
+
+.kicker{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(24px,4vw,32px);font-weight:800;margin-bottom:12px;line-height:1.15}
+.lede{color:var(--text2);max-width:38ch;margin:0 auto 24px}
+
+.card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:22px;margin-bottom:22px;text-align:left}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.row:last-child{border-bottom:none}
+.row .k{font-size:13px;color:var(--text2)}
+.row .v{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--text);text-align:right}
+.msg-quote{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06);font-size:14px;color:var(--text);font-style:italic}
+
+.btn{cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;padding:14px 26px;border-radius:12px;text-decoration:none;white-space:nowrap;border:none;display:inline-flex;align-items:center;gap:8px;width:100%;justify-content:center}
+.btn-primary{background:var(--gold);color:#000}
+.btn-primary:hover{background:var(--gold2);color:#000}
+.btn-primary:disabled{opacity:.5;cursor:default}
+.btn-ghost{border:1px solid rgba(255,255,255,.16);color:var(--text);background:transparent}
+.btn-ghost:hover{border-color:var(--gold-border);color:var(--gold)}
+.actions{display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
+.err-line{font-size:13px;color:#F87171;margin-top:10px;min-height:16px}
+
+.spinner{width:26px;height:26px;border-radius:50%;border:2.5px solid rgba(255,184,0,.2);border-top-color:var(--gold);animation:spin .8s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.links{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;font-size:13.5px;color:var(--text2);margin-top:24px}
+
+footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
+.footer-inner{max-width:var(--max);margin:0 auto;padding:24px;display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between;font-size:12.5px;color:var(--text3)}
+.footer-inner a{color:var(--text2)}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="confetti-field" id="confettiField"></div>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">STAR VPN</a>
+  </div>
+</nav>
+
+<main>
+  <div class="wrap" id="box">
+    <div class="spinner"></div>
+    <h1>Открываем подарок…</h1>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 STAR VPN</span>
+    <span style="display:flex;gap:20px;flex-wrap:wrap">
+      <a href="/privacy">Конфиденциальность</a>
+      <a href="/terms">Условия</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+const code = location.pathname.replace(/^\/gift\//, '').trim();
+const box = document.getElementById('box');
+const PENDING_KEY = 'star_vpn_pending_gift';
+
+function boxStage(cls) {
+  return `<div class="box-stage ${cls}"><div class="box-glow"></div><div class="box-base"></div><div class="box-lid"></div></div>`;
+}
+
+function renderConfetti() {
+  const field = document.getElementById('confettiField');
+  const colors = ['#FFB800', '#FFD84D', '#4ADE80', '#EBE0CC', '#F87171'];
+  field.innerHTML = Array.from({length: 40}, (_, i) => {
+    const size = 6 + (i % 3) * 3;
+    const left = Math.round((i * 2.5 + (i % 5) * 6) % 100);
+    const dur = (2.6 + (i % 4) * 0.6).toFixed(1);
+    const delay = ((i % 8) * 0.18).toFixed(2);
+    const radius = i % 2 ? '2px' : '50%';
+    const color = colors[i % colors.length];
+    return `<span class="confetti-piece" style="left:${left}%;width:${size}px;height:${size}px;background:${color};border-radius:${radius};animation:confetti-fall ${dur}s ease-in ${delay}s 1 both"></span>`;
+  }).join('');
+}
+
+function renderNotFound() {
+  box.innerHTML = `
+    ${boxStage('muted')}
+    <div class="kicker">Ссылка недействительна</div>
+    <h1>Подарок не найден</h1>
+    <p class="lede">Проверьте, что ссылка скопирована полностью — либо попросите отправителя прислать её заново.</p>
+    <div class="actions"><a class="btn btn-ghost" href="/">На главную</a></div>
+  `;
+}
+
+function renderPending() {
+  box.innerHTML = `
+    ${boxStage('')}
+    <div class="kicker">Почти готово</div>
+    <h1>Отправитель ещё оплачивает подарок</h1>
+    <p class="lede">Как только оплата пройдёт, здесь появится анимация открытия — обычно это занимает не больше минуты.</p>
+    <div class="actions"><button class="btn btn-ghost" id="retryBtn">Обновить</button></div>
+  `;
+  document.getElementById('retryBtn').addEventListener('click', load);
+}
+
+function renderClaimed() {
+  box.innerHTML = `
+    ${boxStage('muted')}
+    <div class="kicker">Уже открыт</div>
+    <h1>Этот подарок уже забрали</h1>
+    <p class="lede">Ссылка одноразовая — похоже, кто-то уже успел активировать её раньше вас.</p>
+    <div class="actions"><a class="btn btn-primary" href="/tariffs">Купить себе VPN</a></div>
+  `;
+}
+
+function renderReady(data, opts) {
+  opts = opts || {};
+  const senderLine = data.sender_name === 'Аноним'
+    ? 'Аноним 🕵️'
+    : data.sender_name;
+  box.innerHTML = `
+    ${boxStage('')}
+    <div class="kicker">Тебе подарок</div>
+    <h1>Кто-то подарил тебе STAR VPN</h1>
+    <p class="lede">Открой, чтобы увидеть детали, и забери подписку на свой аккаунт.</p>
+    <div class="card">
+      <div class="row"><span class="k">От кого</span><span class="v">${escapeHtml(senderLine)}</span></div>
+      <div class="row"><span class="k">Тариф</span><span class="v">${escapeHtml(data.plan_label)}</span></div>
+      <div class="row"><span class="k">Срок</span><span class="v">+${data.plan_days} дней</span></div>
+      ${data.message ? `<div class="msg-quote">«${escapeHtml(data.message)}»</div>` : ''}
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="claimBtn">🎁 Забрать подарок</button>
+    </div>
+    <div class="err-line" id="claimErr"></div>
+    ${opts.authPrompt ? `
+      <div class="card" style="margin-top:8px">
+        <div class="kicker" style="margin-bottom:12px">Нужно войти, чтобы забрать</div>
+        <div class="actions">
+          <a class="btn btn-primary" href="/api/telegram-oauth/start">Войти через Telegram</a>
+          <a class="btn btn-ghost" href="/login">Войти по email</a>
+        </div>
+      </div>
+    ` : ''}
+  `;
+  const stage = box.querySelector('.box-stage');
+  requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.add('open')));
+  document.getElementById('claimBtn').addEventListener('click', () => claim(data));
+}
+
+function renderSuccess(data) {
+  box.innerHTML = `
+    ${boxStage('open')}
+    <div class="kicker">Готово</div>
+    <h1>+${data.plan_days} дней уже на твоём аккаунте</h1>
+    <p class="lede">Подписка активирована. Открой личный кабинет или бота, чтобы подключить устройство.</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="/account">Личный кабинет</a>
+      <a class="btn btn-ghost" href="https://t.me/starisvpnbot">Открыть в Telegram</a>
+    </div>
+  `;
+  renderConfetti();
+}
+
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s == null ? '' : String(s);
+  return d.innerHTML;
+}
+
+async function claim(data) {
+  const btn = document.getElementById('claimBtn');
+  const err = document.getElementById('claimErr');
+  btn.disabled = true;
+  btn.textContent = 'Забираем…';
+  err.textContent = '';
+  try {
+    const r = await fetch(`/api/gift/link/${encodeURIComponent(code)}/claim`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (r.status === 401) {
+      try { localStorage.setItem(PENDING_KEY, code); } catch (e) {}
+      renderReady(data, { authPrompt: true });
+      return;
+    }
+    const body = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      err.textContent = body.detail || 'Не удалось забрать подарок';
+      btn.disabled = false;
+      btn.textContent = '🎁 Забрать подарок';
+      return;
+    }
+    try { localStorage.removeItem(PENDING_KEY); } catch (e) {}
+    renderSuccess(body);
+  } catch (e) {
+    err.textContent = 'Проблема с сетью — попробуйте ещё раз.';
+    btn.disabled = false;
+    btn.textContent = '🎁 Забрать подарок';
+  }
+}
+
+async function load() {
+  if (!code) { renderNotFound(); return; }
+  try {
+    const r = await fetch(`/api/gift/link/${encodeURIComponent(code)}`);
+    const data = await r.json();
+    if (data.status === 'ready') renderReady(data);
+    else if (data.status === 'pending') renderPending();
+    else if (data.status === 'claimed') renderClaimed();
+    else renderNotFound();
+  } catch (e) {
+    renderNotFound();
+  }
+}
+
+load().then(() => {
+  // Вернулись из /login или Telegram OIDC с ещё не забранным подарком — автозаберём.
+  let pending = null;
+  try { pending = localStorage.getItem(PENDING_KEY); } catch (e) {}
+  if (pending && pending === code) {
+    const claimBtn = document.getElementById('claimBtn');
+    if (claimBtn) claimBtn.click();
+  }
+});
+
+/* ═══ Starfield ══════════════════════════════════════════════ */
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize, {passive:true});
+  const stars = Array.from({length:340}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.6 + 0.3,
+    o: Math.random() * 0.6 + 0.35,
+    sp: Math.random() * 0.0004 + 0.00006,
+    ph: Math.random() * Math.PI * 2,
+  }));
+  let f = 0;
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height); f++;
+    for(const s of stars){
+      const a = s.o * (0.55 + 0.45 * Math.sin(f * s.sp * 200 + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,216,120,${a})`; ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>

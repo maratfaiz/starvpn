@@ -156,6 +156,17 @@ async def handle_card_webhook(payment_id: int, bot: Bot) -> None:
         payment.paid_at = datetime.utcnow()
         days = payment.days or 30
 
+        if payment.gift_link_code:
+            # Подарок по ссылке — получатель ещё не известен, ничего не
+            # выдаём сейчас. Подписка достанется тому, кто заберёт по
+            # /gift/{code} (см. POST /api/gift/link/{code}/claim в api.py).
+            await session.commit()
+            logger.info(
+                "Card gift-link payment confirmed: id=%s code=%s rub=%s days=%s",
+                payment_id, payment.gift_link_code, payment.amount, days,
+            )
+            return
+
         user_result = await session.execute(
             select(User).where(User.telegram_id == payment.telegram_id)
         )

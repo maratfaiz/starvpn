@@ -1529,12 +1529,21 @@ async def gift_lookup(request: Request, x_telegram_init_data: str | None = Heade
     return {"telegram_id": recipient.telegram_id, "display_name": uname}
 
 
+def _new_gift_link_code() -> str:
+    return secrets.token_urlsafe(9).replace("-", "").replace("_", "")[:11]
+
+
 @app.post("/api/gift/invoice")
 async def gift_invoice(request: Request, x_telegram_init_data: str | None = Header(default=None)):
     """
     Создаёт подарочный платёж с сайта (личный кабинет) — картой или ЮMoney,
     в зависимости от переключателя в админ-панели. Stars здесь недоступны —
     это оплата только внутри Telegram.
+
+    Если recipient не указан — это подарок "по ссылке": получатель ещё
+    неизвестен, платёж временно висит на самом отправителе (gift_sender_id),
+    а после оплаты становится доступен на /gift/{code} — кто угодно
+    открывает ссылку и забирает подарок под своим аккаунтом.
     """
     body = await request.json()
     provider = (body.get("provider") or "").strip()
@@ -1542,11 +1551,10 @@ async def gift_invoice(request: Request, x_telegram_init_data: str | None = Head
     recipient_input = (body.get("recipient") or "").strip()
     anon = bool(body.get("anon"))
     message = (body.get("message") or "").strip()[:300]
+    link_mode = not recipient_input
 
     if provider not in ("card", "yoomoney"):
         raise HTTPException(400, "Неизвестный способ оплаты")
-    if not recipient_input:
-        raise HTTPException(400, "Укажите получателя")
 
     from bot.utils.settings_store import is_provider_enabled
 
@@ -1556,13 +1564,21 @@ async def gift_invoice(request: Request, x_telegram_init_data: str | None = Head
         if not await is_provider_enabled(session, provider):
             raise HTTPException(503, "Этот способ оплаты временно недоступен")
 
-        recipient = await _lookup_gift_recipient(recipient_input, session)
-        if not recipient or recipient.telegram_id <= 0:
-            raise HTTPException(404, "Получатель не найден. Он должен сначала написать /start боту @starisvpnbot.")
-        if recipient.telegram_id == tg_id:
-            raise HTTPException(400, "Нельзя подарить подписку самому себе.")
-
-        uname = f"@{recipient.username}" if recipient.username else str(recipient.telegram_id)
+        gift_link_code = None
+        if link_mode:
+            recipient_tg_id = tg_id  # временный держатель записи, пока подарок не заберут
+            uname = "по ссылке"
+            gift_desc_suffix = "по ссылке"
+            gift_link_code = _new_gift_link_code()
+        else:
+            recipient = await _lookup_gift_recipient(recipient_input, session)
+            if not recipient or recipient.telegram_id <= 0:
+                raise HTTPException(404, "Получатель не найден. Он должен сначала написать /start боту @starisvpnbot.")
+            if recipient.telegram_id == tg_id:
+                raise HTTPException(400, "Нельзя подарить подписку самому себе.")
+            recipient_tg_id = recipient.telegram_id
+            uname = f"@{recipient.username}" if recipient.username else str(recipient.telegram_id)
+            gift_desc_suffix = f"для {uname}"
 
         if provider == "card":
             from bot.utils.robokassa import robokassa, CARD_PLANS, payment_inv_id
@@ -1573,9 +1589,10 @@ async def gift_invoice(request: Request, x_telegram_init_data: str | None = Head
                 raise HTTPException(503, "Оплата картой временно недоступна")
 
             payment = Payment(
-                order_id="", telegram_id=recipient.telegram_id, amount=float(plan["rub"]),
+                order_id="", telegram_id=recipient_tg_id, amount=float(plan["rub"]),
                 status="pending", payment_method="card", days=plan["days"],
                 is_gift=True, gift_sender_id=tg_id, gift_anon=anon, gift_message=message,
+                gift_link_code=gift_link_code,
             )
             session.add(payment)
             await session.flush()
@@ -1584,7 +1601,7 @@ async def gift_invoice(request: Request, x_telegram_init_data: str | None = Head
                 pay_url = robokassa.build_payment_url(
                     inv_id=payment_inv_id(payment.id),
                     amount=plan["rub"],
-                    description=f"STAR VPN — подарок {plan['label']} для {uname}",
+                    description=f"STAR VPN — подарок {plan['label']} {gift_desc_suffix}",
                 )
             except RuntimeError as e:
                 await session.rollback()
@@ -1599,9 +1616,10 @@ async def gift_invoice(request: Request, x_telegram_init_data: str | None = Head
                 raise HTTPException(503, "Оплата через ЮMoney временно недоступна")
 
             payment = Payment(
-                order_id="", telegram_id=recipient.telegram_id, amount=float(plan["rub"]),
+                order_id="", telegram_id=recipient_tg_id, amount=float(plan["rub"]),
                 status="pending", payment_method="yoomoney", days=plan["days"],
                 is_gift=True, gift_sender_id=tg_id, gift_anon=anon, gift_message=message,
+                gift_link_code=gift_link_code,
             )
             session.add(payment)
             await session.flush()
@@ -1610,7 +1628,7 @@ async def gift_invoice(request: Request, x_telegram_init_data: str | None = Head
                 pay_url = yoomoney.build_payment_url(
                     label=payment_label(payment.id),
                     amount=plan["rub"],
-                    description=f"STAR VPN — подарок {plan['label']} для {uname}",
+                    description=f"STAR VPN — подарок {plan['label']} {gift_desc_suffix}",
                 )
             except RuntimeError as e:
                 await session.rollback()
@@ -1620,7 +1638,119 @@ async def gift_invoice(request: Request, x_telegram_init_data: str | None = Head
         await session.commit()
         inv_id = payment.id
 
-    return {"url": pay_url, "invoice_id": inv_id, "recipient_name": uname}
+    result = {"url": pay_url, "invoice_id": inv_id, "recipient_name": uname}
+    if gift_link_code:
+        result["gift_link"] = f"{settings.site_url}/gift/{gift_link_code}"
+    return result
+
+
+_GIFT_PLAN_LABELS = {30: "1 месяц", 90: "3 месяца", 180: "6 месяцев"}
+
+
+@app.get("/gift/{code}", include_in_schema=False)
+async def gift_reveal_page(code: str):
+    """Публичная страница-открытка для подарка по ссылке — см. /api/gift/link/{code}."""
+    return _serve_html(_LANDING_DIR / "gift-reveal.html")
+
+
+@app.get("/api/gift/link/{code}")
+async def gift_link_status(code: str):
+    """Публичный статус подарка по ссылке — без авторизации, для анимации на /gift/{code}."""
+    async with AsyncSessionLocal() as session:
+        r = await session.execute(
+            select(Payment).where(Payment.gift_link_code == code, Payment.is_gift.is_(True))
+        )
+        payment: Payment | None = r.scalar_one_or_none()
+        if not payment:
+            return {"status": "not_found"}
+        if payment.status != "paid":
+            return {"status": "pending"}
+        if payment.gift_claimed:
+            return {"status": "claimed"}
+
+        days = payment.days or 30
+        plan_label = _GIFT_PLAN_LABELS.get(days, f"{days} дней")
+        sender_name = "Аноним"
+        if not payment.gift_anon and payment.gift_sender_id:
+            sr = await session.execute(select(User).where(User.telegram_id == payment.gift_sender_id))
+            sender: User | None = sr.scalar_one_or_none()
+            if sender:
+                sender_name = f"@{sender.username}" if sender.username else (sender.full_name or "пользователь")
+
+        return {
+            "status": "ready",
+            "plan_days": days,
+            "plan_label": plan_label,
+            "sender_name": sender_name,
+            "message": payment.gift_message or "",
+        }
+
+
+@app.post("/api/gift/link/{code}/claim")
+async def gift_link_claim(code: str, request: Request, x_telegram_init_data: str | None = Header(default=None)):
+    """Забрать подарок по ссылке — требует авторизации (Mini App или /login),
+    поэтому фронт на 401 должен предложить войти и вернуться на эту же ссылку."""
+    async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+
+        r = await session.execute(
+            select(Payment).where(Payment.gift_link_code == code, Payment.is_gift.is_(True))
+        )
+        payment: Payment | None = r.scalar_one_or_none()
+        if not payment:
+            raise HTTPException(404, "Подарок не найден")
+        if payment.status != "paid":
+            raise HTTPException(409, "Дарящий ещё не завершил оплату")
+        if payment.gift_claimed:
+            raise HTTPException(409, "Этот подарок уже кто-то забрал")
+        if payment.gift_sender_id == tg_id:
+            raise HTTPException(400, "Нельзя забрать свой же подарок")
+
+        from bot.handlers.payment import _grant_subscription
+        from bot.utils.webauth import get_or_create_user_by_telegram_id
+
+        claimant = await get_or_create_user_by_telegram_id(tg_id, None, None, session)
+        days = payment.days or 30
+        await _grant_subscription(claimant, days, session)
+
+        payment.gift_claimed = True
+        payment.telegram_id = tg_id
+        await session.commit()
+
+        plan_label = _GIFT_PLAN_LABELS.get(days, f"{days} дней")
+        sender_name = "Аноним"
+        if not payment.gift_anon and payment.gift_sender_id:
+            sr = await session.execute(select(User).where(User.telegram_id == payment.gift_sender_id))
+            sender: User | None = sr.scalar_one_or_none()
+            if sender:
+                sender_name = f"@{sender.username}" if sender.username else (sender.full_name or "пользователь")
+
+        notif = GiftNotification(
+            recipient_id=tg_id, sender_name=sender_name, plan_label=plan_label, plan_days=days,
+        )
+        session.add(notif)
+        await session.commit()
+
+        if payment.gift_sender_id and payment.gift_sender_id > 0:
+            from aiogram import Bot
+            bot = Bot(token=settings.telegram_api_token)
+            try:
+                await bot.send_message(
+                    payment.gift_sender_id,
+                    f"✅ <b>Подарок забрали по ссылке!</b>\n\n"
+                    f"📦 Тариф: <b>{plan_label}</b>\n"
+                    f"Получатель уже пользуется VPN 🎉",
+                    parse_mode="HTML",
+                )
+            except Exception as e:
+                logger.warning("Gift-link sender notify failed: %s", e)
+            finally:
+                try:
+                    await bot.session.close()
+                except Exception:
+                    pass
+
+    return {"ok": True, "plan_label": plan_label, "plan_days": days}
 
 
 # ─── POST /api/trial ─────────────────────────────────────────────────────────

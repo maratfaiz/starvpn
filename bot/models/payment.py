@@ -34,6 +34,10 @@ class Payment(Base):
     gift_sender_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     gift_anon: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     gift_message: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    # подарок по ссылке — получатель неизвестен при создании платежа, поэтому
+    # telegram_id временно = gift_sender_id, пока подарок не заберут по коду.
+    gift_link_code: Mapped[str | None] = mapped_column(String(16), unique=True, nullable=True, index=True)
+    gift_claimed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     def __repr__(self) -> str:
         method = self.payment_method or "stars"
