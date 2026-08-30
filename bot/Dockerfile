@@ -9,6 +9,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy bot package
 COPY bot/ ./bot/
 
+# Copy Alembic config/migrations (needed for `alembic upgrade head` inside the container)
+COPY alembic.ini ./alembic.ini
+COPY alembic/ ./alembic/
+
 # Copy Mini App HTML (served via /app endpoint)
 COPY webapp/app.html ./webapp/app.html
 
