@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Купить VPN-ключ без Telegram — STAR VPN</title>
-<meta name="description" content="Покупка ключа STAR VPN прямо на сайте: оплата картой через Robokassa или ЮMoney, ссылка подписки сразу после оплаты. Telegram не нужен.">
+<meta name="description" content="Покупка ключа STAR VPN прямо на сайте: оплата через ЮMoney, ссылка подписки сразу после оплаты. Telegram не нужен.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -176,16 +176,16 @@ footer{border-top:1px solid rgba(255,255,255,.07)}
 
     <div class="step-label">Шаг 2 · Способ оплаты</div>
     <div class="providers" id="providers">
-      <div class="provider sel" data-provider="robokassa" onclick="selectProvider('robokassa', this)">
+      <div class="provider" data-provider="robokassa" onclick="selectProvider('robokassa', this)">
         <span class="provider-icon"><svg viewBox="0 0 24 24"><path d="M2 9h20M4 5h16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2zM6 15h4"/></svg></span>
         <div><div class="provider-label">Банковская карта</div><div class="provider-hint">Visa · Mastercard · МИР</div></div>
       </div>
-      <div class="provider" data-provider="yoomoney" onclick="selectProvider('yoomoney', this)">
+      <div class="provider sel" data-provider="yoomoney" onclick="selectProvider('yoomoney', this)">
         <span class="provider-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>
         <div><div class="provider-label">ЮMoney</div><div class="provider-hint">карта, СБП или кошелёк</div></div>
       </div>
     </div>
-    <div class="pay-note" id="pay-note">Visa, Mastercard и МИР через Robokassa. Реквизиты вводятся на стороне провайдера.</div>
+    <div class="pay-note" id="pay-note">Оплата картой, через СБП или с кошелька ЮMoney. Реквизиты вводятся на стороне провайдера.</div>
 
     <button class="buy-btn" id="buy-btn" disabled>Выберите тариф</button>
     <div class="buy-note">Оплата проходит на защищённой странице провайдера. Данные карты к нам не попадают.</div>
@@ -225,7 +225,7 @@ footer{border-top:1px solid rgba(255,255,255,.07)}
     <div class="faq-card"><div class="faq-q">Нужен ли паспорт?</div><div class="faq-a">Нет. Ни Robokassa, ни ЮMoney не требуют от вас документов при оплате подписки.</div></div>
     <div class="faq-card"><div class="faq-q">Можно ли потом перейти в бота?</div><div class="faq-a">Да, когда Telegram снова доступен — напишите в @starisvpnbot, ключ можно привязать к аккаунту.</div></div>
     <div class="faq-card"><div class="faq-q">Работает ли здесь пробный период?</div><div class="faq-a">Пробные 2 дня выдаются один раз на telegram_id и активируются в боте. На сайте доступна только покупка.</div></div>
-    <div class="faq-card"><div class="faq-q">А криптовалютой?</div><div class="faq-a">Нет, оплата криптовалютой убрана. Остались Stars в боте, карта через Robokassa и ЮMoney.</div></div>
+    <div class="faq-card"><div class="faq-q">А криптовалютой?</div><div class="faq-a">Нет, оплата криптовалютой убрана насовсем. Сейчас на сайте доступна только ЮMoney.</div></div>
     <div class="faq-card"><div class="faq-q">Что если платёж прошёл, а ссылки нет?</div><div class="faq-a">Сохраните номер заказа и напишите в поддержку через бота — ключ восстановим вручную.</div></div>
   </div>
 </div>
@@ -278,7 +278,7 @@ function rateFor(days){
 function priceFor(days){ return Math.round(days * rateFor(days)); }
 
 let selectedPlan = null;   // {key, days, rub, label, desc} — key "custom" for the days-param plan
-let selectedProvider = 'robokassa';
+let selectedProvider = 'yoomoney';
 const buyBtn = document.getElementById('buy-btn');
 const plansEl = document.getElementById('plans');
 const providersEl = document.getElementById('providers');
@@ -362,7 +362,7 @@ async function loadProviders(){
       if (available && !firstAvailable) firstAvailable = el;
     });
     if (firstAvailable) selectProvider(firstAvailable.dataset.provider, firstAvailable);
-  } catch (e) { /* оставляем Robokassa по умолчанию */ }
+  } catch (e) { /* оставляем ЮMoney по умолчанию */ }
 }
 
 buyBtn.addEventListener('click', async () => {
