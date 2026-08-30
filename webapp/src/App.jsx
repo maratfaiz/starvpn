@@ -379,9 +379,17 @@ export default function App() {
 
   if (loading || !subscription) {
     return (
-      <div className="relative flex items-center justify-center min-h-screen bg-app-bg">
-        <Starfield />
-        <span className="relative text-ink/50 text-sm animate-pulse">Загрузка...</span>
+      <div className="relative flex items-center justify-center min-h-screen bg-app-bg overflow-hidden">
+        <Starfield shootingStars />
+        <div className="relative z-[1] flex flex-col items-center gap-6">
+          <div className="flex flex-col items-center gap-2">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="w-7 h-7 text-gold">
+              <path d="M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z" />
+            </svg>
+            <span className="font-display font-extrabold text-2xl tracking-wide text-gold">STAR VPN</span>
+          </div>
+          <span className="text-ink/40 text-xs tracking-[0.2em] uppercase animate-pulse">Загрузка</span>
+        </div>
       </div>
     );
   }
