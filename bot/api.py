@@ -2127,6 +2127,80 @@ async def create_yoomoney_invoice(
     return {"url": pay_url, "invoice_id": inv_id}
 
 
+# ─── GET /api/crypto/plans, POST /api/invoice/crypto (сайт/личный кабинет) ───
+
+@app.get("/api/crypto/plans")
+async def get_crypto_plans_api(request: Request, x_telegram_init_data: str | None = Header(default=None)):
+    """Тарифы для оплаты криптовалютой (USD, через @CryptoBot). Возвращает []
+    если CryptoPay не настроен или отключён в админке."""
+    from bot.utils.settings_store import is_provider_enabled
+    async with AsyncSessionLocal() as session:
+        await _resolve_tg_id(request, x_telegram_init_data, session)
+        if not await is_provider_enabled(session, "crypto"):
+            return []
+    from bot.utils.cryptopay import cryptopay, CRYPTO_PLANS
+    if not cryptopay.configured:
+        return []
+    return [
+        {"key": k, "label": v["label"], "usd": float(v["usd"]), "days": v["days"], "desc": v["desc"]}
+        for k, v in CRYPTO_PLANS.items()
+    ]
+
+
+@app.post("/api/invoice/crypto")
+async def create_crypto_invoice_api(
+    request: Request,
+    x_telegram_init_data: str | None = Header(default=None),
+):
+    """Создаёт CryptoPay-инвойс для личного кабинета/сайта — тот же payload
+    "{plan_key}:{tg_id}", что и в bot/handlers/crypto_payment.py, поэтому
+    его обрабатывает тот же /crypto/webhook без отдельной ветки."""
+    body = await request.json()
+    plan_key = body.get("plan")
+
+    from bot.utils.cryptopay import cryptopay, CRYPTO_PLANS
+    plan = CRYPTO_PLANS.get(plan_key)
+    if not plan:
+        raise HTTPException(status_code=400, detail="Неизвестный тариф")
+    if not cryptopay.configured:
+        raise HTTPException(status_code=503, detail="Оплата криптовалютой временно недоступна")
+
+    from bot.utils.settings_store import is_provider_enabled
+    async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+        if not await is_provider_enabled(session, "crypto"):
+            raise HTTPException(status_code=503, detail="Оплата криптовалютой временно недоступна")
+
+        try:
+            invoice = await cryptopay.create_invoice(
+                usd_amount=plan["usd"],
+                payload=f"{plan_key}:{tg_id}",
+                description=f"STAR VPN - {plan['label']}",
+                paid_btn_name="callback",
+                paid_btn_url=f"{settings.site_url}/account",
+            )
+        except Exception as e:
+            logger.error("CryptoPay invoice (site) failed for tg=%s: %s", tg_id, e)
+            raise HTTPException(status_code=502, detail="Ошибка CryptoPay. Попробуйте позже.")
+
+        invoice_id = invoice.get("invoice_id")
+        pay_url = invoice.get("bot_invoice_url") or invoice.get("mini_app_invoice_url", "")
+
+        payment = Payment(
+            order_id=f"crypto_{invoice_id}",
+            telegram_id=tg_id,
+            amount=float(plan["usd"]),
+            status="pending",
+            payment_method="crypto",
+            invoice_id=invoice_id,
+            days=plan["days"],
+        )
+        session.add(payment)
+        await session.commit()
+
+    return {"url": pay_url, "invoice_id": invoice_id}
+
+
 # ─── Гостевые заказы (покупка без Telegram, с лендинга) ──────────────────────
 
 @app.get("/api/guest/plans")

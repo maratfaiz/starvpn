@@ -53,6 +53,10 @@ class CryptoPay:
         self._token: str = settings.cryptopay_token
 
     @property
+    def configured(self) -> bool:
+        return bool(self._token)
+
+    @property
     def _headers(self) -> dict[str, str]:
         return {"Crypto-Pay-API-Token": self._token}
 
@@ -61,10 +65,19 @@ class CryptoPay:
         usd_amount: Decimal | str,
         payload: str,
         description: str = "STAR VPN",
+        paid_btn_name: str = "openBot",
+        paid_btn_url: str | None = None,
     ) -> dict:
         """
         Создаёт счёт с ценой в USD.
         Пользователь выбирает USDT / TON / BTC / ETH в боте @CryptoBot.
+
+        По умолчанию кнопка "оплачено" ведёт обратно в наш бот — подходит
+        для инвойсов, созданных из самого бота (crypto_payment.py, gift.py).
+        Для оплаты с сайта (bot/api.py) передавайте paid_btn_name="callback"
+        и paid_btn_url=на страницу сайта — иначе веб-only аккаунт (без
+        привязанного Telegram) после оплаты попадёт в бота под ДРУГИМ,
+        настоящим telegram_id и не увидит там свою подписку.
 
         Returns:
             dict с полями: invoice_id, bot_invoice_url, pay_url, status, ...
@@ -83,8 +96,8 @@ class CryptoPay:
                     "accepted_assets": "USDT,TON,BTC,ETH",
                     "payload": payload,
                     "description": description,
-                    "paid_btn_name": "openBot",
-                    "paid_btn_url": f"https://t.me/{settings.bot_username}",
+                    "paid_btn_name": paid_btn_name,
+                    "paid_btn_url": paid_btn_url or f"https://t.me/{settings.bot_username}",
                     "expires_in": 3600,  # 1 час
                 },
             )

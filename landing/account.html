@@ -501,6 +501,21 @@ async function boot() {
   initAccountMenu();
   checkPendingGift();
   claimPendingGiftLink();
+  resumePendingPurchase();
+}
+
+/* ── Тариф, выбранный на /get-vpn до входа в аккаунт ─────────── */
+
+async function resumePendingPurchase() {
+  let pending = null;
+  try { pending = JSON.parse(localStorage.getItem('star_vpn_pending_purchase') || 'null'); } catch (e) {}
+  if (!pending || !pending.plan) return;
+  const renewTab = document.querySelector('[data-tab="renew"]');
+  if (renewTab) renewTab.click();
+  await new Promise(r => setTimeout(r, 400));
+  const planEl = document.querySelector(`#renewContent [data-plan="${pending.plan}"]`);
+  if (planEl) planEl.click();
+  try { localStorage.removeItem('star_vpn_pending_purchase'); } catch (e) {}
 }
 
 /* ── Подарок по ссылке, отложенный до входа (см. /gift/{code}) ── */
@@ -797,21 +812,25 @@ async function deleteDevice(id) {
 
 async function loadRenew() {
   const el = document.getElementById('renewContent');
-  const [cardR, yooR] = await Promise.all([API('/api/card/plans'), API('/api/yoomoney/plans')]);
+  const [cardR, yooR, cryptoR] = await Promise.all([API('/api/card/plans'), API('/api/yoomoney/plans'), API('/api/crypto/plans')]);
   const cardPlans = cardR.ok ? await cardR.json() : [];
   const yooPlans = yooR.ok ? await yooR.json() : [];
+  const cryptoPlans = cryptoR.ok ? await cryptoR.json() : [];
 
-  if (!cardPlans.length && !yooPlans.length) {
+  if (!cardPlans.length && !yooPlans.length && !cryptoPlans.length) {
     el.innerHTML = '<div class="empty">Оплата временно недоступна — напишите в <a href="/support" style="color:var(--gold)">поддержку</a>.</div>';
     return;
   }
 
   const providers = [];
   if (cardPlans.length) providers.push({key: 'card', label: 'Банковской картой', plans: cardPlans});
+  if (cryptoPlans.length) providers.push({key: 'crypto', label: 'Криптовалютой', plans: cryptoPlans});
   if (yooPlans.length) providers.push({key: 'yoomoney', label: 'ЮMoney', plans: yooPlans});
 
   let selectedProvider = providers[0].key;
   let selectedPlan = providers[0].plans[0]?.key;
+
+  function priceText(p) { return p.usd != null ? `$${p.usd}` : `${p.rub}₽`; }
 
   function render() {
     const active = providers.find(p => p.key === selectedProvider);
@@ -825,7 +844,7 @@ async function loadRenew() {
         ${active.plans.map(p => `
           <div class="plan-card ${p.key === selectedPlan ? 'selected' : ''}" data-plan="${p.key}">
             <div class="lbl">${p.label}</div>
-            <div class="price">${p.rub}₽</div>
+            <div class="price">${priceText(p)}</div>
             <div class="unit">${p.desc}</div>
           </div>
         `).join('')}

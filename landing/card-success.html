@@ -103,27 +103,43 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
 <script>
 const CHECK_ICON = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-opacity=".9"></circle><path d="M8 12.5l2.5 2.5L16 9"></path></svg>';
 
-function telegramState() {
+async function accountState() {
+  let hasTelegram = true;
+  try {
+    const r = await fetch('/api/me', { credentials: 'include' });
+    if (r.ok) {
+      const me = await r.json();
+      hasTelegram = (me.telegram_id || 0) > 0;
+    }
+  } catch (e) { /* оставляем сценарий с Telegram по умолчанию */ }
+
+  const steps = hasTelegram ? `
+        <div class="step"><div class="step-num">1</div><p>Вернитесь в <b>Telegram-бота</b> или откройте <b>личный кабинет</b> — там уже виден статус активной подписки.</p></div>
+        <div class="step"><div class="step-num">2</div><p>Откройте раздел <b>«Мои устройства»</b> и добавьте ключ для своего телефона, ноутбука или ТВ.</p></div>
+        <div class="step"><div class="step-num">3</div><p>Подключитесь через приложение — ссылка на установку есть прямо в боте или в кабинете.</p></div>
+  ` : `
+        <div class="step"><div class="step-num">1</div><p>Откройте <b>личный кабинет</b> — там уже виден статус активной подписки.</p></div>
+        <div class="step"><div class="step-num">2</div><p>Откройте раздел <b>«Устройства»</b> и добавьте ключ для своего телефона, ноутбука или ТВ.</p></div>
+        <div class="step"><div class="step-num">3</div><p>Подключитесь через приложение — ссылка на установку есть прямо в кабинете.</p></div>
+  `;
+  const actions = hasTelegram
+    ? `<a class="btn btn-primary" href="https://t.me/starisvpnbot">Открыть Telegram</a>
+       <a class="btn btn-ghost" href="/account">Личный кабинет</a>`
+    : `<a class="btn btn-primary" href="/account">Открыть личный кабинет</a>`;
+
   document.getElementById('box').innerHTML = `
     <div class="status-icon">${CHECK_ICON}</div>
     <h1>Оплата прошла успешно</h1>
     <p class="lede">Подписка активируется автоматически — обычно в течение минуты.</p>
     <div class="card">
       <div class="card-title">Что дальше</div>
-      <div class="steps">
-        <div class="step"><div class="step-num">1</div><p>Вернитесь в <b>Telegram-бота</b> — там уже виден статус активной подписки.</p></div>
-        <div class="step"><div class="step-num">2</div><p>Откройте раздел <b>«Мои устройства»</b> и добавьте ключ для своего телефона, ноутбука или ТВ.</p></div>
-        <div class="step"><div class="step-num">3</div><p>Подключитесь через приложение — ссылка на установку есть прямо в боте.</p></div>
-      </div>
+      <div class="steps">${steps}</div>
     </div>
     <div class="perk-row">
       <span class="perk-pill"><svg viewBox="0 0 24 24"><path d="M12 2l7 4v6c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z"/></svg>Zero Logs</span>
       <span class="perk-pill"><svg viewBox="0 0 24 24"><path d="M7 3h10a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/></svg>До 3 устройств</span>
     </div>
-    <div class="actions">
-      <a class="btn btn-primary" href="https://t.me/starisvpnbot">Открыть Telegram</a>
-      <a class="btn btn-ghost" href="/account">Личный кабинет</a>
-    </div>
+    <div class="actions">${actions}</div>
     <div class="links">
       <a href="/tariffs">Тарифы</a>
       <a href="/support">Поддержка</a>
@@ -178,7 +194,7 @@ const orderId = localStorage.getItem('star_vpn_guest_order');
 if (orderId) {
   pollGuestOrder(orderId, 0);
 } else {
-  telegramState();
+  accountState();
 }
 
 /* ═══ Starfield ══════════════════════════════════════════════ */
