@@ -1983,14 +1983,33 @@ async def create_card_invoice(
     request: Request,
     x_telegram_init_data: str | None = Header(default=None),
 ):
-    """Создаёт pending-платёж и подписанную ссылку Robokassa (мини-апп)."""
+    """Создаёт pending-платёж и подписанную ссылку Robokassa (мини-апп).
+
+    Принимает либо {"plan": "plan_1m"} (фиксированный тариф), либо
+    {"days": N} (7..180, произвольный срок — та же формула цены,
+    что и в гостевом чекауте, см. robokassa.custom_plan_price)."""
     body = await request.json()
     plan_key = body.get("plan")
+    custom_days = body.get("days")
 
-    from bot.utils.robokassa import robokassa, CARD_PLANS
-    plan = CARD_PLANS.get(plan_key)
-    if not plan:
-        raise HTTPException(status_code=400, detail="Неизвестный тариф")
+    from bot.utils.robokassa import (
+        robokassa, CARD_PLANS, CUSTOM_DAYS_MIN, CUSTOM_DAYS_MAX, custom_plan_price,
+    )
+    if plan_key:
+        plan_days = CARD_PLANS[plan_key]["days"] if plan_key in CARD_PLANS else None
+        if plan_days is None:
+            raise HTTPException(status_code=400, detail="Неизвестный тариф")
+        rub = CARD_PLANS[plan_key]["rub"]
+        label = CARD_PLANS[plan_key]["label"]
+    elif isinstance(custom_days, int) and CUSTOM_DAYS_MIN <= custom_days <= CUSTOM_DAYS_MAX:
+        plan_days = custom_days
+        rub = custom_plan_price(custom_days)
+        label = f"{custom_days} дней"
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Укажите тариф или срок от {CUSTOM_DAYS_MIN} до {CUSTOM_DAYS_MAX} дней",
+        )
     if not robokassa.configured:
         raise HTTPException(status_code=503, detail="Оплата картой временно недоступна")
 
@@ -2002,10 +2021,10 @@ async def create_card_invoice(
         payment = Payment(
             order_id="",
             telegram_id=tg_id,
-            amount=float(plan["rub"]),
+            amount=float(rub),
             status="pending",
             payment_method="card",
-            days=plan["days"],
+            days=plan_days,
         )
         session.add(payment)
         await session.flush()
@@ -2015,8 +2034,8 @@ async def create_card_invoice(
             from bot.utils.robokassa import payment_inv_id
             pay_url = robokassa.build_payment_url(
                 inv_id=payment_inv_id(payment.id),
-                amount=plan["rub"],
-                description=f"STAR VPN - {plan['label']}",
+                amount=rub,
+                description=f"STAR VPN - {label}",
             )
         except RuntimeError as e:
             await session.rollback()

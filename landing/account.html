@@ -84,7 +84,7 @@ code,.mono{font-family:'JetBrains Mono',monospace}
 .side-menu-item.active{background:rgba(255,184,0,.09);border-color:rgba(255,184,0,.3);color:var(--gold)}
 .side-menu-item svg{width:18px;height:18px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .side-menu-item span{font-size:14px;font-weight:500;flex:1}
-.side-menu-count{font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(255,255,255,.04);border-radius:6px;padding:2px 7px;color:var(--text2)}
+.side-menu-count{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:600;background:rgba(255,255,255,.05);border-radius:20px;padding:1.5px 7px;color:var(--text2);margin-left:auto}
 .side-menu-item.active .side-menu-count{background:rgba(255,184,0,.12);color:var(--gold)}
 
 .side-days-card{background:rgba(255,184,0,.05);border:1px solid rgba(255,184,0,.22);border-radius:18px;padding:18px}
@@ -121,6 +121,19 @@ main{min-width:0}
 .overview-exp{font-size:13.5px;color:var(--text2)}
 .overview-actions{display:flex;flex-direction:column;gap:10px;min-width:200px}
 .trial-note{font-size:12.5px;color:var(--text2);margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08)}
+
+.gift-hero{background:linear-gradient(160deg,rgba(255,184,0,.1),rgba(255,255,255,.02));border:1px solid rgba(255,184,0,.24);border-radius:22px;padding:22px;margin-bottom:14px;display:flex;align-items:center;gap:18px}
+.gift-hero-icon{width:52px;height:52px;border-radius:16px;background:var(--gold-dim);border:1px solid rgba(255,184,0,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--gold)}
+.gift-hero-icon svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.gift-hero-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;margin-bottom:5px}
+.gift-hero-text{color:var(--text2);font-size:13px;line-height:1.55}
+@media(max-width:520px){.gift-hero{flex-direction:column;text-align:center}}
+.gift-feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.gift-feat{background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px}
+.gift-feat-icon{color:var(--gold);margin-bottom:8px}
+.gift-feat-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.gift-feat-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.gift-feat-text{font-size:11.5px;color:var(--text2);line-height:1.4}
 
 .card{background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:20px;margin-bottom:12px}
 .card-title{font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:10px}
@@ -194,8 +207,28 @@ main{min-width:0}
 .plan-card .price{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:var(--gold);margin-top:8px}
 .plan-card .unit{font-size:12px;color:var(--text2);margin-top:3px}
 .provider-toggle{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px}
-.provider-btn{cursor:pointer;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.02);border-radius:14px;padding:14px 16px;text-align:center;font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:600;color:var(--text2);min-height:44px;transition:border-color .15s,background .15s,color .15s}
+.provider-btn{cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.02);border-radius:14px;padding:14px 16px;text-align:center;font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:600;color:var(--text2);min-height:44px;transition:border-color .15s,background .15s,color .15s}
 .provider-btn.selected{border-color:rgba(255,184,0,.45);color:var(--gold);background:rgba(255,184,0,.07)}
+.provider-btn svg{width:17px;height:17px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+
+.renew-mode-toggle{display:flex;gap:8px;margin-bottom:14px}
+.renew-mode-btn{cursor:pointer;flex:1;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.02);border-radius:12px;padding:10px;text-align:center;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:var(--text2);transition:all .15s}
+.renew-mode-btn.selected{border-color:rgba(255,184,0,.45);color:var(--gold);background:rgba(255,184,0,.07)}
+.custom-days-card{background:linear-gradient(160deg,rgba(255,184,0,.08),rgba(255,255,255,.015));border:1px solid rgba(255,184,0,.24);border-radius:18px;padding:20px;margin-bottom:16px}
+.custom-top{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.custom-days-num{font-family:'Space Grotesk',sans-serif;font-size:34px;font-weight:700;color:var(--text);line-height:1}
+.custom-days-lbl{font-size:14px;color:var(--text2)}
+.custom-price{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:var(--gold);line-height:1;text-align:right}
+.custom-perday{font-size:11.5px;color:var(--text2);margin-top:4px;text-align:right}
+.custom-ticks{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text3);margin-top:8px}
+.quick-days{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.quick-day{cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--text2);transition:all .15s}
+.quick-day.sel{border-color:rgba(255,184,0,.45);background:rgba(255,184,0,.08);color:var(--gold)}
+input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;width:100%}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:4px;background:rgba(255,255,255,.1)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--gold);border:3px solid var(--bg);box-shadow:0 2px 10px rgba(255,184,0,.5);margin-top:-8px;cursor:pointer}
+input[type=range]::-moz-range-track{height:6px;border-radius:4px;background:rgba(255,255,255,.1)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--gold);border:3px solid var(--bg);cursor:pointer}
 .field-input,.field-textarea{width:100%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:12px 14px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
 .field-input:focus,.field-textarea:focus{border-color:rgba(255,184,0,.4)}
 .field-textarea{min-height:90px;line-height:1.6;resize:vertical;margin-top:4px}
@@ -418,22 +451,7 @@ main{min-width:0}
       <div class="page-title">Устройства</div>
       <div class="page-sub" id="devicesSub">Ссылка добавляет STAR VPN в приложение автоматически — под своим названием и с предупреждением об окончании подписки.</div>
       <div id="devicesList"></div>
-      <div class="section-title">Телефон / планшет</div>
-      <div class="add-device-grid">
-        <div class="add-device-btn" data-type="ios"><div class="ic"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg></div><div class="lbl">iPhone / iPad</div></div>
-        <div class="add-device-btn" data-type="android"><div class="ic"><svg viewBox="0 0 24 24"><rect x="7" y="4" width="10" height="18" rx="2"/><line x1="11" y1="19" x2="13" y2="19"/><line x1="9" y1="4" x2="7.5" y2="2"/><line x1="15" y1="4" x2="16.5" y2="2"/></svg></div><div class="lbl">Android</div></div>
-      </div>
-      <div class="section-title">Компьютер</div>
-      <div class="add-device-grid">
-        <div class="add-device-btn" data-type="macos"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><line x1="2" y1="19" x2="22" y2="19"/></svg></div><div class="lbl">macOS</div></div>
-        <div class="add-device-btn" data-type="windows"><div class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="1.5"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/></svg></div><div class="lbl">Windows</div></div>
-        <div class="add-device-btn" data-type="linux"><div class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 9l4 3-4 3"/><line x1="12" y1="15" x2="17" y2="15"/></svg></div><div class="lbl">Linux</div></div>
-      </div>
-      <div class="section-title">ТВ</div>
-      <div class="add-device-grid">
-        <div class="add-device-btn" data-type="appletv"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20l1.5-3M16 20l-1.5-3"/></svg></div><div class="lbl">Apple TV</div></div>
-        <div class="add-device-btn" data-type="androidtv"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20l1.5-3M16 20l-1.5-3"/></svg></div><div class="lbl">Смарт-ТВ</div></div>
-      </div>
+      <button class="btn" id="openAddDeviceBtn" style="max-width:240px">+ Добавить устройство</button>
       <div class="msg" id="devicesMsg"></div>
     </div>
 
@@ -454,7 +472,33 @@ main{min-width:0}
     <!-- Подарить -->
     <div class="tab-panel" id="tab-gift">
       <div class="page-title">Подарить подписку</div>
-      <div class="page-sub">Оплачиваете срок — получатель активирует его сам. На вашу подписку это не влияет.</div>
+      <div class="page-sub">Оплачиваете срок — получатель активирует его сам.</div>
+
+      <div class="gift-hero">
+        <div class="gift-hero-icon"><svg viewBox="0 0 24 24"><path d="M3 11h18v9a1 1 0 01-1 1H4a1 1 0 01-1-1zM2.5 7.5h19V11h-19zM12 7.5V21M12 7.5S10.5 3 8 3a2.2 2.2 0 000 4.5zM12 7.5S13.5 3 16 3a2.2 2.2 0 010 4.5z"/></svg></div>
+        <div>
+          <div class="gift-hero-title">Подарите STAR VPN</div>
+          <div class="gift-hero-text">Быстро, безопасно и без границ — для друга, который ещё не подключился. На вашу подписку это никак не влияет.</div>
+        </div>
+      </div>
+      <div class="gift-feat-grid">
+        <div class="gift-feat">
+          <div class="gift-feat-icon"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></div>
+          <div class="gift-feat-title">Без риска</div>
+          <div class="gift-feat-text">Ваша подписка не меняется</div>
+        </div>
+        <div class="gift-feat">
+          <div class="gift-feat-icon"><svg viewBox="0 0 24 24"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></div>
+          <div class="gift-feat-title">Мгновенно</div>
+          <div class="gift-feat-text">Активируется сразу после оплаты</div>
+        </div>
+        <div class="gift-feat">
+          <div class="gift-feat-icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+          <div class="gift-feat-title">Без документов</div>
+          <div class="gift-feat-text">Картой или криптовалютой</div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-title">Кому дарим</div>
         <div class="provider-toggle" style="margin-bottom:14px">
@@ -507,10 +551,28 @@ main{min-width:0}
         <div class="profile-row"><span class="k">Дата регистрации</span><span class="v" id="profCreated">—</span></div>
         <div class="profile-row"><span class="k">Telegram</span><span class="v" id="profTg">—</span></div>
       </div>
-      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
-        <a class="btn-ghost" href="/support" style="flex:1">Написать в поддержку</a>
-        <button class="btn-ghost" id="logoutBtn" style="flex:1;color:var(--error);border-color:rgba(248,113,113,.3)">Выйти</button>
+
+      <div class="card">
+        <div class="card-title">Приватность</div>
+        <p style="color:var(--text2);font-size:12.5px;line-height:1.6">Мы не ведём журнал посещённых сайтов, IP-адресов и трафика — архитектура Zero Logs. Данные передаются платёжным провайдерам только в объёме, необходимом для оплаты.</p>
       </div>
+
+      <div class="card">
+        <div class="card-title">Помощь</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a class="btn-ghost" href="/wiki" style="flex:1;min-width:140px">Wiki</a>
+          <a class="btn-ghost" href="/wiki/faq" style="flex:1;min-width:140px">Частые вопросы</a>
+          <a class="btn-ghost" href="/support" style="flex:1;min-width:140px">Написать в поддержку</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Документы</div>
+        <div class="profile-row"><span class="k">Условия использования</span><a class="v" href="/terms">Открыть →</a></div>
+        <div class="profile-row"><span class="k">Политика конфиденциальности</span><a class="v" href="/privacy">Открыть →</a></div>
+      </div>
+
+      <button class="btn-ghost" id="logoutBtn" style="width:100%;color:var(--error);border-color:rgba(248,113,113,.3)">Выйти</button>
     </div>
 
   </main>
@@ -522,6 +584,30 @@ main{min-width:0}
   <button class="bottom-nav-item" data-tab="renew"><svg viewBox="0 0 24 24"><path d="M3 6h18v12H3zM3 10h18M6.5 14.5h3"/></svg><span>Продление</span></button>
   <button class="bottom-nav-item" data-tab="gift"><svg viewBox="0 0 24 24"><path d="M3 11h18v9a1 1 0 01-1 1H4a1 1 0 01-1-1zM2.5 7.5h19V11h-19zM12 7.5V21"/></svg><span>Подарить</span></button>
   <button class="bottom-nav-item" data-tab="referral"><svg viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg><span>Ещё</span></button>
+</div>
+
+<!-- Add device modal -->
+<div class="modal-overlay" id="addDeviceModal">
+  <div class="modal" style="max-width:420px;text-align:left">
+    <button class="modal-close" id="closeAddDeviceModal"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <h3 style="text-align:center;margin-bottom:16px">Выберите устройство</h3>
+    <div class="section-title">Телефон / планшет</div>
+    <div class="add-device-grid">
+      <div class="add-device-btn" data-type="ios"><div class="ic"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg></div><div class="lbl">iPhone / iPad</div></div>
+      <div class="add-device-btn" data-type="android"><div class="ic"><svg viewBox="0 0 24 24"><rect x="7" y="4" width="10" height="18" rx="2"/><line x1="11" y1="19" x2="13" y2="19"/><line x1="9" y1="4" x2="7.5" y2="2"/><line x1="15" y1="4" x2="16.5" y2="2"/></svg></div><div class="lbl">Android</div></div>
+    </div>
+    <div class="section-title">Компьютер</div>
+    <div class="add-device-grid">
+      <div class="add-device-btn" data-type="macos"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><line x1="2" y1="19" x2="22" y2="19"/></svg></div><div class="lbl">macOS</div></div>
+      <div class="add-device-btn" data-type="windows"><div class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="13" rx="1.5"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="17" x2="12" y2="20"/></svg></div><div class="lbl">Windows</div></div>
+      <div class="add-device-btn" data-type="linux"><div class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 9l4 3-4 3"/><line x1="12" y1="15" x2="17" y2="15"/></svg></div><div class="lbl">Linux</div></div>
+    </div>
+    <div class="section-title">ТВ</div>
+    <div class="add-device-grid">
+      <div class="add-device-btn" data-type="appletv"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20l1.5-3M16 20l-1.5-3"/></svg></div><div class="lbl">Apple TV</div></div>
+      <div class="add-device-btn" data-type="androidtv"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20l1.5-3M16 20l-1.5-3"/></svg></div><div class="lbl">Смарт-ТВ</div></div>
+    </div>
+  </div>
 </div>
 
 <!-- Device link modal -->
@@ -803,7 +889,16 @@ const DEVICE_LABELS = {ios: 'iPhone / iPad', android: 'Android', windows: 'Windo
 async function initDevices() {
   await loadDevices();
   document.querySelectorAll('.add-device-btn').forEach(btn => {
-    btn.addEventListener('click', () => addDevice(btn.dataset.type));
+    btn.addEventListener('click', () => {
+      document.getElementById('addDeviceModal').classList.remove('show');
+      addDevice(btn.dataset.type);
+    });
+  });
+  document.getElementById('openAddDeviceBtn').addEventListener('click', () => {
+    document.getElementById('addDeviceModal').classList.add('show');
+  });
+  document.getElementById('closeAddDeviceModal').addEventListener('click', () => {
+    document.getElementById('addDeviceModal').classList.remove('show');
   });
   document.getElementById('closeLinkModal').addEventListener('click', () => {
     document.getElementById('linkModal').classList.remove('show');
@@ -917,6 +1012,17 @@ async function deleteDevice(id) {
 
 /* ── Продление ───────────────────────────────────────────── */
 
+const RENEW_CUSTOM_MIN = 7, RENEW_CUSTOM_MAX = 180;
+const RENEW_ICON_CARD = '<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>';
+const RENEW_ICON_CRYPTO = '<svg viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/></svg>';
+function renewRateFor(days) {
+  if (days >= 180) return 5;
+  if (days >= 90) return 5.5;
+  if (days >= 30) return 6.6;
+  return 7;
+}
+function renewPriceFor(days) { return Math.round(days * renewRateFor(days)); }
+
 async function loadRenew() {
   const el = document.getElementById('renewContent');
   const [cardR, cryptoR] = await Promise.all([API('/api/card/plans'), API('/api/crypto/plans')]);
@@ -929,49 +1035,102 @@ async function loadRenew() {
   }
 
   const providers = [];
-  if (cardPlans.length) providers.push({key: 'card', label: 'Банковской картой', plans: cardPlans});
-  if (cryptoPlans.length) providers.push({key: 'crypto', label: 'Криптовалютой', plans: cryptoPlans});
+  if (cardPlans.length) providers.push({key: 'card', label: 'Банковской картой', icon: RENEW_ICON_CARD, plans: cardPlans, custom: true});
+  if (cryptoPlans.length) providers.push({key: 'crypto', label: 'Криптовалютой', icon: RENEW_ICON_CRYPTO, plans: cryptoPlans, custom: false});
 
   let selectedProvider = providers[0].key;
   let selectedPlan = providers[0].plans[0]?.key;
+  let mode = 'fixed';
+  let customDays = 30;
 
   function priceText(p) { return p.usd != null ? `$${p.usd}` : `${p.rub}₽`; }
 
   function render() {
     const active = providers.find(p => p.key === selectedProvider);
+    const canCustom = !!active.custom;
     el.innerHTML = `
       ${providers.length > 1 ? `
         <div class="provider-toggle">
-          ${providers.map(p => `<div class="provider-btn ${p.key === selectedProvider ? 'selected' : ''}" data-provider="${p.key}">${p.label}</div>`).join('')}
+          ${providers.map(p => `<div class="provider-btn ${p.key === selectedProvider ? 'selected' : ''}" data-provider="${p.key}">${p.icon}<span>${p.label}</span></div>`).join('')}
         </div>
       ` : ''}
-      <div class="plan-grid">
-        ${active.plans.map(p => `
-          <div class="plan-card ${p.key === selectedPlan ? 'selected' : ''}" data-plan="${p.key}">
-            <div class="lbl">${p.label}</div>
-            <div class="price">${priceText(p)}</div>
-            <div class="unit">${p.desc}</div>
+      ${canCustom ? `
+        <div class="renew-mode-toggle">
+          <button type="button" class="renew-mode-btn ${mode === 'fixed' ? 'selected' : ''}" data-mode="fixed">Тарифы</button>
+          <button type="button" class="renew-mode-btn ${mode === 'custom' ? 'selected' : ''}" data-mode="custom">Свой срок</button>
+        </div>
+      ` : ''}
+      ${canCustom && mode === 'custom' ? `
+        <div class="custom-days-card">
+          <div class="custom-top">
+            <div><span class="custom-days-num" id="renewDaysNum">${customDays}</span> <span class="custom-days-lbl">дней</span></div>
+            <div>
+              <div class="custom-price" id="renewPriceNum">${renewPriceFor(customDays)} ₽</div>
+              <div class="custom-perday" id="renewPerDay">${renewRateFor(customDays)} ₽ в день</div>
+            </div>
           </div>
-        `).join('')}
-      </div>
+          <input type="range" id="renewDaysSlider" min="${RENEW_CUSTOM_MIN}" max="${RENEW_CUSTOM_MAX}" value="${customDays}">
+          <div class="custom-ticks"><span>7</span><span>90</span><span>180</span></div>
+          <div class="quick-days">
+            <button type="button" class="quick-day ${customDays === 30 ? 'sel' : ''}" data-days="30">30 дн.</button>
+            <button type="button" class="quick-day ${customDays === 90 ? 'sel' : ''}" data-days="90">90 дн.</button>
+            <button type="button" class="quick-day ${customDays === 180 ? 'sel' : ''}" data-days="180">180 дн.</button>
+          </div>
+        </div>
+      ` : `
+        <div class="plan-grid">
+          ${active.plans.map(p => `
+            <div class="plan-card ${p.key === selectedPlan ? 'selected' : ''}" data-plan="${p.key}">
+              <div class="lbl">${p.label}</div>
+              <div class="price">${priceText(p)}</div>
+              <div class="unit">${p.desc}</div>
+            </div>
+          `).join('')}
+        </div>
+      `}
       <button class="btn" id="renewSubmit">Перейти к оплате</button>
       <div class="msg" id="renewMsg"></div>
     `;
     el.querySelectorAll('[data-provider]').forEach(b => b.addEventListener('click', () => {
       selectedProvider = b.dataset.provider;
       selectedPlan = providers.find(p => p.key === selectedProvider).plans[0]?.key;
+      mode = 'fixed';
+      render();
+    }));
+    el.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
+      mode = b.dataset.mode;
       render();
     }));
     el.querySelectorAll('[data-plan]').forEach(b => b.addEventListener('click', () => {
       selectedPlan = b.dataset.plan;
       render();
     }));
-    document.getElementById('renewSubmit').addEventListener('click', () => submitRenew(selectedProvider, selectedPlan));
+    const slider = document.getElementById('renewDaysSlider');
+    if (slider) {
+      slider.addEventListener('input', e => {
+        customDays = parseInt(e.target.value, 10) || RENEW_CUSTOM_MIN;
+        document.getElementById('renewDaysNum').textContent = customDays;
+        document.getElementById('renewPriceNum').textContent = renewPriceFor(customDays) + ' ₽';
+        document.getElementById('renewPerDay').textContent = renewRateFor(customDays) + ' ₽ в день';
+        el.querySelectorAll('.quick-day').forEach(q => q.classList.toggle('sel', parseInt(q.dataset.days, 10) === customDays));
+      });
+    }
+    el.querySelectorAll('.quick-day').forEach(b => b.addEventListener('click', () => {
+      customDays = parseInt(b.dataset.days, 10);
+      render();
+    }));
+    document.getElementById('renewSubmit').addEventListener('click', () => {
+      if (canCustom && mode === 'custom') {
+        submitRenew(selectedProvider, null, customDays);
+      } else {
+        submitRenew(selectedProvider, selectedPlan, null);
+      }
+    });
   }
   render();
 }
 
-async function submitRenew(provider, plan) {
+async function submitRenew(provider, plan, days) {
   const msg = document.getElementById('renewMsg');
   const btn = document.getElementById('renewSubmit');
   btn.disabled = true;
@@ -979,7 +1138,7 @@ async function submitRenew(provider, plan) {
   const r = await API(`/api/invoice/${provider}`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({plan}),
+    body: JSON.stringify(plan ? {plan} : {days}),
   });
   if (!r.ok) {
     const data = await r.json().catch(() => ({}));
