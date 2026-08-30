@@ -71,12 +71,18 @@ aside{display:flex;flex-direction:column;background:#0A0908;border-right:1px sol
 .sb-logout{font-size:11px;color:#8A7A60;white-space:nowrap;cursor:pointer}
 .sb-logout:hover{color:#FFB800}
 
-.bottom-nav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:200;background:#0A0908;border-top:1px solid rgba(255,255,255,.09);overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px 6px calc(6px + env(safe-area-inset-bottom, 0px))}
-.bn-item{cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;padding:7px 13px;border-radius:10px;color:#8A7A60;position:relative}
-.bn-item svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-.bn-item span{font-size:9.5px;font-weight:600;white-space:nowrap}
+.bottom-nav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:200;background:#0A0908;border-top:1px solid rgba(255,255,255,.09);padding:6px 6px calc(6px + env(safe-area-inset-bottom, 0px))}
+.bn-item{cursor:pointer;display:flex;flex:1;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;border-radius:10px;color:#8A7A60;position:relative;min-width:0}
+.bn-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.bn-item span{font-size:10px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .bn-item.active{color:#FFB800;background:rgba(255,184,0,.09)}
-.bn-item .cnt{position:absolute;top:2px;right:4px;font-family:'JetBrains Mono',monospace;font-size:8.5px;color:#FFB800;background:rgba(255,184,0,.16);border-radius:6px;padding:0 4px}
+.bn-item .cnt{position:absolute;top:2px;right:14%;font-family:'JetBrains Mono',monospace;font-size:8.5px;color:#FFB800;background:rgba(255,184,0,.16);border-radius:6px;padding:0 4px}
+
+.bottom-sheet-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:250}
+.bottom-sheet-overlay.open{display:block}
+.bottom-sheet{position:fixed;left:0;right:0;bottom:0;z-index:260;background:#0A0908;border-top:1px solid rgba(255,255,255,.09);border-radius:18px 18px 0 0;max-height:75vh;overflow-y:auto;transform:translateY(100%);transition:transform .25s ease;padding:10px 14px calc(14px + env(safe-area-inset-bottom, 0px))}
+.bottom-sheet.open{transform:translateY(0)}
+.bottom-sheet-handle{width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.2);margin:4px auto 14px}
 
 main{min-width:0;display:flex;flex-direction:column}
 #topbar{position:sticky;top:0;z-index:50;background:rgba(6,6,6,.92);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,.07);padding:0 26px}
@@ -354,6 +360,11 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 </div>
 
 <nav class="bottom-nav" id="bottomNav"></nav>
+<div class="bottom-sheet-overlay" id="bottomSheetOverlay" onclick="closeBottomSheet()"></div>
+<div class="bottom-sheet" id="bottomSheet">
+  <div class="bottom-sheet-handle"></div>
+  <div id="bottomSheetContent"></div>
+</div>
 
 <div class="toast-wrap" id="toastWrap"></div>
 
@@ -495,6 +506,8 @@ const NAV_GROUPS = [
   { title: 'Система', items: [{ id: 'settings', label: 'Настройки' }] },
   { title: 'Аккаунт', items: [{ id: 'profile', label: 'Профиль' }] },
 ];
+// 3 основных раздела внизу на мобильном + 4-я кнопка "Меню" со всеми остальными (bottom sheet)
+const BOTTOM_NAV_PRIMARY = ['dash', 'users', 'payments'];
 const PAGE_META = {
   dash: ['Дашборд', 'Обзор сервиса за последние 7 дней'],
   users: ['Аккаунты', 'Все зарегистрированные пользователи'],
@@ -525,15 +538,46 @@ function renderSidebar() {
     </div>
   `).join('');
 
-  const bn = document.getElementById('bottomNav');
   const allItems = NAV_GROUPS.flatMap(g => g.items);
-  bn.innerHTML = allItems.map(it => `
+  const findItem = id => allItems.find(it => it.id === id);
+
+  const bn = document.getElementById('bottomNav');
+  const primaryHtml = BOTTOM_NAV_PRIMARY.map(id => findItem(id)).filter(Boolean).map(it => `
     <div class="bn-item ${it.id === section ? 'active' : ''}" onclick="goto('${it.id}')">
       <svg viewBox="0 0 24 24"><path d="${NAV_ICONS[it.id]}"></path></svg>
       <span>${it.label}</span>
       ${it.countKey && navCounts[it.countKey] != null ? `<span class="cnt">${navCounts[it.countKey]}</span>` : ''}
     </div>
   `).join('');
+  const moreActive = !BOTTOM_NAV_PRIMARY.includes(section);
+  bn.innerHTML = primaryHtml + `
+    <div class="bn-item ${moreActive ? 'active' : ''}" onclick="toggleBottomSheet()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+      <span>Меню</span>
+    </div>
+  `;
+
+  document.getElementById('bottomSheetContent').innerHTML = NAV_GROUPS.map(g => `
+    <div class="sb-group">
+      <div class="sb-group-title">${g.title}</div>
+      ${g.items.map(it => `
+        <div class="sb-item ${it.id === section ? 'active' : ''}" onclick="goto('${it.id}');closeBottomSheet()">
+          <svg viewBox="0 0 24 24"><path d="${NAV_ICONS[it.id]}"></path></svg>
+          <span>${it.label}</span>
+          ${it.countKey && navCounts[it.countKey] != null ? `<span class="cnt">${navCounts[it.countKey]}</span>` : ''}
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function toggleBottomSheet() {
+  document.getElementById('bottomSheet').classList.toggle('open');
+  document.getElementById('bottomSheetOverlay').classList.toggle('open');
+}
+function closeBottomSheet() {
+  document.getElementById('bottomSheet').classList.remove('open');
+  document.getElementById('bottomSheetOverlay').classList.remove('open');
 }
 
 function goto(s) {
