@@ -787,6 +787,7 @@ async def get_devices(request: Request, x_telegram_init_data: str | None = Heade
                 "id": d.id,
                 "slot": d.slot,
                 "name": d.name,
+                "custom_name": d.custom_name,
                 "traffic_gb": traffic_gb,
                 "online": online,
                 "last_online": last_online,
@@ -806,6 +807,7 @@ async def get_devices(request: Request, x_telegram_init_data: str | None = Heade
 async def create_device(request: Request, x_telegram_init_data: str | None = Header(default=None)):
     body = await request.json()
     type_key = (body.get("type") or "").strip().lower()
+    custom_name = (body.get("name") or "").strip()[:64] or None
     if not type_key or type_key not in DEVICE_TYPES_API:
         raise HTTPException(400, f"Invalid device type. Must be one of: {', '.join(DEVICE_TYPES_API)}")
 
@@ -849,12 +851,17 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
                 raise HTTPException(500, "VPN server error. Try again later.")
 
         if link:
-            link = _set_vless_remark(link, type_key)
+            if custom_name:
+                from bot.utils.branding import set_vless_remark_text
+                link = set_vless_remark_text(link, custom_name)
+            else:
+                link = _set_vless_remark(link, type_key)
 
         dev = Device(
             telegram_id=tg_id,
             slot=slot,
             name=type_key,
+            custom_name=custom_name,
             marzban_username=mz_username,
         )
         session.add(dev)
@@ -871,6 +878,7 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
         "slot": slot,
         "type": type_key,
         "name": type_key,
+        "custom_name": custom_name,
         "link": link,
         "qr_url": qr_url,
         "sub_url": subscription_url(mz_username),
@@ -893,13 +901,42 @@ async def get_device_link(device_id: int, request: Request, x_telegram_init_data
         mz_user = await marzban.get_user(dev.marzban_username)
         link = marzban.extract_vless_link(mz_user) or ""
         if link:
-            link = _set_vless_remark(link, dev.name)
+            if dev.custom_name:
+                from bot.utils.branding import set_vless_remark_text
+                link = set_vless_remark_text(link, dev.custom_name)
+            else:
+                link = _set_vless_remark(link, dev.name)
     except Exception as e:
         raise HTTPException(500, str(e))
 
     qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(link)}" if link else ""
     from bot.utils.branding import subscription_url
-    return {"link": link, "qr_url": qr_url, "name": dev.name, "sub_url": subscription_url(dev.marzban_username)}
+    return {
+        "link": link, "qr_url": qr_url, "name": dev.name, "custom_name": dev.custom_name,
+        "sub_url": subscription_url(dev.marzban_username),
+    }
+
+
+# ─── PATCH /api/devices/{id} — переименовать устройство ──────────────────────
+
+@app.patch("/api/devices/{device_id}")
+async def rename_device(device_id: int, request: Request, x_telegram_init_data: str | None = Header(default=None)):
+    body = await request.json()
+    custom_name = (body.get("name") or "").strip()[:64]
+    if not custom_name:
+        raise HTTPException(400, "Укажите имя устройства")
+
+    async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+        r = await session.execute(select(Device).where(Device.id == device_id))
+        dev: Device | None = r.scalar_one_or_none()
+        if not dev or dev.telegram_id != tg_id:
+            raise HTTPException(404, "Device not found")
+
+        dev.custom_name = custom_name
+        await session.commit()
+
+    return {"ok": True, "custom_name": custom_name}
 
 
 # ─── DELETE /api/devices/{id} ─────────────────────────────────────────────────
