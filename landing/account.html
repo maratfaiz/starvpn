@@ -136,20 +136,19 @@ main{min-width:0}
 .location-badge{font-size:11px;color:var(--text2);margin-top:2px}
 .location-badge.live{color:var(--success)}
 
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
-.stat-card{background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px 14px;text-align:center}
-.stat-icon{width:34px;height:34px;border-radius:10px;background:var(--gold-dim);border:1px solid rgba(255,184,0,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:var(--gold)}
-.stat-icon svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.stat-value{font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:700;color:var(--text)}
-.stat-label{font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+.pay-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px}
+.pay-card{background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:20px}
+.pay-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.pay-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--text)}
+.pay-icon{width:20px;height:20px;flex-shrink:0;stroke:var(--gold);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.5}
+.pay-where{font-size:15px;font-weight:700;color:var(--gold);font-family:'Space Grotesk',sans-serif}
 
-.key-card-body{display:flex;align-items:center;gap:16px}
-.key-card-qr{width:72px;height:72px;border-radius:10px;background:#fff;padding:6px;flex-shrink:0}
-.key-card-info{min-width:0;flex:1}
 .key-card-name{font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:6px}
-.key-card-value{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 10px;margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.key-card .btn-outline{margin-top:0;width:auto;padding:9px 16px;display:inline-block}
-@media(max-width:480px){.key-card-body{flex-direction:column;align-items:stretch;text-align:center}.key-card-qr{margin:0 auto}}
+.key-card-hint{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px}
+.key-card-value{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 10px;margin-bottom:12px;word-break:break-all}
+.key-card-actions{display:flex;gap:10px;flex-wrap:wrap}
+.key-card-actions .btn,.key-card-actions .btn-outline{width:auto;flex:1;min-width:160px;margin-top:0;text-decoration:none;display:inline-block;text-align:center}
+@media(max-width:480px){.key-card-actions{flex-direction:column}.key-card-actions .btn,.key-card-actions .btn-outline{width:100%}}
 
 .section-title{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin:22px 0 10px}
 .section-title:first-child{margin-top:0}
@@ -219,9 +218,10 @@ main{min-width:0}
 .modal{background:#0B0A09;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:26px;max-width:380px;width:100%;text-align:center;position:relative}
 .modal-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--text2);cursor:pointer;line-height:1;width:18px;height:18px;padding:0}
 .modal-close svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
-.modal h3{font-family:'Space Grotesk',sans-serif;font-size:16px;margin-bottom:14px}
-.modal img{width:180px;height:180px;border-radius:12px;margin:0 auto 16px;display:block;background:#fff;padding:8px}
+.modal h3{font-family:'Space Grotesk',sans-serif;font-size:16px;margin-bottom:10px}
+.modal-hint{font-size:12.5px;color:var(--text2);line-height:1.6;margin-bottom:14px}
 .modal-key{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;font-size:11px;word-break:break-all;color:var(--text2);margin-bottom:14px;max-height:80px;overflow-y:auto;text-align:left}
+.modal a.btn{display:block;text-decoration:none}
 
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#0B0A09;border:1px solid rgba(255,184,0,.35);color:var(--text);padding:12px 20px;border-radius:12px;font-size:13px;z-index:300;opacity:0;pointer-events:none;transition:opacity .25s}
 .toast.show{opacity:1}
@@ -346,42 +346,49 @@ main{min-width:0}
       </div>
 
       <div class="card key-card" id="subKeyCard" style="display:none">
-        <div class="card-title">Ключ подписки</div>
-        <div class="key-card-body">
-          <img class="key-card-qr" id="subKeyQr" alt="QR-код">
-          <div class="key-card-info">
-            <div class="key-card-name" id="subKeyDeviceName">—</div>
-            <div class="key-card-value" id="subKeyValue">—</div>
-            <button class="btn-outline" id="subKeyCopyBtn">Копировать ключ</button>
-          </div>
+        <div class="card-title">Ссылка подписки</div>
+        <div class="key-card-name" id="subKeyDeviceName">—</div>
+        <p class="key-card-hint">Открой в Happ, v2rayNG или другом клиенте — сервер добавится автоматически под именем «STAR VPN».</p>
+        <div class="key-card-value" id="subKeyValue">—</div>
+        <div class="key-card-actions">
+          <a class="btn" id="subKeyOpenBtn" href="#" target="_blank" rel="noopener">Открыть ссылку</a>
+          <button class="btn-outline" id="subKeyCopyBtn">Скопировать ссылку</button>
         </div>
       </div>
       <div class="card" id="subKeyEmptyCard" style="display:none">
-        <div class="card-title">Ключ подписки</div>
-        <p style="color:var(--text2);font-size:12.5px;line-height:1.6;margin-bottom:14px">Пока нет ни одного подключённого устройства — добавьте первое, чтобы получить ключ.</p>
+        <div class="card-title">Ссылка подписки</div>
+        <p style="color:var(--text2);font-size:12.5px;line-height:1.6;margin-bottom:14px">Пока нет ни одного подключённого устройства — добавьте первое, чтобы получить ссылку.</p>
         <button class="btn" data-goto="devices">Добавить устройство</button>
       </div>
 
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1"/></svg></div>
-          <div class="stat-value" id="statDevices">—</div>
-          <div class="stat-label">устройства</div>
+      <div class="pay-grid">
+        <div class="pay-card">
+          <div class="pay-top">
+            <div class="pay-title">Устройства</div>
+            <svg class="pay-icon" viewBox="0 0 24 24"><path d="M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1"/></svg>
+          </div>
+          <div class="pay-where" id="statDevices">—</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/></svg></div>
-          <div class="stat-value" id="statProto">—</div>
-          <div class="stat-label">протокол</div>
+        <div class="pay-card">
+          <div class="pay-top">
+            <div class="pay-title">Протокол</div>
+            <svg class="pay-icon" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/></svg>
+          </div>
+          <div class="pay-where" id="statProto">—</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></div>
-          <div class="stat-value" id="statTls">—</div>
-          <div class="stat-label">шифрование</div>
+        <div class="pay-card">
+          <div class="pay-top">
+            <div class="pay-title">Шифрование</div>
+            <svg class="pay-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+          </div>
+          <div class="pay-where" id="statTls">—</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><line x1="3" y1="3" x2="21" y2="21"/></svg></div>
-          <div class="stat-value" style="color:var(--success)">0</div>
-          <div class="stat-label">логи трафика</div>
+        <div class="pay-card">
+          <div class="pay-top">
+            <div class="pay-title">Логи трафика</div>
+            <svg class="pay-icon" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><line x1="3" y1="3" x2="21" y2="21"/></svg>
+          </div>
+          <div class="pay-where" style="color:var(--success)">0 · Zero Logs</div>
         </div>
       </div>
 
@@ -399,7 +406,7 @@ main{min-width:0}
     <!-- Устройства -->
     <div class="tab-panel" id="tab-devices">
       <div class="page-title">Устройства</div>
-      <div class="page-sub" id="devicesSub">Ключ и ссылка ведут к одной подписке — выберите то, что удобнее приложению.</div>
+      <div class="page-sub" id="devicesSub">Ссылка добавляет STAR VPN в приложение автоматически — под своим названием и с предупреждением об окончании подписки.</div>
       <div id="devicesList"></div>
       <div class="section-title">Телефон / планшет</div>
       <div class="add-device-grid">
@@ -512,9 +519,10 @@ main{min-width:0}
   <div class="modal">
     <button class="modal-close" id="closeLinkModal"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <h3 id="linkModalTitle">Устройство добавлено</h3>
-    <img id="linkQr" alt="QR-код">
+    <p class="modal-hint">Открой в Happ, v2rayNG или другом клиенте — сервер добавится автоматически под именем «STAR VPN» и сам предупредит, когда подписка закончится.</p>
     <div class="modal-key mono" id="linkKey"></div>
-    <button class="btn" id="copyKeyBtn">Скопировать ключ</button>
+    <a class="btn" id="openLinkBtn" href="#" target="_blank" rel="noopener">Открыть ссылку</a>
+    <button class="btn-outline" id="copyKeyBtn">Скопировать ссылку</button>
   </div>
 </div>
 
@@ -806,11 +814,11 @@ async function renderSubKeyCard(devices) {
   if (!r.ok) { keyCard.style.display = 'none'; return; }
   const data = await r.json();
   document.getElementById('subKeyDeviceName').textContent = DEVICE_LABELS[data.name] || data.name || 'Устройство';
-  document.getElementById('subKeyValue').textContent = data.link;
-  document.getElementById('subKeyQr').src = data.qr_url;
+  document.getElementById('subKeyValue').textContent = data.sub_url;
+  document.getElementById('subKeyOpenBtn').href = data.sub_url;
   document.getElementById('subKeyCopyBtn').onclick = () => {
-    navigator.clipboard.writeText(data.link);
-    showToast('Ключ скопирован');
+    navigator.clipboard.writeText(data.sub_url);
+    showToast('Ссылка скопирована');
   };
   keyCard.style.display = 'block';
 }
@@ -821,7 +829,7 @@ async function loadDevices() {
   if (!r.ok) { list.innerHTML = '<div class="empty">Не удалось загрузить устройства</div>'; renderSubKeyCard([]); return; }
   const devices = await r.json();
   renderSubKeyCard(devices);
-  document.getElementById('devicesSub').textContent = `Привязано ${devices.length} из ${ME.max_devices}. Ключ и ссылка ведут к одной подписке — выберите то, что удобнее приложению.`;
+  document.getElementById('devicesSub').textContent = `Привязано ${devices.length} из ${ME.max_devices}. Ссылка добавляет STAR VPN в приложение автоматически.`;
   if (!devices.length) {
     list.innerHTML = '<div class="empty">Пока нет ни одного устройства — добавьте первое ниже</div>';
     return;
@@ -836,7 +844,7 @@ async function loadDevices() {
         </div>
       </div>
       <div class="device-actions">
-        <button class="pill-btn" data-link="${d.id}">Ключ / QR</button>
+        <button class="pill-btn" data-link="${d.id}">Ссылка</button>
         <button class="pill-btn danger" data-delete="${d.id}">Удалить</button>
       </div>
     </div>
@@ -868,23 +876,23 @@ async function addDevice(type) {
   const dev = await r.json();
   await loadDevices();
   const me = await API('/api/me'); ME = await me.json(); renderStatus();
-  openLinkModal(DEVICE_LABELS[type] || type, dev.link, dev.qr_url);
+  openLinkModal(DEVICE_LABELS[type] || type, dev.sub_url);
 }
 
 async function showDeviceLink(id) {
   const r = await API(`/api/devices/${id}/link`);
-  if (!r.ok) { showToast('Не удалось получить ключ'); return; }
+  if (!r.ok) { showToast('Не удалось получить ссылку'); return; }
   const data = await r.json();
-  openLinkModal(DEVICE_LABELS[data.name] || data.name, data.link, data.qr_url);
+  openLinkModal(DEVICE_LABELS[data.name] || data.name, data.sub_url);
 }
 
-function openLinkModal(title, link, qrUrl) {
+function openLinkModal(title, subUrl) {
   document.getElementById('linkModalTitle').textContent = title;
-  document.getElementById('linkQr').src = qrUrl;
-  document.getElementById('linkKey').textContent = link;
+  document.getElementById('linkKey').textContent = subUrl;
+  document.getElementById('openLinkBtn').href = subUrl;
   document.getElementById('copyKeyBtn').onclick = () => {
-    navigator.clipboard.writeText(link);
-    showToast('Ключ скопирован');
+    navigator.clipboard.writeText(subUrl);
+    showToast('Ссылка скопирована');
   };
   document.getElementById('linkModal').classList.add('show');
 }
