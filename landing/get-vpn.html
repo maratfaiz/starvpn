@@ -198,7 +198,11 @@ footer{border-top:1px solid rgba(255,255,255,.07)}
 
     <div class="step-block locked" id="step2">
       <div class="step-head"><span class="step-num">2</span><span class="step-title">Аккаунт</span></div>
-      <div id="acct-gate" class="acct-gate">
+      <div id="acct-checking" class="acct-check" style="background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.1)">
+        <svg viewBox="0 0 24 24" style="stroke:var(--text2)"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span>Проверяем вход…</span>
+      </div>
+      <div id="acct-gate" class="acct-gate" style="display:none">
         <p>Ключ привязывается к аккаунту STAR VPN — без этого некому будет выдать подписку и продлевать её потом. Зарегистрируйтесь или войдите, это займёт минуту.</p>
         <div class="acct-actions">
           <a class="acct-btn primary" id="acct-tg-btn" href="/api/telegram-oauth/start">Войти через Telegram</a>
@@ -415,6 +419,9 @@ async function loadPlans(){
 }
 
 async function checkAuth(){
+  document.getElementById('acct-checking').style.display = 'none';
+  document.getElementById('acct-gate').style.display = 'none';
+  document.getElementById('acct-done').style.display = 'none';
   try {
     const res = await fetch('/api/me', { credentials: 'include' });
     if (!res.ok) throw new Error('not authed');
@@ -423,7 +430,6 @@ async function checkAuth(){
     step2El.classList.remove('locked');
     step2El.classList.add('done');
     step3El.classList.remove('locked');
-    document.getElementById('acct-gate').style.display = 'none';
     document.getElementById('acct-done').style.display = 'flex';
     document.getElementById('acct-done-text').textContent = `Вы вошли как ${me.email || me.username || 'аккаунт'}`;
     await loadPaymentPlans();
@@ -432,6 +438,7 @@ async function checkAuth(){
     step2El.classList.remove('done');
     step2El.classList.add('locked');
     step3El.classList.add('locked');
+    document.getElementById('acct-gate').style.display = 'block';
   }
   refreshStep3();
 }
