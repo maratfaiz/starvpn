@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Купить VPN-ключ без Telegram — STAR VPN</title>
-<meta name="description" content="Покупка ключа STAR VPN прямо на сайте: оплата через ЮMoney, ссылка подписки сразу после оплаты. Telegram не нужен.">
+<meta name="description" content="Покупка ключа STAR VPN прямо на сайте, Telegram не нужен. Оплата временно приостановлена — доступен бесплатный пробный период в боте.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -163,7 +163,7 @@ footer{border-top:1px solid rgba(255,255,255,.07)}
     БЕЗ БОТА И РЕГИСТРАЦИИ
   </div>
   <h1>Ключ прямо здесь, Telegram не нужен</h1>
-  <p>Иногда Telegram сам недоступен без VPN — замкнутый круг. На этот случай покупка работает на сайте: выбираете срок, платите картой или через ЮMoney и сразу получаете ссылку подписки.</p>
+  <p>Иногда Telegram сам недоступен без VPN — замкнутый круг. Обычно на этот случай можно купить прямо здесь без Telegram — сейчас оплата на сайте временно приостановлена, доступен только бесплатный пробный период в боте.</p>
 </div>
 
 <div class="wrap">
@@ -224,8 +224,8 @@ footer{border-top:1px solid rgba(255,255,255,.07)}
     <div class="faq-card"><div class="faq-q">Чем это отличается от покупки в боте?</div><div class="faq-a">Только способом выдачи ключа. Протокол, серверы и лимит устройств те же. В боте удобнее продлевать и видеть остаток дней.</div></div>
     <div class="faq-card"><div class="faq-q">Нужен ли паспорт?</div><div class="faq-a">Нет. Ни Robokassa, ни ЮMoney не требуют от вас документов при оплате подписки.</div></div>
     <div class="faq-card"><div class="faq-q">Можно ли потом перейти в бота?</div><div class="faq-a">Да, когда Telegram снова доступен — напишите в @starisvpnbot, ключ можно привязать к аккаунту.</div></div>
-    <div class="faq-card"><div class="faq-q">Работает ли здесь пробный период?</div><div class="faq-a">Пробные 2 дня выдаются один раз на telegram_id и активируются в боте. На сайте доступна только покупка.</div></div>
-    <div class="faq-card"><div class="faq-q">А криптовалютой?</div><div class="faq-a">Нет, оплата криптовалютой убрана насовсем. Сейчас на сайте доступна только ЮMoney.</div></div>
+    <div class="faq-card"><div class="faq-q">Работает ли здесь пробный период?</div><div class="faq-a">Пробные 2 дня выдаются один раз на telegram_id и активируются в боте. Пока оплата на сайте приостановлена, это единственный бесплатный способ получить доступ.</div></div>
+    <div class="faq-card"><div class="faq-q">А криптовалютой или ЮMoney?</div><div class="faq-a">Оплата криптовалютой убрана насовсем. Robokassa и ЮMoney сейчас тоже временно отключены — следите за статусом здесь или в @starisvpnbot.</div></div>
     <div class="faq-card"><div class="faq-q">Что если платёж прошёл, а ссылки нет?</div><div class="faq-a">Сохраните номер заказа и напишите в поддержку через бота — ключ восстановим вручную.</div></div>
   </div>
 </div>
@@ -301,6 +301,12 @@ function selectPlan(p, el){
   selectedPlan = p;
   document.querySelectorAll('.plan').forEach(x => x.classList.remove('sel'));
   el.classList.add('sel');
+  if (!selectedProvider) {
+    buyBtn.disabled = true;
+    buyBtn.classList.remove('ready');
+    buyBtn.textContent = 'Оплата временно недоступна';
+    return;
+  }
   buyBtn.disabled = false;
   buyBtn.classList.add('ready');
   buyBtn.textContent = `Оплатить — ${p.rub} ₽`;
@@ -361,12 +367,19 @@ async function loadProviders(){
       if (!available) hint.textContent = 'Временно недоступно';
       if (available && !firstAvailable) firstAvailable = el;
     });
-    if (firstAvailable) selectProvider(firstAvailable.dataset.provider, firstAvailable);
+    if (firstAvailable) {
+      selectProvider(firstAvailable.dataset.provider, firstAvailable);
+    } else {
+      selectedProvider = null;
+      buyBtn.disabled = true;
+      buyBtn.textContent = 'Оплата временно недоступна';
+      document.getElementById('pay-note').textContent = 'Все способы оплаты сейчас отключены — загляните чуть позже или напишите в поддержку.';
+    }
   } catch (e) { /* оставляем ЮMoney по умолчанию */ }
 }
 
 buyBtn.addEventListener('click', async () => {
-  if (!selectedPlan) return;
+  if (!selectedPlan || !selectedProvider) return;
   buyBtn.disabled = true;
   buyBtn.textContent = 'Создаём счёт…';
   try {

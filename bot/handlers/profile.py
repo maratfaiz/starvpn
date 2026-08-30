@@ -134,11 +134,28 @@ async def refresh_subscription(callback: CallbackQuery, session: AsyncSession) -
     await callback.answer("Обновлено ✅")
 
 
+async def pay_choice_text() -> str:
+    """Заголовок для экрана выбора способа оплаты — с учётом того, что все
+    способы могут быть временно отключены разом (см. ADR-012)."""
+    from bot.utils.database import AsyncSessionLocal
+    from bot.utils.settings_store import get_all_provider_states
+
+    async with AsyncSessionLocal() as session:
+        states = await get_all_provider_states(session)
+
+    if any(states.values()):
+        return "💳 <b>Выбери способ оплаты</b>"
+    return (
+        "💳 <b>Оплата временно недоступна</b>\n\n"
+        "Все способы сейчас отключены — попробуй чуть позже или напиши в поддержку."
+    )
+
+
 @router.callback_query(F.data == "sub:pay_choice")
 async def pay_choice(callback: CallbackQuery) -> None:
-    """Выбор способа оплаты — Stars или крипта."""
+    """Выбор способа оплаты — Stars, карта, ЮMoney или крипта."""
     await callback.message.edit_text(
-        "💳 <b>Выбери способ оплаты</b>",
+        await pay_choice_text(),
         parse_mode="HTML",
         reply_markup=await _pay_choice_kb(),
     )

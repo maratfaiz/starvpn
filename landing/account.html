@@ -802,7 +802,7 @@ async function loadRenew() {
   const yooPlans = yooR.ok ? await yooR.json() : [];
 
   if (!cardPlans.length && !yooPlans.length) {
-    el.innerHTML = '<div class="empty">Оплата временно недоступна — напишите в <a href="/support" style="color:var(--gold)">поддержку</a> или продлите через бота.</div>';
+    el.innerHTML = '<div class="empty">Оплата временно недоступна — напишите в <a href="/support" style="color:var(--gold)">поддержку</a>.</div>';
     return;
   }
 

@@ -255,9 +255,9 @@ async def _stars_enabled(session: AsyncSession) -> bool:
 @router.message(F.text == "⚡️ Подключить VPN")
 async def show_plans(message: Message, session: AsyncSession) -> None:
     if not await _stars_enabled(session):
-        from bot.handlers.profile import _pay_choice_kb
+        from bot.handlers.profile import _pay_choice_kb, pay_choice_text
         await message.answer(
-            "💳 <b>Выбери способ оплаты</b>", parse_mode="HTML", reply_markup=await _pay_choice_kb(),
+            await pay_choice_text(), parse_mode="HTML", reply_markup=await _pay_choice_kb(),
         )
         return
     await message.answer(
@@ -273,9 +273,9 @@ async def show_plans(message: Message, session: AsyncSession) -> None:
 async def show_plans_inline(callback: CallbackQuery, session: AsyncSession) -> None:
     """Вызывается из инлайн-кнопок стартового сообщения."""
     if not await _stars_enabled(session):
-        from bot.handlers.profile import _pay_choice_kb
+        from bot.handlers.profile import _pay_choice_kb, pay_choice_text
         await callback.message.answer(
-            "💳 <b>Выбери способ оплаты</b>", parse_mode="HTML", reply_markup=await _pay_choice_kb(),
+            await pay_choice_text(), parse_mode="HTML", reply_markup=await _pay_choice_kb(),
         )
         await callback.answer()
         return
