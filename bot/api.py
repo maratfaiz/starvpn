@@ -2936,6 +2936,15 @@ async def web_settings_payment_toggle(request: Request, authorization: str | Non
 
 # ─── Рекламный баннер (верхняя полоса главной) ───────────────────────────────
 
+# Фиксированный набор — не произвольная SVG-строка от админа (см. docstring
+# AdBanner.icon). Тот же список ключей отрисован в landing/index.html и
+# admin/index.html как BANNER_ICONS.
+AD_BANNER_ICONS = {
+    "sparkle", "star", "fire", "gift", "percent",
+    "bell", "rocket", "heart", "zap", "clock",
+}
+
+
 async def _get_ad_banner(session: AsyncSession):
     from bot.models.ad_banner import AdBanner
     row = (await session.execute(select(AdBanner).where(AdBanner.id == 1))).scalar_one_or_none()
@@ -2959,6 +2968,7 @@ async def get_ad_banner_public():
         "text": banner.text,
         "link_url": banner.link_url,
         "link_label": banner.link_label,
+        "icon": banner.icon,
     }
 
 
@@ -2972,6 +2982,7 @@ async def get_ad_banner_admin(authorization: str | None = Header(default=None)):
         "text": banner.text,
         "link_url": banner.link_url,
         "link_label": banner.link_label,
+        "icon": banner.icon,
     }
 
 
@@ -2983,6 +2994,9 @@ async def set_ad_banner(request: Request, authorization: str | None = Header(def
     link_url = (body.get("link_url") or "").strip() or None
     link_label = (body.get("link_label") or "").strip() or None
     enabled = bool(body.get("enabled"))
+    icon = body.get("icon") or "sparkle"
+    if icon not in AD_BANNER_ICONS:
+        raise HTTPException(400, "Неизвестная иконка")
 
     if len(text) > 300:
         raise HTTPException(400, "Текст баннера — максимум 300 символов")
@@ -2993,6 +3007,7 @@ async def set_ad_banner(request: Request, authorization: str | None = Header(def
         banner.text = text
         banner.link_url = link_url
         banner.link_label = link_label
+        banner.icon = icon
         await session.commit()
 
     return {"ok": True}

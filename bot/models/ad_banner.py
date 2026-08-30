@@ -18,4 +18,8 @@ class AdBanner(Base):
     text: Mapped[str] = mapped_column(String(300), default="")
     link_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     link_label: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    # Ключ из фиксированного набора иконок (см. BANNER_ICONS в bot/api.py и
+    # одноимённый JS-объект в landing/index.html + admin/index.html) —
+    # не произвольный SVG/URL, чтобы не пришлось думать о XSS в баннере.
+    icon: Mapped[str] = mapped_column(String(24), default="sparkle")
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
