@@ -26,7 +26,7 @@ html{-webkit-font-smoothing:antialiased}
 body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
-#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.28}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,184,0,.2);border-radius:2px}
@@ -388,24 +388,17 @@ main{min-width:0}
         </div>
         <div class="pay-card">
           <div class="pay-top">
-            <div class="pay-title">Протокол</div>
-            <svg class="pay-icon" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/></svg>
+            <div class="pay-title">Трафик</div>
+            <svg class="pay-icon" viewBox="0 0 24 24"><path d="M7 16a4 4 0 01-1-7.87A5 5 0 0116 7a4 4 0 011 7.87"/><path d="M12 12v6M9.5 15.5L12 18l2.5-2.5"/></svg>
           </div>
-          <div class="pay-where" id="statProto">—</div>
+          <div class="pay-where" id="statTraffic">—</div>
         </div>
         <div class="pay-card">
           <div class="pay-top">
-            <div class="pay-title">Шифрование</div>
-            <svg class="pay-icon" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
+            <div class="pay-title">Рефералы</div>
+            <svg class="pay-icon" viewBox="0 0 24 24"><path d="M6 14a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 7.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 21a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8.2 10.3l7.6-3.6M8.2 13.2l7.6 3.6"/></svg>
           </div>
-          <div class="pay-where" id="statTls">—</div>
-        </div>
-        <div class="pay-card">
-          <div class="pay-top">
-            <div class="pay-title">Логи трафика</div>
-            <svg class="pay-icon" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><line x1="3" y1="3" x2="21" y2="21"/></svg>
-          </div>
-          <div class="pay-where" style="color:var(--success)">0 · Zero Logs</div>
+          <div class="pay-where" id="statReferrals">—</div>
         </div>
       </div>
 
@@ -709,8 +702,8 @@ function renderStatus() {
     : 'Продлите подписку, чтобы пользоваться VPN';
 
   document.getElementById('statDevices').textContent = `${ME.device_count} из ${ME.max_devices}`;
-  document.getElementById('statProto').textContent = ME.server_protocol;
-  document.getElementById('statTls').textContent = ME.server_tls;
+  document.getElementById('statTraffic').textContent = `${ME.traffic_gb} ГБ`;
+  document.getElementById('statReferrals').textContent = ME.referral_count;
 }
 
 function renderProfile() {
@@ -1225,10 +1218,10 @@ boot();
   const ctx = c.getContext('2d');
   function resize(){ c.width = innerWidth; c.height = innerHeight; }
   resize(); window.addEventListener('resize', resize, {passive:true});
-  const stars = Array.from({length:150}, () => ({
+  const stars = Array.from({length:280}, () => ({
     x: Math.random(), y: Math.random(),
-    r: Math.random() * 1.2 + 0.1,
-    o: Math.random() * 0.5 + 0.08,
+    r: Math.random() * 1.5 + 0.25,
+    o: Math.random() * 0.55 + 0.2,
     sp: Math.random() * 0.0004 + 0.00006,
     ph: Math.random() * Math.PI * 2,
   }));
@@ -1236,7 +1229,7 @@ boot();
   function draw(){
     ctx.clearRect(0,0,c.width,c.height); f++;
     for(const s of stars){
-      const a = s.o * (0.4 + 0.6 * Math.sin(f * s.sp * 200 + s.ph));
+      const a = s.o * (0.45 + 0.55 * Math.sin(f * s.sp * 200 + s.ph));
       ctx.beginPath();
       ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
       ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fill();
