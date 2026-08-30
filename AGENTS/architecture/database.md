@@ -57,7 +57,10 @@ PostgreSQL 16, SQLAlchemy 2.0 (async), миграции — Alembic
 | `email_verification_codes` | `EmailVerificationCode` | 6-значные коды подтверждения email при регистрации (хеш кода, cooldown на переотправку, лимит попыток) |
 | `guest_orders` | `GuestOrder` | Покупка VPN-ключа без Telegram (гостевой чекаут, `/get-vpn`) |
 | `wiki_articles` | `WikiArticle` | Статьи базы знаний, создаваемые из админки (в дополнение к статичным `.html` в `landing/wiki/`) |
-| `app_settings` | `AppSetting` | Key-value тумблеры (например, включена ли оплата криптой) |
+| `app_settings` | `AppSetting` | Key-value тумблеры способов оплаты (card/yoomoney/crypto/stars) |
+| `admin_accounts` | `AdminAccount` | Аккаунты веб-админки — логин/пароль, ранг (`admin`/`worker`), личный `invite_key` (см. ADR-009) |
+| `admin_sessions` | `AdminSession` | Bearer-сессии админ-панели, привязанные к `AdminAccount` |
+| `ad_banner` | `AdBanner` | Синглтон-строка (id=1) — рекламный баннер на верхней полосе главной, редактируется из админки |
 
 ## Ключевые правила (см. также `AGENTS/roles/database.md`)
 

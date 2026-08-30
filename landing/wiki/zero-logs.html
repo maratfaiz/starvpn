@@ -43,7 +43,9 @@ code{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--gold);bac
 .nav-login:hover{color:var(--gold);border-color:var(--gold-border)}
 .nav-cta{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;padding:10px 18px;border-radius:11px;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;transition:background .2s,transform .15s}
 .nav-cta:hover{background:var(--gold2);color:#000;transform:translateY(-1px)}
-@media(max-width:768px){.nav-links{display:none}.nav-login{display:none}.nav-cta{padding:8px 16px;font-size:12px}}
+.nav-hamburger{display:none;flex-direction:column;justify-content:center;gap:4px;width:34px;height:34px;background:transparent;border:1px solid rgba(255,255,255,.14);border-radius:9px;flex-shrink:0;cursor:pointer}
+.nav-hamburger span{display:block;width:16px;height:1.5px;background:var(--gold);margin:0 auto}
+@media(max-width:768px){.nav-hamburger{display:flex}.nav-links{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:#0a0a0a;border-bottom:1px solid var(--gold-border);padding:10px 20px 16px;gap:2px;box-shadow:0 20px 40px rgba(0,0,0,.5)}.nav-links.open{display:flex}.nav-links a{padding:12px 4px}.nav-inner{gap:6px;flex-wrap:wrap;row-gap:8px}.nav-logo-text{font-size:15px!important}.nav-login{padding:6px 9px;font-size:10.5px;white-space:nowrap}.nav-cta{padding:6px 11px;font-size:10.5px;white-space:nowrap}}
 
 .start-modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(6,6,6,.72);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
 .start-modal-overlay.open{display:flex}
@@ -139,6 +141,9 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
 <nav id="nav">
   <div class="nav-inner">
     <a class="nav-logo" href="/"><span class="nav-logo-text">STAR VPN</span></a>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Меню" type="button" onclick="document.querySelector('.nav-links').classList.toggle('open')">
+      <span></span><span></span><span></span>
+    </button>
     <div class="nav-links">
       <a href="/#how">Преимущества</a>
       <a href="/#compare">Сравнение</a>

@@ -247,8 +247,19 @@ def _plans_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+async def _stars_enabled(session: AsyncSession) -> bool:
+    from bot.utils.settings_store import is_provider_enabled
+    return await is_provider_enabled(session, "stars")
+
+
 @router.message(F.text == "⚡️ Подключить VPN")
-async def show_plans(message: Message) -> None:
+async def show_plans(message: Message, session: AsyncSession) -> None:
+    if not await _stars_enabled(session):
+        from bot.handlers.profile import _pay_choice_kb
+        await message.answer(
+            "💳 <b>Выбери способ оплаты</b>", parse_mode="HTML", reply_markup=await _pay_choice_kb(),
+        )
+        return
     await message.answer(
         "⚡️ <b>Выберите тарифный план</b>\n\n"
         "Чем больше срок — тем выгоднее цена за месяц.\n"
@@ -259,8 +270,15 @@ async def show_plans(message: Message) -> None:
 
 
 @router.callback_query(F.data == "show_plans")
-async def show_plans_inline(callback: CallbackQuery) -> None:
+async def show_plans_inline(callback: CallbackQuery, session: AsyncSession) -> None:
     """Вызывается из инлайн-кнопок стартового сообщения."""
+    if not await _stars_enabled(session):
+        from bot.handlers.profile import _pay_choice_kb
+        await callback.message.answer(
+            "💳 <b>Выбери способ оплаты</b>", parse_mode="HTML", reply_markup=await _pay_choice_kb(),
+        )
+        await callback.answer()
+        return
     await callback.message.answer(
         "⚡️ <b>Выберите тарифный план</b>\n\n"
         "Чем больше срок — тем выгоднее цена за месяц.\n"

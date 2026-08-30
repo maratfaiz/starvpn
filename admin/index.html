@@ -41,6 +41,9 @@ textarea{resize:vertical}
 .login-btn:hover{background:#FFD84D}
 .login-err{color:#F87171;font-size:12.5px;margin-top:4px;min-height:16px}
 .login-note{font-size:12px;color:#3A3028;margin-top:16px;line-height:1.6;text-align:center}
+.login-tabs{display:flex;gap:6px;background:rgba(0,0,0,.4);border-radius:12px;padding:4px;margin-bottom:22px}
+.login-tab{flex:1;padding:10px;border-radius:9px;background:transparent;color:#8A7A60;font-size:13px;font-weight:600;transition:background .15s,color .15s}
+.login-tab.active{background:rgba(255,184,0,.14);color:#FFB800}
 .login-back{display:block;text-align:center;margin-top:22px;font-size:13px;color:#3A3028}
 .login-back:hover{color:#8A7A60}
 
@@ -253,11 +256,33 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
     </div>
     <div class="login-box">
       <h2>Вход в админ-панель</h2>
-      <p class="login-sub">Доступ только для сотрудников с правами администратора. Обычным пользователям сюда не нужно — им в <a href="/login">личный кабинет</a>.</p>
-      <label class="login-label">Ключ доступа</label>
-      <input class="login-input" type="password" id="login-key" placeholder="ADMIN_WEB_KEY" onkeydown="if(event.key==='Enter')doLogin()">
-      <div class="login-err" id="login-err"></div>
-      <button class="login-btn" onclick="doLogin()">Войти</button>
+      <p class="login-sub">Доступ только для сотрудников. Обычным пользователям сюда не нужно — им в <a href="/login">личный кабинет</a>.</p>
+      <div class="login-tabs">
+        <button class="login-tab active" id="loginTabIn" type="button" onclick="setLoginTab('login')">Войти</button>
+        <button class="login-tab" id="loginTabReg" type="button" onclick="setLoginTab('register')">Первый вход</button>
+      </div>
+
+      <div id="loginPane">
+        <label class="login-label">Логин</label>
+        <input class="login-input" type="text" id="login-username" placeholder="username" autocomplete="username">
+        <label class="login-label">Пароль</label>
+        <input class="login-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        <div class="login-err" id="login-err"></div>
+        <button class="login-btn" onclick="doLogin()">Войти</button>
+      </div>
+
+      <div id="registerPane" style="display:none">
+        <p class="login-sub" style="margin-top:0">Ключ доступа даёт вам, кто вас пригласил — главный админ или другой admin. Введите его один раз, чтобы создать свой логин и пароль.</p>
+        <label class="login-label">Ключ доступа</label>
+        <input class="login-input" type="password" id="reg-key" placeholder="ключ приглашения" autocomplete="off">
+        <label class="login-label">Логин</label>
+        <input class="login-input" type="text" id="reg-username" placeholder="username" autocomplete="username">
+        <label class="login-label">Пароль</label>
+        <input class="login-input" type="password" id="reg-password" placeholder="Минимум 8 символов" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()">
+        <div class="login-err" id="register-err"></div>
+        <button class="login-btn" onclick="doRegister()">Создать аккаунт</button>
+      </div>
+
       <div class="login-note">Вход логируется на сервере.</div>
     </div>
     <a class="login-back" href="/">← Вернуться на сайт</a>
@@ -274,13 +299,13 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
     </div>
     <div class="sb-nav" id="sbNav"></div>
     <div class="sb-foot">
-      <div class="sb-foot-inner">
-        <div class="sb-avatar">AD</div>
+      <div class="sb-foot-inner" style="cursor:pointer" onclick="goto('profile')">
+        <div class="sb-avatar" id="sbAvatar">··</div>
         <div style="flex:1;min-width:0">
-          <div class="sb-foot-name">Admin</div>
-          <div class="sb-foot-role">владелец</div>
+          <div class="sb-foot-name" id="sbFootName">…</div>
+          <div class="sb-foot-role" id="sbFootRole"></div>
         </div>
-        <div class="sb-logout" onclick="logout()">выход</div>
+        <div class="sb-logout" onclick="event.stopPropagation();logout()">выход</div>
       </div>
     </div>
   </aside>
@@ -344,28 +369,60 @@ let filter = 'all';
 })();
 
 /* ── Auth ──────────────────────────────────────────────────── */
+let myProfile = null;
+
+function setLoginTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('loginTabIn').classList.toggle('active', isLogin);
+  document.getElementById('loginTabReg').classList.toggle('active', !isLogin);
+  document.getElementById('loginPane').style.display = isLogin ? 'block' : 'none';
+  document.getElementById('registerPane').style.display = isLogin ? 'none' : 'block';
+}
+
 async function doLogin() {
-  const key = document.getElementById('login-key').value.trim();
-  if (!key) return;
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-err');
+  errEl.textContent = '';
+  if (!username || !password) { errEl.textContent = 'Введите логин и пароль'; return; }
   try {
-    const r = await fetch(API + '/web/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ key }) });
-    if (r.status === 503) { document.getElementById('login-err').textContent = 'ADMIN_WEB_KEY не настроен на сервере'; return; }
-    if (r.status === 401) { document.getElementById('login-err').textContent = 'Неверный ключ'; return; }
-    if (!r.ok) { const err = await r.json().catch(() => ({})); document.getElementById('login-err').textContent = 'Ошибка: ' + (err.detail || r.status); return; }
-    token = key;
+    const r = await fetch(API + '/web/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ username, password }) });
+    if (!r.ok) { const err = await r.json().catch(() => ({})); errEl.textContent = err.detail || ('Ошибка: ' + r.status); return; }
+    const data = await r.json();
+    token = data.token;
     localStorage.setItem('adminToken', token);
     showApp();
   } catch(e) {
-    document.getElementById('login-err').textContent = 'Нет связи с сервером';
+    errEl.textContent = 'Нет связи с сервером';
+  }
+}
+
+async function doRegister() {
+  const invite_key = document.getElementById('reg-key').value.trim();
+  const username = document.getElementById('reg-username').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const errEl = document.getElementById('register-err');
+  errEl.textContent = '';
+  if (!invite_key || !username || !password) { errEl.textContent = 'Заполните все поля'; return; }
+  try {
+    const r = await fetch(API + '/web/register', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ invite_key, username, password }) });
+    if (!r.ok) { const err = await r.json().catch(() => ({})); errEl.textContent = err.detail || ('Ошибка: ' + r.status); return; }
+    const data = await r.json();
+    token = data.token;
+    localStorage.setItem('adminToken', token);
+    showApp();
+  } catch(e) {
+    errEl.textContent = 'Нет связи с сервером';
   }
 }
 
 function logout() {
   localStorage.removeItem('adminToken');
-  token = '';
+  token = ''; myProfile = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-key').value = '';
+  document.getElementById('login-username').value = '';
+  document.getElementById('login-password').value = '';
   document.getElementById('login-err').textContent = '';
 }
 
@@ -400,14 +457,17 @@ const NAV_ICONS = {
   support: 'M4 5h16v11H8l-4 4V5zM8 9h8M8 12h5',
   wiki: 'M4 5a1 1 0 011-1h5a2 2 0 012 2v13a2 2 0 00-2-1.6H4zM20 5a1 1 0 00-1-1h-5a2 2 0 00-2 2v13a2 2 0 012-1.6h6z',
   settings: 'M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1M15 5v4M9 10v4M17 15v4',
+  profile: 'M12 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5',
+  adbanner: 'M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z',
 };
 const NAV_GROUPS = [
   { title: 'Обзор', items: [{ id: 'dash', label: 'Дашборд' }] },
   { title: 'VPN', items: [{ id: 'users', label: 'Аккаунты', countKey: 'users' }, { id: 'devices', label: 'Устройства', countKey: 'devices' }, { id: 'servers', label: 'Серверы' }] },
   { title: 'Деньги', items: [{ id: 'payments', label: 'Платежи', countKey: 'payments' }, { id: 'referrals', label: 'Рефералы', countKey: 'referrals' }] },
   { title: 'Поддержка', items: [{ id: 'support', label: 'Обращения', countKey: 'tickets' }] },
-  { title: 'Контент', items: [{ id: 'wiki', label: 'Wiki', countKey: 'wiki' }] },
+  { title: 'Контент', items: [{ id: 'wiki', label: 'Wiki', countKey: 'wiki' }, { id: 'adbanner', label: 'Реклама' }] },
   { title: 'Система', items: [{ id: 'settings', label: 'Настройки' }] },
+  { title: 'Аккаунт', items: [{ id: 'profile', label: 'Профиль' }] },
 ];
 const PAGE_META = {
   dash: ['Дашборд', 'Обзор сервиса за последние 7 дней'],
@@ -419,6 +479,8 @@ const PAGE_META = {
   support: ['Обращения', 'Тикеты из /support и личного кабинета'],
   wiki: ['Wiki', 'Статьи базы знаний'],
   settings: ['Настройки', 'Тарифы, лимиты и провайдеры оплаты'],
+  profile: ['Профиль', 'Ваш аккаунт и права доступа'],
+  adbanner: ['Реклама', 'Баннер на верхней полосе главной страницы'],
 };
 let navCounts = {};
 
@@ -447,7 +509,7 @@ function goto(s) {
   document.getElementById('tbTitle').textContent = title;
   document.getElementById('tbSub').textContent = sub;
   document.getElementById('content').innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
-  const fns = { dash: renderDashboard, users: () => renderTable('users'), devices: () => renderTable('devices'), servers: renderServers, payments: () => renderTable('payments'), referrals: () => renderTable('referrals'), support: renderSupport, wiki: renderWiki, settings: renderSettings };
+  const fns = { dash: renderDashboard, users: () => renderTable('users'), devices: () => renderTable('devices'), servers: renderServers, payments: () => renderTable('payments'), referrals: () => renderTable('referrals'), support: renderSupport, wiki: renderWiki, settings: renderSettings, profile: renderProfile, adbanner: renderAdBanner };
   (fns[s] || (() => {}))();
 }
 
@@ -1140,22 +1202,16 @@ async function renderSettings() {
           </div>
           <div class="editor-card">
             <div class="dcard-title">Приём оплаты</div>
-            <div style="font-size:13px;color:#8A7A60;margin:4px 0 18px">«Настроено» — есть ключи в .env. Переключатель — показывать ли способ пользователям (боту и сайту) прямо сейчас. Telegram Stars не выключается — это нативная оплата Telegram, работает всегда. Stars недоступны на сайте — только в боте.</div>
+            <div style="font-size:13px;color:#8A7A60;margin:4px 0 18px">«Настроено» — есть ключи в .env. Переключатель — показывать ли способ пользователям (боту и сайту) прямо сейчас. Stars — только в боте (на сайте недоступны в принципе).</div>
             ${[['stars', 'Telegram Stars (только в боте)', s.providers.stars], ['card', 'Банковская карта (Robokassa)', s.providers.card], ['yoomoney', 'ЮMoney', s.providers.yoomoney], ['crypto', 'Криптовалюта (@CryptoBot)', s.providers.crypto]].map(([key, label, p]) => `
               <div class="provider-row">
                 <div style="flex:1;font-size:14px;font-weight:600;color:#EBE0CC">${label}</div>
                 <span class="chip ${p.configured ? 'green' : 'grey'}">${p.configured ? 'Настроено' : 'Не настроено'}</span>
-                ${key === 'stars' ? `
-                  <div class="toggle-track" style="background:rgba(255,184,0,.35);cursor:default" title="Всегда включено">
-                    <div class="toggle-knob" style="background:#FFB800;margin-left:auto"></div>
-                  </div>
-                ` : `
-                  <div class="toggle-track" data-provider="${key}" data-on="${p.enabled ? '1' : '0'}"
-                       style="background:${p.enabled ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'};cursor:pointer"
-                       onclick="togglePaymentProvider('${key}')" title="${p.enabled ? 'Выключить' : 'Включить'}">
-                    <div class="toggle-knob" style="background:${p.enabled ? '#FFB800' : '#5A5040'};margin-left:${p.enabled ? 'auto' : '0'}"></div>
-                  </div>
-                `}
+                <div class="toggle-track" data-provider="${key}" data-on="${p.enabled ? '1' : '0'}"
+                     style="background:${p.enabled ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'};cursor:pointer"
+                     onclick="togglePaymentProvider('${key}')" title="${p.enabled ? 'Выключить' : 'Включить'}">
+                  <div class="toggle-knob" style="background:${p.enabled ? '#FFB800' : '#5A5040'};margin-left:${p.enabled ? 'auto' : '0'}"></div>
+                </div>
               </div>
             `).join('')}
           </div>
@@ -1168,7 +1224,7 @@ async function renderSettings() {
           </div>
           <div class="editor-card">
             <div class="dcard-title" style="margin-bottom:14px">Доступ к админке</div>
-            <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">Единый ключ ADMIN_WEB_KEY из .env — отдельных аккаунтов админов пока нет.</div>
+            <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">У каждого сотрудника свой логин и пароль. Мастер-ключ ниже — из ADMIN_WEB_KEY в .env, нужен только для регистрации самого первого аккаунта (ранга admin). Дальше приглашения — через личный ключ в разделе «Профиль».</div>
             <div class="mono" style="background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:10px 12px;font-size:13px;color:#8A7A60">${s.admin_web_key_masked || '—'}</div>
           </div>
           <div class="zl-box">
@@ -1186,6 +1242,83 @@ async function renderSettings() {
   } catch (e) {
     c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
   }
+}
+
+async function renderProfile() {
+  const c = document.getElementById('content');
+  try {
+    const me = await api('GET', '/web/me');
+    myProfile = me;
+    const rankLabel = me.rank === 'admin' ? 'Admin' : 'Работник';
+    c.innerHTML = `
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;align-items:start">
+        <div class="editor-card">
+          <div class="dcard-title" style="margin-bottom:18px">Ваш аккаунт</div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="color:#8A7A60;font-size:13px">Логин</span><span class="mono" style="color:#EBE0CC">${esc(me.username)}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="color:#8A7A60;font-size:13px">Ранг</span><span class="chip ${me.rank === 'admin' ? 'green' : 'grey'}">${rankLabel}</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="color:#8A7A60;font-size:13px">Пригласил</span><span class="mono" style="color:#EBE0CC">${me.invited_by ? esc(me.invited_by) : '— (мастер-ключ)'}</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:#8A7A60;font-size:13px">В системе с</span><span class="mono" style="color:#EBE0CC">${fmtDate(me.created_at)}</span></div>
+        </div>
+        <div class="editor-card">
+          <div class="dcard-title" style="margin-bottom:14px">Приглашения</div>
+          ${me.rank === 'admin' ? `
+            <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">Дайте этот ключ новому сотруднику — при первом входе (вкладка «Первый вход») он создаст свой логин и пароль рангом «Работник» (без права приглашать).</div>
+            <div class="mono" style="background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:10px 12px;font-size:13px;color:#FFB800;word-break:break-all">${esc(me.invite_key || '—')}</div>
+          ` : `
+            <div style="font-size:13px;color:#8A7A60">Ранг «Работник» не может приглашать новых сотрудников — эта возможность только у ранга Admin.</div>
+          `}
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
+  }
+}
+
+async function renderAdBanner() {
+  const c = document.getElementById('content');
+  try {
+    const b = await api('GET', '/web/ad-banner');
+    c.innerHTML = `
+      <div class="editor-card" style="max-width:560px">
+        <div class="dcard-title" style="margin-bottom:6px">Баннер на верхней полосе главной</div>
+        <div style="font-size:13px;color:#8A7A60;margin-bottom:18px">Показывается на / (главной), пока включён и есть текст. Например: «Скидка 20% на VPN до конца августа».</div>
+
+        <label class="login-label">Текст</label>
+        <input class="login-input" type="text" id="abText" maxlength="300" value="${esc(b.text || '')}" placeholder="Скидка 20% на VPN до конца августа">
+
+        <label class="login-label">Ссылка (необязательно)</label>
+        <input class="login-input" type="text" id="abLinkUrl" value="${esc(b.link_url || '')}" placeholder="/tariffs">
+
+        <label class="login-label">Текст ссылки</label>
+        <input class="login-input" type="text" id="abLinkLabel" value="${esc(b.link_label || '')}" placeholder="Подробнее">
+
+        <div class="provider-row" style="margin:14px 0">
+          <div style="flex:1;font-size:14px;font-weight:600;color:#EBE0CC">Показывать на сайте</div>
+          <div class="toggle-track" id="abToggle" data-on="${b.enabled ? '1' : '0'}"
+               style="background:${b.enabled ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'};cursor:pointer"
+               onclick="this.dataset.on = this.dataset.on === '1' ? '0' : '1'; this.style.background = this.dataset.on === '1' ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'; this.querySelector('.toggle-knob').style.marginLeft = this.dataset.on === '1' ? 'auto' : '0'; this.querySelector('.toggle-knob').style.background = this.dataset.on === '1' ? '#FFB800' : '#5A5040';">
+            <div class="toggle-knob" style="background:${b.enabled ? '#FFB800' : '#5A5040'};margin-left:${b.enabled ? 'auto' : '0'}"></div>
+          </div>
+        </div>
+
+        <button class="login-btn" style="margin-top:4px" onclick="saveAdBanner()">Сохранить</button>
+      </div>
+    `;
+  } catch (e) {
+    c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
+  }
+}
+
+async function saveAdBanner() {
+  const text = document.getElementById('abText').value.trim();
+  const link_url = document.getElementById('abLinkUrl').value.trim();
+  const link_label = document.getElementById('abLinkLabel').value.trim();
+  const enabled = document.getElementById('abToggle').dataset.on === '1';
+  try {
+    await api('POST', '/web/ad-banner', { text, link_url, link_label, enabled });
+    toast('Баннер сохранён');
+  } catch (e) { toast(e.message, true); }
 }
 
 async function togglePaymentProvider(provider) {
@@ -1207,12 +1340,22 @@ async function togglePaymentProvider(provider) {
   }
 })();
 
+async function loadMe() {
+  try {
+    myProfile = await api('GET', '/web/me');
+    document.getElementById('sbAvatar').textContent = myProfile.username.slice(0, 2).toUpperCase();
+    document.getElementById('sbFootName').textContent = myProfile.username;
+    document.getElementById('sbFootRole').textContent = myProfile.rank === 'admin' ? 'admin' : 'работник';
+  } catch (e) { /* ignore — сессия могла истечь, api() сам разлогинит */ }
+}
+
 function showApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'grid';
   renderSidebar();
   checkMarzban();
   loadCounts();
+  loadMe();
   goto('dash');
 }
 </script>

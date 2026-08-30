@@ -59,7 +59,9 @@ async def _pay_choice_kb() -> InlineKeyboardMarkup:
     async with AsyncSessionLocal() as session:
         states = await get_all_provider_states(session)
 
-    rows = [[InlineKeyboardButton(text="⭐  Telegram Stars", callback_data="sub:renew")]]
+    rows = []
+    if states["stars"]:
+        rows.append([InlineKeyboardButton(text="⭐  Telegram Stars", callback_data="sub:renew")])
     if states["card"]:
         rows.append([InlineKeyboardButton(text="💳  Банковская карта  (₽)", callback_data="sub:card")])
     if states["yoomoney"]:

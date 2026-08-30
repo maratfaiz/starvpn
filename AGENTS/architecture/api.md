@@ -5,9 +5,14 @@
 - **`/api/*`** — публичное API для сайта (`landing/`) и Mini App (`webapp/`).
  Identity — через `_resolve_tg_id()` (Telegram initData **или** cookie
  `star_session`), см. `AGENTS/roles/backend.md`.
-- **`/web/*`** — API веб-админки (`admin/index.html`). Identity — общий
- `Authorization: Bearer <ADMIN_WEB_KEY>` (один ключ на всех
- администраторов, не per-user учётки).
+- **`/web/*`** — API веб-админки (`admin/index.html`). Identity —
+ `Authorization: Bearer <session-token>`, персональная сессия на
+ аккаунт (`AdminAccount`, ранги `admin`/`worker`) — см. ADR-009 в
+ `AGENTS/decisions/ADR.md` и `bot/utils/admin_auth.py`.
+ `POST /web/register` (invite_key → создать аккаунт), `POST /web/login`
+ (username+password), `POST /web/logout`, `GET /web/me` (ранг, личный
+ invite_key). `ADMIN_WEB_KEY` из `.env` не удалён — он мастер-ключ для
+ регистрации самого первого `admin`-аккаунта.
 
 Плюс раздача HTML-страниц (`/`, `/tariffs`, `/wiki/{slug}`, `/account`,
 `/login`, `/admin`, ...) — читаются с диска через `_serve_html`, не
@@ -24,6 +29,7 @@
 | `POST` | `/api/account/logout` | Выйти из веб-аккаунта |
 | `GET` | `/api/telegram-oauth/start` | Начать вход через Telegram (OIDC) — редирект на `oauth.telegram.org` |
 | `GET` | `/api/telegram-oauth/callback` | Приёмник редиректа от Telegram — обменивает code на id_token, выставляет `star_session` |
+| `GET` | `/api/ad-banner` | Публичный — активный рекламный баннер (если включён), для главной страницы |
 | `GET` | `/api/me` | Текущий пользователь (статус подписки, устройства, и т.д.) |
 | `GET`/`POST`/`DELETE` | `/api/devices*` | Список / добавление / удаление устройств |
 | `GET` | `/api/devices/{id}/link` | Получить VLESS-ссылку/QR устройства |
@@ -46,7 +52,11 @@
 
 | Метод | Путь | Назначение |
 |---|---|---|
-| `POST` | `/web/login` | Вход по общему `ADMIN_WEB_KEY` |
+| `POST` | `/web/register` | Первый вход по инвайт-ключу — создать `AdminAccount` (ранг зависит от ключа, см. ADR-009) |
+| `POST` | `/web/login` | Вход по username+паролю |
+| `POST` | `/web/logout` | Завершить сессию |
+| `GET` | `/web/me` | Текущий админ: username, ранг, личный invite_key (если `admin`) |
+| `GET`/`POST` | `/web/ad-banner` | Рекламный баннер на главной — прочитать/сохранить |
 | `GET` | `/web/stats` | Дашборд (метрики за 7 дней) |
 | `GET` | `/web/users`, `/web/user/{tg_id}` | Список / карточка пользователя |
 | `POST` | `/web/user/{tg_id}/grant`, `/ban`, `/unban`, `/message` | Выдать дни / забанить / разбанить / написать пользователю |

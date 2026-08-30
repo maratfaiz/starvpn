@@ -84,7 +84,9 @@ body{
   transition:background .2s,transform .15s,box-shadow .2s;
 }
 .nav-cta:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 8px 24px rgba(255,184,0,0.3)}
-@media(max-width:768px){.nav-links{display:none}.nav-login{display:none}.nav-cta{padding:8px 16px;font-size:12px}}
+.nav-hamburger{display:none;flex-direction:column;justify-content:center;gap:4px;width:34px;height:34px;background:transparent;border:1px solid rgba(255,255,255,.14);border-radius:9px;flex-shrink:0;cursor:pointer}
+.nav-hamburger span{display:block;width:16px;height:1.5px;background:var(--gold);margin:0 auto}
+@media(max-width:768px){.nav-hamburger{display:flex}.nav-links{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:#0a0a0a;border-bottom:1px solid var(--gold-border);padding:10px 20px 16px;gap:2px;box-shadow:0 20px 40px rgba(0,0,0,.5)}.nav-links.open{display:flex}.nav-links a{padding:12px 4px}.nav-inner{gap:6px;flex-wrap:wrap;row-gap:8px}.nav-logo-text{font-size:15px!important}.nav-login{padding:6px 9px;font-size:10.5px;white-space:nowrap}.nav-cta{padding:6px 11px;font-size:10.5px;white-space:nowrap}}
 
 /* ─── Wrapper ──────────────────────────────────────────────── */
 .wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}
@@ -513,12 +515,12 @@ footer{
 <div id="progress"></div>
 <canvas id="bg-canvas"></canvas>
 
-<!-- ═══ TOP BANNER ═══════════════════════════════════════════════ -->
-<div class="top-banner">
+<!-- ═══ TOP BANNER (управляется из админ-панели, раздел "Реклама") ═══ -->
+<div class="top-banner" id="adBanner" style="display:none">
   <div class="top-banner-inner">
-    <svg viewBox="0 0 24 24" fill="#FFB800"><path d="M21.5 4.5L2.7 12.1c-1.2.5-1.2 1.2-.2 1.5l4.6 1.4 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.4-2.3 4.9 3.6c.9.5 1.5.2 1.8-.8l3.2-15c.3-1.3-.4-1.8-1.5-1.3zM8.5 14.3l9.7-6.2c.5-.3.9-.1.5.2l-8.2 7.5-.3 3.3-1.5-4.6z"></path></svg>
-    <span>Telegram не открывается? Ключ можно купить прямо на сайте, без бота.</span>
-    <a href="/get-vpn">Купить без Telegram →</a>
+    <svg viewBox="0 0 24 24" fill="#FFB800"><path d="M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z"></path></svg>
+    <span id="adBannerText"></span>
+    <a href="#" id="adBannerLink" style="display:none"></a>
   </div>
 </div>
 
@@ -528,6 +530,9 @@ footer{
     <a class="nav-logo" href="#">
       <span class="nav-logo-text">STAR VPN</span>
     </a>
+    <button class="nav-hamburger" id="navHamburger" aria-label="Меню" type="button" onclick="document.querySelector('.nav-links').classList.toggle('open')">
+      <span></span><span></span><span></span>
+    </button>
     <div class="nav-links">
       <a href="#how">Преимущества</a>
       <a href="#compare">Сравнение</a>
@@ -1044,6 +1049,23 @@ footer{
 </footer>
 
 <script>
+/* ═══ Рекламный баннер (редактируется из админ-панели) ═══════════ */
+(async function loadAdBanner(){
+  try {
+    const r = await fetch('/api/ad-banner');
+    const data = await r.json();
+    if (!data.enabled || !data.text) return;
+    document.getElementById('adBannerText').textContent = data.text;
+    const linkEl = document.getElementById('adBannerLink');
+    if (data.link_url) {
+      linkEl.href = data.link_url;
+      linkEl.textContent = (data.link_label || 'Подробнее') + ' →';
+      linkEl.style.display = '';
+    }
+    document.getElementById('adBanner').style.display = '';
+  } catch (e) { /* баннер просто не покажется */ }
+})();
+
 /* ═══ Server map (canvas dots + markers) ═══════════════════════ */
 (function(){
   const c = document.getElementById('world-map-canvas');

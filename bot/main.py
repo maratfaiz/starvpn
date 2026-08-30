@@ -11,7 +11,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from bot.api import app as fastapi_app
 from bot.config import settings
-from bot.utils.database import init_db
+from bot.utils.database import init_db, AsyncSessionLocal
+from bot.utils import admin_auth
 from bot.middlewares.db import DbSessionMiddleware
 from bot.middlewares.ban import BanMiddleware
 from bot.handlers import admin, start, payment, profile, referral, instructions, gift, devices, crypto_payment, card_payment, yoomoney_payment
@@ -27,6 +28,10 @@ logger = logging.getLogger(__name__)
 async def main() -> None:
     await init_db()
     logger.info("Database initialized.")
+
+    async with AsyncSessionLocal() as session:
+        await admin_auth.load_sessions_cache(session)
+    logger.info("Admin sessions cache warmed.")
 
     bot = Bot(
         token=settings.telegram_api_token,

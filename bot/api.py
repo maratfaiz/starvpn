@@ -2362,21 +2362,100 @@ if (localStorage.getItem('star_vpn_guest_order')) {
 #  WEB ADMIN DASHBOARD — отдельная авторизация (не Telegram initData)
 # ═══════════════════════════════════════════════════════════════════
 
-def _web_auth(authorization: str | None) -> None:
-    if not settings.admin_web_key:
-        raise HTTPException(status_code=503, detail="ADMIN_WEB_KEY not configured")
-    token = (authorization or "").removeprefix("Bearer ").strip()
-    if not token or not hmac.compare_digest(token, settings.admin_web_key):
+def _web_auth(authorization: str | None):
+    """Проверяет bearer-сессию админ-панели. Возвращает AdminIdentity —
+    вызывающему коду не обязательно использовать возврат (большинство
+    эндпоинтов просто гейтят доступ), но эндпоинты, которым нужен ранг
+    вызывающего (например, приглашение), могут его забрать."""
+    from bot.utils import admin_auth
+    try:
+        return admin_auth.check_session(authorization)
+    except PermissionError:
         raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+@app.post("/web/register")
+async def web_register(request: Request):
+    """Первый вход в админ-панель — по инвайт-ключу (см. ADR-009).
+    Мастер-ключ ADMIN_WEB_KEY даёт ранг 'admin' (с собственным invite_key
+    для будущих приглашений); личный invite_key существующего 'admin' даёт
+    ранг 'worker' (без права приглашать дальше)."""
+    from bot.utils import admin_auth
+
+    body = await request.json()
+    invite_key = (body.get("invite_key") or "").strip()
+    username = (body.get("username") or "").strip()
+    password = body.get("password") or ""
+
+    if not invite_key:
+        raise HTTPException(400, "Введите ключ доступа")
+    if not (3 <= len(username) <= 64):
+        raise HTTPException(400, "Логин должен быть от 3 до 64 символов")
+
+    async with AsyncSessionLocal() as session:
+        try:
+            admin, token = await admin_auth.register_admin(invite_key, username, password, session)
+        except ValueError as e:
+            if str(e) == "username_taken":
+                raise HTTPException(409, "Этот логин уже занят")
+            if str(e) == "bad_invite_key":
+                raise HTTPException(401, "Неверный ключ доступа")
+            raise HTTPException(400, "Пароль должен быть от 8 символов")
+
+    return {"ok": True, "token": token, "rank": admin.rank, "username": admin.username}
 
 
 @app.post("/web/login")
 async def web_login(request: Request):
+    from bot.utils import admin_auth
+
     body = await request.json()
-    key = body.get("key", "").strip()
-    if not settings.admin_web_key or not hmac.compare_digest(key, settings.admin_web_key):
-        raise HTTPException(status_code=401, detail="Invalid key")
-    return {"ok": True, "token": settings.admin_web_key}
+    username = (body.get("username") or "").strip()
+    password = body.get("password") or ""
+    if not username or not password:
+        raise HTTPException(400, "Введите логин и пароль")
+
+    async with AsyncSessionLocal() as session:
+        result = await admin_auth.login_admin(username, password, session)
+    if not result:
+        raise HTTPException(401, "Неверный логин или пароль")
+    admin, token = result
+    return {"ok": True, "token": token, "rank": admin.rank, "username": admin.username}
+
+
+@app.post("/web/logout")
+async def web_logout(authorization: str | None = Header(default=None)):
+    from bot.utils import admin_auth
+    async with AsyncSessionLocal() as session:
+        await admin_auth.logout_admin(authorization, session)
+    return {"ok": True}
+
+
+@app.get("/web/me")
+async def web_me(authorization: str | None = Header(default=None)):
+    from bot.models.admin_account import AdminAccount as _AdminAccount
+    identity = _web_auth(authorization)
+
+    async with AsyncSessionLocal() as session:
+        admin = (await session.execute(
+            select(_AdminAccount).where(_AdminAccount.id == identity.admin_id)
+        )).scalar_one_or_none()
+        if not admin:
+            raise HTTPException(404, "Not found")
+        inviter_username = None
+        if admin.invited_by_id:
+            inviter = (await session.execute(
+                select(_AdminAccount).where(_AdminAccount.id == admin.invited_by_id)
+            )).scalar_one_or_none()
+            inviter_username = inviter.username if inviter else None
+
+    return {
+        "username": admin.username,
+        "rank": admin.rank,
+        "invite_key": admin.invite_key,
+        "invited_by": inviter_username,
+        "created_at": admin.created_at.isoformat(),
+    }
 
 
 @app.get("/web/stats")
@@ -2824,7 +2903,7 @@ async def web_settings_overview(authorization: str | None = Header(default=None)
     return {
         "tariffs": tariffs,
         "providers": {
-            "stars": {"configured": True, "enabled": True},
+            "stars": {"configured": True, "enabled": toggles["stars"]},
             "card": {"configured": robokassa.configured, "enabled": toggles["card"]},
             "yoomoney": {"configured": yoomoney.configured, "enabled": toggles["yoomoney"]},
             "crypto": {"configured": bool(settings.cryptopay_token), "enabled": toggles["crypto"]},
@@ -2839,7 +2918,7 @@ async def web_settings_overview(authorization: str | None = Header(default=None)
 
 @app.post("/web/settings/payment-toggle")
 async def web_settings_payment_toggle(request: Request, authorization: str | None = Header(default=None)):
-    """Включить/выключить способ оплаты (card/yoomoney/crypto). Stars всегда включены — не тумблится."""
+    """Включить/выключить способ оплаты (card/yoomoney/crypto/stars)."""
     _web_auth(authorization)
     from bot.utils.settings_store import set_provider_enabled, PROVIDER_KEYS
 
@@ -2853,6 +2932,70 @@ async def web_settings_payment_toggle(request: Request, authorization: str | Non
         await set_provider_enabled(session, provider, enabled)
 
     return {"ok": True, "provider": provider, "enabled": enabled}
+
+
+# ─── Рекламный баннер (верхняя полоса главной) ───────────────────────────────
+
+async def _get_ad_banner(session: AsyncSession):
+    from bot.models.ad_banner import AdBanner
+    row = (await session.execute(select(AdBanner).where(AdBanner.id == 1))).scalar_one_or_none()
+    if not row:
+        row = AdBanner(id=1, enabled=False, text="")
+        session.add(row)
+        await session.commit()
+        await session.refresh(row)
+    return row
+
+
+@app.get("/api/ad-banner")
+async def get_ad_banner_public():
+    """Публичный — отдаёт баннер только если он включён и есть текст."""
+    async with AsyncSessionLocal() as session:
+        banner = await _get_ad_banner(session)
+    if not banner.enabled or not banner.text.strip():
+        return {"enabled": False}
+    return {
+        "enabled": True,
+        "text": banner.text,
+        "link_url": banner.link_url,
+        "link_label": banner.link_label,
+    }
+
+
+@app.get("/web/ad-banner")
+async def get_ad_banner_admin(authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    async with AsyncSessionLocal() as session:
+        banner = await _get_ad_banner(session)
+    return {
+        "enabled": banner.enabled,
+        "text": banner.text,
+        "link_url": banner.link_url,
+        "link_label": banner.link_label,
+    }
+
+
+@app.post("/web/ad-banner")
+async def set_ad_banner(request: Request, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    body = await request.json()
+    text = (body.get("text") or "").strip()
+    link_url = (body.get("link_url") or "").strip() or None
+    link_label = (body.get("link_label") or "").strip() or None
+    enabled = bool(body.get("enabled"))
+
+    if len(text) > 300:
+        raise HTTPException(400, "Текст баннера — максимум 300 символов")
+
+    async with AsyncSessionLocal() as session:
+        banner = await _get_ad_banner(session)
+        banner.enabled = enabled
+        banner.text = text
+        banner.link_url = link_url
+        banner.link_label = link_label
+        await session.commit()
+
+    return {"ok": True}
 
 
 @app.post("/web/broadcast")
