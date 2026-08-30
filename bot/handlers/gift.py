@@ -70,15 +70,33 @@ async def _crypto_enabled() -> bool:
         return await is_provider_enabled(session, "crypto")
 
 
+async def _stars_enabled() -> bool:
+    from bot.utils.settings_store import is_provider_enabled
+    async with AsyncSessionLocal() as session:
+        return await is_provider_enabled(session, "stars")
+
+
 @router.message(F.text == "🎁 Подарить VPN")
 async def gift_start(message: Message) -> None:
     crypto_on = await _crypto_enabled()
+    stars_on = await _stars_enabled()
+    if not stars_on and not crypto_on:
+        await message.answer(
+            "🎁 Подарки сейчас временно недоступны — оба способа оплаты подарков "
+            "(⭐ Stars и 💎 крипта) отключены. Загляни попозже."
+        )
+        return
+
     buttons = []
     for key, plan in PLANS.items():
         crypto = CRYPTO_PLANS.get(key, {})
-        usd_str = f" / ${crypto['usd']}" if crypto and crypto_on else ""
+        price_parts = []
+        if stars_on:
+            price_parts.append(f"{plan['stars']} ⭐")
+        if crypto and crypto_on:
+            price_parts.append(f"${crypto['usd']}")
         buttons.append([InlineKeyboardButton(
-            text=f"{plan['label']} — {plan['stars']} ⭐{usd_str}",
+            text=f"{plan['label']} — {' / '.join(price_parts)}",
             callback_data=f"gift_plan:{key}",
         )])
     buttons.append([InlineKeyboardButton(text="❌ Отмена", callback_data="gift:cancel")])
@@ -105,17 +123,25 @@ async def gift_choose_plan(callback: CallbackQuery, state: FSMContext) -> None:
 
     plan = PLANS[plan_key]
     crypto_on = await _crypto_enabled()
+    stars_on = await _stars_enabled()
     crypto = CRYPTO_PLANS.get(plan_key, {})
-    usd_str = f" / ${crypto['usd']}" if crypto and crypto_on else ""
+    price_parts = []
+    if stars_on:
+        price_parts.append(f"{plan['stars']} ⭐")
+    if crypto and crypto_on:
+        price_parts.append(f"${crypto['usd']}")
+    price_str = " / ".join(price_parts)
 
-    rows = [[InlineKeyboardButton(text="⭐  Telegram Stars", callback_data="gift_method:stars")]]
+    rows = []
+    if stars_on:
+        rows.append([InlineKeyboardButton(text="⭐  Telegram Stars", callback_data="gift_method:stars")])
     if crypto_on:
         rows.append([InlineKeyboardButton(text="💎  Крипта  (USDT · TON · BTC · ETH)", callback_data="gift_method:crypto")])
     rows.append([InlineKeyboardButton(text="❌ Отмена", callback_data="gift:cancel")])
     kb = InlineKeyboardMarkup(inline_keyboard=rows)
 
     await callback.message.edit_text(
-        f"🎁 Подарок: <b>{plan['label']}</b> — {plan['stars']} ⭐{usd_str}\n\n"
+        f"🎁 Подарок: <b>{plan['label']}</b> — {price_str}\n\n"
         "Выбери способ оплаты:",
         parse_mode="HTML",
         reply_markup=kb,
@@ -130,6 +156,9 @@ async def gift_choose_method(callback: CallbackQuery, state: FSMContext) -> None
     method = callback.data.split(":", 1)[1]  # "stars" or "crypto"
     if method == "crypto" and not await _crypto_enabled():
         await callback.answer("Оплата криптовалютой сейчас недоступна", show_alert=True)
+        return
+    if method == "stars" and not await _stars_enabled():
+        await callback.answer("Оплата через Stars сейчас недоступна", show_alert=True)
         return
     await state.update_data(gift_method=method)
     await state.set_state(GiftForm.recipient)
