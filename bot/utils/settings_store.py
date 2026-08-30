@@ -28,7 +28,7 @@ _DEFAULT_ENABLED = {
     "card": True,
     "yoomoney": False,
     "crypto": True,
-    "stars": False,
+    "stars": True,
 }
 
 
