@@ -670,7 +670,9 @@ def _mz_username_for_type(
     username: str | None,
     existing: list[str],
 ) -> str:
-    ident = username.lower() if username else str(telegram_id)
+    ident = username.lower() if username else (
+        f"web{-telegram_id}" if telegram_id < 0 else str(telegram_id)
+    )
     base = f"{type_key}_tg_{ident}"
     if base not in existing:
         return base
@@ -678,7 +680,7 @@ def _mz_username_for_type(
         candidate = f"{type_key}{i}_tg_{ident}"
         if candidate not in existing:
             return candidate
-    return f"{type_key}_tg_{telegram_id}"
+    return f"{type_key}_tg_{ident}_x"
 
 
 # ─── GET /api/me ──────────────────────────────────────────────────────────────

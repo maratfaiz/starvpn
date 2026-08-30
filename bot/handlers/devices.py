@@ -84,7 +84,9 @@ def _mz_username_for_type(
     existing: list[str],
 ) -> str:
     """Генерирует Marzban username: {type}_tg_{ident}[2..9]."""
-    ident = username.lower() if username else str(telegram_id)
+    ident = username.lower() if username else (
+        f"web{-telegram_id}" if telegram_id < 0 else str(telegram_id)
+    )
     base = f"{type_key}_tg_{ident}"
     if base not in existing:
         return base
@@ -92,7 +94,7 @@ def _mz_username_for_type(
         candidate = f"{type_key}{i}_tg_{ident}"
         if candidate not in existing:
             return candidate
-    return f"{type_key}_tg_{telegram_id}"
+    return f"{type_key}_tg_{ident}_x"
 
 
 async def _get_devices(telegram_id: int, session: AsyncSession) -> list[Device]:
