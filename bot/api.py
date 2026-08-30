@@ -250,6 +250,16 @@ async def serve_logo_title():
     return HTMLResponse(content="", status_code=404)
 
 
+@app.get("/world-dots.js", include_in_schema=False)
+async def serve_world_dots():
+    """Данные для карты серверов на главной (landing/index.html)."""
+    from fastapi.responses import FileResponse
+    p = _LANDING_DIR / "world-dots.js"
+    if p.exists():
+        return FileResponse(str(p), media_type="application/javascript")
+    return HTMLResponse(content="", status_code=404)
+
+
 # ─── Auth ─────────────────────────────────────────────────────────────────────
 
 def _parse_tg_id(init_data: str) -> int:
