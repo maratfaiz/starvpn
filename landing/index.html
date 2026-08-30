@@ -52,9 +52,7 @@ body{
 .splash-nebula.n1{top:-30vmax;right:-32vmax;background:radial-gradient(ellipse 22% 60% at 50% 50%,rgba(255,184,0,.16),transparent 70%);transform:rotate(-35deg)}
 .splash-nebula.n2{bottom:-32vmax;left:-32vmax;background:radial-gradient(ellipse 22% 60% at 50% 50%,rgba(255,184,0,.13),transparent 70%);transform:rotate(-35deg)}
 .splash-inner{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 24px}
-.splash-word{font-family:'Space Grotesk',sans-serif;font-weight:800;line-height:.92;letter-spacing:.02em;font-size:clamp(52px,11vw,110px);background:linear-gradient(180deg,var(--gold2),var(--gold) 60%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 26px rgba(255,184,0,.35));text-transform:uppercase}
-.splash-word .a-star{display:inline-flex;align-items:center;justify-content:center;width:.72em;vertical-align:-.05em}
-.splash-word .a-star svg{width:100%;height:100%;fill:var(--bg)}
+.splash-logo-img{width:min(460px,72vw);height:auto;filter:drop-shadow(0 0 34px rgba(255,184,0,.4))}
 .splash-tag{margin-top:14px;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:rgba(235,224,204,.55)}
 .splash-loading{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-top:36px;margin-bottom:12px;animation:splashPulse 1.4s ease-in-out infinite}
 .splash-bar-row{display:flex;align-items:center;gap:14px;width:min(320px,70vw)}
@@ -536,10 +534,7 @@ footer{
   <div class="splash-nebula n2"></div>
   <canvas id="splash-canvas"></canvas>
   <div class="splash-inner">
-    <div class="splash-word">
-      <div>ST<span class="a-star"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.7 1.1 6.6L12 17.1l-5.8 3.2 1.1-6.6-4.8-4.7 6.6-.9z"></path></svg></span>R</div>
-      <div>VPN</div>
-    </div>
+    <img class="splash-logo-img" src="/logo-star-transparent.png" alt="STAR VPN">
     <div class="splash-tag">Быстро · Безопасно · Без границ</div>
     <div class="splash-loading">Загрузка<span id="splashDots"></span></div>
     <div class="splash-bar-row">

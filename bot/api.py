@@ -251,6 +251,16 @@ async def serve_logo_title():
     return HTMLResponse(content="", status_code=404)
 
 
+@app.get("/logo-star-transparent.png", include_in_schema=False)
+async def serve_logo_star_transparent():
+    """Вордмарк на прозрачном фоне для экрана загрузки (landing/index.html)."""
+    from fastapi.responses import FileResponse
+    p = _LANDING_DIR / "logo-star-transparent.png"
+    if p.exists():
+        return FileResponse(str(p), media_type="image/png")
+    return HTMLResponse(content="", status_code=404)
+
+
 @app.get("/world-dots.js", include_in_schema=False)
 async def serve_world_dots():
     """Данные для карты серверов на главной (landing/index.html)."""
