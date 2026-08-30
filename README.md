@@ -58,7 +58,7 @@ Marzban (VPN-ядро) разворачивается отдельно, не ч�
 | `bot/api.py` | FastAPI-приложение: REST API (`/api/*`), админ-API (`/web/*`), раздача HTML-страниц сайта/админки/Mini App | — |
 | `bot/handlers/` | aiogram-роутеры бота, один файл — одна фича (payment, devices, referral, gift, admin...) | — |
 | `bot/models/` | SQLAlchemy 2.0 async ORM-модели | — |
-| `bot/utils/` | Marzban-клиент, Robokassa/ЮMoney/CryptoPay, settings_store (тумблеры оплаты), sub_page (страница подписки в боте) | — |
+| `bot/utils/` | Marzban-клиент, Robokassa/CryptoPay, settings_store (тумблеры оплаты), sub_page (страница подписки в боте) | — |
 | `landing/` | **Сайт** — статичные `.html`-файлы, без сборки. Правишь файл → коммит → на сервере `git pull` + рестарт бота | Отдаётся FastAPI напрямую как есть |
 | `landing/wiki/` | Статьи базы знаний (Wiki) | — |
 | `admin/index.html` | Веб-админка (один файл, ванильный JS, ходит в `/web/*` эндпоинты) | Отдаётся FastAPI напрямую как есть |
@@ -215,8 +215,8 @@ STAR VPN
 - **Zero Logs** — `infra/xray_config.json` всегда должен иметь
  `"access": "none", "error": "none", "loglevel": "none"`. Это не опция,
  а требование из `CLAUDE.md`.
-- Payment webhooks (Robokassa/ЮMoney/CryptoPay) проверяют подпись — см.
- `bot/utils/robokassa.py`, `bot/utils/yoomoney.py`, `bot/utils/cryptopay.py`.
+- Payment webhooks (Robokassa/CryptoPay) проверяют подпись — см.
+ `bot/utils/robokassa.py`, `bot/utils/cryptopay.py`.
 - Криптоплатежи скрыты из UI по умолчанию (`bot/utils/settings_store.py`,
  `crypto: False`), но не удалены из кода — админ может включить обратно
  через `/admin` → Настройки.

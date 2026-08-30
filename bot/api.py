@@ -1495,7 +1495,7 @@ async def create_gift_crypto_invoice(
     return {"url": pay_url, "recipient_name": uname}
 
 
-# ─── Подарок с сайта (личный кабинет) — только карта / ЮMoney, без Stars ─────
+# ─── Подарок с сайта (личный кабинет) — только карта, без Stars ─────────────
 
 async def _lookup_gift_recipient(recipient_input: str, session: AsyncSession) -> User | None:
     recipient_input = recipient_input.strip()
@@ -1536,9 +1536,8 @@ def _new_gift_link_code() -> str:
 @app.post("/api/gift/invoice")
 async def gift_invoice(request: Request, x_telegram_init_data: str | None = Header(default=None)):
     """
-    Создаёт подарочный платёж с сайта (личный кабинет) — картой или ЮMoney,
-    в зависимости от переключателя в админ-панели. Stars здесь недоступны —
-    это оплата только внутри Telegram.
+    Создаёт подарочный платёж с сайта (личный кабинет) — картой.
+    Stars здесь недоступны — это оплата только внутри Telegram.
 
     Если recipient не указан — это подарок "по ссылке": получатель ещё
     неизвестен, платёж временно висит на самом отправителе (gift_sender_id),
@@ -1553,7 +1552,7 @@ async def gift_invoice(request: Request, x_telegram_init_data: str | None = Head
     message = (body.get("message") or "").strip()[:300]
     link_mode = not recipient_input
 
-    if provider not in ("card", "yoomoney"):
+    if provider != "card":
         raise HTTPException(400, "Неизвестный способ оплаты")
 
     from bot.utils.settings_store import is_provider_enabled
@@ -1580,60 +1579,32 @@ async def gift_invoice(request: Request, x_telegram_init_data: str | None = Head
             uname = f"@{recipient.username}" if recipient.username else str(recipient.telegram_id)
             gift_desc_suffix = f"для {uname}"
 
-        if provider == "card":
-            from bot.utils.robokassa import robokassa, CARD_PLANS, payment_inv_id
-            plan = CARD_PLANS.get(plan_key)
-            if not plan:
-                raise HTTPException(400, "Неизвестный тариф")
-            if not robokassa.configured:
-                raise HTTPException(503, "Оплата картой временно недоступна")
+        from bot.utils.robokassa import robokassa, CARD_PLANS, payment_inv_id
+        plan = CARD_PLANS.get(plan_key)
+        if not plan:
+            raise HTTPException(400, "Неизвестный тариф")
+        if not robokassa.configured:
+            raise HTTPException(503, "Оплата картой временно недоступна")
 
-            payment = Payment(
-                order_id="", telegram_id=recipient_tg_id, amount=float(plan["rub"]),
-                status="pending", payment_method="card", days=plan["days"],
-                is_gift=True, gift_sender_id=tg_id, gift_anon=anon, gift_message=message,
-                gift_link_code=gift_link_code,
+        payment = Payment(
+            order_id="", telegram_id=recipient_tg_id, amount=float(plan["rub"]),
+            status="pending", payment_method="card", days=plan["days"],
+            is_gift=True, gift_sender_id=tg_id, gift_anon=anon, gift_message=message,
+            gift_link_code=gift_link_code,
+        )
+        session.add(payment)
+        await session.flush()
+        payment.order_id = f"card_{payment.id}"
+        try:
+            pay_url = robokassa.build_payment_url(
+                inv_id=payment_inv_id(payment.id),
+                amount=plan["rub"],
+                description=f"STAR VPN — подарок {plan['label']} {gift_desc_suffix}",
             )
-            session.add(payment)
-            await session.flush()
-            payment.order_id = f"card_{payment.id}"
-            try:
-                pay_url = robokassa.build_payment_url(
-                    inv_id=payment_inv_id(payment.id),
-                    amount=plan["rub"],
-                    description=f"STAR VPN — подарок {plan['label']} {gift_desc_suffix}",
-                )
-            except RuntimeError as e:
-                await session.rollback()
-                logger.error("Robokassa gift build_payment_url failed: %s", e)
-                raise HTTPException(502, "Ошибка Robokassa. Попробуйте позже.")
-        else:
-            from bot.utils.yoomoney import yoomoney, CARD_PLANS, payment_label
-            plan = CARD_PLANS.get(plan_key)
-            if not plan:
-                raise HTTPException(400, "Неизвестный тариф")
-            if not yoomoney.configured:
-                raise HTTPException(503, "Оплата через ЮMoney временно недоступна")
-
-            payment = Payment(
-                order_id="", telegram_id=recipient_tg_id, amount=float(plan["rub"]),
-                status="pending", payment_method="yoomoney", days=plan["days"],
-                is_gift=True, gift_sender_id=tg_id, gift_anon=anon, gift_message=message,
-                gift_link_code=gift_link_code,
-            )
-            session.add(payment)
-            await session.flush()
-            payment.order_id = f"yoomoney_{payment.id}"
-            try:
-                pay_url = yoomoney.build_payment_url(
-                    label=payment_label(payment.id),
-                    amount=plan["rub"],
-                    description=f"STAR VPN — подарок {plan['label']} {gift_desc_suffix}",
-                )
-            except RuntimeError as e:
-                await session.rollback()
-                logger.error("YooMoney gift build_payment_url failed: %s", e)
-                raise HTTPException(502, "Ошибка ЮMoney. Попробуйте позже.")
+        except RuntimeError as e:
+            await session.rollback()
+            logger.error("Robokassa gift build_payment_url failed: %s", e)
+            raise HTTPException(502, "Ошибка Robokassa. Попробуйте позже.")
 
         await session.commit()
         inv_id = payment.id
@@ -2058,75 +2029,6 @@ async def create_card_invoice(
     return {"url": pay_url, "invoice_id": inv_id}
 
 
-# ─── GET /api/yoomoney/plans, POST /api/invoice/yoomoney ─────────────────────
-
-@app.get("/api/yoomoney/plans")
-async def get_yoomoney_plans(request: Request, x_telegram_init_data: str | None = Header(default=None)):
-    """Тарифы для оплаты через ЮMoney (RUB). Возвращает [] если не настроена или отключена в админке."""
-    from bot.utils.settings_store import is_provider_enabled
-    async with AsyncSessionLocal() as session:
-        await _resolve_tg_id(request, x_telegram_init_data, session)
-        if not await is_provider_enabled(session, "yoomoney"):
-            return []
-    from bot.utils.yoomoney import yoomoney, CARD_PLANS
-    if not yoomoney.configured:
-        return []
-    return [
-        {"key": k, "label": v["label"], "rub": float(v["rub"]), "days": v["days"], "desc": v["desc"]}
-        for k, v in CARD_PLANS.items()
-    ]
-
-
-@app.post("/api/invoice/yoomoney")
-async def create_yoomoney_invoice(
-    request: Request,
-    x_telegram_init_data: str | None = Header(default=None),
-):
-    """Создаёт pending-платёж и ссылку Quickpay ЮMoney (мини-апп)."""
-    body = await request.json()
-    plan_key = body.get("plan")
-
-    from bot.utils.yoomoney import yoomoney, CARD_PLANS, payment_label
-    plan = CARD_PLANS.get(plan_key)
-    if not plan:
-        raise HTTPException(status_code=400, detail="Неизвестный тариф")
-    if not yoomoney.configured:
-        raise HTTPException(status_code=503, detail="Оплата через ЮMoney временно недоступна")
-
-    from bot.utils.settings_store import is_provider_enabled
-    async with AsyncSessionLocal() as session:
-        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
-        if not await is_provider_enabled(session, "yoomoney"):
-            raise HTTPException(status_code=503, detail="Оплата через ЮMoney временно недоступна")
-        payment = Payment(
-            order_id="",
-            telegram_id=tg_id,
-            amount=float(plan["rub"]),
-            status="pending",
-            payment_method="yoomoney",
-            days=plan["days"],
-        )
-        session.add(payment)
-        await session.flush()
-        payment.order_id = f"yoomoney_{payment.id}"
-
-        try:
-            pay_url = yoomoney.build_payment_url(
-                label=payment_label(payment.id),
-                amount=plan["rub"],
-                description=f"STAR VPN - {plan['label']}",
-            )
-        except RuntimeError as e:
-            await session.rollback()
-            logger.error("YooMoney build_payment_url failed: %s", e)
-            raise HTTPException(status_code=502, detail="Ошибка ЮMoney. Попробуйте позже.")
-
-        await session.commit()
-        inv_id = payment.id
-
-    return {"url": pay_url, "invoice_id": inv_id}
-
-
 # ─── GET /api/crypto/plans, POST /api/invoice/crypto (сайт/личный кабинет) ───
 
 @app.get("/api/crypto/plans")
@@ -2207,13 +2109,11 @@ async def create_crypto_invoice_api(
 async def get_guest_plans():
     """Тарифы для покупки без Telegram. Публичный эндпоинт — initData не нужен."""
     from bot.utils.robokassa import robokassa, CARD_PLANS
-    from bot.utils.yoomoney import yoomoney
     from bot.utils.settings_store import get_all_provider_states
     async with AsyncSessionLocal() as session:
         states = await get_all_provider_states(session)
     card_available = robokassa.configured and states["card"]
-    yoomoney_available = yoomoney.configured and states["yoomoney"]
-    if not card_available and not yoomoney_available:
+    if not card_available:
         return []
     return [
         {"key": k, "label": v["label"], "rub": float(v["rub"]), "days": v["days"], "desc": v["desc"]}
@@ -2225,22 +2125,19 @@ async def get_guest_plans():
 async def get_guest_providers():
     """Какие способы оплаты доступны для покупки без Telegram."""
     from bot.utils.robokassa import robokassa
-    from bot.utils.yoomoney import yoomoney
     from bot.utils.settings_store import get_all_provider_states
     async with AsyncSessionLocal() as session:
         states = await get_all_provider_states(session)
     return {
         "robokassa": robokassa.configured and states["card"],
-        "yoomoney": yoomoney.configured and states["yoomoney"],
     }
 
 
 @app.post("/api/guest/checkout")
 async def guest_checkout(request: Request):
     """
-    Создаёт гостевой заказ и подписанную ссылку на оплату (Robokassa или
-    ЮMoney — см. поле "provider"). Публичный — для покупки VPN прямо с
-    сайта, без Telegram (initData не требуется).
+    Создаёт гостевой заказ и подписанную ссылку на оплату Robokassa.
+    Публичный — для покупки VPN прямо с сайта, без Telegram (initData не требуется).
     """
     import uuid
     from bot.models.guest_order import GuestOrder
@@ -2264,14 +2161,9 @@ async def guest_checkout(request: Request):
         if not plan:
             raise HTTPException(status_code=400, detail="Неизвестный тариф")
 
-    provider = body.get("provider") or "robokassa"
-    if provider not in ("robokassa", "yoomoney"):
-        raise HTTPException(status_code=400, detail="Неизвестный способ оплаты")
-
     from bot.utils.settings_store import is_provider_enabled
     async with AsyncSessionLocal() as session:
-        toggle_key = "card" if provider == "robokassa" else "yoomoney"
-        if not await is_provider_enabled(session, toggle_key):
+        if not await is_provider_enabled(session, "card"):
             raise HTTPException(status_code=503, detail="Этот способ оплаты временно недоступен")
 
     async with AsyncSessionLocal() as session:
@@ -2286,27 +2178,16 @@ async def guest_checkout(request: Request):
         await session.flush()
 
         try:
-            if provider == "yoomoney":
-                from bot.utils.yoomoney import yoomoney, guest_label
-                if not yoomoney.configured:
-                    raise HTTPException(status_code=503, detail="Оплата через ЮMoney временно недоступна")
-                pay_url = yoomoney.build_payment_url(
-                    label=guest_label(order.id),
-                    amount=plan["rub"],
-                    description=f"STAR VPN - {plan['label']} (сайт)",
-                    success_url=f"{settings.webapp_url.rstrip('/')}/card/success",
-                )
-            else:
-                if not robokassa.configured:
-                    raise HTTPException(status_code=503, detail="Оплата картой временно недоступна")
-                pay_url = robokassa.build_payment_url(
-                    inv_id=guest_inv_id(order.id),
-                    amount=plan["rub"],
-                    description=f"STAR VPN - {plan['label']} (сайт)",
-                )
+            if not robokassa.configured:
+                raise HTTPException(status_code=503, detail="Оплата картой временно недоступна")
+            pay_url = robokassa.build_payment_url(
+                inv_id=guest_inv_id(order.id),
+                amount=plan["rub"],
+                description=f"STAR VPN - {plan['label']} (сайт)",
+            )
         except RuntimeError as e:
             await session.rollback()
-            logger.error("build_payment_url (guest, %s) failed: %s", provider, e)
+            logger.error("build_payment_url (guest) failed: %s", e)
             raise HTTPException(status_code=502, detail="Ошибка платёжной системы. Попробуйте позже.")
         except HTTPException:
             await session.rollback()
@@ -2425,59 +2306,9 @@ async def card_webhook(request: Request):
     return PlainTextResponse(f"OK{inv_id}")
 
 
-# ─── POST /yoomoney/webhook (ЮMoney HTTP-уведомление) ────────────────────────
-
-@app.post("/yoomoney/webhook", include_in_schema=False)
-async def yoomoney_webhook(request: Request):
-    """
-    HTTP-уведомление ЮMoney о зачислении (server-to-server,
-    application/x-www-form-urlencoded).
-    Подпись: sign = HMAC-SHA256(secret, "k1=v1&k2=v2&...") по алфавитно
-    отсортированным параметрам (кроме sign), значения URL-encoded.
-    label содержит "pay{id}" / "guest{id}" — им различаем Payment/GuestOrder.
-    Обязан ответить HTTP 200 — иначе ЮMoney повторит попытку через 10 мин и час.
-    """
-    from bot.utils.yoomoney import yoomoney, decode_label
-    from bot.handlers.yoomoney_payment import handle_yoomoney_webhook
-    from aiogram import Bot
-
-    form = await request.form()
-    params = dict(form)
-
-    if not yoomoney.check_notification_signature(params):
-        logger.warning("YooMoney webhook: invalid signature for label=%s", params.get("label"))
-        raise HTTPException(status_code=403, detail="Invalid signature")
-
-    try:
-        kind, real_id = decode_label(params.get("label", ""))
-    except ValueError as e:
-        logger.warning("YooMoney webhook: %s", e)
-        return PlainTextResponse("OK")
-
-    if kind == "guest":
-        try:
-            await _fulfill_guest_order(real_id)
-        except Exception as e:
-            logger.error("_fulfill_guest_order error: %s", e)
-        return PlainTextResponse("OK")
-
-    bot = Bot(token=settings.telegram_api_token)
-    try:
-        await handle_yoomoney_webhook(payment_id=real_id, bot=bot)
-    except Exception as e:
-        logger.error("handle_yoomoney_webhook error: %s", e)
-    finally:
-        try:
-            await bot.session.close()
-        except Exception:
-            pass
-
-    return PlainTextResponse("OK")
-
-
 @app.get("/card/success", response_class=HTMLResponse, include_in_schema=False)
 async def card_success():
-    # Один SuccessURL обслуживает Robokassa и ЮMoney, Telegram-платежи и
+    # Один SuccessURL обслуживает Robokassa, Telegram-платежи и
     # гостевые заказы с сайта. Различаем их на клиенте: если браузер,
     # вернувшийся с оплаты, это тот же браузер, что открывал чекаут на
     # /get-vpn, в localStorage будет лежать order_id гостевого заказа —
@@ -3017,7 +2848,6 @@ async def web_settings_overview(authorization: str | None = Header(default=None)
     _web_auth(authorization)
     from bot.handlers.payment import PLANS
     from bot.utils.robokassa import robokassa, CARD_PLANS
-    from bot.utils.yoomoney import yoomoney
     from bot.models.device import MAX_DEVICES
     from bot.utils.settings_store import get_all_provider_states
 
@@ -3037,7 +2867,6 @@ async def web_settings_overview(authorization: str | None = Header(default=None)
         "providers": {
             "stars": {"configured": True, "enabled": toggles["stars"]},
             "card": {"configured": robokassa.configured, "enabled": toggles["card"]},
-            "yoomoney": {"configured": yoomoney.configured, "enabled": toggles["yoomoney"]},
             "crypto": {"configured": bool(settings.cryptopay_token), "enabled": toggles["crypto"]},
         },
         "limits": {"max_devices": MAX_DEVICES, "trial_days": settings.trial_days},
@@ -3050,7 +2879,7 @@ async def web_settings_overview(authorization: str | None = Header(default=None)
 
 @app.post("/web/settings/payment-toggle")
 async def web_settings_payment_toggle(request: Request, authorization: str | None = Header(default=None)):
-    """Включить/выключить способ оплаты (card/yoomoney/crypto/stars)."""
+    """Включить/выключить способ оплаты (card/crypto/stars)."""
     _web_auth(authorization)
     from bot.utils.settings_store import set_provider_enabled, PROVIDER_KEYS
 

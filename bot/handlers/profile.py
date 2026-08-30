@@ -64,8 +64,6 @@ async def _pay_choice_kb() -> InlineKeyboardMarkup:
         rows.append([InlineKeyboardButton(text="⭐  Telegram Stars", callback_data="sub:renew")])
     if states["card"]:
         rows.append([InlineKeyboardButton(text="💳  Банковская карта  (₽)", callback_data="sub:card")])
-    if states["yoomoney"]:
-        rows.append([InlineKeyboardButton(text="🟣  ЮMoney  (₽)", callback_data="sub:yoomoney")])
     if states["crypto"]:
         rows.append([InlineKeyboardButton(text="💎  Криптовалюта", callback_data="sub:crypto")])
     rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data="sub:back")])
@@ -153,7 +151,7 @@ async def pay_choice_text() -> str:
 
 @router.callback_query(F.data == "sub:pay_choice")
 async def pay_choice(callback: CallbackQuery) -> None:
-    """Выбор способа оплаты — Stars, карта, ЮMoney или крипта."""
+    """Выбор способа оплаты — Stars, карта или крипта."""
     await callback.message.edit_text(
         await pay_choice_text(),
         parse_mode="HTML",

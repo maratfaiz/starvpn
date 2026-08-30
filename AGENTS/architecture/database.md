@@ -50,14 +50,14 @@ PostgreSQL 16, SQLAlchemy 2.0 (async), миграции — Alembic
 |---|---|---|
 | `users` | `User` | Центральная таблица. Реальный Telegram-пользователь **или** веб-аккаунт (email-only, отрицательный `telegram_id`) |
 | `devices` | `Device` | Привязанные VPN-устройства (слот 1–3, `marzban_username` уникален) |
-| `payments` | `Payment` | Все платежи (Stars/Robokassa/ЮMoney/крипта), включая подарки (`is_gift`) |
+| `payments` | `Payment` | Все платежи (Stars/Robokassa/крипта), включая подарки (`is_gift`); поле `payment_method` может исторически содержать `"yoomoney"` в старых строках — провайдер удалён из кода (ADR-015), но данные не переписывались |
 | `gift_notifications` | `GiftNotification` | Уведомление получателю о подарке (сами дни уже начислены в момент оплаты — это только UI-уведомление) |
 | `support_tickets` | `SupportTicket` | Обращения в поддержку (сайт + бот) |
 | `web_sessions` | `WebSession` | Сессии веб-личного кабинета (cookie `star_session`) |
 | `email_verification_codes` | `EmailVerificationCode` | 6-значные коды подтверждения email при регистрации (хеш кода, cooldown на переотправку, лимит попыток) |
 | `guest_orders` | `GuestOrder` | Покупка VPN-ключа без Telegram (гостевой чекаут, `/get-vpn`) |
 | `wiki_articles` | `WikiArticle` | Статьи базы знаний, создаваемые из админки (в дополнение к статичным `.html` в `landing/wiki/`) |
-| `app_settings` | `AppSetting` | Key-value тумблеры способов оплаты (card/yoomoney/crypto/stars) |
+| `app_settings` | `AppSetting` | Key-value тумблеры способов оплаты (card/crypto/stars) |
 | `admin_accounts` | `AdminAccount` | Аккаунты веб-админки — логин/пароль, ранг (`admin`/`worker`), личный `invite_key` (см. ADR-009) |
 | `admin_sessions` | `AdminSession` | Bearer-сессии админ-панели, привязанные к `AdminAccount` |
 | `ad_banner` | `AdBanner` | Синглтон-строка (id=1) — рекламный баннер на верхней полосе главной, редактируется из админки |

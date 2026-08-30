@@ -757,9 +757,8 @@ async function renderTable(sec) {
       cols = ['ID', 'Пользователь', 'Сумма', 'Метод', 'Дней', 'Дата'];
       const icoStar = '<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.7 1.1 6.6L12 17.1l-5.8 3.2 1.1-6.6L2.5 9l6.6-.9z"/></svg>';
       const icoCard = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>';
-      const icoDot = '<span style="width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block"></span>';
       const icoGem = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/></svg>';
-      const methodChip = { stars: [icoStar + ' Stars', 'gold'], card: [icoCard + ' Карта', 'grey'], yoomoney: [icoDot + ' ЮMoney', 'grey'], crypto: [icoGem + ' Крипта', 'gold'] };
+      const methodChip = { stars: [icoStar + ' Stars', 'gold'], card: [icoCard + ' Карта', 'grey'], crypto: [icoGem + ' Крипта', 'gold'] };
       rows = data.payments.map(p => { const mc = methodChip[p.method] || ['—', 'grey']; return { key: p.id, owner: p.telegram_id, cells: [
         `<span class="mono" style="color:#3A3028">#${p.id}</span>`,
         `<a href="#" onclick="event.preventDefault();openUserDetail(${p.telegram_id})">${p.telegram_id}</a>`,
@@ -1283,7 +1282,7 @@ async function renderSettings() {
           <div class="editor-card">
             <div class="dcard-title">Приём оплаты</div>
             <div style="font-size:13px;color:#8A7A60;margin:4px 0 18px">«Настроено» — есть ключи в .env. Переключатель — показывать ли способ пользователям (боту и сайту) прямо сейчас. Stars — только в боте (на сайте недоступны в принципе).</div>
-            ${[['stars', 'Telegram Stars (только в боте)', s.providers.stars], ['card', 'Банковская карта (Robokassa)', s.providers.card], ['yoomoney', 'ЮMoney', s.providers.yoomoney], ['crypto', 'Криптовалюта (@CryptoBot)', s.providers.crypto]].map(([key, label, p]) => `
+            ${[['stars', 'Telegram Stars (только в боте)', s.providers.stars], ['card', 'Банковская карта (Robokassa)', s.providers.card], ['crypto', 'Криптовалюта (@CryptoBot)', s.providers.crypto]].map(([key, label, p]) => `
               <div class="provider-row">
                 <div style="flex:1;font-size:14px;font-weight:600;color:#EBE0CC">${label}</div>
                 <span class="chip ${p.configured ? 'green' : 'grey'}">${p.configured ? 'Настроено' : 'Не настроено'}</span>

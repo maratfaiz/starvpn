@@ -37,8 +37,8 @@
 | `POST` | `/api/trial` | Активировать пробный период (2 дня, один раз) |
 | `GET` | `/api/plans` | Тарифы (для Mini App/бота) |
 | `POST` | `/api/support` | Отправить обращение в поддержку |
-| `GET` | `/api/card/plans`, `/api/yoomoney/plans`, `/api/crypto/plans` | Тарифы по конкретному провайдеру оплаты |
-| `POST` | `/api/invoice/card`, `/api/invoice/yoomoney`, `/api/invoice/crypto`, `/api/invoice/renew` | Создать счёт на оплату/продление |
+| `GET` | `/api/card/plans`, `/api/crypto/plans` | Тарифы по конкретному провайдеру оплаты |
+| `POST` | `/api/invoice/card`, `/api/invoice/crypto`, `/api/invoice/renew` | Создать счёт на оплату/продление |
 | `POST` | `/api/gift/lookup` | Проверить получателя подарка по @username/ID |
 | `POST` | `/api/gift/invoice` | Создать счёт на подарок |
 | `GET` | `/api/gift/pending` | Есть ли непрочитанное уведомление о подарке |
@@ -46,7 +46,7 @@
 | `GET` | `/api/guest/plans`, `/api/guest/providers` | Тарифы для покупки без Telegram |
 | `POST` | `/api/guest/checkout` | Гостевой чекаут (`/get-vpn`) |
 | `GET` | `/api/guest/order/{public_id}` | Статус гостевого заказа |
-| `POST` | `/card/webhook`, `/yoomoney/webhook`, `/crypto/webhook` | Вебхуки платёжных провайдеров — **проверяют подпись**, не трогать без крайней необходимости |
+| `POST` | `/card/webhook`, `/crypto/webhook` | Вебхуки платёжных провайдеров — **проверяют подпись**, не трогать без крайней необходимости |
 
 ## `/web/*` — API админки
 
@@ -74,6 +74,6 @@
  добавлять новый эндпоинт — использовать общий резолвер по умолчанию).
 - **Вебхуки НЕ используют `_resolve_tg_id`** — они идентифицируют
  платёж по `order_id`/`payload` из самого вебхука, а подлинность
- проверяют подписью провайдера (MD5 у Robokassa, SHA-256 у ЮMoney).
+ проверяют подписью провайдера (MD5 у Robokassa).
 - Добавляя новый эндпоинт под фичу сайта — сначала проверь, нет ли уже
  подходящего в этом списке, не дублируй.

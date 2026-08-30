@@ -1248,3 +1248,78 @@
  этот же переключает вкладки внутри SPA через `data-goto`) — не путай
  их и не пытайся унифицировать разметку между `account.html` и
  остальными страницами, они намеренно разные.
+
+### 2026-08-30 — ЮMoney удалён полностью: код, конфиг, админка, весь копирайт (ADR-015)
+
+- **Роль:** backend + frontend
+- **Кто:** Claude (Claude Code)
+- **Что сделал:** пользователь потребовал убрать вообще ЛЮБОЕ упоминание
+ ЮMoney отовсюду — это прочитано как полное удаление провайдера из
+ кода, а не просто ещё одна правка текста поверх ADR-014.
+ - Удалил файлы `bot/handlers/yoomoney_payment.py` и
+ `bot/utils/yoomoney.py` (`git rm`), убрал роутер из `bot/main.py`.
+ - В `bot/api.py` удалил `GET /api/yoomoney/plans`, `POST
+ /api/invoice/yoomoney`, `POST /yoomoney/webhook` целиком; упростил
+ `/api/gift/invoice` (был `if provider == "card": ... else: # yoomoney
+ ...` — стал только card-ветка), `/api/guest/checkout` (был
+ `provider in ("robokassa","yoomoney")` с выбором эндпоинта — стал
+ только Robokassa), `/api/guest/plans`, `/api/guest/providers`,
+ `/web/settings/overview`.
+ - `bot/utils/settings_store.py`: `PROVIDER_KEYS`/`_DEFAULT_ENABLED`
+ теперь только `card`/`crypto`/`stars` — три ключа вместо четырёх.
+ - `bot/handlers/profile.py`: убрал кнопку "🟣 ЮMoney (₽)" из клавиатуры
+ выбора способа оплаты.
+ - `bot/config.py`/`.env.example`: убрал `YOOMONEY_WALLET`/
+ `YOOMONEY_NOTIFICATION_SECRET`.
+ - `admin/index.html`: убрал тумблер "ЮMoney" из "Приём оплаты" и
+ запись в `methodChip` (таблица платежей) — старые записи с
+ `payment_method="yoomoney"` теперь просто показывают нейтральный
+ чип "—" (fallback уже был в коде: `methodChip[p.method] || ['—',
+ 'grey']`, ничего чинить не пришлось).
+ - `landing/account.html`: это оказалось не только про текст — вкладки
+ "Продление" и "Подарить" реально дёргали `/api/yoomoney/plans`,
+ который я только что удалил. Убрал вызов и опцию `yoomoney` из
+ обоих провайдер-списков (Promise.all стал двух-, а не трёхэлементным),
+ проверил Playwright с моками `/api/card/plans`+`/api/crypto/plans`,
+ что обе вкладки рендерятся без JS-ошибок и без единого упоминания
+ yoomoney в итоговом HTML.
+ - Убрал весь текстовый копирайт (не только "отключено", а вообще
+ любое упоминание, включая нейтральные "когда доступна" из
+ terms.html/privacy.html, которые в прошлый раз намеренно оставил):
+ `index.html`, `tariffs.html` (убрал целую `pay-card`-плашку ЮMoney,
+ на её место поставил плашку Telegram Stars, которая внутри бота
+ реально работает и раньше нигде на этой странице не упоминалась),
+ `terms.html`, `privacy.html` (два места), `wiki/faq.html`,
+ `wiki/payment.html` (notice-блок и строка таблицы), `wiki/index.html`
+ (поисковый `data-kw`), `card-fail.html`.
+ - Прошёлся по документации: `CLAUDE.md` (переписал абзац "Payment
+ methods" под ADR-015, поправил "Website account" и "Gift by link"),
+ `AGENTS/architecture/database.md`, `AGENTS/architecture/api.md`,
+ `AGENTS/architecture/purchase-flow.md` (этот файл был вообще
+ устаревшим — описывал состояние ADR-010 из более раннего в тот же
+ день; переписал целиком под текущую реальность: /get-vpn требует
+ регистрацию, card+crypto+stars включены), `AGENTS/roles/backend.md`,
+ `AGENTS/roles/bot.md`, `AGENTS/new_agent.md`, `README.md`.
+ - Осознанно НЕ тронул: `alembic/versions/0007_gift_payments.py`
+ (историческая миграция) и старые строки `Payment.payment_method =
+ "yoomoney"` в БД — это данные, а не код.
+- **Затронутые файлы/папки:** `bot/main.py`, `bot/api.py`,
+ `bot/config.py`, `bot/utils/settings_store.py`,
+ `bot/handlers/profile.py`, `bot/handlers/card_payment.py`
+ (docstring), `.env.example`, `admin/index.html`, `landing/account.html`,
+ `landing/index.html`, `landing/tariffs.html`, `landing/terms.html`,
+ `landing/privacy.html`, `landing/wiki/faq.html`,
+ `landing/wiki/payment.html`, `landing/wiki/index.html`,
+ `landing/card-fail.html`, `CLAUDE.md`, `AGENTS/decisions/ADR.md`
+ (новый ADR-015), `AGENTS/architecture/*.md`, `AGENTS/roles/*.md`,
+ `AGENTS/new_agent.md`, `README.md`; удалены `bot/handlers/
+ yoomoney_payment.py`, `bot/utils/yoomoney.py`.
+- **Важно для следующего агента:** это полное удаление, не тумблер —
+ не восстанавливай ЮMoney "по аналогии" с card/crypto/stars, глядя на
+ старые ADR или git blame. Перед любым похожим "удали всё упоминание
+ X" — не забудь проверить не только текст, но и живые API-вызовы с
+ фронтенда (я чуть не оставил `account.html` дёргать удалённый
+ эндпоинт `/api/yoomoney/plans`, что сломало бы обе вкладки —
+ "Продление" и "Подарить" — рантайм-ошибкой). `git grep -i yoomoney`
+ по всему репо — быстрый способ проверить, что реально ничего не
+ осталось, кроме исторической миграции и записей changelog'а.

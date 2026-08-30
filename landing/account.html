@@ -841,12 +841,11 @@ async function deleteDevice(id) {
 
 async function loadRenew() {
   const el = document.getElementById('renewContent');
-  const [cardR, yooR, cryptoR] = await Promise.all([API('/api/card/plans'), API('/api/yoomoney/plans'), API('/api/crypto/plans')]);
+  const [cardR, cryptoR] = await Promise.all([API('/api/card/plans'), API('/api/crypto/plans')]);
   const cardPlans = cardR.ok ? await cardR.json() : [];
-  const yooPlans = yooR.ok ? await yooR.json() : [];
   const cryptoPlans = cryptoR.ok ? await cryptoR.json() : [];
 
-  if (!cardPlans.length && !yooPlans.length && !cryptoPlans.length) {
+  if (!cardPlans.length && !cryptoPlans.length) {
     el.innerHTML = '<div class="empty">Оплата временно недоступна — напишите в <a href="/support" style="color:var(--gold)">поддержку</a>.</div>';
     return;
   }
@@ -854,7 +853,6 @@ async function loadRenew() {
   const providers = [];
   if (cardPlans.length) providers.push({key: 'card', label: 'Банковской картой', plans: cardPlans});
   if (cryptoPlans.length) providers.push({key: 'crypto', label: 'Криптовалютой', plans: cryptoPlans});
-  if (yooPlans.length) providers.push({key: 'yoomoney', label: 'ЮMoney', plans: yooPlans});
 
   let selectedProvider = providers[0].key;
   let selectedPlan = providers[0].plans[0]?.key;
@@ -990,11 +988,10 @@ async function giftCheckRecipient() {
 
 async function loadGiftPlans() {
   const el = document.getElementById('giftPlansArea');
-  const [cardR, yooR] = await Promise.all([API('/api/card/plans'), API('/api/yoomoney/plans')]);
+  const cardR = await API('/api/card/plans');
   const cardPlans = cardR.ok ? await cardR.json() : [];
-  const yooPlans = yooR.ok ? await yooR.json() : [];
 
-  if (!cardPlans.length && !yooPlans.length) {
+  if (!cardPlans.length) {
     el.innerHTML = '<div class="empty">Оплата подарков временно недоступна — напишите в <a href="/support" style="color:var(--gold)">поддержку</a>.</div>';
     document.getElementById('giftSubmitBtn').style.display = 'none';
     return;
@@ -1003,7 +1000,6 @@ async function loadGiftPlans() {
 
   const providers = [];
   if (cardPlans.length) providers.push({key: 'card', label: 'Банковской картой', plans: cardPlans});
-  if (yooPlans.length) providers.push({key: 'yoomoney', label: 'ЮMoney', plans: yooPlans});
 
   giftSelectedProvider = providers[0].key;
   giftSelectedPlan = providers[0].plans[0]?.key;
