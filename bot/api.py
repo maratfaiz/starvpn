@@ -17,10 +17,12 @@ from pathlib import Path
 
 import httpx
 from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from bot.config import settings
 from bot.models.device import Device, MAX_DEVICES
@@ -47,12 +49,24 @@ app.add_middleware(
 _APP_HTML     = Path(__file__).parent.parent / "webapp" / "app.html"
 _LANDING_DIR  = Path(__file__).parent.parent / "landing"
 _ADMIN_HTML   = Path(__file__).parent.parent / "admin" / "index.html"
+_NOT_FOUND_HTML = _LANDING_DIR / "404.html"
 
 
 def _serve_html(path: Path) -> HTMLResponse:
     if path.exists():
         return HTMLResponse(content=path.read_text(encoding="utf-8"))
     return HTMLResponse(content="<h1>Not found</h1>", status_code=404)
+
+
+@app.exception_handler(StarletteHTTPException)
+async def _not_found_page_handler(request: Request, exc: StarletteHTTPException):
+    """Отдаёт брендированную 404-страницу для обычных (не API) запросов.
+    /api/* и /web/* — это JSON-клиенты (сайт/бот/Mini App), им нужен
+    предсказуемый JSON-ответ, а не HTML — их 404 не трогаем."""
+    if exc.status_code == 404 and not request.url.path.startswith(("/api/", "/web/")):
+        if _NOT_FOUND_HTML.exists():
+            return HTMLResponse(content=_NOT_FOUND_HTML.read_text(encoding="utf-8"), status_code=404)
+    return await http_exception_handler(request, exc)
 
 
 @app.get("/app", response_class=HTMLResponse, include_in_schema=False)

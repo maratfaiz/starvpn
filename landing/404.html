@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Страница не найдена — STAR VPN</title>
+<meta name="description" content="Такой страницы нет. Возможно, ссылка устарела — вернитесь на главную или в базу знаний STAR VPN.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+:root{
+  --gold:#FFB800;--gold2:#FFD84D;
+  --gold-border:rgba(255,184,0,0.2);
+  --gold-dim:rgba(255,184,0,0.1);
+  --bg:#060606;
+  --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;
+  --max:1240px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.7;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:var(--gold2)}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5}
+
+#nav{position:sticky;top:0;z-index:100;padding:0 24px;background:rgba(6,6,6,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
+.nav-inner{max-width:var(--max);margin:0 auto;display:flex;align-items:center;height:64px}
+.nav-logo{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
+
+main{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px;text-align:center}
+.wrap{max-width:520px}
+.code{font-family:'Space Grotesk',sans-serif;font-size:clamp(72px,14vw,120px);font-weight:700;line-height:1;letter-spacing:-.03em;background:linear-gradient(180deg,var(--gold),var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:8px}
+h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(20px,3vw,26px);font-weight:700;margin-bottom:12px}
+.wrap p{color:var(--text2);max-width:42ch;margin:0 auto 32px}
+.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:36px}
+.btn{cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;padding:13px 24px;border-radius:12px;text-decoration:none;white-space:nowrap}
+.btn-primary{background:var(--gold);color:#000}
+.btn-primary:hover{background:var(--gold2);color:#000}
+.btn-ghost{border:1px solid rgba(255,255,255,.16);color:var(--text)}
+.btn-ghost:hover{border-color:var(--gold-border);color:var(--gold)}
+.links{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;font-size:13.5px;color:var(--text2)}
+
+footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
+.footer-inner{max-width:var(--max);margin:0 auto;padding:24px;display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between;font-size:12.5px;color:var(--text3)}
+.footer-inner a{color:var(--text2)}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">STAR VPN</a>
+  </div>
+</nav>
+
+<main>
+  <div class="wrap">
+    <div class="code">404</div>
+    <h1>Такой страницы нет</h1>
+    <p>Ссылка устарела или в адресе опечатка. История подключений всё равно не сохраняется — даже история ваших ошибок 404.</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="/">На главную</a>
+      <a class="btn btn-ghost" href="/wiki">База знаний</a>
+    </div>
+    <div class="links">
+      <a href="/tariffs">Тарифы</a>
+      <a href="/support">Поддержка</a>
+      <a href="/account">Личный кабинет</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 STAR VPN</span>
+    <span style="display:flex;gap:20px;flex-wrap:wrap">
+      <a href="/privacy">Конфиденциальность</a>
+      <a href="/terms">Условия</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize, {passive:true});
+  const stars = Array.from({length:220}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.6 + 0.3,
+    o: Math.random() * 0.6 + 0.35,
+    sp: Math.random() * 0.0004 + 0.00006,
+    ph: Math.random() * Math.PI * 2,
+  }));
+  let f = 0;
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height); f++;
+    for(const s of stars){
+      const a = s.o * (0.55 + 0.45 * Math.sin(f * s.sp * 200 + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,216,120,${a})`; ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
