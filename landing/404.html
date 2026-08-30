@@ -26,7 +26,7 @@ html{-webkit-font-smoothing:antialiased}
 body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.7;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
-#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
 
 #nav{position:sticky;top:0;z-index:100;padding:0 24px;background:rgba(6,6,6,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
 .nav-inner{max-width:var(--max);margin:0 auto;display:flex;align-items:center;height:64px}
@@ -93,7 +93,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
   const ctx = c.getContext('2d');
   function resize(){ c.width = innerWidth; c.height = innerHeight; }
   resize(); window.addEventListener('resize', resize, {passive:true});
-  const stars = Array.from({length:220}, () => ({
+  const stars = Array.from({length:340}, () => ({
     x: Math.random(), y: Math.random(),
     r: Math.random() * 1.6 + 0.3,
     o: Math.random() * 0.6 + 0.35,
