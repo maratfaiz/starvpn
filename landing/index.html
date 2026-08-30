@@ -45,14 +45,23 @@ body{
 /* ─── Starfield canvas ─────────────────────────────────────── */
 #bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
 
-#site-splash{position:fixed;inset:0;z-index:9999;background:var(--bg,#060606);display:flex;align-items:center;justify-content:center;transition:opacity .5s ease}
+#site-splash{position:fixed;inset:0;z-index:9999;background:#060606;display:flex;align-items:center;justify-content:center;transition:opacity .6s ease;overflow:hidden}
 #site-splash.hide{opacity:0;pointer-events:none}
 #splash-canvas{position:absolute;inset:0}
-.splash-inner{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px}
-.splash-mark{width:30px;height:30px;fill:var(--gold);animation:splashPulse 1.8s ease-in-out infinite}
-.splash-word{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:800;letter-spacing:.04em;color:var(--gold)}
-.splash-loading{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(235,224,204,.4);margin-top:8px;animation:splashPulse 1.6s ease-in-out infinite}
-@keyframes splashPulse{0%,100%{opacity:.45}50%{opacity:1}}
+.splash-nebula{position:absolute;width:80vmax;height:80vmax;border-radius:50%;pointer-events:none;opacity:.5;filter:blur(2px)}
+.splash-nebula.n1{top:-30vmax;right:-32vmax;background:radial-gradient(ellipse 22% 60% at 50% 50%,rgba(255,184,0,.16),transparent 70%);transform:rotate(-35deg)}
+.splash-nebula.n2{bottom:-32vmax;left:-32vmax;background:radial-gradient(ellipse 22% 60% at 50% 50%,rgba(255,184,0,.13),transparent 70%);transform:rotate(-35deg)}
+.splash-inner{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 24px}
+.splash-word{font-family:'Space Grotesk',sans-serif;font-weight:800;line-height:.92;letter-spacing:.02em;font-size:clamp(52px,11vw,110px);background:linear-gradient(180deg,var(--gold2),var(--gold) 60%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 26px rgba(255,184,0,.35));text-transform:uppercase}
+.splash-word .a-star{display:inline-flex;align-items:center;justify-content:center;width:.72em;vertical-align:-.05em}
+.splash-word .a-star svg{width:100%;height:100%;fill:var(--bg)}
+.splash-tag{margin-top:14px;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:rgba(235,224,204,.55)}
+.splash-loading{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-top:36px;margin-bottom:12px;animation:splashPulse 1.4s ease-in-out infinite}
+.splash-bar-row{display:flex;align-items:center;gap:14px;width:min(320px,70vw)}
+.splash-bar{flex:1;height:5px;border-radius:100px;background:rgba(255,255,255,.08);overflow:hidden}
+.splash-bar-fill{height:100%;width:0%;border-radius:100px;background:linear-gradient(90deg,var(--gold),var(--gold2));box-shadow:0 0 10px rgba(255,184,0,.6);transition:width .12s linear}
+.splash-percent{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--gold);min-width:38px;text-align:right}
+@keyframes splashPulse{0%,100%{opacity:.5}50%{opacity:1}}
 
 /* ─── NAV ──────────────────────────────────────────────────── */
 #nav{
@@ -523,11 +532,20 @@ footer{
 <body>
 
 <div id="site-splash">
+  <div class="splash-nebula n1"></div>
+  <div class="splash-nebula n2"></div>
   <canvas id="splash-canvas"></canvas>
   <div class="splash-inner">
-    <svg viewBox="0 0 24 24" class="splash-mark"><path d="M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z"></path></svg>
-    <div class="splash-word">STAR VPN</div>
-    <div class="splash-loading">Загрузка</div>
+    <div class="splash-word">
+      <div>ST<span class="a-star"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.7 1.1 6.6L12 17.1l-5.8 3.2 1.1-6.6-4.8-4.7 6.6-.9z"></path></svg></span>R</div>
+      <div>VPN</div>
+    </div>
+    <div class="splash-tag">Быстро · Безопасно · Без границ</div>
+    <div class="splash-loading">Загрузка<span id="splashDots"></span></div>
+    <div class="splash-bar-row">
+      <div class="splash-bar"><div class="splash-bar-fill" id="splashFill"></div></div>
+      <span class="splash-percent" id="splashPercent">0%</span>
+    </div>
   </div>
 </div>
 
@@ -1114,11 +1132,38 @@ footer{
   }
   raf = requestAnimationFrame(draw);
 
+  const fillEl = document.getElementById('splashFill');
+  const pctEl = document.getElementById('splashPercent');
+  let pct = 0, doneProgress = false;
+  function tickProgress(){
+    if (!doneProgress) {
+      pct += (90 - pct) * 0.035 + 0.25; // быстро набирает, замедляется у 90% и ждёт реальной загрузки
+      if (pct > 90) pct = 90;
+      fillEl.style.width = pct + '%';
+      pctEl.textContent = Math.round(pct) + '%';
+      requestAnimationFrame(tickProgress);
+    }
+  }
+  requestAnimationFrame(tickProgress);
+
+  const dotsEl = document.getElementById('splashDots');
+  let dotStep = 0;
+  const dotsTimer = setInterval(() => {
+    dotStep = (dotStep + 1) % 4;
+    if (dotsEl) dotsEl.textContent = '.'.repeat(dotStep);
+  }, 350);
+
   function hideSplash(){
     const splash = document.getElementById('site-splash');
     if (!splash) return;
-    splash.classList.add('hide');
-    setTimeout(() => { running = false; cancelAnimationFrame(raf); splash.remove(); }, 550);
+    doneProgress = true;
+    fillEl.style.width = '100%';
+    pctEl.textContent = '100%';
+    clearInterval(dotsTimer);
+    setTimeout(() => {
+      splash.classList.add('hide');
+      setTimeout(() => { running = false; cancelAnimationFrame(raf); splash.remove(); }, 600);
+    }, 200);
   }
   window.addEventListener('load', () => setTimeout(hideSplash, 500));
   setTimeout(hideSplash, 3500); // на случай медленной загрузки — не держим сплэш вечно
