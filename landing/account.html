@@ -45,14 +45,11 @@ code,.mono{font-family:'JetBrains Mono',monospace}
 .nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--gold);transition:width .25s}
 .nav-links a:hover{color:var(--gold)}
 .nav-links a:hover::after{width:100%}
-.nav-cta{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;padding:10px 22px;border-radius:10px;text-decoration:none;white-space:nowrap;flex-shrink:0;transition:background .2s,transform .15s,box-shadow .2s}
-.nav-cta:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 8px 24px rgba(255,184,0,0.3)}
 .nav-hamburger{display:none;flex-direction:column;justify-content:center;gap:4px;width:34px;height:34px;background:transparent;border:1px solid rgba(255,255,255,.14);border-radius:9px;flex-shrink:0;cursor:pointer}
 .nav-hamburger span{display:block;width:16px;height:1.5px;background:var(--gold);margin:0 auto}
 .nav-menu{display:contents}
 .nav-right{display:flex;align-items:center;gap:10px;flex-shrink:0;order:2}
-@media(min-width:769px){.nav-actions{display:contents}.nav-cta{order:3}}
-@media(max-width:768px){.nav-hamburger{display:flex}.nav-right{margin-left:auto}.nav-menu{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:#0a0a0a;border-bottom:1px solid var(--gold-border);padding:10px 20px 18px;box-shadow:0 20px 40px rgba(0,0,0,.5)}.nav-menu.open{display:flex}.nav-links{display:flex;flex-direction:column;gap:2px}.nav-links a{padding:12px 4px}.nav-actions{display:flex;gap:10px;margin-top:12px}.nav-cta{padding:9px 16px;font-size:13px}}
+@media(max-width:768px){.nav-hamburger{display:flex}.nav-right{margin-left:auto}.nav-menu{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:#0a0a0a;border-bottom:1px solid var(--gold-border);padding:10px 20px 18px;box-shadow:0 20px 40px rgba(0,0,0,.5)}.nav-menu.open{display:flex}.nav-links{display:flex;flex-direction:column;gap:2px}.nav-links a{padding:12px 4px}}
 .account-menu-wrap{position:relative}
 .account-btn{cursor:pointer;display:flex;align-items:center;gap:9px;font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;padding:7px 14px 7px 7px;border:1px solid rgba(255,255,255,.14);border-radius:100px;background:none;transition:border-color .2s;max-width:220px}
 .account-btn:hover{border-color:rgba(255,184,0,.4)}
@@ -138,6 +135,21 @@ main{min-width:0}
 .location-city{font-size:13.5px;font-weight:600;color:var(--text)}
 .location-badge{font-size:11px;color:var(--text2);margin-top:2px}
 .location-badge.live{color:var(--success)}
+
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
+.stat-card{background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px 14px;text-align:center}
+.stat-icon{width:34px;height:34px;border-radius:10px;background:var(--gold-dim);border:1px solid rgba(255,184,0,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;color:var(--gold)}
+.stat-icon svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.stat-value{font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:700;color:var(--text)}
+.stat-label{font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+
+.key-card-body{display:flex;align-items:center;gap:16px}
+.key-card-qr{width:72px;height:72px;border-radius:10px;background:#fff;padding:6px;flex-shrink:0}
+.key-card-info{min-width:0;flex:1}
+.key-card-name{font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:6px}
+.key-card-value{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 10px;margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.key-card .btn-outline{margin-top:0;width:auto;padding:9px 16px;display:inline-block}
+@media(max-width:480px){.key-card-body{flex-direction:column;align-items:stretch;text-align:center}.key-card-qr{margin:0 auto}}
 
 .section-title{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin:22px 0 10px}
 .section-title:first-child{margin-top:0}
@@ -257,7 +269,7 @@ main{min-width:0}
         </button>
         <div class="account-dropdown" id="accountDropdown">
           <div class="account-dropdown-inner">
-            <button class="dropdown-item" data-goto="subscription"><svg viewBox="0 0 24 24"><path d="M4 11.5L12 5l8 6.5V20a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1z"/></svg>Подписка</button>
+            <button class="dropdown-item" data-goto="subscription"><svg viewBox="0 0 24 24"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg>Подписка</button>
             <button class="dropdown-item" data-goto="devices"><svg viewBox="0 0 24 24"><path d="M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1M17 7h4v8h-4"/></svg>Устройства</button>
             <button class="dropdown-item" data-goto="referral"><svg viewBox="0 0 24 24"><path d="M6 14a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 7.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 21a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8.2 10.3l7.6-3.6M8.2 13.2l7.6 3.6"/></svg>Приглашения</button>
             <button class="dropdown-item" data-goto="profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6"/></svg>Профиль</button>
@@ -279,9 +291,6 @@ main{min-width:0}
         <a href="/tariffs">Тарифы</a>
         <a href="/wiki">Wiki</a>
       </div>
-      <div class="nav-actions">
-        <a class="nav-cta" href="https://t.me/starisvpnbot">2 дня бесплатно</a>
-      </div>
     </div>
   </div>
 </nav>
@@ -298,7 +307,7 @@ main{min-width:0}
         </div>
       </div>
       <div class="side-menu" id="sideMenu">
-        <button class="side-menu-item active" data-tab="subscription"><svg viewBox="0 0 24 24"><path d="M4 11.5L12 5l8 6.5V20a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1z"/></svg><span>Подписка</span></button>
+        <button class="side-menu-item active" data-tab="subscription"><svg viewBox="0 0 24 24"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg><span>Подписка</span></button>
         <button class="side-menu-item" data-tab="devices"><svg viewBox="0 0 24 24"><path d="M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1M17 7h4v8h-4"/></svg><span>Устройства</span><span class="side-menu-count" id="sideDeviceCount">—</span></button>
         <button class="side-menu-item" data-tab="referral"><svg viewBox="0 0 24 24"><path d="M6 14a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 7.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 21a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8.2 10.3l7.6-3.6M8.2 13.2l7.6 3.6"/></svg><span>Приглашения</span></button>
       </div>
@@ -308,7 +317,7 @@ main{min-width:0}
       <div class="side-days-title" id="sideDaysTitle">Осталось</div>
       <div class="side-days-num"><b id="sideDaysNum">—</b><span>дн.</span></div>
       <div class="side-days-bar"><div class="side-days-fill" id="sideDaysFill" style="width:0%"></div></div>
-      <button class="btn" data-goto="renew">Продлить</button>
+      <button class="btn" id="sideRenewBtn" data-goto="renew">Продлить</button>
       <button class="btn-outline" data-goto="gift">Подарить</button>
     </div>
   </aside>
@@ -329,19 +338,51 @@ main{min-width:0}
           </div>
           <div class="overview-actions">
             <button class="btn" id="activateTrialBtn" style="display:none">Активировать пробный период</button>
-            <button class="btn" data-goto="renew">Продлить подписку</button>
+            <button class="btn" id="renewSubBtn" data-goto="renew">Продлить подписку</button>
             <a class="btn-ghost" href="/wiki">Как подключить</a>
           </div>
         </div>
         <div class="trial-note" id="trialNote" style="display:none">Пробный период — <span id="trialDaysLbl">2</span> дня, выдаётся один раз на аккаунт. Карта не нужна.</div>
       </div>
 
-      <div class="card">
-        <div class="card-title">Сервер</div>
-        <div class="profile-row"><span class="k">Локация</span><span class="v" id="srvLoc">—</span></div>
-        <div class="profile-row"><span class="k">Протокол</span><span class="v" id="srvProto">—</span></div>
-        <div class="profile-row"><span class="k">Шифрование</span><span class="v" id="srvTls">—</span></div>
-        <div class="profile-row"><span class="k">Логи трафика</span><span class="v" style="color:var(--success)">0 · Zero Logs</span></div>
+      <div class="card key-card" id="subKeyCard" style="display:none">
+        <div class="card-title">Ключ подписки</div>
+        <div class="key-card-body">
+          <img class="key-card-qr" id="subKeyQr" alt="QR-код">
+          <div class="key-card-info">
+            <div class="key-card-name" id="subKeyDeviceName">—</div>
+            <div class="key-card-value" id="subKeyValue">—</div>
+            <button class="btn-outline" id="subKeyCopyBtn">Копировать ключ</button>
+          </div>
+        </div>
+      </div>
+      <div class="card" id="subKeyEmptyCard" style="display:none">
+        <div class="card-title">Ключ подписки</div>
+        <p style="color:var(--text2);font-size:12.5px;line-height:1.6;margin-bottom:14px">Пока нет ни одного подключённого устройства — добавьте первое, чтобы получить ключ.</p>
+        <button class="btn" data-goto="devices">Добавить устройство</button>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1"/></svg></div>
+          <div class="stat-value" id="statDevices">—</div>
+          <div class="stat-label">устройства</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z"/></svg></div>
+          <div class="stat-value" id="statProto">—</div>
+          <div class="stat-label">протокол</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></div>
+          <div class="stat-value" id="statTls">—</div>
+          <div class="stat-label">шифрование</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><line x1="3" y1="3" x2="21" y2="21"/></svg></div>
+          <div class="stat-value" style="color:var(--success)">0</div>
+          <div class="stat-label">логи трафика</div>
+        </div>
       </div>
 
       <div class="card">
@@ -459,7 +500,7 @@ main{min-width:0}
 </div>
 
 <div class="bottom-nav" id="bottomNav">
-  <button class="bottom-nav-item active" data-tab="subscription"><svg viewBox="0 0 24 24"><path d="M4 11.5L12 5l8 6.5V20a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1z"/></svg><span>Подписка</span></button>
+  <button class="bottom-nav-item active" data-tab="subscription"><svg viewBox="0 0 24 24"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg><span>Подписка</span></button>
   <button class="bottom-nav-item" data-tab="devices"><svg viewBox="0 0 24 24"><path d="M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1M17 7h4v8h-4"/></svg><span>Девайсы</span></button>
   <button class="bottom-nav-item" data-tab="renew"><svg viewBox="0 0 24 24"><path d="M3 6h18v12H3zM3 10h18M6.5 14.5h3"/></svg><span>Продление</span></button>
   <button class="bottom-nav-item" data-tab="gift"><svg viewBox="0 0 24 24"><path d="M3 11h18v9a1 1 0 01-1 1H4a1 1 0 01-1-1zM2.5 7.5h19V11h-19zM12 7.5V21"/></svg><span>Подарить</span></button>
@@ -626,6 +667,12 @@ function renderStatus() {
   trialNote.style.display = trialCard ? 'block' : 'none';
   document.getElementById('trialDaysLbl').textContent = ME.trial_days || 2;
 
+  // "Продлить" не имеет смысла, пока у аккаунта вообще не было подписки —
+  // ни разу не активировался пробный период, ни разу не покупали.
+  const neverHadSubscription = trialCard;
+  document.getElementById('renewSubBtn').style.display = neverHadSubscription ? 'none' : '';
+  document.getElementById('sideRenewBtn').style.display = neverHadSubscription ? 'none' : '';
+
   const card = document.getElementById('overviewCard');
   card.classList.toggle('inactive', !active);
   document.getElementById('statusPill').classList.toggle('active', active);
@@ -636,10 +683,9 @@ function renderStatus() {
     ? `Действует до ${fmtDate(ME.subscription_expires_at)}`
     : 'Продлите подписку, чтобы пользоваться VPN';
 
-  const srvFlag = COUNTRY_FLAGS[ME.server_country] || '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px"><circle cx="10" cy="7" r="6" fill="none" stroke="currentColor" stroke-width="1.4"></circle><path d="M4 7h12M10 1a9 9 0 010 12M10 1a9 9 0 000 12" fill="none" stroke="currentColor" stroke-width="1.4"></path></svg>';
-  document.getElementById('srvLoc').innerHTML = `${srvFlag} ${ME.server_city}, ${ME.server_country}`;
-  document.getElementById('srvProto').textContent = ME.server_protocol;
-  document.getElementById('srvTls').textContent = ME.server_tls;
+  document.getElementById('statDevices').textContent = `${ME.device_count} из ${ME.max_devices}`;
+  document.getElementById('statProto').textContent = ME.server_protocol;
+  document.getElementById('statTls').textContent = ME.server_tls;
 }
 
 function renderProfile() {
@@ -734,16 +780,6 @@ const DEVICE_ICONS = {
 };
 const DEVICE_ICON_FALLBACK = '<svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"></rect><line x1="11" y1="18" x2="13" y2="18"></line></svg>';
 
-const COUNTRY_FLAGS = {
-  'Нидерланды': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="4.67" fill="#AE1C28"></rect><rect y="4.67" width="20" height="4.67" fill="#fff"></rect><rect y="9.33" width="20" height="4.67" fill="#21468B"></rect></svg>',
-  'Netherlands': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="4.67" fill="#AE1C28"></rect><rect y="4.67" width="20" height="4.67" fill="#fff"></rect><rect y="9.33" width="20" height="4.67" fill="#21468B"></rect></svg>',
-  'Германия': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="4.67" fill="#1a1a1a"></rect><rect y="4.67" width="20" height="4.67" fill="#DD0000"></rect><rect y="9.33" width="20" height="4.67" fill="#FFCE00"></rect></svg>',
-  'Germany': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="4.67" fill="#1a1a1a"></rect><rect y="4.67" width="20" height="4.67" fill="#DD0000"></rect><rect y="9.33" width="20" height="4.67" fill="#FFCE00"></rect></svg>',
-  'Финляндия': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="14" fill="#fff"></rect><rect x="6" width="3" height="14" fill="#002F6C"></rect><rect y="5.5" width="20" height="3" fill="#002F6C"></rect></svg>',
-  'Finland': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="14" fill="#fff"></rect><rect x="6" width="3" height="14" fill="#002F6C"></rect><rect y="5.5" width="20" height="3" fill="#002F6C"></rect></svg>',
-  'США': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="14" fill="#B22234"></rect><g fill="#fff"><rect y="2" width="20" height="1.4"></rect><rect y="4.8" width="20" height="1.4"></rect><rect y="7.6" width="20" height="1.4"></rect><rect y="10.4" width="20" height="1.4"></rect></g><rect width="8" height="7.6" fill="#3C3B6E"></rect></svg>',
-  'USA': '<svg viewBox="0 0 20 14" width="16" height="12" style="vertical-align:-2px;margin-right:3px;border-radius:2px"><rect width="20" height="14" fill="#B22234"></rect><g fill="#fff"><rect y="2" width="20" height="1.4"></rect><rect y="4.8" width="20" height="1.4"></rect><rect y="7.6" width="20" height="1.4"></rect><rect y="10.4" width="20" height="1.4"></rect></g><rect width="8" height="7.6" fill="#3C3B6E"></rect></svg>',
-};
 const DEVICE_LABELS = {ios: 'iPhone / iPad', android: 'Android', windows: 'Windows', macos: 'macOS', linux: 'Linux', appletv: 'Apple TV', androidtv: 'Смарт-ТВ'};
 
 async function initDevices() {
@@ -756,11 +792,35 @@ async function initDevices() {
   });
 }
 
+async function renderSubKeyCard(devices) {
+  const keyCard = document.getElementById('subKeyCard');
+  const emptyCard = document.getElementById('subKeyEmptyCard');
+  if (!devices.length) {
+    keyCard.style.display = 'none';
+    emptyCard.style.display = 'block';
+    return;
+  }
+  emptyCard.style.display = 'none';
+  const last = devices.reduce((a, b) => (new Date(b.created_at || 0) > new Date(a.created_at || 0) ? b : a));
+  const r = await API(`/api/devices/${last.id}/link`);
+  if (!r.ok) { keyCard.style.display = 'none'; return; }
+  const data = await r.json();
+  document.getElementById('subKeyDeviceName').textContent = DEVICE_LABELS[data.name] || data.name || 'Устройство';
+  document.getElementById('subKeyValue').textContent = data.link;
+  document.getElementById('subKeyQr').src = data.qr_url;
+  document.getElementById('subKeyCopyBtn').onclick = () => {
+    navigator.clipboard.writeText(data.link);
+    showToast('Ключ скопирован');
+  };
+  keyCard.style.display = 'block';
+}
+
 async function loadDevices() {
   const list = document.getElementById('devicesList');
   const r = await API('/api/devices');
-  if (!r.ok) { list.innerHTML = '<div class="empty">Не удалось загрузить устройства</div>'; return; }
+  if (!r.ok) { list.innerHTML = '<div class="empty">Не удалось загрузить устройства</div>'; renderSubKeyCard([]); return; }
   const devices = await r.json();
+  renderSubKeyCard(devices);
   document.getElementById('devicesSub').textContent = `Привязано ${devices.length} из ${ME.max_devices}. Ключ и ссылка ведут к одной подписке — выберите то, что удобнее приложению.`;
   if (!devices.length) {
     list.innerHTML = '<div class="empty">Пока нет ни одного устройства — добавьте первое ниже</div>';
