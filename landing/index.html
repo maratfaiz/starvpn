@@ -54,8 +54,8 @@ body{
 .splash-inner{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 24px}
 .splash-logo-img{width:min(460px,72vw);height:auto;filter:drop-shadow(0 0 34px rgba(255,184,0,.4))}
 .splash-tag{margin-top:14px;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:rgba(235,224,204,.55)}
-.splash-loading{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-top:36px;margin-bottom:12px;animation:splashPulse 1.4s ease-in-out infinite}
-.splash-bar-row{display:flex;align-items:center;gap:14px;width:min(320px,70vw)}
+.splash-loading{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-top:12px;animation:splashPulse 1.4s ease-in-out infinite}
+.splash-bar-row{display:flex;align-items:center;gap:14px;width:min(320px,70vw);margin-top:36px}
 .splash-bar{flex:1;height:5px;border-radius:100px;background:rgba(255,255,255,.08);overflow:hidden}
 .splash-bar-fill{height:100%;width:0%;border-radius:100px;background:linear-gradient(90deg,var(--gold),var(--gold2));box-shadow:0 0 10px rgba(255,184,0,.6);transition:width .12s linear}
 .splash-percent{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--gold);min-width:38px;text-align:right}
@@ -536,11 +536,11 @@ footer{
   <div class="splash-inner">
     <img class="splash-logo-img" src="/logo-star-transparent.png" alt="STAR VPN">
     <div class="splash-tag">Быстро · Безопасно · Без границ</div>
-    <div class="splash-loading">Загрузка<span id="splashDots"></span></div>
     <div class="splash-bar-row">
       <div class="splash-bar"><div class="splash-bar-fill" id="splashFill"></div></div>
       <span class="splash-percent" id="splashPercent">0%</span>
     </div>
+    <div class="splash-loading">Загрузка<span id="splashDots"></span></div>
   </div>
 </div>
 
