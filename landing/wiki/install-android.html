@@ -406,22 +406,24 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
   const overlay = document.getElementById('start-modal');
   const closeBtn = document.getElementById('start-modal-close');
   const navBtn = document.getElementById('nav-start-btn');
-  let channel = null;
-  try { const saved = localStorage.getItem('star_vpn_channel'); if(saved === 'site' || saved === 'telegram') channel = saved; } catch(e){}
-  function applyChannel(){
-    navBtn.href = channel === 'site' ? '/login' : 'https://t.me/starisvpnbot';
-  }
-  applyChannel();
   function openModal(){ overlay.classList.add('open'); }
   function closeModal(){ overlay.classList.remove('open'); }
-  navBtn.addEventListener('click', e => { if(channel === null){ e.preventDefault(); openModal(); } });
+  navBtn.addEventListener('click', e => {
+    e.preventDefault();
+    fetch('/api/me', { credentials: 'include' })
+      .then(r => { if (r.ok) { window.location.href = '/account'; } else { openModal(); } })
+      .catch(() => openModal());
+  });
   overlay.addEventListener('click', closeModal);
   closeBtn.addEventListener('click', closeModal);
   document.querySelectorAll('.start-modal-opt').forEach(opt => {
-    opt.addEventListener('click', () => {
-      channel = opt.dataset.channel;
-      try { localStorage.setItem('star_vpn_channel', channel); } catch(e){}
-      applyChannel();
+    opt.addEventListener('click', e => {
+      if (opt.dataset.channel === 'site') {
+        e.preventDefault();
+        fetch('/api/me', { credentials: 'include' })
+          .then(r => { window.location.href = r.ok ? '/account' : '/login'; })
+          .catch(() => { window.location.href = '/login'; });
+      }
     });
   });
 })();

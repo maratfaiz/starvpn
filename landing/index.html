@@ -1369,53 +1369,36 @@ window.addEventListener('scroll', () => {
     ? 'rgba(6,6,6,0.95)' : 'rgba(6,6,6,0.82)';
 }, {passive:true});
 
-/* ═══ Start modal + channel choice (Telegram vs сайт) ═══════════ */
+/* ═══ Start modal — всегда спрашивает Telegram/сайт, если не вошли ═ */
 (function(){
   const overlay = document.getElementById('start-modal');
   const closeBtn = document.getElementById('start-modal-close');
   const heroBtn = document.getElementById('hero-primary-btn');
-  const heroLabel = document.getElementById('hero-primary-label');
-  const secBtn = document.getElementById('hero-secondary-btn');
-  const secLabel = document.getElementById('hero-secondary-label');
   const navBtn = document.getElementById('nav-start-btn');
-
-  let channel = null;
-  try { const saved = localStorage.getItem('star_vpn_channel'); if(saved === 'site' || saved === 'telegram') channel = saved; } catch(e){}
-
-  function applyChannel(){
-    if(channel === 'telegram'){
-      heroBtn.href = 'https://t.me/starisvpnbot'; heroLabel.textContent = 'Начать в Telegram';
-      secBtn.href = '/login'; secLabel.textContent = 'Или войти по email';
-      navBtn.href = 'https://t.me/starisvpnbot';
-    } else if(channel === 'site'){
-      heroBtn.href = '/login'; heroLabel.textContent = 'Войти по email';
-      secBtn.href = 'https://t.me/starisvpnbot'; secLabel.textContent = 'Или открыть бота';
-      navBtn.href = '/login';
-    } else {
-      heroBtn.href = '#'; heroLabel.textContent = 'Подключиться';
-      secBtn.href = '/tariffs'; secLabel.textContent = 'Смотреть тарифы';
-      navBtn.href = '#';
-    }
-  }
-  applyChannel();
 
   function openModal(){ overlay.classList.add('open'); }
   function closeModal(){ overlay.classList.remove('open'); }
 
-  function onPrimaryClick(e){
-    if(channel === null){ e.preventDefault(); openModal(); }
+  function onStartClick(e){
+    e.preventDefault();
+    fetch('/api/me', { credentials: 'include' })
+      .then(r => { if (r.ok) { window.location.href = '/account'; } else { openModal(); } })
+      .catch(() => openModal());
   }
-  heroBtn.addEventListener('click', onPrimaryClick);
-  navBtn.addEventListener('click', onPrimaryClick);
+  heroBtn.addEventListener('click', onStartClick);
+  navBtn.addEventListener('click', onStartClick);
 
   overlay.addEventListener('click', closeModal);
   closeBtn.addEventListener('click', closeModal);
 
   document.querySelectorAll('.start-modal-opt').forEach(opt => {
-    opt.addEventListener('click', () => {
-      channel = opt.dataset.channel;
-      try { localStorage.setItem('star_vpn_channel', channel); } catch(e){}
-      applyChannel();
+    opt.addEventListener('click', e => {
+      if (opt.dataset.channel === 'site') {
+        e.preventDefault();
+        fetch('/api/me', { credentials: 'include' })
+          .then(r => { window.location.href = r.ok ? '/account' : '/login'; })
+          .catch(() => { window.location.href = '/login'; });
+      }
     });
   });
 })();
