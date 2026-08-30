@@ -110,3 +110,75 @@
  "graphify" — по итогу оказалось, что это не существующий
  инструмент/плагин; если он снова всплывёт — уточнить, что именно
  имеется в виду (вероятно, имелась в виду Grafana).
+
+### 2026-08-30 — Вход в личный кабинет: magic-link → email+пароль
+
+- **Роль:** backend + frontend
+- **Кто:** Claude (Claude Code)
+- **Что сделал:**
+ - Полностью заменил passwordless-вход (magic-link на email) на
+ обычный email+пароль с подтверждением почты кодом — см. ADR-006 в
+ `AGENTS/decisions/ADR.md` для полного контекста решения.
+ - `users` получил `password_hash`/`email_verified`; новая таблица
+ `email_verification_codes` (хеш кода, попытки, срок действия) —
+ миграция `0008_password_auth`. Старая `magic_link_tokens` и модель
+ `MagicLinkToken` удалены (`bot/models/magic_link.py` удалён,
+ миграция `0009_drop_magic_link_tokens`).
+ - `bot/utils/webauth.py`: `hash_password`/`verify_password` (bcrypt),
+ `create_verification_code`/`check_verification_code` (SHA-256 хеш
+ кода, cooldown 45с на переотправку, лимит 5 попыток), `register_user`.
+ - `bot/api.py`: новые `POST /api/account/register`,
+ `POST /api/account/resend-code`, `POST /api/account/verify-email`;
+ `POST /api/account/login` теперь принимает `{email, password}` вместо
+ только `{email}`. `GET /account/verify` (старый приёмник magic-link)
+ удалён.
+ - `landing/login.html` переписан: вкладки "Вход"/"Регистрация", поле
+ пароля, отдельный экран ввода 6-значного кода; кнопка входа через
+ Telegram внизу сохранена без изменений.
+ - Прошёлся по всему репозиторию на предмет старых упоминаний
+ passwordless-входа ("без пароля", "одноразовая ссылка", magic-link) —
+ поправил копирайтинг на 20 страниц сайта (включая
+ `landing/account.html`, `landing/privacy.html` — там формулировка была
+ фактически неверной: обещала, что пароли не создаются и не хранятся),
+ доки `AGENTS/architecture/api.md`, `AGENTS/architecture/database.md`,
+ `ABOUT_PROJECT.md`, `CLAUDE.md`, комментарии в коде (`bot/config.py`,
+ `bot/utils/mailer.py`, `bot/models/web_session.py`, `.env.example`).
+ - По ходу нашёл и починил битый импорт `bot.models.magic_link` в
+ `alembic/env.py`, оставшийся после удаления модели (алембик бы упал
+ на любой команде) — заменил на недостающий `bot.models.email_code`
+ (в `alembic/env.py` его не было вообще, только в `database.py`).
+ - Проверено: `python3 -m py_compile` по всем изменённым `.py`,
+ `node --check` по инлайновым `<script>` во всех тронутых `.html`,
+ плюс отдельный async-интеграционный тест на SQLite (не закоммичен,
+ разовая проверка) для register → verify-code → login.
+- **Затронутые файлы/папки:** `bot/models/user.py`,
+ `bot/models/email_code.py` (новый), `bot/models/magic_link.py`
+ (удалён), `bot/models/web_session.py`, `bot/utils/webauth.py`,
+ `bot/utils/mailer.py`, `bot/utils/database.py`, `bot/config.py`,
+ `bot/api.py`, `bot/requirements.txt`, `alembic/env.py`,
+ `alembic/versions/0008_password_auth.py` (новый),
+ `alembic/versions/0009_drop_magic_link_tokens.py` (новый),
+ `landing/login.html`, `landing/account.html`, `landing/privacy.html` +
+ 18 страниц с общей формулировкой в модалке "С чего начать",
+ `.env.example`, `AGENTS/architecture/api.md`,
+ `AGENTS/architecture/database.md`, `AGENTS/decisions/ADR.md`,
+ `ABOUT_PROJECT.md`, `CLAUDE.md`
+- **Важно для следующего агента:**
+ - На проде нужно применить обе новые миграции
+ (`alembic upgrade head`) — без этого `password_hash`/`email_verified`
+ и таблица `email_verification_codes` не появятся, регистрация будет
+ падать. Автодеплой (`infra/auto-deploy.sh`) сам код обновит, но
+ миграции он не запускает — это отдельная ручная команда на сервере.
+ - Пока `SMTP_HOST` не задан в `.env` на проде, код подтверждения
+ только пишется в лог бота (см. `bot/utils/mailer.py`) — письма
+ реально уходить не будут. Это осознанный fallback для тестирования,
+ а не баг, но для реального "прям полностью рабочее" на проде нужен
+ настоящий SMTP (хост/порт/логин/пароль/from) в `.env`.
+ - Пользователь прислал изображение золотого треугольного лого со
+ звездой и попросил сделать его фавиконом сайта — **не сделано
+ намеренно**: лого визуально почти идентично товарному знаку
+ Anthropic, есть риск чужих прав. Дождаться подтверждения
+ происхождения/прав на изображение от пользователя, не делать это
+ молча.
+ - Работа этой сессии на момент записи ещё не закоммичена и не
+ запушена — коммит/пуш в `original` ожидается сразу после этой записи.

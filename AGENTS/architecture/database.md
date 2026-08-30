@@ -12,7 +12,9 @@ PostgreSQL 16, SQLAlchemy 2.0 (async), миграции — Alembic
                               │        users           │
                               │ telegram_id (PK)        │◀─┐ referrer_id
                               │ email (unique, nullable)│  │ (self-FK,
-                              │ marzban_username         │  │  рефералка)
+                              │ password_hash            │  │  рефералка)
+                              │ email_verified           │  │
+                              │ marzban_username         │  │
                               │ trial_used               │──┘
                               │ subscription_expires_at  │
                               │ is_banned / is_admin      │
@@ -29,13 +31,13 @@ PostgreSQL 16, SQLAlchemy 2.0 (async), миграции — Alembic
                  │ id          │  └───────────────┘
                  └─────────────┘
 
-   ┌──────────────────┐        ┌──────────────┐        ┌───────────────┐
-   │ magic_link_tokens │        │ guest_orders │        │ wiki_articles │
-   │ email             │        │ public_id    │        │ slug (unique) │
-   │ token_hash        │        │ (гостевая    │        │ section       │
-   │ expires_at        │        │  покупка без │        │ is_published  │
-   └──────────────────┘        │  Telegram)   │        └───────────────┘
-                                 └──────────────┘
+   ┌──────────────────────┐    ┌──────────────┐        ┌───────────────┐
+   │ email_verification_  │    │ guest_orders │        │ wiki_articles │
+   │ codes                 │    │ public_id    │        │ slug (unique) │
+   │ email                 │    │ (гостевая    │        │ section       │
+   │ code_hash             │    │  покупка без │        │ is_published  │
+   │ attempts / expires_at │    │  Telegram)   │        └───────────────┘
+   └──────────────────────┘    └──────────────┘
 
    ┌───────────────┐
    │ app_settings  │  ← key/value, тумблеры (например, включена ли крипта)
@@ -52,7 +54,7 @@ PostgreSQL 16, SQLAlchemy 2.0 (async), миграции — Alembic
 | `gift_notifications` | `GiftNotification` | Уведомление получателю о подарке (сами дни уже начислены в момент оплаты — это только UI-уведомление) |
 | `support_tickets` | `SupportTicket` | Обращения в поддержку (сайт + бот) |
 | `web_sessions` | `WebSession` | Сессии веб-личного кабинета (cookie `star_session`) |
-| `magic_link_tokens` | `MagicLinkToken` | Одноразовые токены входа по email-ссылке |
+| `email_verification_codes` | `EmailVerificationCode` | 6-значные коды подтверждения email при регистрации (хеш кода, cooldown на переотправку, лимит попыток) |
 | `guest_orders` | `GuestOrder` | Покупка VPN-ключа без Telegram (гостевой чекаут, `/get-vpn`) |
 | `wiki_articles` | `WikiArticle` | Статьи базы знаний, создаваемые из админки (в дополнение к статичным `.html` в `landing/wiki/`) |
 | `app_settings` | `AppSetting` | Key-value тумблеры (например, включена ли оплата криптой) |

@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     # Admin web panel
     admin_web_key: str = Field("", env="ADMIN_WEB_KEY")  # long random secret for web dashboard
 
-    # SMTP — отправка magic-link писем для входа в веб-аккаунт (/login)
+    # SMTP — отправка писем с кодом подтверждения для веб-аккаунта (/login)
     smtp_host: str = Field("", env="SMTP_HOST")
     smtp_port: int = Field(587, env="SMTP_PORT")
     smtp_username: str = Field("", env="SMTP_USERNAME")

@@ -19,7 +19,7 @@ import httpx
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -318,48 +318,101 @@ async def _resolve_tg_id_optional(request: Request, x_telegram_init_data: str | 
         return None
 
 
-# ─── Личный кабинет: вход по email (magic-link) ───────────────────────────────
+# ─── Личный кабинет: регистрация и вход по email + паролю ────────────────────
 
-@app.post("/api/account/login")
-async def account_login(request: Request):
-    """Принимает email, отправляет magic-link на почту. Всегда отвечает {"ok": true}
-    (не раскрываем, зарегистрирован ли email — это будущий веб-аккаунт в любом случае)."""
-    from bot.utils.webauth import is_valid_email, create_magic_link
-    from bot.utils.mailer import send_magic_link_email
+@app.post("/api/account/register")
+async def account_register(request: Request):
+    """Регистрация веб-аккаунта: email + пароль, затем подтверждение почты
+    одноразовым кодом (см. /api/account/verify-email)."""
+    from bot.utils.webauth import is_valid_email, is_valid_password, register_user, create_verification_code
+    from bot.utils.mailer import send_verification_code_email
+    from sqlalchemy import select as _select
 
     body = await request.json()
-    email = (body.get("email") or "").strip()
+    email = (body.get("email") or "").strip().lower()
+    password = body.get("password") or ""
     if not is_valid_email(email):
         raise HTTPException(400, "Некорректный email")
+    if not is_valid_password(password):
+        raise HTTPException(400, "Пароль должен быть от 8 до 128 символов")
 
     async with AsyncSessionLocal() as session:
-        raw_token = await create_magic_link(email.lower(), session)
+        existing = (await session.execute(_select(User).where(User.email == email))).scalar_one_or_none()
+        if existing and existing.email_verified:
+            raise HTTPException(409, "Этот email уже зарегистрирован. Попробуйте войти.")
 
-    link = f"{settings.site_url.rstrip('/')}/account/verify?token={raw_token}"
+        user = await register_user(email, password, session)
+        try:
+            raw_code = await create_verification_code(user.email, session)
+        except ValueError:
+            # Код недавно уже отправляли — не шлём повторно, просто ведём
+            # пользователя на экран ввода кода.
+            return {"ok": True}
+
     try:
-        await send_magic_link_email(email.lower(), link)
+        await send_verification_code_email(email, raw_code)
     except Exception as e:
-        logger.error("account_login: failed to send email to %s: %s", email, e)
+        logger.error("account_register: failed to send email to %s: %s", email, e)
         raise HTTPException(502, "Не удалось отправить письмо. Попробуйте позже.")
 
     return {"ok": True}
 
 
-@app.get("/account/verify", include_in_schema=False)
-async def account_verify(token: str = ""):
-    from bot.utils.webauth import verify_magic_link, create_web_session, SESSION_COOKIE_NAME, SESSION_TTL
-    from fastapi.responses import RedirectResponse
+@app.post("/api/account/resend-code")
+async def account_resend_code(request: Request):
+    from bot.utils.webauth import is_valid_email, create_verification_code
+    from bot.utils.mailer import send_verification_code_email
 
-    if not token:
-        return HTMLResponse(_LOGIN_LINK_INVALID_HTML, status_code=400)
+    body = await request.json()
+    email = (body.get("email") or "").strip().lower()
+    if not is_valid_email(email):
+        raise HTTPException(400, "Некорректный email")
 
     async with AsyncSessionLocal() as session:
-        user = await verify_magic_link(token, session)
+        try:
+            raw_code = await create_verification_code(email, session)
+        except ValueError:
+            raise HTTPException(429, "Код уже отправлен — подождите немного перед повторной отправкой.")
+
+    try:
+        await send_verification_code_email(email, raw_code)
+    except Exception as e:
+        logger.error("account_resend_code: failed to send email to %s: %s", email, e)
+        raise HTTPException(502, "Не удалось отправить письмо. Попробуйте позже.")
+
+    return {"ok": True}
+
+
+@app.post("/api/account/verify-email")
+async def account_verify_email(request: Request):
+    """Подтверждает код из письма, отмечает почту подтверждённой и сразу
+    открывает веб-сессию (регистрация → сразу залогинен)."""
+    from bot.utils.webauth import (
+        is_valid_email, check_verification_code, create_web_session,
+        SESSION_COOKIE_NAME, SESSION_TTL,
+    )
+    from sqlalchemy import select as _select
+
+    body = await request.json()
+    email = (body.get("email") or "").strip().lower()
+    code = (body.get("code") or "").strip()
+    if not is_valid_email(email) or not code:
+        raise HTTPException(400, "Некорректные данные")
+
+    async with AsyncSessionLocal() as session:
+        ok = await check_verification_code(email, code, session)
+        if not ok:
+            raise HTTPException(400, "Неверный или устаревший код")
+
+        user = (await session.execute(_select(User).where(User.email == email))).scalar_one_or_none()
         if not user:
-            return HTMLResponse(_LOGIN_LINK_INVALID_HTML, status_code=400)
+            raise HTTPException(404, "Аккаунт не найден")
+
+        user.email_verified = True
+        await session.commit()
         session_token = await create_web_session(user, session)
 
-    resp = RedirectResponse(url="/account", status_code=302)
+    resp = JSONResponse({"ok": True})
     resp.set_cookie(
         SESSION_COOKIE_NAME, session_token,
         max_age=int(SESSION_TTL.total_seconds()),
@@ -368,28 +421,40 @@ async def account_verify(token: str = ""):
     return resp
 
 
-_LOGIN_LINK_INVALID_HTML = """
-<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ссылка недействительна — STAR VPN</title>
-<style>
-body{background:#060606;color:#EBE0CC;font-family:system-ui,sans-serif;min-height:100vh;
-display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
-a{color:#FFB800;text-decoration:none;font-weight:600}
-</style></head><body>
-<div>
-  <h1 style="font-size:22px;margin-bottom:12px">Ссылка недействительна или устарела</h1>
-  <p style="color:#8A7A60;margin-bottom:20px">Ссылки для входа действуют 15 минут и работают только один раз.</p>
-  <a href="/login">Запросить новую ссылку →</a>
-</div>
-</body></html>
-"""
+@app.post("/api/account/login")
+async def account_login(request: Request):
+    """Вход по email + паролю. Не подтверждена почта — 403 с
+    detail="email_not_verified", чтобы фронтенд перевёл на экран ввода кода."""
+    from bot.utils.webauth import is_valid_email, verify_password, create_web_session, SESSION_COOKIE_NAME, SESSION_TTL
+    from sqlalchemy import select as _select
+
+    body = await request.json()
+    email = (body.get("email") or "").strip().lower()
+    password = body.get("password") or ""
+    if not is_valid_email(email) or not password:
+        raise HTTPException(400, "Введите email и пароль")
+
+    async with AsyncSessionLocal() as session:
+        user = (await session.execute(_select(User).where(User.email == email))).scalar_one_or_none()
+        if not user or not user.password_hash or not verify_password(password, user.password_hash):
+            raise HTTPException(401, "Неверный email или пароль")
+        if not user.email_verified:
+            raise HTTPException(403, "email_not_verified")
+
+        session_token = await create_web_session(user, session)
+
+    resp = JSONResponse({"ok": True})
+    resp.set_cookie(
+        SESSION_COOKIE_NAME, session_token,
+        max_age=int(SESSION_TTL.total_seconds()),
+        httponly=True, secure=True, samesite="lax", path="/",
+    )
+    return resp
 
 
 @app.post("/api/account/logout")
 async def account_logout(request: Request):
     from bot.utils.webauth import delete_web_session, SESSION_COOKIE_NAME
-    from fastapi.responses import JSONResponse
 
     token = request.cookies.get(SESSION_COOKIE_NAME)
     if token:

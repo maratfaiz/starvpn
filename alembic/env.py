@@ -13,7 +13,7 @@ import bot.models.device            # noqa: F401
 import bot.models.payment           # noqa: F401
 import bot.models.guest_order       # noqa: F401
 import bot.models.gift_notification # noqa: F401
-import bot.models.magic_link        # noqa: F401
+import bot.models.email_code        # noqa: F401
 import bot.models.web_session       # noqa: F401
 import bot.models.support_ticket    # noqa: F401
 import bot.models.wiki_article      # noqa: F401

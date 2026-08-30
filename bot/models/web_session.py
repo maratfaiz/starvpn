@@ -1,4 +1,4 @@
-"""Сессии веб-аккаунта (личный кабинет) — выдаются после перехода по magic-link."""
+"""Сессии веб-аккаунта (личный кабинет) — выдаются после входа по email+паролю или Telegram."""
 
 from datetime import datetime
 from sqlalchemy import BigInteger, String, DateTime, ForeignKey

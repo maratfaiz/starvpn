@@ -1,8 +1,8 @@
 """
-Отправка писем по SMTP (magic-link для входа в личный кабинет).
+Отправка писем по SMTP (код подтверждения email для личного кабинета).
 
-Пока SMTP_HOST не задан в .env — письмо не отправляется, а ссылка для
-входа просто пишется в лог, чтобы можно было тестировать поток входа
+Пока SMTP_HOST не задан в .env — письмо не отправляется, а код
+просто пишется в лог, чтобы можно было тестировать поток регистрации
 до того как будут готовы реальные почтовые credentials.
 """
 
@@ -32,28 +32,26 @@ def _send_sync(to_email: str, subject: str, text_body: str, html_body: str) -> N
         server.sendmail(settings.smtp_from, [to_email], msg.as_string())
 
 
-async def send_magic_link_email(to_email: str, link: str) -> None:
+async def send_verification_code_email(to_email: str, code: str) -> None:
     if not settings.smtp_host:
-        logger.warning("SMTP не настроен — magic-link для %s: %s", to_email, link)
+        logger.warning("SMTP не настроен — код подтверждения для %s: %s", to_email, code)
         return
 
-    subject = "Вход в STAR VPN"
-    text_body = f"Ссылка для входа в личный кабинет STAR VPN (действует 15 минут):\n\n{link}\n\nЕсли вы не запрашивали вход — просто проигнорируйте это письмо."
+    subject = f"{code} — код подтверждения STAR VPN"
+    text_body = f"Код подтверждения для входа в STAR VPN: {code}\n\nДействует 15 минут. Если вы не запрашивали код — просто проигнорируйте это письмо."
     html_body = f"""
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#060606;color:#EBE0CC">
       <h2 style="color:#FFB800;margin:0 0 16px">STAR VPN</h2>
-      <p>Ссылка для входа в личный кабинет (действует 15 минут):</p>
-      <p style="margin:24px 0">
-        <a href="{link}" style="background:#FFB800;color:#000;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:700;display:inline-block">Войти в аккаунт</a>
-      </p>
-      <p style="color:#8A7A60;font-size:13px">Если вы не запрашивали вход — просто проигнорируйте это письмо.</p>
+      <p>Код подтверждения для входа в личный кабинет:</p>
+      <p style="margin:24px 0;font-family:monospace;font-size:32px;font-weight:700;letter-spacing:.2em;color:#FFB800">{code}</p>
+      <p style="color:#8A7A60;font-size:13px">Действует 15 минут. Если вы не запрашивали код — просто проигнорируйте это письмо.</p>
     </div>
     """
 
     try:
         await asyncio.to_thread(_send_sync, to_email, subject, text_body, html_body)
     except Exception as e:
-        logger.error("Не удалось отправить magic-link на %s: %s", to_email, e)
+        logger.error("Не удалось отправить код подтверждения на %s: %s", to_email, e)
         raise
 
 

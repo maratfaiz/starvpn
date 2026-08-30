@@ -28,8 +28,10 @@ class User(Base):
     username: Mapped[str | None] = mapped_column(String(64), nullable=True)
     full_name: Mapped[str | None] = mapped_column(String(256), nullable=True)
 
-    # Веб-аккаунт (личный кабинет без Telegram) — вход по magic-link на email.
+    # Веб-аккаунт (личный кабинет без Telegram) — вход по email + паролю.
     email: Mapped[str | None] = mapped_column(String(320), unique=True, nullable=True, index=True)
+    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Marzban username (tg_{telegram_id})

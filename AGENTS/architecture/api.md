@@ -17,8 +17,10 @@
 
 | Метод | Путь | Назначение |
 |---|---|---|
-| `POST` | `/api/account/login` | Отправить magic-link на email |
-| `GET` | `/account/verify` | Подтвердить magic-link → выставить cookie `star_session` |
+| `POST` | `/api/account/register` | Зарегистрировать email+пароль, отправить код подтверждения на почту |
+| `POST` | `/api/account/resend-code` | Повторно отправить код подтверждения (cooldown 45с) |
+| `POST` | `/api/account/verify-email` | Подтвердить код → `email_verified=True`, выставить cookie `star_session` |
+| `POST` | `/api/account/login` | Вход по email+паролю → выставить cookie `star_session` |
 | `POST` | `/api/account/logout` | Выйти из веб-аккаунта |
 | `GET` | `/api/me` | Текущий пользователь (статус подписки, устройства, и т.д.) |
 | `GET`/`POST`/`DELETE` | `/api/devices*` | Список / добавление / удаление устройств |

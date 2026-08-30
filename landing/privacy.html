@@ -127,7 +127,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
       <a class="start-modal-opt opt-site" href="/login" data-channel="site">
         <div class="opt-tag tag-site">Личный кабинет</div>
         <div class="opt-title">Через сайт</div>
-        <div class="opt-text">Вход по email без пароля. Работает, даже если Telegram недоступен.</div>
+        <div class="opt-text">Вход по email и паролю. Работает, даже если Telegram недоступен.</div>
       </a>
       <a class="start-modal-opt opt-tg" href="https://t.me/starisvpnbot" data-channel="telegram">
         <div class="opt-tag tag-tg">Telegram</div>
@@ -181,7 +181,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
 
     <div class="legal-section">
       <h2 id="s5">5. Email в личном кабинете</h2>
-      <p>Если вы входите в кабинет по email, мы используем адрес только для отправки одноразовой ссылки входа (magic-link) и связи с вами по вопросам подписки. Пароли не создаются и не хранятся.</p>
+      <p>Если вы входите в кабинет по email, мы используем адрес для отправки кода подтверждения при регистрации и связи с вами по вопросам подписки. Пароль хранится не в открытом виде, а в виде необратимого хеша (bcrypt) — мы не видим и не можем восстановить ваш исходный пароль.</p>
     </div>
 
     <div class="legal-section">
