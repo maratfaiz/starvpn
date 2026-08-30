@@ -1,12 +1,17 @@
-# STAR VPN
+# 🌟 STAR VPN
 
-Telegram-нативный VPN-сервис на VLESS + Reality (Marzban/Xray-core). Бот, сайт,
-Mini App и админка — это **один и тот же backend-процесс**, а не куча
-раздельных сервисов. Ниже — как это на самом деле устроено и где что лежит.
+> Telegram-нативный VPN-сервис на **VLESS + Reality** (Marzban/Xray-core).
+> Бот, сайт, Mini App и админка — это **один и тот же backend-процесс**,
+> а не куча раздельных сервисов. Ниже — как это на самом деле устроено и
+> где что лежит.
 
-Полная бизнес-спецификация — в [`ABOUT_PROJECT.md`](./ABOUT_PROJECT.md).
-Правила для разработки (стиль кода, бизнес-правила, чего нельзя ломать) — в
-[`CLAUDE.md`](./CLAUDE.md).
+🔒 **Zero Logs** · 🤖 **Telegram-бот + сайт** · 🇷🇺 **RU-first** · 🏗️ **Один процесс, не микросервисы**
+
+| Документ | Зачем |
+|---|---|
+| 📘 [`ABOUT_PROJECT.md`](./ABOUT_PROJECT.md) | Полная бизнес-спецификация продукта |
+| 📏 [`CLAUDE.md`](./CLAUDE.md) | Стиль кода, бизнес-правила, чего нельзя ломать |
+| 🤖 [`AGENTS/new_agent.md`](./AGENTS/new_agent.md) | **Ты агент/ИИ и тебя подключили к проекту? Начни отсюда** |
 
 ---
 
@@ -61,7 +66,7 @@ Marzban (VPN-ядро) разворачивается отдельно, не ч�
 | `webapp/app.html` | Собранный однофайловый бандл Mini App — именно этот файл реально открывается по `/app` | Коммитится в git, генерируется через `npm run build:app` |
 | `alembic/` | Миграции БД (PostgreSQL) | `alembic upgrade head` |
 | `infra/` | `docker-compose.yml`, `nginx.conf`, `xray_config.json` (Zero Logs), `deploy.sh` | Конфиги для продакшн-сервера |
-| `miniapp/` | ⚠️ Старый/неиспользуемый прототип Mini App (Netlify-заготовка). Ни один роут в `bot/api.py` на него не ссылается — не редактировать вместо `webapp/` | Не деплоится |
+| `AGENTS/` | Правила, роли и архитектурная документация для агентов (людей и ИИ), работающих над проектом | См. [`AGENTS/new_agent.md`](./AGENTS/new_agent.md) |
 | `.env.example` | Шаблон переменных окружения | Скопировать в `.env`, никогда не коммитить `.env` |
 
 ---
@@ -78,10 +83,17 @@ Marzban (VPN-ядро) разворачивается отдельно, не ч�
 нужна:
 
 ```bash
-ssh root@<сервер> "cd /opt/starvpn && git pull && systemctl restart starvpn-api starvpn-bot"
-# или, если это docker compose:
-ssh root@<сервер> "cd /opt/starvpn && git pull && docker compose -f infra/docker-compose.yml restart bot"
+cd /opt/starvpn
+git pull
+cd infra && docker compose up -d --build
 ```
+
+> ⚠️ Если менял корневой `.env` — не забудь `cp ../.env .env` в папке
+> `infra/` перед пересборкой. `docker-compose.yml` подставляет
+> `${POSTGRES_PASSWORD}` и подобные переменные из `.env`, лежащего **в
+> той же папке, что и сам compose-файл**, а не из корневого `.env`
+> (тот подключается к контейнеру `bot` отдельно, через `env_file`).
+> Подробнее — [`AGENTS/roles/devops.md`](./AGENTS/roles/devops.md).
 
 Общий визуальный язык всех страниц: CSS-переменные `--gold #FFB800`,
 `--bg #060606`, `--text #EBE0CC`, шрифты Space Grotesk (заголовки) / Inter
@@ -141,6 +153,54 @@ Mini App: `http://localhost:8080/app` (нужен собранный `webapp/app
 Полный setup с нуля — `infra/deploy.sh` (ставит Docker, генерирует
 Xray Reality-ключи, поднимает `docker compose`). `infra/nginx.conf` —
 шаблон реверс-прокси HTTPS → `127.0.0.1:8080`.
+
+---
+
+## 🤖 Для агентов (людей и ИИ)
+
+Если тебя подключили к этому репозиторию как агента (Claude, ChatGPT,
+любую ИИ-модель) — **сначала загляни в `AGENTS/`**, там правила входа,
+роли и архитектурная документация:
+
+```
+📁 STAR VPN
+│
+├── 📄 README.md                 ← ты здесь
+│
+├── 🤖 AGENTS/
+│   ├── new_agent.md             ← обязательно к прочтению первым
+│   ├── Newbie.md                ← подробная инструкция для первого входа
+│   ├── Agents_history.md        ← лог: кто что делал, передача контекста
+│   │
+│   ├── 📁 roles/                ← инструкция под каждую роль
+│   │   ├── designer.md
+│   │   ├── frontend.md
+│   │   ├── backend.md
+│   │   ├── bot.md
+│   │   ├── database.md
+│   │   ├── devops.md
+│   │   └── qa.md
+│   │
+│   ├── 📁 architecture/         ← как всё устроено
+│   │   ├── overview.md
+│   │   ├── database.md
+│   │   └── api.md
+│   │
+│   └── 📁 decisions/
+│       └── ADR.md               ← почему сделано именно так, а не иначе
+│
+├── 🤖 bot/                       backend + Telegram-бот (один процесс)
+├── 🌐 landing/                   сайт (статичный HTML/CSS/JS)
+├── 🔐 admin/                     веб-админка (статичный HTML/CSS/JS)
+├── 🖥️ webapp/                    Telegram Mini App (React, нужна сборка)
+├── 🗄️ alembic/                   миграции БД
+└── 🚀 infra/                     Docker Compose, nginx, deploy.sh
+```
+
+**TL;DR для нетерпеливых:** прочитай `AGENTS/new_agent.md` → определи
+свою роль в `AGENTS/Newbie.md` → сделай задачу → оставь запись в
+`AGENTS/Agents_history.md`. Без последнего шага задача не считается
+завершённой.
 
 ---
 
