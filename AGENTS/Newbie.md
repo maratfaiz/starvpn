@@ -1,4 +1,4 @@
-# 🧭 Newbie.md — подробная инструкция для первого входа
+# Newbie.md — подробная инструкция для первого входа
 
 Этот файл — дополнение к [`new_agent.md`](./new_agent.md). Если тот файл —
 "правила игры", то этот — "как сделать первый ход".
@@ -44,13 +44,13 @@ API под неё") — это нормально, просто прочитай
 
 | Роль | Файл | Когда это ты |
 |---|---|---|
-| 🎨 Дизайнер | [`roles/designer.md`](./roles/designer.md) | Макеты, UI/UX, визуальный язык, но не сам код страниц |
-| 🖥️ Frontend | [`roles/frontend.md`](./roles/frontend.md) | `landing/`, `admin/`, `webapp/` — вёрстка, JS, стили |
-| ⚙️ Backend | [`roles/backend.md`](./roles/backend.md) | `bot/api.py`, бизнес-логика, эндпоинты |
-| 🤖 Bot | [`roles/bot.md`](./roles/bot.md) | `bot/handlers/`, диалоги и команды в Telegram |
-| 🗄️ Database | [`roles/database.md`](./roles/database.md) | `bot/models/`, `alembic/`, схема БД |
-| 🚀 DevOps | [`roles/devops.md`](./roles/devops.md) | `infra/`, деплой, Docker, сервер |
-| 🧪 QA | [`roles/qa.md`](./roles/qa.md) | Поиск багов, проверка регрессий, тестирование |
+| Дизайнер | [`roles/designer.md`](./roles/designer.md) | Макеты, UI/UX, визуальный язык, но не сам код страниц |
+| Frontend | [`roles/frontend.md`](./roles/frontend.md) | `landing/`, `admin/`, `webapp/` — вёрстка, JS, стили |
+| Backend | [`roles/backend.md`](./roles/backend.md) | `bot/api.py`, бизнес-логика, эндпоинты |
+| Bot | [`roles/bot.md`](./roles/bot.md) | `bot/handlers/`, диалоги и команды в Telegram |
+| Database | [`roles/database.md`](./roles/database.md) | `bot/models/`, `alembic/`, схема БД |
+| DevOps | [`roles/devops.md`](./roles/devops.md) | `infra/`, деплой, Docker, сервер |
+| QA | [`roles/qa.md`](./roles/qa.md) | Поиск багов, проверка регрессий, тестирование |
 
 ---
 
@@ -105,8 +105,8 @@ API под неё") — это нормально, просто прочитай
 
 ## Частые ошибки новичков (по опыту предыдущих агентов)
 
-- ❌ Не читать `CLAUDE.md`/`README.md` перед началом — потом переделывать.
-- ❌ Переименовывать папки "для порядка", не проверив все места, где путь захардкожен (Dockerfile, docker-compose.yml, импорты Python).
-- ❌ Чинить симптом вместо причины (например, обходить ошибку вместо того, чтобы понять, откуда она).
-- ❌ Не оставлять запись в `Agents_history.md` — следующий агент тратит время на то, чтобы заново понять, что уже сделано.
-- ❌ Работать параллельно с другим агентом над тем же файлом без координации через `Agents_history.md`.
+- Не читать `CLAUDE.md`/`README.md` перед началом — потом переделывать.
+- Переименовывать папки "для порядка", не проверив все места, где путь захардкожен (Dockerfile, docker-compose.yml, импорты Python).
+- Чинить симптом вместо причины (например, обходить ошибку вместо того, чтобы понять, откуда она).
+- Не оставлять запись в `Agents_history.md` — следующий агент тратит время на то, чтобы заново понять, что уже сделано.
+- Работать параллельно с другим агентом над тем же файлом без координации через `Agents_history.md`.

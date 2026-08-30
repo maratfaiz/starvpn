@@ -1,35 +1,35 @@
-# 🌟 STAR VPN
+# STAR VPN
 
 > Telegram-нативный VPN-сервис на **VLESS + Reality** (Marzban/Xray-core).
 > Бот, сайт, Mini App и админка — это **один и тот же backend-процесс**,
 > а не куча раздельных сервисов. Ниже — как это на самом деле устроено и
 > где что лежит.
 
-🔒 **Zero Logs** · 🤖 **Telegram-бот + сайт** · 🇷🇺 **RU-first** · 🏗️ **Один процесс, не микросервисы**
+**Zero Logs** · **Telegram-бот + сайт** · **RU-first** · **Один процесс, не микросервисы**
 
 | Документ | Зачем |
 |---|---|
-| 📘 [`ABOUT_PROJECT.md`](./ABOUT_PROJECT.md) | Полная бизнес-спецификация продукта |
-| 📏 [`CLAUDE.md`](./CLAUDE.md) | Стиль кода, бизнес-правила, чего нельзя ломать |
-| 🤖 [`AGENTS/new_agent.md`](./AGENTS/new_agent.md) | **Ты агент/ИИ и тебя подключили к проекту? Начни отсюда** |
+| [`ABOUT_PROJECT.md`](./ABOUT_PROJECT.md) | Полная бизнес-спецификация продукта |
+| [`CLAUDE.md`](./CLAUDE.md) | Стиль кода, бизнес-правила, чего нельзя ломать |
+| [`AGENTS/new_agent.md`](./AGENTS/new_agent.md) | **Ты агент/ИИ и тебя подключили к проекту? Начни отсюда** |
 
 ---
 
 ## Главная идея: всё крутится в одном процессе
 
 ```
-                         ┌─────────────────────────────┐
-                         │   bot/main.py (один процесс) │
-                         │                              │
-   Telegram ──polling──▶ │  aiogram-бот   +   FastAPI   │ ◀── nginx (443) ── браузер
-                         │                (uvicorn:8080) │
-                         └───────────────┬──────────────┘
-                                         │ читает файлы с диска
-                    ┌────────────────────┼────────────────────┐
-                    ▼                    ▼                    ▼
-              landing/*.html       admin/index.html      webapp/app.html
-              (сайт, отдаётся        (админка,             (Mini App,
-               как есть)            отдаётся как есть)     собранный React)
+ ┌─────────────────────────────┐
+ │ bot/main.py (один процесс) │
+ │ │
+ Telegram ──polling──▶ │ aiogram-бот + FastAPI │ ◀── nginx (443) ── браузер
+ │ (uvicorn:8080) │
+ └───────────────┬──────────────┘
+ │ читает файлы с диска
+ ┌────────────────────┼────────────────────┐
+ ▼ ▼ ▼
+ landing/*.html admin/index.html webapp/app.html
+ (сайт, отдаётся (админка, (Mini App,
+ как есть) отдаётся как есть) собранный React)
 ```
 
 `bot/main.py` запускает **одновременно** (`asyncio.gather`) aiogram-бота
@@ -88,7 +88,7 @@ git pull
 cd infra && docker compose up -d --build
 ```
 
-> ⚠️ Если менял корневой `.env` — не забудь `cp ../.env .env` в папке
+> Если менял корневой `.env` — не забудь `cp ../.env .env` в папке
 > `infra/` перед пересборкой. `docker-compose.yml` подставляет
 > `${POSTGRES_PASSWORD}` и подобные переменные из `.env`, лежащего **в
 > той же папке, что и сам compose-файл**, а не из корневого `.env`
@@ -111,9 +111,9 @@ production-файле — исходники в `webapp/src/`, а прод от�
 
 ```bash
 cd webapp
-npm install          # один раз
-npm run dev           # локальная разработка, http://localhost:5173
-npm run build:app     # сборка → webapp/dist/index.html → копия в webapp/app.html
+npm install # один раз
+npm run dev # локальная разработка, http://localhost:5173
+npm run build:app # сборка → webapp/dist/index.html → копия в webapp/app.html
 ```
 
 После `build:app` нужно закоммитить и запушить **обновившийся
@@ -131,8 +131,8 @@ PostgreSQL 16 + SQLAlchemy 2.0 (async), миграции через Alembic
 нужен только когда меняешь схему уже существующей боевой базы:
 
 ```bash
-alembic revision -m "описание"   # создать миграцию
-alembic upgrade head              # применить
+alembic revision -m "описание" # создать миграцию
+alembic upgrade head # применить
 ```
 
 ---
@@ -140,9 +140,9 @@ alembic upgrade head              # применить
 ## Запуск локально
 
 ```bash
-cp .env.example .env       # заполнить токены/пароли
+cp .env.example .env # заполнить токены/пароли
 docker compose -f infra/docker-compose.yml up -d db
-python -m bot.main          # бот + API на :8080 в одном процессе
+python -m bot.main # бот + API на :8080 в одном процессе
 ```
 
 Сайт: `http://localhost:8080/`, админка: `http://localhost:8080/admin`,
@@ -156,23 +156,23 @@ Xray Reality-ключи, поднимает `docker compose`). `infra/nginx.conf
 
 ---
 
-## 🤖 Для агентов (людей и ИИ)
+## Для агентов (людей и ИИ)
 
 Если тебя подключили к этому репозиторию как агента (Claude, ChatGPT,
 любую ИИ-модель) — **сначала загляни в `AGENTS/`**, там правила входа,
 роли и архитектурная документация:
 
 ```
-📁 STAR VPN
+STAR VPN
 │
-├── 📄 README.md                 ← ты здесь
+├── README.md                    ← ты здесь
 │
-├── 🤖 AGENTS/
-│   ├── new_agent.md             ← обязательно к прочтению первым
-│   ├── Newbie.md                ← подробная инструкция для первого входа
-│   ├── Agents_history.md        ← лог: кто что делал, передача контекста
+├── AGENTS/
+│   ├── new_agent.md              ← обязательно к прочтению первым
+│   ├── Newbie.md                 ← подробная инструкция для первого входа
+│   ├── Agents_history.md         ← лог: кто что делал, передача контекста
 │   │
-│   ├── 📁 roles/                ← инструкция под каждую роль
+│   ├── roles/                    ← инструкция под каждую роль
 │   │   ├── designer.md
 │   │   ├── frontend.md
 │   │   ├── backend.md
@@ -181,20 +181,20 @@ Xray Reality-ключи, поднимает `docker compose`). `infra/nginx.conf
 │   │   ├── devops.md
 │   │   └── qa.md
 │   │
-│   ├── 📁 architecture/         ← как всё устроено
+│   ├── architecture/              ← как всё устроено
 │   │   ├── overview.md
 │   │   ├── database.md
 │   │   └── api.md
 │   │
-│   └── 📁 decisions/
-│       └── ADR.md               ← почему сделано именно так, а не иначе
+│   └── decisions/
+│       └── ADR.md                ← почему сделано именно так, а не иначе
 │
-├── 🤖 bot/                       backend + Telegram-бот (один процесс)
-├── 🌐 landing/                   сайт (статичный HTML/CSS/JS)
-├── 🔐 admin/                     веб-админка (статичный HTML/CSS/JS)
-├── 🖥️ webapp/                    Telegram Mini App (React, нужна сборка)
-├── 🗄️ alembic/                   миграции БД
-└── 🚀 infra/                     Docker Compose, nginx, deploy.sh
+├── bot/                          backend + Telegram-бот (один процесс)
+├── landing/                      сайт (статичный HTML/CSS/JS)
+├── admin/                        веб-админка (статичный HTML/CSS/JS)
+├── webapp/                       Telegram Mini App (React, нужна сборка)
+├── alembic/                      миграции БД
+└── infra/                        Docker Compose, nginx, deploy.sh
 ```
 
 **TL;DR для нетерпеливых:** прочитай `AGENTS/new_agent.md` → определи
@@ -207,10 +207,10 @@ Xray Reality-ключи, поднимает `docker compose`). `infra/nginx.conf
 ## Прочее
 
 - **Zero Logs** — `infra/xray_config.json` всегда должен иметь
-  `"access": "none", "error": "none", "loglevel": "none"`. Это не опция,
-  а требование из `CLAUDE.md`.
+ `"access": "none", "error": "none", "loglevel": "none"`. Это не опция,
+ а требование из `CLAUDE.md`.
 - Payment webhooks (Robokassa/ЮMoney/CryptoPay) проверяют подпись — см.
-  `bot/utils/robokassa.py`, `bot/utils/yoomoney.py`, `bot/utils/cryptopay.py`.
+ `bot/utils/robokassa.py`, `bot/utils/yoomoney.py`, `bot/utils/cryptopay.py`.
 - Криптоплатежи скрыты из UI по умолчанию (`bot/utils/settings_store.py`,
-  `crypto: False`), но не удалены из кода — админ может включить обратно
-  через `/admin` → Настройки.
+ `crypto: False`), но не удалены из кода — админ может включить обратно
+ через `/admin` → Настройки.

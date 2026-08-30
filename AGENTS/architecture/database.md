@@ -1,4 +1,4 @@
-# 🗄️ Database Schema
+# Database Schema
 
 PostgreSQL 16, SQLAlchemy 2.0 (async), миграции — Alembic
 (`alembic/versions/`). Полный источник правды — сами модели в
@@ -60,13 +60,13 @@ PostgreSQL 16, SQLAlchemy 2.0 (async), миграции — Alembic
 ## Ключевые правила (см. также `AGENTS/roles/database.md`)
 
 1. **`users.telegram_id` — всегда `NOT NULL`.** Веб-аккаунт получает
-   синтетический **отрицательный** ID вместо `NULL` — так все FK на
-   `users.telegram_id` работают одинаково для обоих типов аккаунтов.
-   Проверка "настоящий Telegram?" — `telegram_id > 0`.
+ синтетический **отрицательный** ID вместо `NULL` — так все FK на
+ `users.telegram_id` работают одинаково для обоих типов аккаунтов.
+ Проверка "настоящий Telegram?" — `telegram_id > 0`.
 2. **`referrer_id`** в `users` — self-referencing FK, реализует
-   реферальную цепочку "кто кого пригласил".
+ реферальную цепочку "кто кого пригласил".
 3. **`marzban_username`** — уникален и в `users`, и в `devices`, формат
-   `tg_{telegram_id}` для Telegram-пользователей, `web_{id}` для
-   веб-аккаунтов. Это внешний контракт с Marzban — не менять формат.
+ `tg_{telegram_id}` для Telegram-пользователей, `web_{id}` для
+ веб-аккаунтов. Это внешний контракт с Marzban — не менять формат.
 4. Любая новая таблица с FK на пользователя — на `users.telegram_id`,
-   не заводи отдельный "универсальный" `user_id` без необходимости.
+ не заводи отдельный "универсальный" `user_id` без необходимости.

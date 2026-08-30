@@ -1,13 +1,13 @@
-# 🔌 API Reference
+# API Reference
 
 Всё живёт в `bot/api.py` (FastAPI). Два больших семейства эндпоинтов:
 
 - **`/api/*`** — публичное API для сайта (`landing/`) и Mini App (`webapp/`).
-  Identity — через `_resolve_tg_id()` (Telegram initData **или** cookie
-  `star_session`), см. `AGENTS/roles/backend.md`.
+ Identity — через `_resolve_tg_id()` (Telegram initData **или** cookie
+ `star_session`), см. `AGENTS/roles/backend.md`.
 - **`/web/*`** — API веб-админки (`admin/index.html`). Identity — общий
-  `Authorization: Bearer <ADMIN_WEB_KEY>` (один ключ на всех
-  администраторов, не per-user учётки).
+ `Authorization: Bearer <ADMIN_WEB_KEY>` (один ключ на всех
+ администраторов, не per-user учётки).
 
 Плюс раздача HTML-страниц (`/`, `/tariffs`, `/wiki/{slug}`, `/account`,
 `/login`, `/admin`, ...) — читаются с диска через `_serve_html`, не
@@ -56,10 +56,10 @@
 ## Важные детали контракта
 
 - **Identity в `/api/*` — всегда через `_resolve_tg_id`**, кроме мест,
-  которые сознательно требуют только Telegram (проверь перед тем, как
-  добавлять новый эндпоинт — использовать общий резолвер по умолчанию).
+ которые сознательно требуют только Telegram (проверь перед тем, как
+ добавлять новый эндпоинт — использовать общий резолвер по умолчанию).
 - **Вебхуки НЕ используют `_resolve_tg_id`** — они идентифицируют
-  платёж по `order_id`/`payload` из самого вебхука, а подлинность
-  проверяют подписью провайдера (MD5 у Robokassa, SHA-256 у ЮMoney).
+ платёж по `order_id`/`payload` из самого вебхука, а подлинность
+ проверяют подписью провайдера (MD5 у Robokassa, SHA-256 у ЮMoney).
 - Добавляя новый эндпоинт под фичу сайта — сначала проверь, нет ли уже
-  подходящего в этом списке, не дублируй.
+ подходящего в этом списке, не дублируй.

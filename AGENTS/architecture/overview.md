@@ -1,4 +1,4 @@
-# 🏗️ Architecture Overview
+# Architecture Overview
 
 ## Один процесс — не микросервисы
 
