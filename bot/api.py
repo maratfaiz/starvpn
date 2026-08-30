@@ -2266,96 +2266,12 @@ async def card_success():
     # вернувшийся с оплаты, это тот же браузер, что открывал чекаут на
     # /get-vpn, в localStorage будет лежать order_id гостевого заказа —
     # тогда поллим его статус и показываем QR + ключ прямо здесь, без Telegram.
-    return HTMLResponse("""
-<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>STAR VPN — Оплата</title>
-<style>
-  body{background:#060606;color:#EBE0CC;font-family:system-ui,sans-serif;margin:0;
-    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
-  .box{max-width:360px}
-  h2{margin:0 0 12px}
-  p{color:#8A7A60;line-height:1.6}
-  .spinner{width:28px;height:28px;border-radius:50%;border:3px solid rgba(255,184,0,.25);
-    border-top-color:#FFB800;animation:spin 1s linear infinite;margin:0 auto 18px}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  img.qr{width:220px;height:220px;border-radius:12px;margin:16px auto;display:block;background:#fff;padding:8px}
-  .link-box{background:rgba(255,255,255,.05);border:1px solid rgba(255,184,0,.2);border-radius:12px;
-    padding:12px;font-family:monospace;font-size:12px;word-break:break-all;margin:16px 0}
-  button{background:#FFB800;color:#1A1408;border:none;border-radius:10px;padding:12px 24px;
-    font-weight:700;font-size:14px;cursor:pointer}
-</style></head>
-<body><div class="box" id="box">
-  <div class="spinner"></div>
-  <h2>Оплата обрабатывается…</h2>
-  <p>Это займёт не больше минуты.</p>
-</div>
-<script>
-const orderId = localStorage.getItem('star_vpn_guest_order');
-const box = document.getElementById('box');
-
-function showTelegramReturn() {
-  box.innerHTML = '<h2>✅ Оплата прошла успешно</h2>' +
-    '<p>Подписка активируется автоматически в течение минуты.<br>' +
-    'Вернись в Telegram-бота, чтобы получить ключ.</p>';
-}
-
-async function pollGuestOrder(id, attempt) {
-  if (attempt > 40) {
-    box.innerHTML = '<h2>Оплата обрабатывается</h2><p>Обнови страницу через минуту — ключ появится здесь.</p>';
-    return;
-  }
-  try {
-    const res = await fetch('/api/guest/order/' + id);
-    const data = await res.json();
-    if (data.status === 'paid' && data.link) {
-      localStorage.removeItem('star_vpn_guest_order');
-      box.innerHTML =
-        '<h2>✅ VPN активирован!</h2>' +
-        '<p>Отсканируй QR или скопируй ссылку в приложение VPN-клиента.</p>' +
-        '<img class="qr" src="' + data.qr_url + '" alt="QR">' +
-        '<div class="link-box">' + data.link + '</div>' +
-        '<button onclick="navigator.clipboard.writeText(\\'' + data.link.replace(/'/g, "\\\\'") + '\\')">Скопировать ссылку</button>';
-      return;
-    }
-  } catch (e) { /* ignore, retry */ }
-  setTimeout(() => pollGuestOrder(id, attempt + 1), 2000);
-}
-
-if (orderId) {
-  pollGuestOrder(orderId, 0);
-} else {
-  showTelegramReturn();
-}
-</script>
-</body></html>
-""")
+    return _serve_html(_LANDING_DIR / "card-success.html")
 
 
 @app.get("/card/fail", response_class=HTMLResponse, include_in_schema=False)
 async def card_fail():
-    return HTMLResponse("""
-<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>STAR VPN — Платёж не прошёл</title>
-<style>
-  body{background:#060606;color:#EBE0CC;font-family:system-ui,sans-serif;margin:0;
-    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
-  p{color:#8A7A60;line-height:1.6}
-  a{color:#FFB800;font-weight:700;text-decoration:none}
-</style></head>
-<body><div>
-<h2>❌ Платёж не прошёл</h2>
-<p id="hint">Попробуй ещё раз в Telegram-боте — раздел «Продлить подписку».</p>
-</div>
-<script>
-if (localStorage.getItem('star_vpn_guest_order')) {
-  localStorage.removeItem('star_vpn_guest_order');
-  document.getElementById('hint').innerHTML = 'Попробуй ещё раз: <a href="/get-vpn">вернуться к покупке</a>';
-}
-</script>
-</body></html>
-""")
+    return _serve_html(_LANDING_DIR / "card-fail.html")
 
 
 # ═══════════════════════════════════════════════════════════════════

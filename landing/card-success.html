@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Оплата прошла — STAR VPN</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased}
+:root{
+  --gold:#FFB800;--gold2:#FFD84D;
+  --gold-border:rgba(255,184,0,0.2);
+  --gold-dim:rgba(255,184,0,0.1);
+  --green:#4ADE80;
+  --bg:#060606;
+  --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;
+  --max:1240px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.7;overflow-x:hidden;min-height:100vh;display:flex;flex-direction:column}
+a{color:var(--gold);text-decoration:none}
+a:hover{color:var(--gold2)}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+#nav{position:sticky;top:0;z-index:100;padding:0 24px;background:rgba(6,6,6,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
+.nav-inner{max-width:var(--max);margin:0 auto;display:flex;align-items:center;height:64px}
+.nav-logo{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
+
+main{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px;text-align:center}
+.wrap{max-width:480px;width:100%}
+.status-icon{width:64px;height:64px;margin:0 auto 24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(74,222,128,.35);background:rgba(74,222,128,.08)}
+.status-icon svg{width:30px;height:30px;stroke:var(--green);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(22px,3.2vw,28px);font-weight:700;margin-bottom:12px}
+.lede{color:var(--text2);max-width:40ch;margin:0 auto 28px}
+
+.card{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:26px;margin-bottom:20px;text-align:left}
+.card-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);margin-bottom:16px}
+.steps{display:flex;flex-direction:column;gap:14px}
+.step{display:flex;gap:12px;align-items:flex-start}
+.step-num{width:22px;height:22px;border-radius:7px;background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold);font-family:'Space Grotesk',sans-serif;font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step p{color:var(--text);font-size:14.5px;line-height:1.55}
+.step p b{color:var(--gold2)}
+
+.perk-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;justify-content:center}
+.perk-pill{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);border:1px solid rgba(255,255,255,.08);border-radius:100px;padding:6px 12px}
+.perk-pill svg{width:13px;height:13px;stroke:var(--gold);fill:none;stroke-width:1.8}
+
+.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:8px}
+.btn{cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;padding:13px 24px;border-radius:12px;text-decoration:none;white-space:nowrap;border:none;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--gold);color:#000}
+.btn-primary:hover{background:var(--gold2);color:#000}
+.btn-ghost{border:1px solid rgba(255,255,255,.16);color:var(--text)}
+.btn-ghost:hover{border-color:var(--gold-border);color:var(--gold)}
+
+.qr-wrap{margin:6px auto 18px;display:flex;justify-content:center}
+.qr-wrap img{width:200px;height:200px;border-radius:14px;background:#fff;padding:10px}
+.link-box{background:rgba(0,0,0,.4);border:1px solid var(--gold-border);border-radius:12px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;word-break:break-all;margin-bottom:16px;color:var(--text2)}
+
+.install-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:6px}
+.install-link{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.08);color:var(--text);font-size:13px;font-weight:600}
+.install-link:hover{border-color:var(--gold-border);color:var(--gold)}
+.install-link svg{width:15px;height:15px;stroke:var(--gold);fill:none;stroke-width:1.7;flex-shrink:0}
+
+.spinner{width:26px;height:26px;border-radius:50%;border:2.5px solid rgba(255,184,0,.2);border-top-color:var(--gold);animation:spin .8s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.links{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;font-size:13.5px;color:var(--text2);margin-top:24px}
+
+footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
+.footer-inner{max-width:var(--max);margin:0 auto;padding:24px;display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between;font-size:12.5px;color:var(--text3)}
+.footer-inner a{color:var(--text2)}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">STAR VPN</a>
+  </div>
+</nav>
+
+<main>
+  <div class="wrap" id="box">
+    <div class="spinner"></div>
+    <h1>Оплата обрабатывается</h1>
+    <p class="lede">Это займёт не больше минуты — не закрывайте страницу.</p>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span>© 2026 STAR VPN</span>
+    <span style="display:flex;gap:20px;flex-wrap:wrap">
+      <a href="/privacy">Конфиденциальность</a>
+      <a href="/terms">Условия</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+const CHECK_ICON = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-opacity=".9"></circle><path d="M8 12.5l2.5 2.5L16 9"></path></svg>';
+
+function telegramState() {
+  document.getElementById('box').innerHTML = `
+    <div class="status-icon">${CHECK_ICON}</div>
+    <h1>Оплата прошла успешно</h1>
+    <p class="lede">Подписка активируется автоматически — обычно в течение минуты.</p>
+    <div class="card">
+      <div class="card-title">Что дальше</div>
+      <div class="steps">
+        <div class="step"><div class="step-num">1</div><p>Вернитесь в <b>Telegram-бота</b> — там уже виден статус активной подписки.</p></div>
+        <div class="step"><div class="step-num">2</div><p>Откройте раздел <b>«Мои устройства»</b> и добавьте ключ для своего телефона, ноутбука или ТВ.</p></div>
+        <div class="step"><div class="step-num">3</div><p>Подключитесь через приложение — ссылка на установку есть прямо в боте.</p></div>
+      </div>
+    </div>
+    <div class="perk-row">
+      <span class="perk-pill"><svg viewBox="0 0 24 24"><path d="M12 2l7 4v6c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z"/></svg>Zero Logs</span>
+      <span class="perk-pill"><svg viewBox="0 0 24 24"><path d="M7 3h10a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"/></svg>До 3 устройств</span>
+    </div>
+    <div class="actions">
+      <a class="btn btn-primary" href="https://t.me/starisvpnbot">Открыть Telegram</a>
+      <a class="btn btn-ghost" href="/account">Личный кабинет</a>
+    </div>
+    <div class="links">
+      <a href="/tariffs">Тарифы</a>
+      <a href="/support">Поддержка</a>
+      <a href="/wiki">База знаний</a>
+    </div>
+  `;
+}
+
+async function pollGuestOrder(id, attempt) {
+  const box = document.getElementById('box');
+  if (attempt > 40) {
+    box.innerHTML = `
+      <div class="status-icon">${CHECK_ICON}</div>
+      <h1>Оплата обрабатывается</h1>
+      <p class="lede">Иногда это занимает чуть больше минуты. Обновите страницу — ключ появится здесь автоматически.</p>
+      <div class="actions"><a class="btn btn-primary" href="/support">Написать в поддержку</a></div>
+    `;
+    return;
+  }
+  try {
+    const res = await fetch('/api/guest/order/' + id);
+    const data = await res.json();
+    if (data.status === 'paid' && data.link) {
+      localStorage.removeItem('star_vpn_guest_order');
+      box.innerHTML = `
+        <div class="status-icon">${CHECK_ICON}</div>
+        <h1>VPN активирован</h1>
+        <p class="lede">Отсканируйте QR-код или скопируйте ссылку в приложение VPN-клиента.</p>
+        <div class="qr-wrap"><img src="${data.qr_url}" alt="QR-код подключения"></div>
+        <div class="link-box" id="vlessLink"></div>
+        <div class="actions" style="margin-bottom:28px">
+          <button class="btn btn-primary" id="copyBtn">Скопировать ссылку</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Инструкция по устройствам</div>
+          <div class="install-links">
+            <a class="install-link" href="/wiki/install-ios"><svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"></rect></svg>iPhone / iPad</a>
+            <a class="install-link" href="/wiki/install-android"><svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"></rect></svg>Android</a>
+            <a class="install-link" href="/wiki/install-windows"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1"></rect><path d="M8 20h8"></path></svg>Windows</a>
+            <a class="install-link" href="/wiki/install-macos"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1"></rect><path d="M8 20h8"></path></svg>macOS</a>
+          </div>
+        </div>
+        <div class="links">
+          <a href="/tariffs">Тарифы</a>
+          <a href="/support">Поддержка</a>
+        </div>
+      `;
+      const linkEl = document.getElementById('vlessLink');
+      linkEl.textContent = data.link;
+      document.getElementById('copyBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(data.link);
+      });
+      return;
+    }
+  } catch (e) { /* ignore, retry */ }
+  setTimeout(() => pollGuestOrder(id, attempt + 1), 2000);
+}
+
+const orderId = localStorage.getItem('star_vpn_guest_order');
+if (orderId) {
+  pollGuestOrder(orderId, 0);
+} else {
+  telegramState();
+}
+
+/* ═══ Starfield ══════════════════════════════════════════════ */
+(function(){
+  const c = document.getElementById('bg-canvas');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize, {passive:true});
+  const stars = Array.from({length:340}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.6 + 0.3,
+    o: Math.random() * 0.6 + 0.35,
+    sp: Math.random() * 0.0004 + 0.00006,
+    ph: Math.random() * Math.PI * 2,
+  }));
+  let f = 0;
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height); f++;
+    for(const s of stars){
+      const a = s.o * (0.55 + 0.45 * Math.sin(f * s.sp * 200 + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,216,120,${a})`; ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
