@@ -45,6 +45,15 @@ body{
 /* ─── Starfield canvas ─────────────────────────────────────── */
 #bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
 
+#site-splash{position:fixed;inset:0;z-index:9999;background:var(--bg,#060606);display:flex;align-items:center;justify-content:center;transition:opacity .5s ease}
+#site-splash.hide{opacity:0;pointer-events:none}
+#splash-canvas{position:absolute;inset:0}
+.splash-inner{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px}
+.splash-mark{width:30px;height:30px;fill:var(--gold);animation:splashPulse 1.8s ease-in-out infinite}
+.splash-word{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:800;letter-spacing:.04em;color:var(--gold)}
+.splash-loading{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(235,224,204,.4);margin-top:8px;animation:splashPulse 1.6s ease-in-out infinite}
+@keyframes splashPulse{0%,100%{opacity:.45}50%{opacity:1}}
+
 /* ─── NAV ──────────────────────────────────────────────────── */
 #nav{
   position:sticky;top:0;z-index:100;
@@ -512,6 +521,15 @@ footer{
 </style>
 </head>
 <body>
+
+<div id="site-splash">
+  <canvas id="splash-canvas"></canvas>
+  <div class="splash-inner">
+    <svg viewBox="0 0 24 24" class="splash-mark"><path d="M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z"></path></svg>
+    <div class="splash-word">STAR VPN</div>
+    <div class="splash-loading">Загрузка</div>
+  </div>
+</div>
 
 <div id="progress"></div>
 <canvas id="bg-canvas"></canvas>
@@ -1052,6 +1070,60 @@ footer{
 </footer>
 
 <script>
+/* ═══ Экран загрузки ═══════════════════════════════════════════ */
+(function(){
+  const c = document.getElementById('splash-canvas');
+  const ctx = c.getContext('2d');
+  function resize(){ c.width = innerWidth; c.height = innerHeight; }
+  resize(); window.addEventListener('resize', resize, {passive:true});
+  const stars = Array.from({length:180}, () => ({
+    x: Math.random(), y: Math.random(),
+    r: Math.random() * 1.5 + 0.3,
+    o: Math.random() * 0.6 + 0.35,
+    sp: Math.random() * 0.0004 + 0.00006,
+    ph: Math.random() * Math.PI * 2,
+  }));
+  let comets = [], nextCometAt = 0, raf, running = true;
+  function spawnComet(){
+    const fromLeft = Math.random() > 0.5;
+    const x = fromLeft ? Math.random()*c.width*0.4 : c.width*0.6 + Math.random()*c.width*0.4;
+    comets.push({x, y:-20, vx:(fromLeft?1:-1)*(1.6+Math.random()*1.2), vy:2.4+Math.random()*1.6, len:70+Math.random()*50, life:1});
+  }
+  function draw(t){
+    if (!running) return;
+    ctx.clearRect(0,0,c.width,c.height);
+    for(const s of stars){
+      const a = s.o * (0.55 + 0.45 * Math.sin(t * s.sp * 6 + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,216,120,${a})`; ctx.fill();
+    }
+    if (t > nextCometAt){ spawnComet(); nextCometAt = t + 900 + Math.random()*900; }
+    comets = comets.filter(cm => cm.life > 0 && cm.y < c.height+40);
+    comets.forEach(cm => {
+      cm.x += cm.vx; cm.y += cm.vy; cm.life -= 0.012;
+      const angle = Math.atan2(cm.vy, cm.vx);
+      const tailX = cm.x - Math.cos(angle)*cm.len, tailY = cm.y - Math.sin(angle)*cm.len;
+      const grad = ctx.createLinearGradient(cm.x, cm.y, tailX, tailY);
+      grad.addColorStop(0, `rgba(255,226,150,${cm.life})`);
+      grad.addColorStop(1, 'rgba(255,226,150,0)');
+      ctx.strokeStyle = grad; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(cm.x, cm.y); ctx.lineTo(tailX, tailY); ctx.stroke();
+    });
+    raf = requestAnimationFrame(draw);
+  }
+  raf = requestAnimationFrame(draw);
+
+  function hideSplash(){
+    const splash = document.getElementById('site-splash');
+    if (!splash) return;
+    splash.classList.add('hide');
+    setTimeout(() => { running = false; cancelAnimationFrame(raf); splash.remove(); }, 550);
+  }
+  window.addEventListener('load', () => setTimeout(hideSplash, 500));
+  setTimeout(hideSplash, 3500); // на случай медленной загрузки — не держим сплэш вечно
+})();
+
 /* ═══ Рекламный баннер (редактируется из админ-панели) ═══════════ */
 /* Тот же набор ключей — в admin/index.html (BANNER_ICONS), см. AD_BANNER_ICONS в bot/api.py */
 const BANNER_ICONS = {
