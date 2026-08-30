@@ -11,6 +11,7 @@ import hmac
 import json
 import logging
 import os
+import secrets
 import urllib.parse
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -19,7 +20,7 @@ import httpx
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -260,6 +261,42 @@ async def serve_world_dots():
     return HTMLResponse(content="", status_code=404)
 
 
+@app.get("/favicon.svg", include_in_schema=False)
+async def serve_favicon_svg():
+    from fastapi.responses import FileResponse
+    p = _LANDING_DIR / "favicon.svg"
+    if p.exists():
+        return FileResponse(str(p), media_type="image/svg+xml")
+    return HTMLResponse(content="", status_code=404)
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def serve_favicon_ico():
+    from fastapi.responses import FileResponse
+    p = _LANDING_DIR / "favicon.ico"
+    if p.exists():
+        return FileResponse(str(p), media_type="image/x-icon")
+    return HTMLResponse(content="", status_code=404)
+
+
+@app.get("/favicon.png", include_in_schema=False)
+async def serve_favicon_png():
+    from fastapi.responses import FileResponse
+    p = _LANDING_DIR / "favicon.png"
+    if p.exists():
+        return FileResponse(str(p), media_type="image/png")
+    return HTMLResponse(content="", status_code=404)
+
+
+@app.get("/apple-touch-icon.png", include_in_schema=False)
+async def serve_apple_touch_icon():
+    from fastapi.responses import FileResponse
+    p = _LANDING_DIR / "apple-touch-icon.png"
+    if p.exists():
+        return FileResponse(str(p), media_type="image/png")
+    return HTMLResponse(content="", status_code=404)
+
+
 # ─── Auth ─────────────────────────────────────────────────────────────────────
 
 def _parse_tg_id(init_data: str) -> int:
@@ -463,6 +500,81 @@ async def account_logout(request: Request):
 
     resp = JSONResponse({"ok": True})
     resp.delete_cookie(SESSION_COOKIE_NAME, path="/")
+    return resp
+
+
+# ─── Вход через Telegram (OIDC, oauth.telegram.org) ──────────────────────────
+# Не Mini App и не classic Login Widget — полноценный OAuth2/OIDC authorization
+# code flow с PKCE. Настраивается в BotFather у бота (Login Widget), там же
+# нужно зарегистрировать redirect_uri (см. telegram_oauth.redirect_uri()).
+
+_TG_OAUTH_COOKIE = "tg_oauth_pkce"
+_TG_OAUTH_COOKIE_PATH = "/api/telegram-oauth"
+
+
+@app.get("/api/telegram-oauth/start", include_in_schema=False)
+async def telegram_oauth_start():
+    from bot.utils.telegram_oauth import build_authorize_url, generate_pkce_pair
+
+    if not settings.telegram_oauth_client_id or not settings.telegram_oauth_client_secret:
+        return HTMLResponse("Вход через Telegram временно недоступен", status_code=503)
+
+    state = secrets.token_urlsafe(24)
+    verifier, challenge = generate_pkce_pair()
+
+    resp = RedirectResponse(build_authorize_url(state, challenge), status_code=302)
+    resp.set_cookie(
+        _TG_OAUTH_COOKIE, f"{state}.{verifier}",
+        max_age=600, httponly=True, secure=True, samesite="lax", path=_TG_OAUTH_COOKIE_PATH,
+    )
+    return resp
+
+
+@app.get("/api/telegram-oauth/callback", include_in_schema=False)
+async def telegram_oauth_callback(
+    request: Request, code: str | None = None, state: str | None = None, error: str | None = None
+):
+    from bot.utils.telegram_oauth import exchange_code, verify_id_token
+    from bot.utils.webauth import (
+        SESSION_COOKIE_NAME, SESSION_TTL, create_web_session, get_or_create_user_by_telegram_id,
+    )
+
+    def _fail():
+        resp = RedirectResponse(f"{settings.site_url}/login?tg_error=1", status_code=302)
+        resp.delete_cookie(_TG_OAUTH_COOKIE, path=_TG_OAUTH_COOKIE_PATH)
+        return resp
+
+    if error or not code or not state:
+        return _fail()
+
+    saved_state, _, verifier = (request.cookies.get(_TG_OAUTH_COOKIE) or "").partition(".")
+    if not verifier or not hmac.compare_digest(saved_state, state):
+        return _fail()
+
+    try:
+        tokens = await exchange_code(code, verifier)
+        claims = verify_id_token(tokens["id_token"])
+        tg_id = int(claims.get("id") or claims["sub"])
+    except Exception as e:
+        logger.warning("Ошибка входа через Telegram OAuth: %s", e)
+        return _fail()
+
+    username = claims.get("preferred_username")
+    full_name = claims.get("name") or " ".join(
+        filter(None, [claims.get("given_name"), claims.get("family_name")])
+    ) or None
+
+    async with AsyncSessionLocal() as session:
+        user = await get_or_create_user_by_telegram_id(tg_id, username, full_name, session)
+        session_token = await create_web_session(user, session)
+
+    resp = RedirectResponse(f"{settings.site_url}/account", status_code=302)
+    resp.delete_cookie(_TG_OAUTH_COOKIE, path=_TG_OAUTH_COOKIE_PATH)
+    resp.set_cookie(
+        SESSION_COOKIE_NAME, session_token,
+        max_age=int(SESSION_TTL.total_seconds()),
+        httponly=True, secure=True, samesite="lax", path="/",
+    )
     return resp
 
 

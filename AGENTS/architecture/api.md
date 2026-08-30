@@ -22,6 +22,8 @@
 | `POST` | `/api/account/verify-email` | Подтвердить код → `email_verified=True`, выставить cookie `star_session` |
 | `POST` | `/api/account/login` | Вход по email+паролю → выставить cookie `star_session` |
 | `POST` | `/api/account/logout` | Выйти из веб-аккаунта |
+| `GET` | `/api/telegram-oauth/start` | Начать вход через Telegram (OIDC) — редирект на `oauth.telegram.org` |
+| `GET` | `/api/telegram-oauth/callback` | Приёмник редиректа от Telegram — обменивает code на id_token, выставляет `star_session` |
 | `GET` | `/api/me` | Текущий пользователь (статус подписки, устройства, и т.д.) |
 | `GET`/`POST`/`DELETE` | `/api/devices*` | Список / добавление / удаление устройств |
 | `GET` | `/api/devices/{id}/link` | Получить VLESS-ссылку/QR устройства |

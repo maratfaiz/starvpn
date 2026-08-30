@@ -81,6 +81,28 @@ async def _get_or_create_user_by_email(email: str, session: AsyncSession) -> Use
     raise RuntimeError("Failed to allocate a synthetic user id after 5 attempts")
 
 
+async def get_or_create_user_by_telegram_id(
+    telegram_id: int, username: str | None, full_name: str | None, session: AsyncSession
+) -> User:
+    """Как cmd_start в bot/handlers/start.py, но для входа через Telegram OIDC
+    на сайте — реальный (положительный) telegram_id, а не синтетический."""
+    r = await session.execute(select(User).where(User.telegram_id == telegram_id))
+    user = r.scalar_one_or_none()
+    if user:
+        if username and user.username != username:
+            user.username = username
+        if full_name and user.full_name != full_name:
+            user.full_name = full_name
+        await session.commit()
+        return user
+
+    user = User(telegram_id=telegram_id, username=username, full_name=full_name or "друг")
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+    return user
+
+
 def _generate_code() -> str:
     """6-значный числовой код, криптографически случайный."""
     return f"{secrets.randbelow(1_000_000):06d}"

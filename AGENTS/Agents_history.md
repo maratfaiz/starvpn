@@ -182,3 +182,79 @@
  молча.
  - Работа этой сессии на момент записи ещё не закоммичена и не
  запушена — коммит/пуш в `original` ожидается сразу после этой записи.
+
+### 2026-08-30 — Фавикон (звезда, не лого пользователя) + настоящий вход через Telegram (OIDC)
+
+- **Роль:** frontend + backend
+- **Кто:** Claude (Claude Code)
+- **Что сделал:**
+ - Пользователь дважды настаивал использовать как фавикон присланное
+ им золотое треугольное лого — отказался оба раза (см. ADR-008):
+ оно визуально совпадает с товарным знаком Anthropic, риск остаётся
+ риском независимо от того, что просит владелец продукта. Вместо
+ этого сделал оригинальный фавикон — пятиконечная золотая звезда на
+ тёмном скруглённом квадрате, `landing/favicon.svg` + растровые
+ фолбэки (`favicon.ico`, `favicon.png`, `apple-touch-icon.png`),
+ сгенерированные из SVG через headless Chromium (Playwright, т.к. в
+ песочнице не было `rsvg-convert`/`cairosvg`). Раньше фавиконом на
+ всех 22 страницах сайта/админки был `logo.png` (полноразмерный
+ "STAR VPN" wordmark) — на 16px он был практически нечитаем; заменил
+ везде на новый набор, плюс роуты `/favicon.svg`, `/favicon.ico`,
+ `/favicon.png`, `/apple-touch-icon.png` в `bot/api.py`.
+ - Реализовал реальный вход через Telegram на сайте — до этого кнопка
+ "Войти через Telegram" на `/login` вела просто на `t.me/starisvpnbot`
+ (открывала бота, не логинила на сайте). Пользователь прислал скрин
+ настроек Telegram Login Widget (Client ID/Client Secret/Redirect
+ URIs/Trusted Origins) и реальный client secret в чат — секрет ушёл
+ только в `.env`/конфиг, нигде не закоммичен. Это не classic
+ script-embed widget и не Mini App — полноценный OIDC/OAuth2
+ authorization-code flow с PKCE через `oauth.telegram.org` (см.
+ ADR-007 для разбора трёх похожих механизмов Telegram-логина и почему
+ выбран именно этот).
+ - Перед реализацией свежий механизм (Client ID/Secret/Redirect URIs —
+ непохоже на классический Login Widget) проверил через WebSearch/
+ WebFetch по `core.telegram.org/bots/telegram-login`, а не угадывал
+ по памяти — получил точные эндпоинты (`oauth.telegram.org/auth`,
+ `/token`, JWKS на `/.well-known/jwks.json`) и структуру id_token.
+ - Новое: `bot/utils/telegram_oauth.py` (PKCE, authorize URL, обмен
+ code→token, проверка подписи id_token через `PyJWKClient`),
+ `webauth.get_or_create_user_by_telegram_id` (аналог `cmd_start` из
+ `bot/handlers/start.py`, но для реального telegram_id с сайта),
+ `GET /api/telegram-oauth/start` и `GET /api/telegram-oauth/callback`
+ в `bot/api.py`. `state`+`code_verifier` живут в httponly cookie
+ 10 минут (`tg_oauth_pkce`) — отдельной таблицы под это не заводил,
+ это одноразовый handshake браузера. Добавлены `TELEGRAM_OAUTH_CLIENT_ID`/
+ `_SECRET` в `bot/config.py`/`.env.example`, зависимости `PyJWT`,
+ `cryptography` в `bot/requirements.txt`.
+ - `landing/login.html`: обе Telegram-кнопки (`.nav-tg-btn`, `.tg-btn`)
+ теперь ведут на `/api/telegram-oauth/start` вместо диплинка на бота;
+ добавлена обработка `?tg_error=1` (редирект при неудачном логине).
+ - Протестировано локально в изолированном venv (в основной песочнице
+ стоит несовместимый системный `cryptography`/`PyJWT` от Debian):
+ PKCE/authorize URL, проверка подписи id_token на самоподписанном
+ RSA-ключе с подменённым JWKS-клиентом (в т.ч. отказ по неверной
+ audience и по истёкшему `exp`), и `get_or_create_user_by_telegram_id`
+ на SQLite (создание + обновление username/full_name при повторном
+ входе).
+- **Затронутые файлы/папки:** `landing/favicon.svg` (новый),
+ `landing/favicon.ico`/`favicon.png`/`apple-touch-icon.png` (новые,
+ бинарные), все 22 HTML-страницы `landing/`+`admin/` (замена `<link
+ rel="icon">`), `bot/api.py`, `bot/config.py`,
+ `bot/utils/telegram_oauth.py` (новый), `bot/utils/webauth.py`,
+ `bot/requirements.txt`, `.env.example`, `AGENTS/architecture/api.md`,
+ `AGENTS/decisions/ADR.md`, `CLAUDE.md`
+- **Важно для следующего агента:**
+ - Кнопка "Войти через Telegram" не заработает на проде, пока в
+ `.env` не заданы `TELEGRAM_OAUTH_CLIENT_ID`/`TELEGRAM_OAUTH_CLIENT_SECRET`
+ и пока в BotFather (бот → Login Widget) не зарегистрированы Redirect
+ URI `https://starvpnservice.ru/api/telegram-oauth/callback` и Trusted
+ Origin `https://starvpnservice.ru` — без этого `/api/telegram-oauth/start`
+ отдаёт 503 (нет ключей) либо Telegram отклонит редирект (нет URI).
+ - Presented client secret в этой сессии был вставлен пользователем
+ открытым текстом в чат — если это где-то залогировано за пределами
+ самой сессии, стоит по возможности перевыпустить (Revoke → новый
+ secret в BotFather) и обновить `.env` на сервере.
+ - Не путай новый OIDC-логин с уже существующим Mini App `initData` —
+ это два независимых пути получить `telegram_id`, оба сходятся в
+ `create_web_session`/`_resolve_tg_id`, но триггерятся по-разному
+ (редирект браузера vs. открытие внутри Telegram).

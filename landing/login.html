@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Вход — STAR VPN</title>
 <meta name="description" content="Вход в личный кабинет STAR VPN по email и паролю, либо через Telegram.">
-<link rel="icon" href="/logo.png" type="image/png">
-<link rel="apple-touch-icon" href="/logo.png">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -112,7 +113,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
       <a href="/tariffs">Тарифы</a>
       <a href="/wiki">Wiki</a>
     </div>
-    <a class="nav-tg-btn" href="https://t.me/starisvpnbot">Войти через Telegram</a>
+    <a class="nav-tg-btn" href="/api/telegram-oauth/start">Войти через Telegram</a>
   </div>
 </nav>
 
@@ -179,7 +180,8 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
       </div>
 
       <div class="divider"><div class="divider-line"></div><span>или</span><div class="divider-line"></div></div>
-      <a class="tg-btn" href="https://t.me/starisvpnbot">
+      <div class="err-line" id="tgErr"></div>
+      <a class="tg-btn" href="/api/telegram-oauth/start">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.5 4.5L2.7 12.1c-1.2.5-1.2 1.2-.2 1.5l4.6 1.4 1.8 5.6c.2.6.4.8.9.8.4 0 .6-.2.9-.5l2.4-2.3 4.9 3.6c.9.5 1.5.2 1.8-.8l3.2-15c.3-1.3-.4-1.8-1.5-1.3zM8.5 14.3l9.7-6.2c.5-.3.9-.1.5.2l-8.2 7.5-.3 3.3-1.5-4.6z"/></svg>
         Продолжить в Telegram
       </a>
@@ -234,6 +236,12 @@ const resendBtn = document.getElementById('resendBtn');
 const backLink = document.getElementById('backLink');
 
 let pendingEmail = '';
+
+/* ── Ошибка входа через Telegram (редирект с /api/telegram-oauth/callback) ── */
+if (new URLSearchParams(location.search).get('tg_error')) {
+  document.getElementById('tgErr').textContent = 'Не удалось войти через Telegram. Попробуйте ещё раз.';
+  history.replaceState(null, '', location.pathname);
+}
 
 function showAuthPane(tab) {
   codePane.classList.remove('show');

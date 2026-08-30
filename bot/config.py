@@ -62,6 +62,11 @@ class Settings(BaseSettings):
     smtp_from: str = Field("STAR VPN <noreply@starvpnservice.ru>", env="SMTP_FROM")
     site_url: str = Field("https://starvpnservice.ru", env="SITE_URL")
 
+    # Telegram OIDC login (oauth.telegram.org) — "Войти через Telegram" на сайте.
+    # Client ID/Secret выдаются в настройках бота ("Login Widget") в BotFather.
+    telegram_oauth_client_id: str = Field("", env="TELEGRAM_OAUTH_CLIENT_ID")
+    telegram_oauth_client_secret: str = Field("", env="TELEGRAM_OAUTH_CLIENT_SECRET")
+
     # Business config
     subscription_price_rub: int = Field(100, env="SUBSCRIPTION_PRICE_RUB")
     subscription_days: int = Field(30, env="SUBSCRIPTION_DAYS")

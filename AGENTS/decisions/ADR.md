@@ -141,3 +141,75 @@
  входа по email должен использовать `hash_password`/`verify_password`
  и `create_verification_code`/`check_verification_code` из
  `bot/utils/webauth.py`, а не изобретать токены заново.
+
+## ADR-007 — Вход через Telegram на сайте: настоящий OIDC, а не widget-скрипт и не диплинк на бота
+
+- **Дата:** 2026-08-30
+- **Статус:** Принято
+- **Контекст:** Кнопка "Войти через Telegram" на `/login` раньше вела
+ просто на `https://t.me/starisvpnbot` — это открывало бота, а не
+ логинило пользователя на сайте. Нужен был реальный вход в веб-аккаунт
+ через Telegram. У Telegram есть три разных механизма с похожими
+ названиями: (1) классический script-embed Login Widget
+ (`telegram-widget.js` + `data-onauth`, проверка через HMAC от bot
+ token), (2) Mini App `initData` (уже используется, но требует, чтобы
+ страница была открыта внутри Telegram), (3) новый OIDC/OAuth2
+ authorization-code flow с PKCE через `oauth.telegram.org`, который
+ настраивается в BotFather в разделе "Login Widget" с Client ID/Client
+ Secret/Redirect URIs/Trusted Origins.
+- **Решение:** Выбран вариант (3) — полноценный OIDC. Реализация в
+ `bot/utils/telegram_oauth.py`: `GET /api/telegram-oauth/start` строит
+ PKCE-пару и редиректит на `oauth.telegram.org/auth`; `GET
+ /api/telegram-oauth/callback` меняет `code` на `id_token` (Basic auth
+ client_id:client_secret на `oauth.telegram.org/token`), проверяет
+ подпись через JWKS (`PyJWKClient`, поддержка RS256/ES256/EdDSA/ES256K),
+ и создаёт/находит `User` по **настоящему** (положительному)
+ `telegram_id` из токена (`webauth.get_or_create_user_by_telegram_id`) —
+ в отличие от email-входа, здесь синтетический ID не нужен, ID уже
+ настоящий. `state`+`code_verifier` временно хранятся в httponly cookie
+ (`tg_oauth_pkce`, 10 минут, path ограничен `/api/telegram-oauth`) —
+ отдельная таблица в БД для этого не заводилась, это одноразовый
+ handshake браузера, а не долгоживущее состояние.
+- **Почему не иначе:** Classic Login Widget (вариант 1) требует
+ встраивать сторонний JS-виджет Telegram на страницу и завязан на
+ `/setdomain` в BotFather — OIDC даёт тот же результат без стороннего
+ скрипта на странице и с проверяемой подписью через стандартный JWKS,
+ что проще держать в соответствии с Zero Logs/security-практиками
+ проекта. Просто ссылка на бота (то, что было) не даёт входа на сайт
+ вообще — это не login, а redirect в другое приложение.
+- **Последствия:** `TELEGRAM_OAUTH_CLIENT_ID`/`_SECRET` обязательны в
+ `.env` для работы кнопки — без них `/api/telegram-oauth/start`
+ возвращает 503, а не падает. В BotFather у бота в Login Widget должны
+ быть зарегистрированы Redirect URI `{SITE_URL}/api/telegram-oauth/callback`
+ и Trusted Origin `{SITE_URL}` — иначе Telegram отклонит редирект. Не
+ путай это с Mini App `initData` — это два разных способа получить
+ telegram_id, оба ведут в `_resolve_tg_id()`/`create_web_session`, но
+ инициируются по-разному.
+
+## ADR-008 — Фавикон: собственная звезда, не изображение пользователя
+
+- **Дата:** 2026-08-30
+- **Статус:** Принято
+- **Контекст:** Пользователь дважды просил использовать как фавикон
+ присланное им изображение — золотая треугольная "A" со звездой-вырезом,
+ визуально совпадающая с логотипом Anthropic.
+- **Решение:** Изображение не использовано. Вместо него —
+ оригинальный фавикон: гладкая пятиконечная золотая звезда
+ (`#FFB800`) на тёмном скруглённом квадрате (`#0a0a0f`), в векторе
+ (`landing/favicon.svg`) с растровыми фолбэками
+ (`favicon.ico`, `favicon.png`, `apple-touch-icon.png`), сгенерированными
+ из того же SVG через headless Chromium (Playwright).
+- **Почему не иначе:** Присланное изображение — это, по сути,
+ товарный знак Anthropic; разместить его как фавикон VPN-сервиса
+ означало бы визуально намекать на несуществующую связь/одобрение со
+ стороны Anthropic — репутационный и юридический риск для продукта,
+ который не снимается тем, что владелец продукта лично попросил это
+ сделать.
+- **Последствия:** Если пользователь настоит на использовании именно
+ того изображения ещё раз — не подключай его молча; проговори риск
+ явно и, если он всё равно настаивает, оставь окончательное решение
+ ему, но не выполняй его в рамках автономной работы агента. Новый
+ фавикон встроен через `<link rel="icon" ...>`/`<link rel="apple-touch-icon">`
+ на всех страницах `landing/` и `admin/`, раздаётся отдельными роутами
+ в `bot/api.py` (`/favicon.svg`, `/favicon.ico`, `/favicon.png`,
+ `/apple-touch-icon.png`), как и `/logo.png`.
