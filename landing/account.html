@@ -140,8 +140,8 @@ main{min-width:0}
 .pay-card{background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:20px}
 .pay-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
 .pay-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--text)}
-.pay-icon{width:20px;height:20px;flex-shrink:0;stroke:var(--gold);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.5}
-.pay-where{font-size:15px;font-weight:700;color:var(--gold);font-family:'Space Grotesk',sans-serif}
+.pay-icon{width:20px;height:20px;flex-shrink:0;stroke:var(--text2);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.pay-where{font-size:15px;font-weight:700;color:var(--text);font-family:'Space Grotesk',sans-serif}
 @media(max-width:480px){
   .pay-grid{grid-template-columns:repeat(2,1fr);gap:8px}
   .pay-card{padding:14px;border-radius:14px}
@@ -152,9 +152,11 @@ main{min-width:0}
 
 .key-card-name{font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:6px}
 .key-card-hint{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px}
-.key-card-linkrow,.modal-linkrow{display:flex;align-items:stretch;gap:8px}
-.key-card-value,.modal-key{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 10px;word-break:break-all;flex:1;min-width:0;cursor:pointer;transition:border-color .2s;text-align:left}
-.key-card-value:hover,.modal-key:hover{border-color:rgba(255,184,0,.35)}
+.key-card-linkrow{display:flex;align-items:stretch;gap:8px}
+.key-card-value,.modal-key{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 10px;word-break:break-all;text-align:left}
+.key-card-value{flex:1;min-width:0;cursor:pointer;transition:border-color .2s}
+.key-card-value:hover{border-color:rgba(255,184,0,.35)}
+.modal-key{margin-bottom:14px}
 .key-card-open{flex-shrink:0;width:38px;display:flex;align-items:center;justify-content:center;background:var(--gold);border-radius:8px;color:#000;transition:background .2s}
 .key-card-open:hover{background:var(--gold2)}
 .key-card-open svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -528,12 +530,9 @@ main{min-width:0}
     <button class="modal-close" id="closeLinkModal"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     <h3 id="linkModalTitle">Устройство добавлено</h3>
     <p class="modal-hint">Открой в Happ, v2rayNG или другом клиенте — сервер добавится автоматически под именем «STAR VPN» и сам предупредит, когда подписка закончится.</p>
-    <div class="modal-linkrow">
-      <div class="modal-key mono" id="linkKey" title="Нажмите, чтобы скопировать"></div>
-      <a class="key-card-open" id="openLinkBtn" href="#" target="_blank" rel="noopener" title="Открыть ссылку" aria-label="Открыть ссылку">
-        <svg viewBox="0 0 24 24"><path d="M14 3h7v7M21 3l-9 9M5 5h6v2H7v10h10v-4h2v6H5z"/></svg>
-      </a>
-    </div>
+    <div class="modal-key mono" id="linkKey"></div>
+    <a class="btn" id="openLinkBtn" href="#" target="_blank" rel="noopener">Открыть ссылку</a>
+    <button class="btn-outline" id="copyKeyBtn">Скопировать ссылку</button>
   </div>
 </div>
 
@@ -901,7 +900,7 @@ function openLinkModal(title, subUrl) {
   document.getElementById('linkModalTitle').textContent = title;
   document.getElementById('linkKey').textContent = subUrl;
   document.getElementById('openLinkBtn').href = subUrl;
-  document.getElementById('linkKey').onclick = () => {
+  document.getElementById('copyKeyBtn').onclick = () => {
     navigator.clipboard.writeText(subUrl);
     showToast('Ссылка скопирована');
   };
