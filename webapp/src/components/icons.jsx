@@ -200,9 +200,9 @@ export function NavIcon({ name, color, size = 21 }) {
   switch (name) {
     case "home":
       return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
-          <path d="M3 11l9-8 9 8" />
-          <path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10" />
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round">
+          <path d="M3 17h18l-1.5-9-4.5 3.5L12 6 8.5 11.5 4 8z" />
+          <line x1="4" y1="20" x2="20" y2="20" />
         </svg>
       );
     case "devices":

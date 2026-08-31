@@ -1,7 +1,7 @@
 import { NavIcon } from "./icons.jsx";
 
 const TABS = [
-  { id: "home", label: "Главная", icon: "home" },
+  { id: "home", label: "Подписка", icon: "home" },
   { id: "devices", label: "Устройства", icon: "devices" },
   { id: "referral", label: "Рефералы", icon: "referral" },
   { id: "account", label: "Аккаунт", icon: "account" },
