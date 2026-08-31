@@ -1,11 +1,28 @@
-import { StarIcon, ShareIcon, MedalIcon, DiamondIcon, CheckIcon } from "../components/icons.jsx";
+import { StarIcon, ShareIcon, MedalIcon, DiamondIcon, UsersIcon } from "../components/icons.jsx";
 
-const ACHIEVEMENT_ICON = {
-  bronze: <MedalIcon size={26} color="#CD7F32" />,
-  silver: <MedalIcon size={26} color="#C0C0C0" />,
-  gold: <MedalIcon size={26} color="#FFD700" />,
-  diamond: <DiamondIcon size={26} color="#7DD3FC" />,
-};
+function pluralFriends(n) {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 14) return "друзей";
+  if (mod10 === 1) return "друг";
+  if (mod10 >= 2 && mod10 <= 4) return "друга";
+  return "друзей";
+}
+
+function achievementIcon(icon, size) {
+  switch (icon) {
+    case "bronze":
+      return <MedalIcon size={size} color="#CD7F32" />;
+    case "silver":
+      return <MedalIcon size={size} color="#C0C0C0" />;
+    case "gold":
+      return <MedalIcon size={size} color="#FFD700" />;
+    case "diamond":
+      return <DiamondIcon size={size} color="#7DD3FC" />;
+    default:
+      return null;
+  }
+}
 
 const HISTORY_ICON = {
   referral: (
@@ -33,8 +50,17 @@ export default function ReferralsScreen({ referral, daysHistory, copied, onCopyC
         <div className="font-medium text-[13px] text-ink/50 mt-2">
           +{referral.daysPerReferral} дней за каждого друга, который оплатит подписку и останется с нами {referral.vestingDays} дней
         </div>
+      </div>
 
-        <div className="mt-[18px] flex items-center gap-2 bg-white/[.05] border border-white/[.08] rounded-[14px] px-3.5 py-3">
+      {/* link + stats, merged into one section */}
+      <div className="bg-app-card border border-white/[.06] rounded-[18px] p-4">
+        <div className="mb-3">
+          <span className="font-display font-semibold text-[11px] text-ink/40 tracking-widest uppercase">
+            Ваша ссылка
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 bg-white/[.05] border border-white/[.08] rounded-[14px] px-3.5 py-3">
           <span className="flex-1 font-bold text-[15px] text-gold tracking-wider font-mono">{referral.code}</span>
           <button
             onClick={onCopyCode}
@@ -43,52 +69,64 @@ export default function ReferralsScreen({ referral, daysHistory, copied, onCopyC
             {copied ? "Скопировано" : "Копировать"}
           </button>
         </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-2.5">
-        <div className="bg-app-card border border-white/[.06] rounded-2xl py-3.5 px-2 text-center">
-          <div className="font-display font-extrabold text-[19px] text-ink">{referral.invitedCount}</div>
-          <div className="font-medium text-[10.5px] text-ink/40 mt-1">приглашено</div>
-        </div>
-        <div className="bg-app-card border border-white/[.06] rounded-2xl py-3.5 px-2 text-center">
-          <div className="font-display font-extrabold text-[19px] text-gold">{referral.daysEarned}</div>
-          <div className="font-medium text-[10.5px] text-ink/40 mt-1">дней получено</div>
+        <div className="grid grid-cols-2 gap-2.5 mt-4 pt-4 border-t border-white/[.06]">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-[12px] text-ink/50">Приглашено</span>
+              <UsersIcon size={15} color="rgba(245,243,238,.35)" />
+            </div>
+            <div className="font-display font-extrabold text-lg text-ink">{referral.invitedCount}</div>
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-[12px] text-ink/50">Дней получено</span>
+              <StarIcon size={15} />
+            </div>
+            <div className="font-display font-extrabold text-lg text-gold">{referral.daysEarned}</div>
+          </div>
         </div>
       </div>
 
       <div className="bg-app-card border border-white/[.06] rounded-2xl px-4 py-3.5">
-        <div className="font-semibold text-[13px] text-ink/60 mb-1">Как начисляется</div>
-        <div className="font-medium text-[12.5px] text-ink/50 leading-relaxed">
-          Друг оплачивает подписку → остаётся активным {referral.vestingDays} дней (это защита от
-          возвратов) → тебе автоматически +{referral.daysPerReferral} дней. Без баланса и вывода —
-          только дни к подписке. Лимит — {referral.annualCapDays} дней в год.
+        <div className="font-semibold text-[13px] text-ink/60 mb-3">Как это работает</div>
+        <div className="flex flex-col gap-3">
+          {[
+            "Друг переходит по вашей ссылке и оформляет платную подписку",
+            `Остаётся активным подписчиком ${referral.vestingDays} дней подряд — это защита от возвратов`,
+            `Вам автоматически начисляется +${referral.daysPerReferral} дней — без баланса и вывода, лимит ${referral.annualCapDays} в год`,
+          ].map((step, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center flex-shrink-0">
+                <span className="font-display font-bold text-[11px] text-gold">{i + 1}</span>
+              </div>
+              <div className="font-medium text-[12.5px] text-ink/55 leading-snug pt-0.5">{step}</div>
+            </div>
+          ))}
         </div>
       </div>
 
       <div>
         <div className="font-semibold text-[13px] text-ink/60 mb-2">Достижения</div>
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-4 gap-2">
           {referral.achievements.map((a) => (
             <div
               key={a.key}
-              className={`rounded-2xl px-3 py-3.5 text-center border ${
+              className={`rounded-xl px-1.5 py-2.5 text-center border ${
                 a.unlocked ? "bg-gold/[.08] border-gold/35" : "bg-app-card border-white/[.06]"
               }`}
             >
-              <div className={`flex justify-center mb-1.5 ${a.unlocked ? "" : "grayscale opacity-40"}`}>
-                {ACHIEVEMENT_ICON[a.icon]}
+              <div className={`flex justify-center mb-1 ${a.unlocked ? "" : "grayscale opacity-40"}`}>
+                {achievementIcon(a.icon, 18)}
               </div>
-              <div className={`font-display font-bold text-[12px] ${a.unlocked ? "text-gold" : "text-ink/50"}`}>
+              <div className={`font-display font-bold text-[9.5px] leading-tight ${a.unlocked ? "text-gold" : "text-ink/50"}`}>
                 {a.title}
               </div>
-              <div className="flex items-center justify-center gap-1 font-medium text-[10.5px] text-ink/35 mt-0.5">
-                {a.unlocked ? (
-                  <>
-                    <CheckIcon size={10} color="#2ED9A6" strokeWidth="3" />Открыто
-                  </>
-                ) : (
-                  `от ${a.threshold} друзей`
-                )}
+              <div className="font-medium text-[8.5px] text-ink/35 leading-tight">
+                {a.threshold} {pluralFriends(a.threshold)}
+              </div>
+              <div className="font-semibold text-[8.5px] text-gold/70 leading-tight">
+                +{a.threshold * referral.daysPerReferral} дней
               </div>
             </div>
           ))}
