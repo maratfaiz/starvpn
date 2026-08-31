@@ -41,8 +41,8 @@ export default function DevicesScreen({ devices, devicesLimit, totalTrafficGb, o
           <div className="bg-app-card border border-white/[.06] rounded-[18px] p-3.5">
             <div className="flex items-center justify-between mb-2">
               <span className="font-medium text-[11px] text-ink/45">Отправлено</span>
-              <div className="w-6 h-6 rounded-lg bg-gold/[.12] flex items-center justify-center">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFB800" strokeWidth="2.5" strokeLinecap="round">
+              <div className="w-6 h-6 rounded-lg bg-[#FACC15]/[.14] flex items-center justify-center">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FACC15" strokeWidth="2.5" strokeLinecap="round">
                   <line x1="12" y1="19" x2="12" y2="5" />
                   <polyline points="5 12 12 5 19 12" />
                 </svg>
