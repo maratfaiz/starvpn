@@ -71,11 +71,11 @@ export default function GiftSheet({
                   onClick={() => onDaysSelect(opt)}
                   className="flex-1 text-center py-2.5 rounded-xl"
                   style={{
-                    background: selected ? "rgba(247,206,104,.1)" : "#12151C",
-                    border: `1px solid ${selected ? "rgba(247,206,104,.5)" : "rgba(255,255,255,.06)"}`,
+                    background: selected ? "rgba(255,184,0,.1)" : "#12151C",
+                    border: `1px solid ${selected ? "rgba(255,184,0,.5)" : "rgba(255,255,255,.06)"}`,
                   }}
                 >
-                  <span className="font-display font-bold text-[13.5px]" style={{ color: selected ? "#F7CE68" : "#F5F3EE" }}>
+                  <span className="font-display font-bold text-[13.5px]" style={{ color: selected ? "#FFB800" : "#F5F3EE" }}>
                     {opt}
                   </span>
                 </button>
@@ -101,7 +101,7 @@ export default function GiftSheet({
           onClick={onSubmit}
           disabled={!username.trim()}
           className="border-none py-4 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-40"
-          style={{ background: username.trim() ? "linear-gradient(135deg,#F7CE68,#C9962F)" : "rgba(255,255,255,.08)" }}
+          style={{ background: username.trim() ? "linear-gradient(135deg,#FFB800,#CC8A00)" : "rgba(255,255,255,.08)" }}
         >
           <StarIcon size={15} color={username.trim() ? "#1A1408" : "#F5F3EE"} />
           <span className="font-display font-bold text-[15px]" style={{ color: username.trim() ? "#1A1408" : "#F5F3EE" }}>

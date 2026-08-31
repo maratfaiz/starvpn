@@ -1,4 +1,4 @@
-import { StarIcon, BoltIcon, GiftIcon, KeyIcon, QrIcon, CopyIcon } from "../components/icons.jsx";
+import { StarIcon, BoltIcon, GiftIcon, KeyIcon, QrIcon, CopyIcon, DeviceIcon, CloudIcon } from "../components/icons.jsx";
 
 export default function HomeScreen({
   subscription,
@@ -24,7 +24,7 @@ export default function HomeScreen({
     <div className="flex flex-col gap-4">
       {/* hero subscription card */}
       <div className="relative rounded-3xl p-[22px] overflow-hidden border border-gold/30 bg-[linear-gradient(160deg,#1A1408_0%,#13161D_55%)]">
-        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[radial-gradient(circle,rgba(247,206,104,.25),transparent_70%)]" />
+        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[radial-gradient(circle,rgba(255,184,0,.25),transparent_70%)]" />
         <StarIcon size={11} className="absolute top-3.5 right-[18px] animate-[starTwinkle_2.6s_ease-in-out_infinite]" />
         <StarIcon size={7} className="absolute top-[46px] right-[54px] animate-[starTwinkle_3.2s_ease-in-out_.6s_infinite]" />
 
@@ -62,17 +62,56 @@ export default function HomeScreen({
             style={{ width: `${percentPassed}%` }}
           />
         </div>
+
+        <div className="relative flex gap-2.5 mt-4">
+          <button
+            onClick={onOpenRenew}
+            className="flex-1 py-3.5 rounded-[16px] bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center gap-2"
+          >
+            <BoltIcon size={14} />
+            <span className="font-display font-bold text-[13.5px] text-[#1A1408]">Продлить</span>
+          </button>
+          <button
+            onClick={onOpenGift}
+            className="flex-1 py-3.5 rounded-[16px] border-[1.5px] border-gold/35 bg-gold/[.08] flex items-center justify-center gap-2"
+          >
+            <GiftIcon size={14} />
+            <span className="font-display font-bold text-[13.5px] text-gold">Подарить</span>
+          </button>
+        </div>
       </div>
+
+      {/* devices + traffic tiles */}
+      {active && (
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="bg-app-card border border-white/[.06] rounded-[18px] p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-[12px] text-ink/50">Устройства</span>
+              <DeviceIcon size={15} color="rgba(245,243,238,.35)" />
+            </div>
+            <div className="font-display font-extrabold text-lg text-ink">
+              {devicesCount} из {devicesLimit}
+            </div>
+          </div>
+          <div className="bg-app-card border border-white/[.06] rounded-[18px] p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-[12px] text-ink/50">Трафик</span>
+              <CloudIcon size={15} color="rgba(245,243,238,.35)" />
+            </div>
+            <div className="font-display font-extrabold text-lg text-ink">
+              {trafficUsedTotal}
+              <span className="text-[13px] text-ink/40"> ГБ</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* subscription key card */}
       {active && primaryDevice && (
         <div className="bg-app-card border border-white/[.06] rounded-[18px] p-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="mb-3">
             <span className="font-display font-semibold text-[11px] text-ink/40 tracking-widest uppercase">
               Ваш ключ
-            </span>
-            <span className="font-medium text-xs text-ink/40">
-              {devicesCount} из {devicesLimit} устройств
             </span>
           </div>
 
@@ -104,33 +143,6 @@ export default function HomeScreen({
           </div>
         </div>
       )}
-
-      {active && (
-        <div className="flex items-center justify-between px-4 py-3.5 bg-app-card border border-white/[.06] rounded-2xl">
-          <span className="font-medium text-[13px] text-ink/60">Трафик за месяц</span>
-          <span className="font-display font-bold text-[15px] text-ink">
-            {trafficUsedTotal}
-            <span className="text-ink/40 text-[12px]"> ГБ</span>
-          </span>
-        </div>
-      )}
-
-      <div className="flex gap-2.5">
-        <button
-          onClick={onOpenRenew}
-          className="flex-1 py-4 rounded-[18px] bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center gap-2"
-        >
-          <BoltIcon size={15} />
-          <span className="font-display font-bold text-[14.5px] text-[#1A1408]">Продлить</span>
-        </button>
-        <button
-          onClick={onOpenGift}
-          className="flex-1 py-4 rounded-[18px] border-[1.5px] border-gold/35 bg-gold/[.08] flex items-center justify-center gap-2"
-        >
-          <GiftIcon size={15} />
-          <span className="font-display font-bold text-[14.5px] text-gold">Подарить VPN</span>
-        </button>
-      </div>
 
       {showTrialCard && (
         <div className="rounded-2xl border border-gold/40 bg-app-card text-center px-4 py-5">

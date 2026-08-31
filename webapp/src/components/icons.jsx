@@ -1,7 +1,7 @@
 // Shared inline SVG icons for the STAR VPN Mini App.
 // Kept as simple functional components so screens/sheets stay declarative.
 
-export function StarIcon({ size = 16, color = "#F7CE68", className = "" }) {
+export function StarIcon({ size = 16, color = "#FFB800", className = "" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={color} className={className}>
       <path d="M12 1l3.09 6.26L22 8.27l-5 4.87 1.18 6.88L12 16.9l-6.18 3.12L7 13.14 2 8.27l6.91-1.01L12 1z" />
@@ -18,7 +18,7 @@ export function CloseIcon({ size = 12, color = "rgba(245,243,238,.6)" }) {
   );
 }
 
-export function CheckIcon({ size = 16, color = "#F7CE68", strokeWidth = "2.4" }) {
+export function CheckIcon({ size = 16, color = "#FFB800", strokeWidth = "2.4" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth}>
       <polyline points="20 6 9 17 4 12" />
@@ -52,7 +52,7 @@ export function BoltIcon({ size = 15, color = "#1A1408" }) {
   );
 }
 
-export function GiftIcon({ size = 15, color = "#F7CE68" }) {
+export function GiftIcon({ size = 15, color = "#FFB800" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <path d="M20 12v10H4V12" />
@@ -76,7 +76,7 @@ export function ShareIcon({ size = 14, color = "#1A1408" }) {
   );
 }
 
-export function KeyIcon({ size = 16, color = "#F7CE68" }) {
+export function KeyIcon({ size = 16, color = "#FFB800" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="8" cy="15" r="4" />
@@ -85,7 +85,7 @@ export function KeyIcon({ size = 16, color = "#F7CE68" }) {
   );
 }
 
-export function QrIcon({ size = 15, color = "#F7CE68" }) {
+export function QrIcon({ size = 15, color = "#FFB800" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -105,6 +105,15 @@ export function CopyIcon({ size = 15, color = "#F5F3EE" }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
       <rect x="8" y="8" width="13" height="13" rx="2" />
       <path d="M5 16H4a1 1 0 01-1-1V4a1 1 0 011-1h11a1 1 0 011 1v1" />
+    </svg>
+  );
+}
+
+export function CloudIcon({ size = 16, color = "#F5F3EE" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 18a4.5 4.5 0 01-.5-8.97A5.5 5.5 0 0117 8.5a4 4 0 011 7.87" />
+      <path d="M12 12v7M9.5 16.5L12 19l2.5-2.5" />
     </svg>
   );
 }

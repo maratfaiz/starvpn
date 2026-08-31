@@ -46,8 +46,8 @@ export default function Starfield({ shootingStars = false }) {
         if (s.a > 1 || s.a < 0) s.s *= -1;
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(247,206,104,${s.a * 0.85})`;
-        ctx.shadowColor = "rgba(247,206,104,.8)";
+        ctx.fillStyle = `rgba(255,184,0,${s.a * 0.85})`;
+        ctx.shadowColor = "rgba(255,184,0,.8)";
         ctx.shadowBlur = s.r * 2.5;
         ctx.fill();
         ctx.shadowBlur = 0;

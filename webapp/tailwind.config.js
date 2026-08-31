@@ -21,8 +21,8 @@ export default {
           sheet: "#0E1116",
         },
         gold: {
-          DEFAULT: "#F7CE68",
-          dark: "#C9962F",
+          DEFAULT: "#FFB800",
+          dark: "#CC8A00",
         },
         ink: "#F5F3EE",
         success: "#2ED9A6",

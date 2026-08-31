@@ -59,7 +59,7 @@ export default function RenewSheet({
     <BottomSheet open={open} onClose={onClose} maxHeight="86%">
       <div className="flex items-center justify-between mb-4 -mt-1">
         <div className="flex items-center gap-2">
-          <BoltIcon size={18} color="#F7CE68" />
+          <BoltIcon size={18} color="#FFB800" />
           <span className="font-display font-extrabold text-base text-ink">Продлить подписку</span>
         </div>
       </div>
@@ -68,9 +68,9 @@ export default function RenewSheet({
         <button
           onClick={() => onSelectMethod("stars")}
           className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-display font-semibold text-[12.5px]"
-          style={{ background: method === "stars" ? "rgba(247,206,104,.14)" : "transparent", color: method === "stars" ? "#F7CE68" : "rgba(245,243,238,.5)" }}
+          style={{ background: method === "stars" ? "rgba(255,184,0,.14)" : "transparent", color: method === "stars" ? "#FFB800" : "rgba(245,243,238,.5)" }}
         >
-          <StarIcon size={12} color={method === "stars" ? "#F7CE68" : "rgba(245,243,238,.5)"} /> Stars
+          <StarIcon size={12} color={method === "stars" ? "#FFB800" : "rgba(245,243,238,.5)"} /> Stars
         </button>
         <button
           onClick={() => onSelectMethod("card")}
@@ -90,8 +90,8 @@ export default function RenewSheet({
               onClick={() => onSelectPlan(p.id)}
               className="relative flex items-center justify-between px-4 py-[15px] rounded-2xl"
               style={{
-                background: selected ? "rgba(247,206,104,.1)" : "#12151C",
-                border: `1.5px solid ${selected ? "rgba(247,206,104,.5)" : "rgba(255,255,255,.06)"}`,
+                background: selected ? "rgba(255,184,0,.1)" : "#12151C",
+                border: `1.5px solid ${selected ? "rgba(255,184,0,.5)" : "rgba(255,255,255,.06)"}`,
               }}
             >
               {p.popular && (
@@ -121,8 +121,8 @@ export default function RenewSheet({
           onClick={() => onSelectPlan("custom")}
           className="relative flex items-center justify-between px-4 py-[15px] rounded-2xl"
           style={{
-            background: isCustom ? "rgba(247,206,104,.1)" : "#12151C",
-            border: `1.5px solid ${isCustom ? "rgba(247,206,104,.5)" : "rgba(255,255,255,.06)"}`,
+            background: isCustom ? "rgba(255,184,0,.1)" : "#12151C",
+            border: `1.5px solid ${isCustom ? "rgba(255,184,0,.5)" : "rgba(255,255,255,.06)"}`,
           }}
         >
           <div className="text-left">
@@ -167,7 +167,7 @@ export default function RenewSheet({
       <button
         onClick={onSubmit}
         className="w-full mt-[18px] border-none py-4 rounded-2xl flex items-center justify-center gap-2"
-        style={{ background: method === "stars" ? "linear-gradient(135deg,#F7CE68,#C9962F)" : "linear-gradient(135deg,#5FD068,#3AA84A)" }}
+        style={{ background: method === "stars" ? "linear-gradient(135deg,#FFB800,#CC8A00)" : "linear-gradient(135deg,#5FD068,#3AA84A)" }}
       >
         {method === "stars" ? (
           <>

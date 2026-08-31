@@ -18,7 +18,7 @@ export default function BottomNav({ active, onChange, showAdmin }) {
     >
       {tabs.map((tab) => {
         const isActive = tab.id === active;
-        const color = isActive ? "#F7CE68" : "rgba(245,243,238,.4)";
+        const color = isActive ? "#FFB800" : "rgba(245,243,238,.4)";
         return (
           <button
             key={tab.id}

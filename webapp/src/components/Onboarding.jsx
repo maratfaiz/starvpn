@@ -8,7 +8,7 @@ const SLIDES = [
     title: "Полная\nанонимность",
     sub: "Твой трафик зашифрован. Никаких логов, никакой слежки — мы не знаем кто ты.",
     icon: (
-      <svg viewBox="0 0 56 56" width="52" height="52" fill="none" stroke="#F7CE68" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 56 56" width="52" height="52" fill="none" stroke="#FFB800" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M28 6L8 14v14c0 13 9 22 20 25 11-3 20-12 20-25V14z" />
         <circle cx="28" cy="26" r="7" />
         <line x1="28" y1="33" x2="28" y2="40" />
@@ -21,7 +21,7 @@ const SLIDES = [
     title: "Молниеносная\nскорость",
     sub: "Протокол VLESS + Reality — обходит блокировки и работает быстрее обычного VPN.",
     icon: (
-      <svg viewBox="0 0 56 56" width="52" height="52" fill="none" stroke="#F7CE68" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 56 56" width="52" height="52" fill="none" stroke="#FFB800" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M30 8L10 30h18l-2 18 20-24H28z" />
       </svg>
     ),
@@ -31,7 +31,7 @@ const SLIDES = [
     title: "Интернет\nбез границ",
     sub: "Любые сайты, сервисы и страны. Блокировки не существует — ты везде дома.",
     icon: (
-      <svg viewBox="0 0 56 56" width="52" height="52" fill="none" stroke="#F7CE68" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 56 56" width="52" height="52" fill="none" stroke="#FFB800" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="28" cy="28" r="20" />
         <line x1="8" y1="28" x2="48" y2="28" />
         <path d="M28 8a30 30 0 010 40M28 8a30 30 0 000 40" />
@@ -82,7 +82,7 @@ export default function Onboarding({ trialUsed, onFinish }) {
       >
         {SLIDES.map((s) => (
           <div key={s.badge} className="w-full flex-shrink-0 flex flex-col items-center justify-center px-8 text-center" style={{ width: `${100 / total}%` }}>
-            <div className="relative w-36 h-36 rounded-full flex items-center justify-center mb-10 bg-gold/10 border border-gold/25 shadow-[0_0_60px_rgba(247,206,104,.2)]">
+            <div className="relative w-36 h-36 rounded-full flex items-center justify-center mb-10 bg-gold/10 border border-gold/25 shadow-[0_0_60px_rgba(255,184,0,.2)]">
               {s.icon}
             </div>
             <div className="font-display font-semibold text-[11px] text-gold tracking-widest mb-3">{s.badge}</div>
@@ -93,7 +93,7 @@ export default function Onboarding({ trialUsed, onFinish }) {
 
         <div className="w-full flex-shrink-0 flex flex-col items-center justify-center px-8 text-center pb-8" style={{ width: `${100 / total}%` }}>
           <div className="w-14 h-14 rounded-2xl bg-gold/10 border border-gold/25 flex items-center justify-center mb-4">
-            <svg viewBox="0 0 40 40" width="26" height="26" fill="none" stroke="#F7CE68" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 40 40" width="26" height="26" fill="none" stroke="#FFB800" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
               <path d="M20 4L6 9v10c0 9 6.5 16 14 18 7.5-2 14-9 14-18V9z" />
               <path d="M14 19l4 4 8-8" />
             </svg>
@@ -126,7 +126,7 @@ export default function Onboarding({ trialUsed, onFinish }) {
         {!isFinal && (
           <div className="flex justify-center gap-1.5 mb-5">
             {SLIDES.map((_, i) => (
-              <div key={i} className="h-1.5 rounded-full transition-all" style={{ width: i === slide ? 20 : 6, background: i === slide ? "#F7CE68" : "rgba(255,255,255,.15)" }} />
+              <div key={i} className="h-1.5 rounded-full transition-all" style={{ width: i === slide ? 20 : 6, background: i === slide ? "#FFB800" : "rgba(255,255,255,.15)" }} />
             ))}
           </div>
         )}

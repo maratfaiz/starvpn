@@ -3,7 +3,7 @@ export default function TelegramGate() {
     <div className="fixed inset-0 z-[100] bg-app-bg flex flex-col items-center justify-center text-center px-8">
       <div className="relative w-24 h-24 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center mb-6">
         <div className="absolute inset-0 rounded-full border border-gold/20 animate-ping" />
-        <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#F7CE68" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="#FFB800" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <line x1="22" y1="2" x2="11" y2="13" />
           <polygon points="22 2 15 22 11 13 2 9 22 2" />
         </svg>

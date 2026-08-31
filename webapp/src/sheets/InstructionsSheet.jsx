@@ -78,9 +78,9 @@ export default function InstructionsSheet({ open, onClose }) {
               onClick={() => setTab(p.id)}
               className="px-3 py-2 rounded-xl font-display font-semibold text-xs whitespace-nowrap flex-shrink-0"
               style={{
-                background: active ? "rgba(247,206,104,.12)" : "#12151C",
-                border: `1px solid ${active ? "rgba(247,206,104,.4)" : "rgba(255,255,255,.06)"}`,
-                color: active ? "#F7CE68" : "rgba(245,243,238,.55)",
+                background: active ? "rgba(255,184,0,.12)" : "#12151C",
+                border: `1px solid ${active ? "rgba(255,184,0,.4)" : "rgba(255,255,255,.06)"}`,
+                color: active ? "#FFB800" : "rgba(245,243,238,.55)",
               }}
             >
               {p.label}
