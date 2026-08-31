@@ -13,8 +13,6 @@ export default function RenewSheet({
   step,
   onClose,
   plans,
-  selectedPlanId,
-  onSelectPlan,
   method,
   onSelectMethod,
   customDays,
@@ -25,13 +23,10 @@ export default function RenewSheet({
   const basePlan = plans[0];
   const pricePerDay = basePlan.price / basePlan.days;
   const rubPerDay = basePlan.rub / basePlan.days;
-  const isCustom = selectedPlanId === "custom";
   const customStars = Math.max(1, Math.round(customDays * pricePerDay));
   const customRub = Math.max(1, Math.round(customDays * rubPerDay));
 
-  const selectedPlan = isCustom
-    ? { label: `${customDays} дней`, days: customDays, price: customStars, rub: customRub }
-    : plans.find((p) => p.id === selectedPlanId) || basePlan;
+  const selectedPlan = { label: `${customDays} дней`, days: customDays, price: customStars, rub: customRub };
 
   if (step === "success") {
     return (
@@ -81,87 +76,39 @@ export default function RenewSheet({
         </button>
       </div>
 
-      <div className="flex flex-col gap-2.5">
-        {plans.map((p) => {
-          const selected = p.id === selectedPlanId;
-          return (
-            <button
-              key={p.id}
-              onClick={() => onSelectPlan(p.id)}
-              className="relative flex items-center justify-between px-4 py-[15px] rounded-2xl"
-              style={{
-                background: selected ? "rgba(255,184,0,.1)" : "#0C0E12",
-                border: `1.5px solid ${selected ? "rgba(255,184,0,.5)" : "rgba(255,255,255,.06)"}`,
-              }}
-            >
-              {p.popular && (
-                <span className="absolute -top-[9px] left-3.5 font-display font-bold text-[9.5px] text-[#1A1408] bg-gold px-2 py-0.5 rounded-full">
-                  ВЫГОДНО
-                </span>
-              )}
-              <div className="text-left">
-                <div className="font-display font-bold text-[14.5px] text-ink">{p.label}</div>
-                <div className="font-medium text-[11.5px] text-ink/40 mt-0.5">{p.perMonth}</div>
-              </div>
-              <div className="flex items-center gap-1.5">
-                {method === "stars" ? (
-                  <>
-                    <StarIcon size={13} />
-                    <span className="font-display font-extrabold text-base text-gold">{p.price}</span>
-                  </>
-                ) : (
-                  <span className="font-display font-extrabold text-base text-[#5FD068]">{p.rub} ₽</span>
-                )}
-              </div>
-            </button>
-          );
-        })}
-
-        <button
-          onClick={() => onSelectPlan("custom")}
-          className="relative flex items-center justify-between px-4 py-[15px] rounded-2xl"
-          style={{
-            background: isCustom ? "rgba(255,184,0,.1)" : "#0C0E12",
-            border: `1.5px solid ${isCustom ? "rgba(255,184,0,.5)" : "rgba(255,255,255,.06)"}`,
-          }}
-        >
-          <div className="text-left">
-            <div className="font-display font-bold text-[14.5px] text-ink">Свой срок</div>
-            <div className="font-medium text-[11.5px] text-ink/40 mt-0.5">Укажи количество дней</div>
+      <div className="bg-app-card border border-white/10 rounded-2xl px-4 pt-4 pb-3.5">
+        <div className="flex items-end justify-between">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-display font-extrabold text-[38px] leading-none text-ink">{customDays}</span>
+            <span className="font-medium text-sm text-ink/40">дней</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="text-right">
             {method === "stars" ? (
-              <>
-                <StarIcon size={13} />
-                <span className="font-display font-extrabold text-base text-gold">{customStars}</span>
-              </>
+              <div className="flex items-center gap-1 justify-end">
+                <StarIcon size={14} />
+                <span className="font-display font-extrabold text-lg text-gold">{customStars}</span>
+              </div>
             ) : (
-              <span className="font-display font-extrabold text-base text-[#5FD068]">{customRub} ₽</span>
+              <span className="font-display font-extrabold text-lg text-[#5FD068]">{customRub} ₽</span>
             )}
+            <div className="font-medium text-[11px] text-ink/35 mt-0.5">
+              {method === "stars" ? `${pricePerDay.toFixed(1)} ⭐ в день` : `${rubPerDay.toFixed(1)} ₽ в день`}
+            </div>
           </div>
-        </button>
+        </div>
 
-        {isCustom && (
-          <div className="flex items-center gap-3 bg-app-card border border-white/10 rounded-2xl px-4 py-3">
-            <input
-              type="range"
-              min="1"
-              max="730"
-              value={customDays}
-              onChange={(e) => onCustomDaysChange(Number(e.target.value))}
-              className="flex-1 accent-gold"
-            />
-            <input
-              type="number"
-              min="1"
-              max="730"
-              value={customDays}
-              onChange={(e) => onCustomDaysChange(Math.max(1, Math.min(730, Number(e.target.value) || 1)))}
-              className="w-16 bg-white/[.05] border border-white/10 rounded-lg px-2 py-1.5 text-center font-display font-bold text-sm text-ink outline-none"
-            />
-            <span className="font-medium text-xs text-ink/40 flex-shrink-0">дней</span>
-          </div>
-        )}
+        <input
+          type="range"
+          min="7"
+          max="180"
+          value={customDays}
+          onChange={(e) => onCustomDaysChange(Number(e.target.value))}
+          className="w-full mt-3.5 accent-gold"
+        />
+        <div className="flex justify-between mt-1 font-medium text-[10.5px] text-ink/30">
+          <span>7 дней</span>
+          <span>180 дней</span>
+        </div>
       </div>
 
       <button

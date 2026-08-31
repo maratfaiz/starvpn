@@ -131,9 +131,8 @@ export default function App() {
   // renew sheet
   const [renewOpen, setRenewOpen] = useState(false);
   const [renewStep, setRenewStep] = useState("form");
-  const [renewPlanId, setRenewPlanId] = useState(2);
   const [renewMethod, setRenewMethod] = useState("stars");
-  const [customDays, setCustomDays] = useState(14);
+  const [customDays, setCustomDays] = useState(90);
   const [lastAddedDays, setLastAddedDays] = useState(0);
   const [justRenewed, setJustRenewed] = useState(false);
 
@@ -204,10 +203,12 @@ export default function App() {
     const basePlan = renewPlans[0];
     const pricePerDay = basePlan.price / basePlan.days;
     const rubPerDay = basePlan.rub / basePlan.days;
-    const plan =
-      renewPlanId === "custom"
-        ? { label: `${customDays} дней`, days: customDays, price: Math.max(1, Math.round(customDays * pricePerDay)), rub: Math.max(1, Math.round(customDays * rubPerDay)) }
-        : renewPlans.find((p) => p.id === renewPlanId) || basePlan;
+    const plan = {
+      label: `${customDays} дней`,
+      days: customDays,
+      price: Math.max(1, Math.round(customDays * pricePerDay)),
+      rub: Math.max(1, Math.round(customDays * rubPerDay)),
+    };
 
     haptic("notification");
 
@@ -215,6 +216,11 @@ export default function App() {
       // Real endpoint: POST /api/invoice/card -> tg.openLink(Robokassa url);
       // confirmation arrives later via the /card/webhook ResultURL, so we
       // don't touch the subscription state here — only the invoice was created.
+      // NOTE: per ADR-015, /api/invoice/card only supports the 3 fixed plan
+      // tiers, not arbitrary day counts — now that this sheet always offers
+      // a custom-days slider, wiring the "Карта" tab to the real endpoint
+      // needs either extending that endpoint or hiding "Карта" here and
+      // keeping it fixed-tier elsewhere. Flagged, not resolved by this mock.
       setRenewOpen(false);
       showToast("💳 Счёт создан — оплати картой на защищённой странице");
       return;
@@ -481,8 +487,6 @@ export default function App() {
         step={renewStep}
         onClose={closeRenew}
         plans={renewPlans}
-        selectedPlanId={renewPlanId}
-        onSelectPlan={setRenewPlanId}
         method={renewMethod}
         onSelectMethod={setRenewMethod}
         customDays={customDays}
