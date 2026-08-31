@@ -63,7 +63,8 @@ Marzban — но через разные экраны и разные спосо
 
 | Канал | Способы | Управление |
 |---|---|---|
-| Telegram-бот | Stars, карта (Robokassa), крипта (CryptoPay) | Тумблеры в `app_settings` (`bot/utils/settings_store.py`), редактируются в админке → Настройки |
+| Telegram-бот, классический чат-флоу (`bot/handlers/payment.py` и др.) | Stars, карта (Robokassa), крипта (CryptoPay) | Тумблеры в `app_settings` (`bot/utils/settings_store.py`), редактируются в админке → Настройки |
+| Telegram Mini App (`webapp/`, `RenewSheet.jsx`) | Stars (основной способ), карта — крипта в интерфейсе Mini App **не реализована** (не бэкенд-ограничение, просто нет UI-варианта) | Тумблер stars/card |
 | Сайт, есть аккаунт (`/account`, `/get-vpn`) | карта, крипта — Stars **не** предлагается (нативная валюта Telegram, вне сайта не работает) | Те же тумблеры |
 | Сайт, гость (`/api/guest/*`, сейчас нигде не заходит из `/get-vpn`) | только карта — крипта и Stars недоступны в принципе (архитектурно, `guest_checkout` их не принимает) | Тумблер card |
 

@@ -217,6 +217,11 @@ STAR VPN
  а требование из `CLAUDE.md`.
 - Payment webhooks (Robokassa/CryptoPay) проверяют подпись — см.
  `bot/utils/robokassa.py`, `bot/utils/cryptopay.py`.
-- Криптоплатежи скрыты из UI по умолчанию (`bot/utils/settings_store.py`,
- `crypto: False`), но не удалены из кода — админ может включить обратно
- через `/admin` → Настройки.
+- Способы оплаты по каналам (актуально на 2026-08-31, сверяйся с `CLAUDE.md` →
+ "Payment methods" при сомнении): на сайте — карта (Robokassa) или
+ криптовалюта (Stars там технически невозможны); в Telegram Mini App —
+ Stars (основной способ) и карта, крипты в интерфейсе Mini App нет; в
+ классическом чат-флоу бота — все три сразу, через тумблеры в
+ `bot/utils/settings_store.py` (включены по умолчанию), редактируются в
+ `/admin` → Настройки без деплоя. Провайдер Prodamus/YooMoney в коде
+ отсутствует — был удалён полностью, см. ADR-015.
