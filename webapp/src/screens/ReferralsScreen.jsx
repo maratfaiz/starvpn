@@ -18,7 +18,7 @@ const HISTORY_ICON = {
 export default function ReferralsScreen({ referral, daysHistory, copied, onCopyCode, onShare }) {
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative rounded-3xl p-[22px] overflow-hidden border border-gold/30 bg-[linear-gradient(160deg,#1A1408_0%,#13161D_60%)]">
+      <div className="relative rounded-3xl p-[22px] overflow-hidden border border-gold/30 bg-[linear-gradient(160deg,#120E06_0%,#0C0E12_60%)]">
         <StarIcon size={10} className="absolute top-4 right-5 animate-[starTwinkle_2.4s_ease-in-out_infinite]" />
         <div className="font-display font-extrabold text-[19px] text-ink leading-tight max-w-[230px]">
           Приглашайте друзей — получайте дни VPN бесплатно

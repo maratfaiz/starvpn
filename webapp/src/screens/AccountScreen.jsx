@@ -71,7 +71,7 @@ export default function AccountScreen({
         <GearIcon />
       </div>
 
-      <div className="rounded-[20px] p-[18px] border border-gold/30 bg-[linear-gradient(160deg,#1A1408_0%,#13161D_60%)]">
+      <div className="rounded-[20px] p-[18px] border border-gold/30 bg-[linear-gradient(160deg,#120E06_0%,#0C0E12_60%)]">
         <div className="flex justify-between items-center">
           <span className="font-semibold text-[13px] text-ink/55">Текущий план</span>
           <span className="font-display font-bold text-[13px] text-gold bg-gold/[.12] px-2.5 py-1 rounded-lg">
