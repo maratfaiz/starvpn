@@ -2,24 +2,28 @@
 // No backend calls yet — this feeds the fully interactive frontend
 // until the real API (bot/api.py) is wired in.
 
+// Reward mechanic mirrors bot/handlers/payment.py's REFERRAL_* constants:
+// flat days per paid+vested referral (no "every N" batching), a 30-day
+// vesting hold before credit (refund/chargeback protection), and a rolling
+// annual cap. Achievements are status badges only — no bonus days attached.
 export const referral = {
   code: "STAR-9X4K2",
-  bonusDays: 30,
-  milestoneSize: 2,
+  daysPerReferral: 15,
+  vestingDays: 30,
+  annualCapDays: 365,
   invitedCount: 6,
-  paidCount: 5,
   daysEarned: 85,
   achievements: [
-    { key: "first", icon: "bronze", title: "Первая ласточка", threshold: 1, bonusDays: 5, unlocked: true },
-    { key: "ambassador", icon: "silver", title: "Амбассадор", threshold: 5, bonusDays: 20, unlocked: true },
-    { key: "legend", icon: "gold", title: "Легенда STAR VPN", threshold: 10, bonusDays: 50, unlocked: false },
-    { key: "vip", icon: "diamond", title: "Партнёр года", threshold: 25, bonusDays: 150, unlocked: false },
+    { key: "first", icon: "bronze", title: "Первая ласточка", threshold: 1, unlocked: true },
+    { key: "ambassador", icon: "silver", title: "Амбассадор", threshold: 5, unlocked: true },
+    { key: "legend", icon: "gold", title: "Легенда STAR VPN", threshold: 10, unlocked: false },
+    { key: "vip", icon: "diamond", title: "Партнёр года", threshold: 25, unlocked: false },
   ],
 };
 
 export const daysHistoryInitial = [
-  { id: 1, label: "Бонус за 2 друзей", date: "3 дня назад", days: 30, type: "bonus" },
-  { id: 2, label: "Бонус за 2 друзей", date: "2 недели назад", days: 30, type: "bonus" },
+  { id: 1, label: "Реферальный бонус", date: "3 дня назад", days: 15, type: "bonus" },
+  { id: 2, label: "Реферальный бонус", date: "2 недели назад", days: 15, type: "bonus" },
   { id: 3, label: "Продление подписки", date: "месяц назад", days: 30, type: "purchase" },
 ];
 

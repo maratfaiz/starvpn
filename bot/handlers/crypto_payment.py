@@ -153,7 +153,7 @@ async def handle_crypto_webhook(
     Поддерживает обычные платежи и подарки (payload начинается с 'gift:').
     """
     from datetime import datetime
-    from bot.handlers.payment import _grant_subscription
+    from bot.handlers.payment import _grant_subscription, _mark_first_payment
 
     is_gift = invoice_payload.startswith("gift:")
 
@@ -244,6 +244,8 @@ async def handle_crypto_webhook(
                 return
 
             await _grant_subscription(user, days, session)
+            await _mark_first_payment(user, session)
+            await session.commit()
 
             plan_label = {30: "1 месяц", 90: "3 месяца", 180: "6 месяцев"}.get(days, f"{days} дней")
             try:

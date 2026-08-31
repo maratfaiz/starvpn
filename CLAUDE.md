@@ -112,7 +112,7 @@ project_root/
 ## Key Business Rules (encode in code, not just comments)
 
 - **Trial**: granted once per `telegram_id`. Field: `User.trial_used`.
-- **Referral bonus**: +30 days per every 2 paying referrals. Tracked via `User.extra_days_granted`.
+- **Referral bonus (2026-08-31, redesigned)**: +15 days to the referrer per paying referral (flat, not "every 2" batching), credited only after a **30-day vesting hold** — the referred user must still be an active, non-banned subscriber 30 days after their *first* payment (any method: Stars/card/crypto, not gifts) before the referrer gets credited. Capped at **365 days per rolling 365-day window** per referrer. Achievement badges (1/5/10/25 paying referrals) are status-only now — no bonus days attached (previously stacked on top of the base bonus and could reach 585 days on 25 referrals). Tracked via `User.extra_days_granted` (running total) + the new `referral_credits` table (per-grant audit trail, also the basis for the annual cap). See `AGENTS/architecture/referral-system.md` for the full mechanic, the two bugs this fixed (double-counted `referral_count`, Stars-only crediting), and what's still not implemented (refund clawback — no refund flow exists anywhere yet; device/IP fraud fingerprinting).
 - **Pre-checkout**: `pre_checkout_query` must always be answered within 10 seconds.
 - **Marzban username**: always `tg_{telegram_id}` for Telegram-identified users — never change this format. Guest/web-only accounts use `web_{id}` instead (established exception, not a violation of this rule).
 

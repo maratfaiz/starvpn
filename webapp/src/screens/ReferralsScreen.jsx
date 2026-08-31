@@ -31,7 +31,7 @@ export default function ReferralsScreen({ referral, daysHistory, copied, onCopyC
           Приглашайте друзей — получайте дни VPN бесплатно
         </div>
         <div className="font-medium text-[13px] text-ink/50 mt-2">
-          +{referral.bonusDays} дней за каждого друга, который оформит подписку
+          +{referral.daysPerReferral} дней за каждого друга, который оплатит подписку и останется с нами {referral.vestingDays} дней
         </div>
 
         <div className="mt-[18px] flex items-center gap-2 bg-white/[.05] border border-white/[.08] rounded-[14px] px-3.5 py-3">
@@ -58,20 +58,10 @@ export default function ReferralsScreen({ referral, daysHistory, copied, onCopyC
 
       <div className="bg-app-card border border-white/[.06] rounded-2xl px-4 py-3.5">
         <div className="font-semibold text-[13px] text-ink/60 mb-1">Как начисляется</div>
-        <div className="font-medium text-[12.5px] text-ink/50 leading-relaxed mb-2.5">
-          За каждые {referral.milestoneSize} друзей, оформивших подписку, — автоматически
-          +{referral.bonusDays} дней к твоей подписке. Без баланса и вывода.
-        </div>
-        <div className="flex items-center gap-2.5">
-          <div className="flex-1 h-1.5 rounded-full bg-white/[.06] overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gold"
-              style={{ width: `${((referral.paidCount % referral.milestoneSize) / referral.milestoneSize) * 100}%` }}
-            />
-          </div>
-          <span className="font-display font-semibold text-[11px] text-ink/45 flex-shrink-0">
-            {referral.paidCount % referral.milestoneSize} / {referral.milestoneSize}
-          </span>
+        <div className="font-medium text-[12.5px] text-ink/50 leading-relaxed">
+          Друг оплачивает подписку → остаётся активным {referral.vestingDays} дней (это защита от
+          возвратов) → тебе автоматически +{referral.daysPerReferral} дней. Без баланса и вывода —
+          только дни к подписке. Лимит — {referral.annualCapDays} дней в год.
         </div>
       </div>
 
@@ -94,10 +84,10 @@ export default function ReferralsScreen({ referral, daysHistory, copied, onCopyC
               <div className="flex items-center justify-center gap-1 font-medium text-[10.5px] text-ink/35 mt-0.5">
                 {a.unlocked ? (
                   <>
-                    <CheckIcon size={10} color="#2ED9A6" strokeWidth="3" />+{a.bonusDays} дней получено
+                    <CheckIcon size={10} color="#2ED9A6" strokeWidth="3" />Открыто
                   </>
                 ) : (
-                  `${a.threshold} друзей · +${a.bonusDays} дней`
+                  `от ${a.threshold} друзей`
                 )}
               </div>
             </div>
