@@ -1,28 +1,4 @@
-import { StarIcon, ShareIcon, MedalIcon, DiamondIcon, UsersIcon } from "../components/icons.jsx";
-
-function pluralFriends(n) {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod100 >= 11 && mod100 <= 14) return "друзей";
-  if (mod10 === 1) return "друг";
-  if (mod10 >= 2 && mod10 <= 4) return "друга";
-  return "друзей";
-}
-
-function achievementIcon(icon, size) {
-  switch (icon) {
-    case "bronze":
-      return <MedalIcon size={size} color="#CD7F32" />;
-    case "silver":
-      return <MedalIcon size={size} color="#C0C0C0" />;
-    case "gold":
-      return <MedalIcon size={size} color="#FFD700" />;
-    case "diamond":
-      return <DiamondIcon size={size} color="#7DD3FC" />;
-    default:
-      return null;
-  }
-}
+import { StarIcon, ShareIcon, AlertIcon } from "../components/icons.jsx";
 
 const HISTORY_ICON = {
   referral: (
@@ -39,27 +15,40 @@ const HISTORY_ICON = {
   ),
 };
 
+const STEPS = (referral) => [
+  { title: "Отправь ссылку", text: "Друг переходит по твоей ссылке." },
+  { title: "Друг оформляет подписку", text: `И остаётся активным ${referral.vestingDays} дней.` },
+  { title: `Получаешь +${referral.daysPerReferral} дней`, text: "Дни автоматически добавляются к твоей подписке." },
+];
+
 export default function ReferralsScreen({ referral, daysHistory, copied, onCopyCode, onShare }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3.5">
+      <div className="font-display font-extrabold text-[22px] text-ink">Реферальная программа</div>
+
+      {/* hero */}
       <div className="relative rounded-3xl p-[22px] overflow-hidden border border-gold/30 bg-[linear-gradient(160deg,#120E06_0%,#0C0E12_60%)]">
         <StarIcon size={10} className="absolute top-4 right-5 animate-[starTwinkle_2.4s_ease-in-out_infinite]" />
-        <div className="font-display font-extrabold text-[19px] text-ink leading-tight max-w-[230px]">
-          Приглашайте друзей — получайте дни VPN бесплатно
+        <div className="font-medium text-[13px] text-ink/55">Пригласи друга — получи</div>
+        <div className="flex items-end gap-2 mt-1">
+          <span className="font-display font-extrabold text-[40px] leading-none text-gold">
+            +{referral.daysPerReferral}
+          </span>
+          <span className="font-semibold text-[15px] text-ink/70 pb-1">дней</span>
         </div>
-        <div className="font-medium text-[13px] text-ink/50 mt-2">
-          +{referral.daysPerReferral} дней за каждого друга, который оплатит подписку и останется с нами {referral.vestingDays} дней
+        <div className="font-medium text-[12.5px] text-ink/45 mt-2.5 leading-relaxed max-w-[280px]">
+          Друг оформляет подписку по твоей ссылке и остаётся активным {referral.vestingDays} дней — ты
+          получаешь +{referral.daysPerReferral} дней VPN.
         </div>
       </div>
 
-      {/* link + stats, merged into one section */}
+      {/* link */}
       <div className="bg-app-card border border-white/[.06] rounded-[18px] p-4">
         <div className="mb-3">
           <span className="font-display font-semibold text-[11px] text-ink/40 tracking-widest uppercase">
-            Ваша ссылка
+            Твоя ссылка
           </span>
         </div>
-
         <div className="flex items-center gap-2 bg-white/[.05] border border-white/[.08] rounded-[14px] px-3.5 py-3">
           <span className="flex-1 font-bold text-[15px] text-gold tracking-wider font-mono">{referral.code}</span>
           <button
@@ -69,67 +58,20 @@ export default function ReferralsScreen({ referral, daysHistory, copied, onCopyC
             {copied ? "Скопировано" : "Копировать"}
           </button>
         </div>
-
-        <div className="grid grid-cols-2 gap-2.5 mt-4 pt-4 border-t border-white/[.06]">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-medium text-[12px] text-ink/50">Приглашено</span>
-              <UsersIcon size={15} color="rgba(245,243,238,.35)" />
-            </div>
-            <div className="font-display font-extrabold text-lg text-ink">{referral.invitedCount}</div>
-          </div>
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-medium text-[12px] text-ink/50">Дней получено</span>
-              <StarIcon size={15} />
-            </div>
-            <div className="font-display font-extrabold text-lg text-gold">{referral.daysEarned}</div>
-          </div>
+        <div className="font-medium text-[11.5px] text-ink/40 mt-2.5">
+          Каждый друг = +{referral.daysPerReferral} дней
         </div>
       </div>
 
-      <div className="bg-app-card border border-white/[.06] rounded-2xl px-4 py-3.5">
-        <div className="font-semibold text-[13px] text-ink/60 mb-3">Как это работает</div>
-        <div className="flex flex-col gap-3">
-          {[
-            "Друг переходит по вашей ссылке и оформляет платную подписку",
-            `Остаётся активным подписчиком ${referral.vestingDays} дней подряд — это защита от возвратов`,
-            `Вам автоматически начисляется +${referral.daysPerReferral} дней — без баланса и вывода, лимит ${referral.annualCapDays} в год`,
-          ].map((step, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center flex-shrink-0">
-                <span className="font-display font-bold text-[11px] text-gold">{i + 1}</span>
-              </div>
-              <div className="font-medium text-[12.5px] text-ink/55 leading-snug pt-0.5">{step}</div>
-            </div>
-          ))}
+      {/* stats */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <div className="bg-app-card border border-white/[.06] rounded-2xl py-3.5 text-center">
+          <div className="font-display font-extrabold text-[20px] text-ink">{referral.invitedCount}</div>
+          <div className="font-medium text-[11px] text-ink/40 mt-1">Приглашённых</div>
         </div>
-      </div>
-
-      <div>
-        <div className="font-semibold text-[13px] text-ink/60 mb-2">Достижения</div>
-        <div className="grid grid-cols-4 gap-2">
-          {referral.achievements.map((a) => (
-            <div
-              key={a.key}
-              className={`rounded-xl px-1.5 py-2.5 text-center border ${
-                a.unlocked ? "bg-gold/[.08] border-gold/35" : "bg-app-card border-white/[.06]"
-              }`}
-            >
-              <div className={`flex justify-center mb-1 ${a.unlocked ? "" : "grayscale opacity-40"}`}>
-                {achievementIcon(a.icon, 18)}
-              </div>
-              <div className={`font-display font-bold text-[9.5px] leading-tight ${a.unlocked ? "text-gold" : "text-ink/50"}`}>
-                {a.title}
-              </div>
-              <div className="font-medium text-[8.5px] text-ink/35 leading-tight">
-                {a.threshold} {pluralFriends(a.threshold)}
-              </div>
-              <div className="font-semibold text-[8.5px] text-gold/70 leading-tight">
-                +{a.threshold * referral.daysPerReferral} дней
-              </div>
-            </div>
-          ))}
+        <div className="bg-app-card border border-white/[.06] rounded-2xl py-3.5 text-center">
+          <div className="font-display font-extrabold text-[20px] text-gold">{referral.daysEarned}</div>
+          <div className="font-medium text-[11px] text-ink/40 mt-1">Дней получено</div>
         </div>
       </div>
 
@@ -141,8 +83,42 @@ export default function ReferralsScreen({ referral, daysHistory, copied, onCopyC
         <span className="font-display font-bold text-[14.5px] text-[#1A1408]">Поделиться ссылкой</span>
       </button>
 
+      {/* how it works */}
+      <div className="bg-app-card border border-white/[.06] rounded-2xl px-4 py-3.5">
+        <div className="font-semibold text-[13px] text-ink/60 mb-3">Как это работает</div>
+        <div className="flex flex-col gap-3">
+          {STEPS(referral).map((step, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <div className="w-6 h-6 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center flex-shrink-0">
+                <span className="font-display font-bold text-[11px] text-gold">{i + 1}</span>
+              </div>
+              <div className="min-w-0">
+                <div className="font-semibold text-[12.5px] text-ink">{step.title}</div>
+                <div className="font-medium text-[11.5px] text-ink/45 mt-0.5 leading-snug">{step.text}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* limit */}
+      <div className="rounded-2xl border border-white/[.06] bg-app-card px-4 py-3 flex items-start gap-2.5">
+        <div className="mt-0.5 flex-shrink-0">
+          <AlertIcon size={14} color="rgba(245,243,238,.35)" />
+        </div>
+        <div>
+          <div className="font-semibold text-[12.5px] text-ink/70">
+            Лимит: {referral.monthlyCapDays} бонусных дней в месяц
+          </div>
+          <div className="font-medium text-[11px] text-ink/40 mt-0.5">
+            Максимум {referral.monthlyCapReferrals} успешных приглашений по +{referral.daysPerReferral} дней.
+          </div>
+        </div>
+      </div>
+
+      {/* history */}
       <div>
-        <div className="font-semibold text-[13px] text-ink/60 mb-2">История пополнений дней</div>
+        <div className="font-semibold text-[13px] text-ink/60 mb-2">История бонусов</div>
         <div className="flex flex-col gap-2">
           {daysHistory.map((h) => (
             <div key={h.id} className="flex items-center gap-2.5 bg-app-card border border-white/[.06] rounded-[14px] px-3.5 py-2.5">

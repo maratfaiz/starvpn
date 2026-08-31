@@ -2,23 +2,25 @@
 // No backend calls yet — this feeds the fully interactive frontend
 // until the real API (bot/api.py) is wired in.
 
-// Reward mechanic mirrors bot/handlers/payment.py's REFERRAL_* constants:
-// flat days per paid+vested referral (no "every N" batching), a 30-day
-// vesting hold before credit (refund/chargeback protection), and a rolling
-// annual cap. Achievements are status badges only — no bonus days attached.
+// Reward mechanic: flat days per paid+vested referral (no "every N"
+// batching), a 30-day vesting hold before credit (refund/chargeback
+// protection), and a monthly cap. Kept intentionally simple — no
+// achievements/levels/leaderboards.
+//
+// NOTE: monthlyCapDays/monthlyCapReferrals (90 days = 6 referrals/month)
+// is the cap shown on this screen per an explicit 2026-08-31 design
+// request. The currently deployed backend (bot/handlers/payment.py) still
+// enforces REFERRAL_ANNUAL_CAP_DAYS = 365 on a rolling 365-day window, not
+// a calendar-month 90-day cap — this is a real mismatch flagged for
+// product sign-off, not silently reconciled. See Agents_history.md.
 export const referral = {
   code: "STAR-9X4K2",
   daysPerReferral: 15,
   vestingDays: 30,
-  annualCapDays: 365,
+  monthlyCapDays: 90,
+  monthlyCapReferrals: 6,
   invitedCount: 6,
   daysEarned: 85,
-  achievements: [
-    { key: "first", icon: "bronze", title: "Первая ласточка", threshold: 1, unlocked: true },
-    { key: "ambassador", icon: "silver", title: "Амбассадор", threshold: 5, unlocked: true },
-    { key: "legend", icon: "gold", title: "Легенда STAR VPN", threshold: 10, unlocked: false },
-    { key: "vip", icon: "diamond", title: "Партнёр года", threshold: 25, unlocked: false },
-  ],
 };
 
 export const daysHistoryInitial = [
