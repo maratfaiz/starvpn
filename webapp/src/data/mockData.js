@@ -13,22 +13,22 @@ export const speedValue = "184";
 
 export const referral = {
   code: "STAR-9X4K2",
-  bonusDays: 30,
-  milestoneSize: 2,
+  refereeBonusDays: 2,
   invitedCount: 6,
   paidCount: 5,
-  daysEarned: 85,
+  daysEarned: 26,
+  nextAchievement: { threshold: 10, bonusDays: 35, remaining: 5 },
   achievements: [
-    { key: "first", icon: "🥉", title: "Первая ласточка", threshold: 1, bonusDays: 5, unlocked: true },
-    { key: "ambassador", icon: "🥈", title: "Амбассадор", threshold: 5, bonusDays: 20, unlocked: true },
-    { key: "legend", icon: "🥇", title: "Легенда STAR VPN", threshold: 10, bonusDays: 50, unlocked: false },
-    { key: "vip", icon: "💎", title: "Партнёр года", threshold: 25, bonusDays: 150, unlocked: false },
+    { key: "first", icon: "🥉", title: "Первая ласточка", threshold: 2, bonusDays: 8, unlocked: true },
+    { key: "ambassador", icon: "🥈", title: "Амбассадор", threshold: 5, bonusDays: 18, unlocked: true },
+    { key: "legend", icon: "🥇", title: "Легенда STAR VPN", threshold: 10, bonusDays: 35, unlocked: false },
+    { key: "vip", icon: "💎", title: "Партнёр года", threshold: 25, bonusDays: 90, unlocked: false },
   ],
 };
 
 export const daysHistoryInitial = [
-  { id: 1, label: "Бонус за 2 друзей", date: "3 дня назад", days: 30, type: "bonus" },
-  { id: 2, label: "Бонус за 2 друзей", date: "2 недели назад", days: 30, type: "bonus" },
+  { id: 1, label: "Достижение «Амбассадор»", date: "3 дня назад", days: 18, type: "bonus" },
+  { id: 2, label: "Достижение «Первая ласточка»", date: "2 недели назад", days: 8, type: "bonus" },
   { id: 3, label: "Продление подписки", date: "месяц назад", days: 30, type: "purchase" },
 ];
 

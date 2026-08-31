@@ -92,17 +92,22 @@ PLANS: dict[str, dict] = {
     "plan_6m": {"days": 180, "stars": 449, "label": "6 месяцев", "desc": "180 дней · скидка 25%"},
 }
 
-REFERRAL_DAYS_BONUS = 30      # дней рефереру за каждую пачку оплативших рефералов
-REFERRAL_MILESTONE_SIZE = 2   # сколько оплативших рефералов нужно для одной пачки
+# Бонус самому приглашённому другу — начисляется один раз, в момент его
+# первой оплаты по реферальной ссылке (одновременно с разблокировкой
+# очередного достижения у пригласившего, см. _credit_referral).
+REFEREE_BONUS_DAYS = 2
 
-# Разовые бейджи-достижения по общему числу оплативших рефералов — выдаются
-# один раз, ровно когда referral_count достигает threshold, поверх обычных
-# пачек выше. Порядок важен для отображения в /partner.
+# Достижения рефереру по общему числу оплативших рефералов — выдаются один
+# раз, ровно когда referral_count достигает threshold. Никакой отдельной
+# "пачки за каждые N друзей" больше нет (была раньше, до 2026-08-31) — вся
+# щедрость только здесь, с намеренно уменьшающейся отдачей на друга по мере
+# роста порога (8→18→35→90 дней на 2/5/10/25 друзей, а не линейно). Порядок
+# важен для отображения в /partner.
 REFERRAL_ACHIEVEMENTS = [
-    {"key": "first",      "threshold": 1,  "icon": "🥉", "title": "Первая ласточка",  "bonus_days": 5},
-    {"key": "ambassador", "threshold": 5,  "icon": "🥈", "title": "Амбассадор",       "bonus_days": 20},
-    {"key": "legend",     "threshold": 10, "icon": "🥇", "title": "Легенда STAR VPN", "bonus_days": 50},
-    {"key": "vip",        "threshold": 25, "icon": "💎", "title": "Партнёр года",     "bonus_days": 150},
+    {"key": "first",      "threshold": 2,  "icon": "🥉", "title": "Первая ласточка",  "bonus_days": 8},
+    {"key": "ambassador", "threshold": 5,  "icon": "🥈", "title": "Амбассадор",       "bonus_days": 18},
+    {"key": "legend",     "threshold": 10, "icon": "🥇", "title": "Легенда STAR VPN", "bonus_days": 35},
+    {"key": "vip",        "threshold": 25, "icon": "💎", "title": "Партнёр года",     "bonus_days": 90},
 ]
 
 
@@ -154,11 +159,12 @@ async def _grant_subscription(user: User, days: int, session: AsyncSession) -> N
 
 async def _credit_referral(buyer: User, session: AsyncSession, bot: Bot) -> None:
     """
-    +30 дней рефереру за каждые 2 оплативших подписку реферала, плюс разовые
-    бейджи-достижения (REFERRAL_ACHIEVEMENTS) при первом/5-м/10-м/25-м
-    оплатившем друге. Считается один раз на человека
-    (buyer.referral_bonus_counted), а не на каждую его покупку/продление —
-    иначе один и тот же реферал накручивал бы счётчик при каждом продлении.
+    Достижения-бонусы рефереру по общему числу оплативших рефералов
+    (REFERRAL_ACHIEVEMENTS: 2/5/10/25 друзей), плюс разовый REFEREE_BONUS_DAYS
+    самому приглашённому другу за его первую оплату по ссылке. Считается один
+    раз на человека (buyer.referral_bonus_counted), а не на каждую его
+    покупку/продление — иначе один и тот же реферал накручивал бы счётчик
+    (и получал бы бонус) при каждом продлении.
     """
     if not buyer.referrer_id or buyer.referral_bonus_counted:
         return
@@ -173,32 +179,31 @@ async def _credit_referral(buyer: User, session: AsyncSession, bot: Bot) -> None
     buyer.referral_bonus_counted = True
     referrer.referral_count = (referrer.referral_count or 0) + 1
 
-    bonus_lines: list[str] = []
-    total_bonus_days = 0
-    unlocked_achievement = None
-
-    if referrer.referral_count % REFERRAL_MILESTONE_SIZE == 0:
-        total_bonus_days += REFERRAL_DAYS_BONUS
-        bonus_lines.append(f"🎁 +{REFERRAL_DAYS_BONUS} дней — за {referrer.referral_count} оплативших друзей")
+    await _grant_subscription(buyer, REFEREE_BONUS_DAYS, session)
+    buyer.extra_days_granted = (buyer.extra_days_granted or 0) + REFEREE_BONUS_DAYS
+    try:
+        await bot.send_message(
+            buyer.telegram_id,
+            f"🎁 +{REFEREE_BONUS_DAYS} дня VPN — бонус за переход по реферальной ссылке!",
+            parse_mode="HTML",
+        )
+    except Exception as e:
+        logger.warning("Failed to notify referee %s: %s", buyer.telegram_id, e)
 
     unlocked_achievement = next(
         (a for a in REFERRAL_ACHIEVEMENTS if a["threshold"] == referrer.referral_count), None
     )
-    if unlocked_achievement:
-        total_bonus_days += unlocked_achievement["bonus_days"]
-        bonus_lines.append(
-            f"{unlocked_achievement['icon']} +{unlocked_achievement['bonus_days']} дней — "
-            f"достижение «{unlocked_achievement['title']}»"
-        )
 
-    if total_bonus_days:
-        await _grant_subscription(referrer, total_bonus_days, session)
-        referrer.extra_days_granted = (referrer.extra_days_granted or 0) + total_bonus_days
+    if unlocked_achievement:
+        bonus_days = unlocked_achievement["bonus_days"]
+        await _grant_subscription(referrer, bonus_days, session)
+        referrer.extra_days_granted = (referrer.extra_days_granted or 0) + bonus_days
         try:
-            header = "🏆 <b>Новое достижение!</b>" if unlocked_achievement else "🎉 <b>Бонус за рефералов!</b>"
             await bot.send_message(
                 referrer.telegram_id,
-                f"{header}\n\n" + "\n".join(bonus_lines) +
+                f"🏆 <b>Новое достижение!</b>\n\n"
+                f"{unlocked_achievement['icon']} +{bonus_days} дней — "
+                f"достижение «{unlocked_achievement['title']}»"
                 f"\n\nВсего оплативших друзей: <b>{referrer.referral_count}</b>. "
                 f"Подписка продлена автоматически.",
                 parse_mode="HTML",
@@ -209,8 +214,9 @@ async def _credit_referral(buyer: User, session: AsyncSession, bot: Bot) -> None
     await session.commit()
 
     logger.info(
-        "Referral: tg_id=%s now has %s paying referrals (buyer tg_id=%s, +%s days)",
-        referrer.telegram_id, referrer.referral_count, buyer.telegram_id, total_bonus_days,
+        "Referral: tg_id=%s now has %s paying referrals (buyer tg_id=%s, +%s achievement days, +%s referee days)",
+        referrer.telegram_id, referrer.referral_count, buyer.telegram_id,
+        unlocked_achievement["bonus_days"] if unlocked_achievement else 0, REFEREE_BONUS_DAYS,
     )
 
 

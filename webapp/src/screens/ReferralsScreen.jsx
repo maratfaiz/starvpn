@@ -24,7 +24,7 @@ export default function ReferralsScreen({ referral, daysHistory, copied, onCopyC
           Приглашайте друзей — получайте дни VPN бесплатно
         </div>
         <div className="font-medium text-[13px] text-ink/50 mt-2">
-          +{referral.bonusDays} дней за каждого друга, который оформит подписку
+          Другу — +{referral.refereeBonusDays} дня сразу, тебе — дни за достижения ниже
         </div>
 
         <div className="mt-[18px] flex items-center gap-2 bg-white/[.05] border border-white/[.08] rounded-[14px] px-3.5 py-3">
@@ -51,21 +51,18 @@ export default function ReferralsScreen({ referral, daysHistory, copied, onCopyC
 
       <div className="bg-app-card border border-white/[.06] rounded-2xl px-4 py-3.5">
         <div className="font-semibold text-[13px] text-ink/60 mb-1">Как начисляется</div>
-        <div className="font-medium text-[12.5px] text-ink/50 leading-relaxed mb-2.5">
-          За каждые {referral.milestoneSize} друзей, оформивших подписку, — автоматически
-          +{referral.bonusDays} дней к твоей подписке. Без баланса и вывода.
+        <div className="font-medium text-[12.5px] text-ink/50 leading-relaxed">
+          Друг оформляет подписку по твоей ссылке — сразу получает
+          +{referral.refereeBonusDays} дня, а ты открываешь достижения ниже по
+          мере роста числа оплативших друзей. Без баланса и вывода.
         </div>
-        <div className="flex items-center gap-2.5">
-          <div className="flex-1 h-1.5 rounded-full bg-white/[.06] overflow-hidden">
-            <div
-              className="h-full rounded-full bg-gold"
-              style={{ width: `${((referral.paidCount % referral.milestoneSize) / referral.milestoneSize) * 100}%` }}
-            />
+        {referral.nextAchievement ? (
+          <div className="font-medium text-[12.5px] text-gold/90 leading-relaxed mt-2">
+            До следующего: ещё {referral.nextAchievement.remaining}{" "}
+            {referral.nextAchievement.remaining === 1 ? "друг" : "друзей"} — и +
+            {referral.nextAchievement.bonusDays} дней.
           </div>
-          <span className="font-display font-semibold text-[11px] text-ink/45 flex-shrink-0">
-            {referral.paidCount % referral.milestoneSize} / {referral.milestoneSize}
-          </span>
-        </div>
+        ) : null}
       </div>
 
       <div>

@@ -112,7 +112,7 @@ project_root/
 ## Key Business Rules (encode in code, not just comments)
 
 - **Trial**: granted once per `telegram_id`. Field: `User.trial_used`.
-- **Referral bonus**: +30 days per every 2 paying referrals. Tracked via `User.extra_days_granted`.
+- **Referral bonus (2026-08-31, ADR-017)**: achievement ladder only, no more recurring pack. Referrer gets a one-time bonus at 2/5/10/25 paying referrals (+8/+18/+35/+90 days, `REFERRAL_ACHIEVEMENTS` in `bot/handlers/payment.py`). The referee also gets `REFEREE_BONUS_DAYS = 2` on their first paid purchase via the link — new in this ADR, previously the referee got nothing. Tracked via `User.extra_days_granted`.
 - **Pre-checkout**: `pre_checkout_query` must always be answered within 10 seconds.
 - **Marzban username**: always `tg_{telegram_id}` for Telegram-identified users — never change this format. Guest/web-only accounts use `web_{id}` instead (established exception, not a violation of this rule).
 
