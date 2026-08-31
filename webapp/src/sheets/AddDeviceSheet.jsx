@@ -29,7 +29,7 @@ export default function AddDeviceSheet({ open, onClose, onSubmit, submitting }) 
               onClick={() => setType(t.type)}
               className="flex flex-col items-center gap-2 py-4 rounded-2xl"
               style={{
-                background: selected ? "rgba(255,184,0,.1)" : "#12151C",
+                background: selected ? "rgba(255,184,0,.1)" : "#0C0E12",
                 border: `1.5px solid ${selected ? "rgba(255,184,0,.5)" : "rgba(255,255,255,.06)"}`,
               }}
             >

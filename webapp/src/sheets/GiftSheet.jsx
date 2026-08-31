@@ -71,7 +71,7 @@ export default function GiftSheet({
                   onClick={() => onDaysSelect(opt)}
                   className="flex-1 text-center py-2.5 rounded-xl"
                   style={{
-                    background: selected ? "rgba(255,184,0,.1)" : "#12151C",
+                    background: selected ? "rgba(255,184,0,.1)" : "#0C0E12",
                     border: `1px solid ${selected ? "rgba(255,184,0,.5)" : "rgba(255,255,255,.06)"}`,
                   }}
                 >

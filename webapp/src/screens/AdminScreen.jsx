@@ -166,7 +166,7 @@ export default function AdminScreen({ showToast }) {
               onClick={() => setSubTab(t.id)}
               className="relative px-3 py-2 rounded-xl font-display font-semibold text-xs whitespace-nowrap flex-shrink-0"
               style={{
-                background: active ? "rgba(255,184,0,.12)" : "#12151C",
+                background: active ? "rgba(255,184,0,.12)" : "#0C0E12",
                 border: `1px solid ${active ? "rgba(255,184,0,.4)" : "rgba(255,255,255,.06)"}`,
                 color: active ? "#FFB800" : "rgba(245,243,238,.55)",
               }}
@@ -192,7 +192,7 @@ export default function AdminScreen({ showToast }) {
                 onClick={() => setFilter(f.id)}
                 className="px-3 py-1.5 rounded-full font-display font-semibold text-[11px] whitespace-nowrap flex-shrink-0"
                 style={{
-                  background: filter === f.id ? "rgba(255,184,0,.12)" : "#12151C",
+                  background: filter === f.id ? "rgba(255,184,0,.12)" : "#0C0E12",
                   border: `1px solid ${filter === f.id ? "rgba(255,184,0,.4)" : "rgba(255,255,255,.06)"}`,
                   color: filter === f.id ? "#FFB800" : "rgba(245,243,238,.5)",
                 }}

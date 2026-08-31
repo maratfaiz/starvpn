@@ -90,7 +90,7 @@ export default function RenewSheet({
               onClick={() => onSelectPlan(p.id)}
               className="relative flex items-center justify-between px-4 py-[15px] rounded-2xl"
               style={{
-                background: selected ? "rgba(255,184,0,.1)" : "#12151C",
+                background: selected ? "rgba(255,184,0,.1)" : "#0C0E12",
                 border: `1.5px solid ${selected ? "rgba(255,184,0,.5)" : "rgba(255,255,255,.06)"}`,
               }}
             >
@@ -121,7 +121,7 @@ export default function RenewSheet({
           onClick={() => onSelectPlan("custom")}
           className="relative flex items-center justify-between px-4 py-[15px] rounded-2xl"
           style={{
-            background: isCustom ? "rgba(255,184,0,.1)" : "#12151C",
+            background: isCustom ? "rgba(255,184,0,.1)" : "#0C0E12",
             border: `1.5px solid ${isCustom ? "rgba(255,184,0,.5)" : "rgba(255,255,255,.06)"}`,
           }}
         >
