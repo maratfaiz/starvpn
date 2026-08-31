@@ -24,8 +24,6 @@ import InstructionsSheet from "./sheets/InstructionsSheet.jsx";
 
 import * as api from "./data/mockApi.js";
 import {
-  server,
-  speedValue,
   referral,
   daysHistoryInitial,
   account,
@@ -106,7 +104,6 @@ export default function App() {
 
   // mutable app state (mock, no backend yet)
   const [daysHistory, setDaysHistory] = useState(daysHistoryInitial);
-  const [autoServer, setAutoServer] = useState(true);
   const [trialActivating, setTrialActivating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -302,6 +299,13 @@ export default function App() {
     showToast("✅ Ссылка скопирована!");
   };
 
+  const copyPrimaryDeviceLink = async (device) => {
+    haptic("light");
+    const { link } = await api.getDeviceLink(device.id);
+    navigator.clipboard?.writeText(link).catch(() => {});
+    showToast("✅ Ссылка скопирована!");
+  };
+
   const copyDeviceSubUrl = () => {
     navigator.clipboard?.writeText(subSheet.subUrl).catch(() => {});
     showToast("✅ Ссылка подписки скопирована!");
@@ -326,11 +330,6 @@ export default function App() {
       navigator.clipboard?.writeText(link).catch(() => {});
       showToast("Ссылка скопирована");
     }
-  };
-
-  const toggleAutoServer = () => {
-    haptic("light");
-    setAutoServer((v) => !v);
   };
 
   const logout = () => {
@@ -402,11 +401,13 @@ export default function App() {
           {activeTab === "home" && (
             <HomeScreen
               subscription={subscription}
-              server={server}
-              speedValue={speedValue}
+              primaryDevice={devices[0] || null}
+              devicesCount={devices.length}
+              devicesLimit={maxDevices}
               trafficUsedTotal={totalTrafficGb.toFixed(1)}
-              autoServer={autoServer}
-              onToggleAutoServer={toggleAutoServer}
+              onShowKey={showDeviceLink}
+              onCopyKey={copyPrimaryDeviceLink}
+              onAddDevice={openAddDevice}
               onOpenRenew={openRenew}
               onOpenGift={openGift}
               onActivateTrial={activateTrial}

@@ -76,6 +76,39 @@ export function ShareIcon({ size = 14, color = "#1A1408" }) {
   );
 }
 
+export function KeyIcon({ size = 16, color = "#F7CE68" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="8" cy="15" r="4" />
+      <path d="M10.8 12.2L20 3M17 6l3 3M14 9l2 2" />
+    </svg>
+  );
+}
+
+export function QrIcon({ size = 15, color = "#F7CE68" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <line x1="14" y1="14" x2="14" y2="17" />
+      <line x1="14" y1="20" x2="14" y2="20.01" />
+      <line x1="17" y1="14" x2="20" y2="14" />
+      <line x1="20" y1="17" x2="17" y2="17" />
+      <line x1="17" y1="20" x2="20" y2="20" />
+    </svg>
+  );
+}
+
+export function CopyIcon({ size = 15, color = "#F5F3EE" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">
+      <rect x="8" y="8" width="13" height="13" rx="2" />
+      <path d="M5 16H4a1 1 0 01-1-1V4a1 1 0 011-1h11a1 1 0 011 1v1" />
+    </svg>
+  );
+}
+
 export function LocationIcon({ size = 16, color = "#F5F3EE" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">

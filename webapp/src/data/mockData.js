@@ -2,15 +2,6 @@
 // No backend calls yet — this feeds the fully interactive frontend
 // until the real API (bot/api.py) is wired in.
 
-export const server = {
-  flag: "🇳🇱",
-  name: "Амстердам #2",
-  ping: 34,
-  protocol: "VLESS Reality",
-};
-
-export const speedValue = "184";
-
 export const referral = {
   code: "STAR-9X4K2",
   bonusDays: 30,
