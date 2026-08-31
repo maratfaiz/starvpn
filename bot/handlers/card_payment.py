@@ -204,7 +204,7 @@ async def handle_card_webhook(payment_id: int, bot: Bot) -> None:
 
 
 async def _notify_gift_recipient(payment: Payment, recipient: User, plan_label: str, bot: Bot, session) -> None:
-    """Общая логика уведомления о сайтовом подарке (карта/ЮMoney) — GiftNotification
+    """Общая логика уведомления о сайтовом подарке (картой) — GiftNotification
     для мини-аппа + сообщение в Telegram получателю с учётом анонимности."""
     from bot.models.gift_notification import GiftNotification
     from bot.handlers.gift import _instructions_kb

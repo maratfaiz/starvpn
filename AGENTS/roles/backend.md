@@ -63,7 +63,7 @@ tg_id = _tg_id(x_telegram_init_data)
 
 `bot/api.py` (2800+ строк — используй поиск по эндпоинту, не читай целиком),
 `bot/utils/webauth.py` (магик-линк логин), `bot/utils/marzban.py`,
-`bot/utils/robokassa.py` / `yoomoney.py` / `cryptopay.py`.
+`bot/utils/robokassa.py` / `cryptopay.py`.
 
 См. также [`AGENTS/architecture/api.md`](../architecture/api.md) для
 полного списка эндпоинтов.

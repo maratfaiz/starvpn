@@ -35,10 +35,6 @@ class Settings(BaseSettings):
     robokassa_password2: str = Field("", env="ROBOKASSA_PASSWORD2")  # for verifying ResultURL webhooks
     robokassa_test_mode: bool = Field(False, env="ROBOKASSA_TEST_MODE")
 
-    # ЮMoney (YooMoney) wallet — second RUB rail via Quickpay (wallet/card/SBP)
-    yoomoney_wallet: str = Field("", env="YOOMONEY_WALLET")  # номер кошелька-получателя
-    yoomoney_notification_secret: str = Field("", env="YOOMONEY_NOTIFICATION_SECRET")
-
     # Webhook server (receives Robokassa ResultURL callbacks)
     webhook_host: str = Field("0.0.0.0", env="WEBHOOK_HOST")
     webhook_port: int = Field(8080, env="WEBHOOK_PORT")

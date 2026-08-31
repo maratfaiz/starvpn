@@ -104,6 +104,7 @@ body{
 .nav-hamburger span{display:block;width:16px;height:1.5px;background:var(--gold);margin:0 auto}
 .nav-menu{display:contents}
 @media(max-width:768px){.nav-hamburger{display:flex}.nav-right{margin-left:auto}#account-email{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nav-menu{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:#0a0a0a;border-bottom:1px solid var(--gold-border);padding:10px 20px 18px;box-shadow:0 20px 40px rgba(0,0,0,.5)}.nav-menu.open{display:flex}.nav-links{display:flex;flex-direction:column;gap:2px}.nav-links a{padding:12px 4px}.nav-actions{display:flex;gap:10px;margin-top:12px}.nav-cta{padding:9px 16px;font-size:13px}}
+@media(min-width:769px){.nav-actions{display:contents}.nav-login{order:2}.nav-cta{order:3}}
 
 /* ─── Wrapper ──────────────────────────────────────────────── */
 .wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}
@@ -1036,7 +1037,7 @@ footer{
         Нужен ли паспорт при оплате?
         <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
       </button>
-      <div class="faq-body"><p>Нет. Ни оплата картой через Robokassa, ни оплата криптовалютой через @CryptoBot не требуют от вас документов. ЮMoney и Telegram Stars сейчас временно отключены.</p></div>
+      <div class="faq-body"><p>Нет. Ни оплата картой через Robokassa, ни оплата криптовалютой через @CryptoBot, ни оплата Telegram Stars в боте не требуют от вас документов.</p></div>
     </div>
 
     <div class="faq-item">

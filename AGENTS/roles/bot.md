@@ -12,7 +12,7 @@
 | `bot/tasks/scheduler.py` | Плановые задачи (например, напоминания об истечении подписки) |
 
 Разбивка `bot/handlers/`: `start.py` (онбординг/триал), `payment.py` +
-`card_payment.py` + `yoomoney_payment.py` + `crypto_payment.py` (оплата
+`card_payment.py` + `crypto_payment.py` (оплата
 по провайдерам), `devices.py`, `referral.py`, `gift.py`, `profile.py`,
 `dashboard.py`, `admin.py` (админ-команды в самом боте, не путать с
 веб-админкой), `instructions.py`.

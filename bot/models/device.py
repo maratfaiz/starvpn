@@ -21,7 +21,8 @@ class Device(Base):
         BigInteger, ForeignKey("users.telegram_id"), nullable=False, index=True
     )
     slot: Mapped[int] = mapped_column(Integer, nullable=False)          # 1, 2 или 3
-    name: Mapped[str] = mapped_column(String(64), nullable=False)       # "iPhone 15"
+    name: Mapped[str] = mapped_column(String(64), nullable=False)       # тип платформы: "ios" | "android" | ...
+    custom_name: Mapped[str | None] = mapped_column(String(64), nullable=True)  # имя, данное пользователем — "Мой iPhone"
     marzban_username: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

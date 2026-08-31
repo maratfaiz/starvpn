@@ -63,6 +63,7 @@ a:hover{color:var(--gold2)}
 .nav-hamburger span{display:block;width:16px;height:1.5px;background:var(--gold);margin:0 auto}
 .nav-menu{display:contents}
 @media(max-width:768px){.nav-hamburger{display:flex}.nav-right{margin-left:auto}#account-email{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nav-menu{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:#0a0a0a;border-bottom:1px solid var(--gold-border);padding:10px 20px 18px;box-shadow:0 20px 40px rgba(0,0,0,.5)}.nav-menu.open{display:flex}.nav-links{display:flex;flex-direction:column;gap:2px}.nav-links a{padding:12px 4px}.nav-actions{display:flex;gap:10px;margin-top:12px}.nav-cta{padding:9px 16px;font-size:13px}}
+@media(min-width:769px){.nav-actions{display:contents}.nav-login{order:2}.nav-cta{order:3}}
 
 .start-modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(6,6,6,.72);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
 .start-modal-overlay.open{display:flex}
@@ -221,7 +222,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
 
     <div class="legal-section">
       <h2 id="s4">4. Оплата и отсутствие документов</h2>
-      <p>Оплата возможна банковской картой через Robokassa, криптовалютой через @CryptoBot, а также через Telegram Stars и ЮMoney (когда включены). Реквизиты карты вводятся на стороне платёжного провайдера и к нам не передаются — мы получаем только факт успешной оплаты.</p>
+      <p>Оплата возможна банковской картой через Robokassa, криптовалютой через @CryptoBot, а также через Telegram Stars в боте. Реквизиты карты вводятся на стороне платёжного провайдера и к нам не передаются — мы получаем только факт успешной оплаты.</p>
       <p>Ни один способ оплаты не требует от вас паспорт или иные документы.</p>
     </div>
 
@@ -232,7 +233,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
 
     <div class="legal-section">
       <h2 id="s6">6. Передача третьим лицам</h2>
-      <p>Мы не продаём и не передаём ваши данные третьим лицам. Обмен данными происходит только с платёжными провайдерами (Robokassa, @CryptoBot, ЮMoney, Telegram) в объёме, необходимом для проведения оплаты, и с инфраструктурными поставщиками серверов — без передачи истории трафика, которой у нас нет.</p>
+      <p>Мы не продаём и не передаём ваши данные третьим лицам. Обмен данными происходит только с платёжными провайдерами (Robokassa, @CryptoBot, Telegram) в объёме, необходимом для проведения оплаты, и с инфраструктурными поставщиками серверов — без передачи истории трафика, которой у нас нет.</p>
     </div>
 
     <div class="legal-section">
