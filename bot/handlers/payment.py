@@ -96,7 +96,7 @@ PLANS: dict[str, dict] = {
 
 REFERRAL_DAYS_PER_REFERRAL = 15    # дней рефереру за каждого друга, оплатившего и оставшегося с нами
 REFERRAL_VESTING_DAYS = 30         # сколько друг должен продержаться активным до начисления бонуса
-REFERRAL_ANNUAL_CAP_DAYS = 365     # максимум реферальных дней за скользящие 365 дней на реферера
+REFERRAL_MONTHLY_CAP_DAYS = 90     # максимум реферальных дней за скользящие 30 дней на реферера (2026-08-31: было 365/365)
 
 # Статусы-достижения по общему числу оплативших+переживших выдержку
 # рефералов — чисто визуальные бейджи, без дополнительных дней (раньше
@@ -177,7 +177,8 @@ async def credit_vested_referrals(bot: Bot) -> None:
     не была разобрана, и — если реферал всё ещё активный подписчик (не
     забанен, подписка не истекла) — начисляет его рефереру
     REFERRAL_DAYS_PER_REFERRAL дней, при условии что у реферера остался
-    запас в пределах REFERRAL_ANNUAL_CAP_DAYS за последние 365 дней.
+    запас в пределах REFERRAL_MONTHLY_CAP_DAYS за последние 30 дней
+    (скользящее окно, не календарный месяц — не "сбрасывается" 1-го числа).
 
     Это единственное место, где увеличивается referrer.referral_count —
     раньше он бился дважды (один раз на /start ещё до оплаты, второй раз
@@ -186,7 +187,7 @@ async def credit_vested_referrals(bot: Bot) -> None:
     """
     now = datetime.utcnow()
     cutoff = now - timedelta(days=REFERRAL_VESTING_DAYS)
-    year_ago = now - timedelta(days=365)
+    month_ago = now - timedelta(days=30)
 
     async with AsyncSessionLocal() as session:
         result = await session.execute(
@@ -223,19 +224,19 @@ async def credit_vested_referrals(bot: Bot) -> None:
             if not referrer:
                 continue
 
-            credited_this_year = (await session.execute(
+            credited_this_month = (await session.execute(
                 select(func.coalesce(func.sum(ReferralCredit.days), 0)).where(
                     ReferralCredit.referrer_id == referrer.telegram_id,
-                    ReferralCredit.created_at >= year_ago,
+                    ReferralCredit.created_at >= month_ago,
                 )
             )).scalar_one()
 
-            if credited_this_year >= REFERRAL_ANNUAL_CAP_DAYS:
+            if credited_this_month >= REFERRAL_MONTHLY_CAP_DAYS:
                 try:
                     await bot.send_message(
                         referrer.telegram_id,
-                        "📈 <b>Годовой лимит реферальных дней достигнут</b>\n\n"
-                        f"За последние 12 месяцев начислено {credited_this_year} дней — "
+                        "📈 <b>Месячный лимит реферальных дней достигнут</b>\n\n"
+                        f"За последние 30 дней начислено {credited_this_month} дней — "
                         "это максимум. Новые оплатившие друзья по-прежнему учитываются "
                         "в статистике, но дни временно не начисляются.",
                         parse_mode="HTML",

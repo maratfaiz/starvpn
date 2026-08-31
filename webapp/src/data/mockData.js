@@ -7,12 +7,11 @@
 // protection), and a monthly cap. Kept intentionally simple — no
 // achievements/levels/leaderboards.
 //
-// NOTE: monthlyCapDays/monthlyCapReferrals (90 days = 6 referrals/month)
-// is the cap shown on this screen per an explicit 2026-08-31 design
-// request. The currently deployed backend (bot/handlers/payment.py) still
-// enforces REFERRAL_ANNUAL_CAP_DAYS = 365 on a rolling 365-day window, not
-// a calendar-month 90-day cap — this is a real mismatch flagged for
-// product sign-off, not silently reconciled. See Agents_history.md.
+// monthlyCapDays/monthlyCapReferrals (90 days = 6 referrals, rolling
+// 30-day window) mirrors bot/handlers/payment.py's REFERRAL_MONTHLY_CAP_DAYS
+// — changed 2026-08-31 from an initial 365-days/365-day-window cap to match
+// this screen's simplified copy (explicit product decision, see
+// Agents_history.md).
 export const referral = {
   code: "STAR-9X4K2",
   daysPerReferral: 15,

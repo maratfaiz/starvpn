@@ -986,7 +986,7 @@ async def get_referral(request: Request, x_telegram_init_data: str | None = Head
     from bot.handlers.payment import (
         REFERRAL_DAYS_PER_REFERRAL,
         REFERRAL_VESTING_DAYS,
-        REFERRAL_ANNUAL_CAP_DAYS,
+        REFERRAL_MONTHLY_CAP_DAYS,
         REFERRAL_ACHIEVEMENTS,
     )
 
@@ -998,7 +998,7 @@ async def get_referral(request: Request, x_telegram_init_data: str | None = Head
         "referral_count": paying,
         "days_per_referral": REFERRAL_DAYS_PER_REFERRAL,
         "vesting_days": REFERRAL_VESTING_DAYS,
-        "annual_cap_days": REFERRAL_ANNUAL_CAP_DAYS,
+        "monthly_cap_days": REFERRAL_MONTHLY_CAP_DAYS,
         "achievements": [
             {
                 "key": a["key"],

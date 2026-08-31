@@ -1,8 +1,9 @@
 """Referral credit ledger — one row per bonus grant to a referrer.
 
 This is the audit trail the old system never had (only a running total on
-User.extra_days_granted), and the basis for the rolling 365-day cap on how
-many referral days a single referrer can earn.
+User.extra_days_granted), and the basis for the rolling 30-day cap (2026-08-31:
+changed from a 365-day/365-day cap to a 90-day/30-day cap) on how many
+referral days a single referrer can earn.
 """
 
 from datetime import datetime

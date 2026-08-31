@@ -5,7 +5,7 @@
   • Друг оплачивает подписку по твоей ссылке и остаётся активным
     REFERRAL_VESTING_DAYS дней (защита от возвратов/чарджбэков) —
     тебе автоматически начисляется REFERRAL_DAYS_PER_REFERRAL дней.
-  • Лимит — REFERRAL_ANNUAL_CAP_DAYS дней за скользящие 365 дней.
+  • Лимит — REFERRAL_MONTHLY_CAP_DAYS дней за скользящие 30 дней.
   • Никакого баланса и вывода — бонус применяется сразу к подписке.
   • Достижения (REFERRAL_ACHIEVEMENTS) — статусы за общее число оплативших
     друзей, без дополнительных дней.
@@ -27,7 +27,7 @@ from bot.models.user import User
 from bot.handlers.payment import (
     REFERRAL_DAYS_PER_REFERRAL,
     REFERRAL_VESTING_DAYS,
-    REFERRAL_ANNUAL_CAP_DAYS,
+    REFERRAL_MONTHLY_CAP_DAYS,
     REFERRAL_ACHIEVEMENTS,
 )
 
@@ -77,7 +77,7 @@ async def referral_info(message: Message, session: AsyncSession) -> None:
         f"Делись ссылкой → друг оплачивает подписку → остаётся активным "
         f"{REFERRAL_VESTING_DAYS} дней (это защита от возвратов) → тебе автоматически "
         f"начисляется <b>+{REFERRAL_DAYS_PER_REFERRAL} дней</b> за каждого такого друга. "
-        f"Лимит — {REFERRAL_ANNUAL_CAP_DAYS} дней в год. Никакого вывода — только дни к подписке.\n\n"
+        f"Лимит — {REFERRAL_MONTHLY_CAP_DAYS} дней в месяц. Никакого вывода — только дни к подписке.\n\n"
         f"📈 <b>Твоя статистика:</b>\n"
         f"👤 Приглашено: <b>{total}</b> чел.\n"
         f"✅ Оплатили и остались: <b>{paying}</b> чел.\n"
