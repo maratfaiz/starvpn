@@ -1,4 +1,5 @@
 import { StarIcon, BoltIcon, GiftIcon, KeyIcon, QrIcon, CopyIcon, DeviceIcon, CloudIcon } from "../components/icons.jsx";
+import { planLabel } from "../utils/plan.js";
 
 export default function HomeScreen({
   subscription,
@@ -15,9 +16,7 @@ export default function HomeScreen({
   trialActivating,
 }) {
   const active = subscription.active;
-  const percentPassed = active
-    ? Math.round(((subscription.totalDays - subscription.daysLeft) / subscription.totalDays) * 100)
-    : 0;
+  const percentLeft = active ? Math.round((subscription.daysLeft / subscription.totalDays) * 100) : 0;
   const showTrialCard = !active && !subscription.trialUsed;
 
   return (
@@ -41,7 +40,7 @@ export default function HomeScreen({
           </span>
           {active && (
             <span className="ml-auto font-display font-semibold text-[11px] text-gold bg-gold/10 px-2.5 py-[3px] rounded-full border border-gold/25">
-              {subscription.planName}
+              {planLabel(subscription.planName)}
             </span>
           )}
         </div>
@@ -59,7 +58,7 @@ export default function HomeScreen({
         <div className="mt-4 h-1.5 rounded-full bg-white/[.07] overflow-hidden">
           <div
             className="h-full rounded-full bg-gradient-to-r from-gold-dark to-gold"
-            style={{ width: `${percentPassed}%` }}
+            style={{ width: `${percentLeft}%` }}
           />
         </div>
 

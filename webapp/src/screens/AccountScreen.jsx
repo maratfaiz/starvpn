@@ -1,4 +1,5 @@
 import { StarIcon, GearIcon, SettingIcon, ChevronIcon, CrownIcon, CalendarIcon, CardIcon, HeadsetIcon } from "../components/icons.jsx";
+import { planLabel } from "../utils/plan.js";
 
 function openExternal(url) {
   const tg = window.Telegram?.WebApp;
@@ -107,7 +108,7 @@ export default function AccountScreen({
 
         <div className="relative font-semibold text-[13px] text-ink/55">Текущий план</div>
         <div className="relative flex items-center gap-2 mt-1.5">
-          <span className="font-display font-extrabold text-2xl text-gold">{subscription.planName}</span>
+          <span className="font-display font-extrabold text-2xl text-gold">{planLabel(subscription.planName)}</span>
           {subscription.active && (
             <span className="font-display font-bold text-[11px] text-ink/60 bg-white/[.06] px-2 py-1 rounded-lg">
               {subscription.daysLeft} дней
