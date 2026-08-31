@@ -19,4 +19,7 @@ COPY webapp/app.html ./webapp/app.html
 # Copy Admin Panel (served via /admin endpoint)
 COPY admin/index.html ./admin/index.html
 
+# Copy landing site (favicon, images, world-dots.js, all HTML pages — served via bot/api.py)
+COPY landing/ ./landing/
+
 CMD ["python", "-m", "bot.main"]
