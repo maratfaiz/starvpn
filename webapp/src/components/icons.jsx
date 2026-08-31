@@ -26,10 +26,10 @@ export function CheckIcon({ size = 16, color = "#FFB800", strokeWidth = "2.4" })
   );
 }
 
-export function ChevronIcon() {
+export function ChevronIcon({ color = "rgba(245,243,238,.25)" }) {
   return (
     <svg width="7" height="12" viewBox="0 0 8 14" fill="none">
-      <path d="M1 1l6 6-6 6" stroke="rgba(245,243,238,.25)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M1 1l6 6-6 6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -196,15 +196,50 @@ export function SettingIcon({ name, size = 14, color = "#F5F3EE" }) {
   }
 }
 
+export function CrownIcon({ size = 21, color = "currentColor" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round">
+      <path d="M3 17h18l-1.5-9-4.5 3.5L12 6 8.5 11.5 4 8z" />
+      <line x1="4" y1="20" x2="20" y2="20" />
+    </svg>
+  );
+}
+
+export function CalendarIcon({ size = 16, color = "#FFB800" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+    </svg>
+  );
+}
+
+export function CardIcon({ size = 16, color = "#FFB800" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <line x1="2" y1="10" x2="22" y2="10" />
+    </svg>
+  );
+}
+
+export function HeadsetIcon({ size = 16, color = "#FFB800" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 13v-1a8 8 0 0116 0v1" />
+      <rect x="2.5" y="13" width="4" height="6" rx="1.5" />
+      <rect x="17.5" y="13" width="4" height="6" rx="1.5" />
+      <path d="M19.5 19v.5a3 3 0 01-3 3H13" />
+    </svg>
+  );
+}
+
 export function NavIcon({ name, color, size = 21 }) {
   switch (name) {
     case "home":
-      return (
-        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round">
-          <path d="M3 17h18l-1.5-9-4.5 3.5L12 6 8.5 11.5 4 8z" />
-          <line x1="4" y1="20" x2="20" y2="20" />
-        </svg>
-      );
+      return <CrownIcon size={size} color={color} />;
     case "devices":
       return (
         <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">

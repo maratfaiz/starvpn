@@ -1,4 +1,4 @@
-import { StarIcon, GearIcon, SettingIcon, ChevronIcon } from "../components/icons.jsx";
+import { StarIcon, GearIcon, SettingIcon, ChevronIcon, CrownIcon, CalendarIcon, CardIcon, HeadsetIcon } from "../components/icons.jsx";
 
 function openExternal(url) {
   const tg = window.Telegram?.WebApp;
@@ -60,69 +60,115 @@ export default function AccountScreen({
 }) {
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3.5 px-0.5 py-1.5">
-        <div className="w-[58px] h-[58px] rounded-full bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center font-display font-extrabold text-xl text-[#1A1408] flex-shrink-0">
+      <div className="relative flex items-center gap-3.5 px-0.5 py-1.5 overflow-hidden">
+        <div
+          className="absolute top-1/2 right-0 w-2/3 h-px -translate-y-4 rotate-[-8deg] pointer-events-none"
+          style={{ background: "linear-gradient(90deg, transparent, rgba(255,184,0,.5), transparent)" }}
+        />
+        <div className="relative w-[58px] h-[58px] rounded-full bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center font-display font-extrabold text-xl text-[#1A1408] flex-shrink-0 shadow-[0_0_22px_rgba(255,184,0,.4)] ring-2 ring-gold/30">
           {account.initials}
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="relative flex-1 min-w-0">
           <div className="font-display font-bold text-[17px] text-ink">{account.name}</div>
           <div className="font-medium text-[13px] text-ink/45">{account.username}</div>
+          <span className="inline-flex items-center gap-1.5 mt-1.5 bg-white/[.05] border border-white/[.08] rounded-full px-2.5 py-[3px]">
+            <span
+              className="w-[6px] h-[6px] rounded-full"
+              style={{ background: subscription.active ? "#2ED9A6" : "rgba(245,243,238,.35)" }}
+            />
+            <span
+              className="font-medium text-[11px]"
+              style={{ color: subscription.active ? "#2ED9A6" : "rgba(245,243,238,.4)" }}
+            >
+              {subscription.active ? "Онлайн" : "Не активен"}
+            </span>
+          </span>
         </div>
         <GearIcon />
       </div>
 
-      <div className="rounded-[20px] p-[18px] border border-gold/30 bg-[linear-gradient(160deg,#120E06_0%,#0C0E12_60%)]">
-        <div className="flex justify-between items-center">
-          <span className="font-semibold text-[13px] text-ink/55">Текущий план</span>
-          <span className="font-display font-bold text-[13px] text-gold bg-gold/[.12] px-2.5 py-1 rounded-lg">
-            {subscription.planName}
-          </span>
+      <div className="relative rounded-[20px] p-[18px] overflow-hidden border border-gold/30 bg-[linear-gradient(160deg,#120E06_0%,#0C0E12_60%)]">
+        <svg
+          viewBox="0 0 24 24"
+          className="absolute top-3 right-3 w-16 h-16 opacity-90 pointer-events-none"
+        >
+          <ellipse cx="12" cy="12" rx="10.5" ry="4" fill="none" stroke="#FFB800" strokeOpacity=".3" strokeWidth=".6" transform="rotate(-18 12 12)" />
+          <path
+            d="M12 4l1.8 4.4L18.5 9l-3.5 3 1 4.6L12 14.2l-4 2.4 1-4.6-3.5-3 4.7-.6z"
+            fill="url(#accountStarGrad)"
+          />
+          <defs>
+            <linearGradient id="accountStarGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#FFD84D" />
+              <stop offset="100%" stopColor="#CC8A00" />
+            </linearGradient>
+          </defs>
+        </svg>
+
+        <div className="relative font-semibold text-[13px] text-ink/55">Текущий план</div>
+        <div className="relative flex items-center gap-2 mt-1.5">
+          <span className="font-display font-extrabold text-2xl text-gold">{subscription.planName}</span>
+          {subscription.active && (
+            <span className="font-display font-bold text-[11px] text-ink/60 bg-white/[.06] px-2 py-1 rounded-lg">
+              {subscription.daysLeft} дней
+            </span>
+          )}
         </div>
-        <div className="flex justify-between items-center mt-2.5">
+
+        <div className="relative flex items-center gap-2 mt-3.5">
+          <CalendarIcon size={15} />
           <span className="font-medium text-[12.5px] text-ink/40">Продление</span>
-          <span className="font-semibold text-[13px] text-ink">{subscription.expiryDate}</span>
+          <span className="ml-auto font-semibold text-[13px] text-ink">{subscription.expiryDate}</span>
         </div>
-        <div className="flex justify-between items-center mt-2">
+        <div className="relative flex items-center gap-2 mt-2.5">
+          <CardIcon size={15} />
           <span className="font-medium text-[12.5px] text-ink/40">Оплата</span>
-          <span className="flex items-center gap-1 font-semibold text-[13px] text-ink">
+          <span className="ml-auto flex items-center gap-1 font-semibold text-[13px] text-ink">
             <StarIcon size={11} /> Telegram Stars
           </span>
         </div>
+
         <button
           onClick={onManageSubscription}
-          className="w-full mt-3.5 border border-gold/35 bg-gold/[.08] py-2.5 rounded-[13px] font-display font-bold text-[13px] text-gold"
+          className="relative w-full mt-4 bg-gradient-to-br from-gold to-gold-dark py-3 rounded-[14px] flex items-center justify-center gap-2"
         >
-          Управлять подпиской
+          <CrownIcon size={16} color="#1A1408" />
+          <span className="font-display font-bold text-[14px] text-[#1A1408]">Управлять подпиской</span>
+          <ChevronIcon color="rgba(26,20,8,.5)" />
         </button>
       </div>
 
-      <div className="flex flex-col gap-2.5">
+      <div className="grid grid-cols-2 gap-2.5">
         <button
           onClick={onOpenInstructions}
-          className="w-full flex items-center gap-3 bg-app-card border border-gold/20 rounded-2xl px-4 py-3.5 text-left"
+          className="bg-app-card border border-gold/20 rounded-2xl p-3.5 text-left flex flex-col gap-3"
         >
-          <div className="w-9 h-9 rounded-[10px] bg-gold/[.08] border border-gold/20 flex items-center justify-center flex-shrink-0">
-            <SettingIcon name="info" color="#FFB800" />
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 rounded-[10px] bg-gold/[.08] border border-gold/20 flex items-center justify-center flex-shrink-0">
+              <SettingIcon name="info" color="#FFB800" />
+            </div>
+            <ChevronIcon />
           </div>
-          <div className="flex-1 min-w-0">
+          <div>
             <div className="font-semibold text-[13.5px] text-ink">Как подключиться</div>
-            <div className="font-medium text-[11px] text-ink/40">Пошаговая инструкция для всех устройств</div>
+            <div className="font-medium text-[11px] text-ink/40 mt-0.5">Пошаговая инструкция для всех устройств</div>
           </div>
-          <ChevronIcon />
         </button>
 
         <button
           onClick={() => openTelegram(account.supportUrl)}
-          className="w-full flex items-center gap-3 bg-app-card border border-gold/20 rounded-2xl px-4 py-3.5 text-left"
+          className="bg-app-card border border-gold/20 rounded-2xl p-3.5 text-left flex flex-col gap-3"
         >
-          <div className="w-9 h-9 rounded-[10px] bg-gold/[.08] border border-gold/20 flex items-center justify-center flex-shrink-0">
-            <SettingIcon name="help" color="#FFB800" />
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 rounded-[10px] bg-gold/[.08] border border-gold/20 flex items-center justify-center flex-shrink-0">
+              <HeadsetIcon size={16} />
+            </div>
+            <ChevronIcon />
           </div>
-          <div className="flex-1 min-w-0">
+          <div>
             <div className="font-semibold text-[13.5px] text-ink">Написать в поддержку</div>
-            <div className="font-medium text-[11px] text-ink/40">Мы онлайн 24/7</div>
+            <div className="font-medium text-[11px] text-ink/40 mt-0.5">Мы онлайн 24/7</div>
           </div>
-          <ChevronIcon />
         </button>
       </div>
 
@@ -157,7 +203,7 @@ export default function AccountScreen({
             }`}
           >
             <div className="w-[30px] h-[30px] rounded-[9px] bg-white/[.05] flex items-center justify-center flex-shrink-0">
-              <SettingIcon name={row.icon} />
+              <SettingIcon name={row.icon} color="#FFB800" />
             </div>
             <span className="flex-1 font-medium text-[13.5px] text-ink">{row.label}</span>
             {row.detail && <span className="font-medium text-xs text-ink/35 mr-1">{row.detail}</span>}
