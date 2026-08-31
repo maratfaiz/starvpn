@@ -91,7 +91,7 @@ export default function GiftSheet({
           <textarea
             value={comment}
             onChange={(e) => onCommentChange(e.target.value)}
-            placeholder="С днём рождения! 🎉"
+            placeholder="С днём рождения!"
             rows={3}
             className="w-full resize-none bg-app-card border border-white/10 rounded-[13px] px-3.5 py-3 font-medium text-sm text-ink outline-none placeholder:text-ink/30"
           />

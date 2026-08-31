@@ -145,7 +145,9 @@ export default function HomeScreen({
 
       {showTrialCard && (
         <div className="rounded-2xl border border-gold/40 bg-app-card text-center px-4 py-5">
-          <div className="text-[28px] mb-2">🎁</div>
+          <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center">
+            <GiftIcon size={22} />
+          </div>
           <div className="font-display font-bold text-[15px] text-ink mb-1.5">Попробуй бесплатно — 2 дня</div>
           <div className="font-medium text-xs text-ink/45 mb-3.5">Полный безлимит · без ограничений</div>
           <button

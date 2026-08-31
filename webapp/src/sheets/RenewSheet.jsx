@@ -36,8 +36,8 @@ export default function RenewSheet({
             <CheckIcon size={28} color="#2ED9A6" />
           </div>
           <div className="font-display font-extrabold text-[17px] text-ink">Подписка продлена!</div>
-          <div className="font-medium text-[13.5px] text-ink/45 mt-1.5 max-w-[260px]">
-            Добавлено {lastAddedDays} дней. Спасибо, что выбираете STAR VPN ⭐
+          <div className="font-medium text-[13.5px] text-ink/45 mt-1.5 max-w-[260px] inline-flex items-center gap-1 flex-wrap justify-center">
+            Добавлено {lastAddedDays} дней. Спасибо, что выбираете STAR VPN <StarIcon size={12} />
           </div>
           <button
             onClick={onClose}
@@ -91,8 +91,14 @@ export default function RenewSheet({
             ) : (
               <span className="font-display font-extrabold text-lg text-[#5FD068]">{customRub} ₽</span>
             )}
-            <div className="font-medium text-[11px] text-ink/35 mt-0.5">
-              {method === "stars" ? `${pricePerDay.toFixed(1)} ⭐ в день` : `${rubPerDay.toFixed(1)} ₽ в день`}
+            <div className="flex items-center gap-1 justify-end font-medium text-[11px] text-ink/35 mt-0.5">
+              {method === "stars" ? (
+                <>
+                  {pricePerDay.toFixed(1)} <StarIcon size={9} /> в день
+                </>
+              ) : (
+                `${rubPerDay.toFixed(1)} ₽ в день`
+              )}
             </div>
           </div>
         </div>
@@ -119,7 +125,9 @@ export default function RenewSheet({
         {method === "stars" ? (
           <>
             <BoltIcon size={14} />
-            <span className="font-display font-bold text-[15px] text-[#1A1408]">Оплатить {selectedPlan.price} ⭐</span>
+            <span className="font-display font-bold text-[15px] text-[#1A1408] inline-flex items-center gap-1">
+              Оплатить {selectedPlan.price} <StarIcon size={13} color="#1A1408" />
+            </span>
           </>
         ) : (
           <>

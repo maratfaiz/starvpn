@@ -10,10 +10,10 @@ export const referral = {
   paidCount: 5,
   daysEarned: 85,
   achievements: [
-    { key: "first", icon: "🥉", title: "Первая ласточка", threshold: 1, bonusDays: 5, unlocked: true },
-    { key: "ambassador", icon: "🥈", title: "Амбассадор", threshold: 5, bonusDays: 20, unlocked: true },
-    { key: "legend", icon: "🥇", title: "Легенда STAR VPN", threshold: 10, bonusDays: 50, unlocked: false },
-    { key: "vip", icon: "💎", title: "Партнёр года", threshold: 25, bonusDays: 150, unlocked: false },
+    { key: "first", icon: "bronze", title: "Первая ласточка", threshold: 1, bonusDays: 5, unlocked: true },
+    { key: "ambassador", icon: "silver", title: "Амбассадор", threshold: 5, bonusDays: 20, unlocked: true },
+    { key: "legend", icon: "gold", title: "Легенда STAR VPN", threshold: 10, bonusDays: 50, unlocked: false },
+    { key: "vip", icon: "diamond", title: "Партнёр года", threshold: 25, bonusDays: 150, unlocked: false },
   ],
 };
 
@@ -56,9 +56,9 @@ export const languageOptions = [
 
 // price — Stars price, rub — card price via Robokassa. Matches bot/handlers/payment.py PLANS.
 export const renewPlans = [
-  { id: 1, label: "1 месяц", days: 30, perMonth: "99 ⭐ / мес", price: 99, rub: 199, popular: false },
-  { id: 2, label: "3 месяца", days: 90, perMonth: "83 ⭐ / мес", price: 249, rub: 499, popular: true },
-  { id: 3, label: "6 месяцев", days: 180, perMonth: "75 ⭐ / мес", price: 449, rub: 899, popular: false },
+  { id: 1, label: "1 месяц", days: 30, perMonth: "99 звёзд / мес", price: 99, rub: 199, popular: false },
+  { id: 2, label: "3 месяца", days: 90, perMonth: "83 звезды / мес", price: 249, rub: 499, popular: true },
+  { id: 3, label: "6 месяцев", days: 180, perMonth: "75 звёзд / мес", price: 449, rub: 899, popular: false },
 ];
 
 export const giftDayOptions = [7, 30, 90, 180];

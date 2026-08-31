@@ -6,6 +6,7 @@ import Starfield from "./components/Starfield.jsx";
 import Onboarding, { onboardingSeen } from "./components/Onboarding.jsx";
 import TelegramGate from "./components/TelegramGate.jsx";
 import GiftReceivedModal from "./components/GiftReceivedModal.jsx";
+import { CheckIcon, CardIcon, GiftIcon } from "./components/icons.jsx";
 
 import HomeScreen from "./screens/HomeScreen.jsx";
 import DevicesScreen from "./screens/DevicesScreen.jsx";
@@ -108,12 +109,12 @@ export default function App() {
   const [refreshing, setRefreshing] = useState(false);
 
   // toast
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState({ message: "", icon: null });
   const toastTimer = useRef(null);
-  const showToast = (message) => {
-    setToast(message);
+  const showToast = (message, icon = null) => {
+    setToast({ message, icon });
     clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(""), 2200);
+    toastTimer.current = setTimeout(() => setToast({ message: "", icon: null }), 2200);
   };
 
   // settings sheet
@@ -222,7 +223,7 @@ export default function App() {
       // needs either extending that endpoint or hiding "Карта" here and
       // keeping it fixed-tier elsewhere. Flagged, not resolved by this mock.
       setRenewOpen(false);
-      showToast("💳 Счёт создан — оплати картой на защищённой странице");
+      showToast("Счёт создан — оплати картой на защищённой странице", <CardIcon size={15} color="#5FD068" />);
       return;
     }
 
@@ -249,7 +250,7 @@ export default function App() {
       const me = await api.activateTrial();
       setSubscription(meToSubscription(me));
       haptic("notification");
-      showToast("🎁 Триал активирован на 2 дня!");
+      showToast("Триал активирован на 2 дня!", <GiftIcon size={15} />);
     } finally {
       setTrialActivating(false);
     }
@@ -266,7 +267,7 @@ export default function App() {
     await api.deleteDevice(id);
     setDevices((prev) => prev.filter((d) => d.id !== id));
     setDeviceSheetId(null);
-    showToast("✅ Устройство удалено");
+    showToast("Устройство удалено", <CheckIcon size={15} />);
   };
 
   const openAddDevice = () => {
@@ -280,7 +281,7 @@ export default function App() {
       setDevices((prev) => [...prev, device]);
       setAddDeviceOpen(false);
       setDeviceSheetId(device.id);
-      showToast("✅ Устройство добавлено");
+      showToast("Устройство добавлено", <CheckIcon size={15} />);
     } finally {
       setAddingDevice(false);
     }
@@ -302,19 +303,19 @@ export default function App() {
 
   const copyDeviceLink = () => {
     navigator.clipboard?.writeText(linkSheet.link).catch(() => {});
-    showToast("✅ Ссылка скопирована!");
+    showToast("Ссылка скопирована!", <CheckIcon size={15} />);
   };
 
   const copyPrimaryDeviceLink = async (device) => {
     haptic("light");
     const { link } = await api.getDeviceLink(device.id);
     navigator.clipboard?.writeText(link).catch(() => {});
-    showToast("✅ Ссылка скопирована!");
+    showToast("Ссылка скопирована!", <CheckIcon size={15} />);
   };
 
   const copyDeviceSubUrl = () => {
     navigator.clipboard?.writeText(subSheet.subUrl).catch(() => {});
-    showToast("✅ Ссылка подписки скопирована!");
+    showToast("Ссылка подписки скопирована!", <CheckIcon size={15} />);
   };
 
   const copyReferralCode = () => {
@@ -348,7 +349,7 @@ export default function App() {
     showToast("Обновляю...");
     try {
       await loadAll();
-      showToast("✅ Обновлено");
+      showToast("Обновлено", <CheckIcon size={15} />);
     } finally {
       setRefreshing(false);
     }
@@ -526,7 +527,7 @@ export default function App() {
 
       <GiftReceivedModal gift={pendingGift} onClose={closeGiftReceived} />
 
-      <Toast message={toast} />
+      <Toast message={toast.message} icon={toast.icon} />
     </div>
   );
 }

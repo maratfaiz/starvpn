@@ -1,4 +1,11 @@
-import { StarIcon, ShareIcon } from "../components/icons.jsx";
+import { StarIcon, ShareIcon, MedalIcon, DiamondIcon, CheckIcon } from "../components/icons.jsx";
+
+const ACHIEVEMENT_ICON = {
+  bronze: <MedalIcon size={26} color="#CD7F32" />,
+  silver: <MedalIcon size={26} color="#C0C0C0" />,
+  gold: <MedalIcon size={26} color="#FFD700" />,
+  diamond: <DiamondIcon size={26} color="#7DD3FC" />,
+};
 
 const HISTORY_ICON = {
   referral: (
@@ -78,12 +85,20 @@ export default function ReferralsScreen({ referral, daysHistory, copied, onCopyC
                 a.unlocked ? "bg-gold/[.08] border-gold/35" : "bg-app-card border-white/[.06]"
               }`}
             >
-              <div className={`text-2xl mb-1.5 ${a.unlocked ? "" : "grayscale opacity-40"}`}>{a.icon}</div>
+              <div className={`flex justify-center mb-1.5 ${a.unlocked ? "" : "grayscale opacity-40"}`}>
+                {ACHIEVEMENT_ICON[a.icon]}
+              </div>
               <div className={`font-display font-bold text-[12px] ${a.unlocked ? "text-gold" : "text-ink/50"}`}>
                 {a.title}
               </div>
-              <div className="font-medium text-[10.5px] text-ink/35 mt-0.5">
-                {a.unlocked ? `+${a.bonusDays} дней получено ✅` : `${a.threshold} друзей · +${a.bonusDays} дней`}
+              <div className="flex items-center justify-center gap-1 font-medium text-[10.5px] text-ink/35 mt-0.5">
+                {a.unlocked ? (
+                  <>
+                    <CheckIcon size={10} color="#2ED9A6" strokeWidth="3" />+{a.bonusDays} дней получено
+                  </>
+                ) : (
+                  `${a.threshold} друзей · +${a.bonusDays} дней`
+                )}
               </div>
             </div>
           ))}

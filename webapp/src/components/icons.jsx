@@ -118,6 +118,131 @@ export function CloudIcon({ size = 16, color = "#F5F3EE" }) {
   );
 }
 
+export function LinkIcon({ size = 16, color = "#FFB800" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 13a5 5 0 007.07 0l2.83-2.83a5 5 0 00-7.07-7.07L11.5 4.5" />
+      <path d="M14 11a5 5 0 00-7.07 0L4.1 13.83a5 5 0 007.07 7.07L12.5 19.5" />
+    </svg>
+  );
+}
+
+export function MedalIcon({ size = 24, color = "#FFB800" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path d="M8 2L4 9l4 3 2-6-2-4zM16 2l4 7-4 3-2-6 2-4z" fill={color} opacity=".55" />
+      <circle cx="12" cy="15" r="7" fill={color} />
+      <circle cx="12" cy="15" r="4.2" fill="none" stroke="rgba(0,0,0,.25)" strokeWidth="1.2" />
+    </svg>
+  );
+}
+
+export function DiamondIcon({ size = 24, color = "#7DD3FC" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path d="M6 3h12l4 6-10 12L2 9z" fill={color} />
+      <path d="M2 9h20M6 3l2 6-4 0M18 3l-2 6 4 0M9 3l3 18 3-18" stroke="rgba(0,0,0,.2)" strokeWidth=".8" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function UsersIcon({ size = 16, color = "currentColor" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M2.5 19c0-3.2 2.9-5.5 6.5-5.5s6.5 2.3 6.5 5.5" />
+      <path d="M16 4.2a3.2 3.2 0 010 6.2M21.5 19c0-2.8-2-4.9-4.8-5.4" />
+    </svg>
+  );
+}
+
+export function MegaphoneIcon({ size = 16, color = "currentColor", className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M3 11v2a2 2 0 002 2h1l3 5h2l-1-5h2l8 4V6l-8 4H6a2 2 0 00-2 2z" />
+      <path d="M3 11V9" />
+    </svg>
+  );
+}
+
+export function SearchIcon({ size = 16, color = "currentColor", className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="11" cy="11" r="7" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  );
+}
+
+export function BanIcon({ size = 16, color = "currentColor", className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" />
+    </svg>
+  );
+}
+
+export function ChartIcon({ size = 16, color = "currentColor", className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <line x1="18" y1="20" x2="18" y2="10" />
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <line x1="6" y1="20" x2="6" y2="14" />
+    </svg>
+  );
+}
+
+export function RefreshIcon({ size = 16, color = "currentColor", className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <polyline points="23 4 23 10 17 10" />
+      <polyline points="1 20 1 14 7 14" />
+      <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
+    </svg>
+  );
+}
+
+export function RocketIcon({ size = 14, color = "currentColor" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2c3 2 5 6 5 10-1.5 1-3.2 1.6-5 1.6S8.5 13 7 12c0-4 2-8 5-10z" />
+      <circle cx="12" cy="9" r="1.6" />
+      <path d="M9 15l-2.5 2.5M15 15l2.5 2.5M9.5 19.5L12 22l2.5-2.5" />
+    </svg>
+  );
+}
+
+export function DownloadIcon({ size = 14, color = "currentColor" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v12" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="4" y1="20" x2="20" y2="20" />
+    </svg>
+  );
+}
+
+export function XCircleIcon({ size = 14, color = "currentColor" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round">
+      <circle cx="12" cy="12" r="9" />
+      <line x1="9" y1="9" x2="15" y2="15" />
+      <line x1="15" y1="9" x2="9" y2="15" />
+    </svg>
+  );
+}
+
+export function AlertIcon({ size = 14, color = "currentColor" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <line x1="12" y1="8" x2="12" y2="13" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+  );
+}
+
 export function LocationIcon({ size = 16, color = "#F5F3EE" }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2">

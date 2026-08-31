@@ -24,14 +24,6 @@ const store = {
     trial_used: false,
     device_count: 2,
     max_devices: 3,
-    server_flag: "🇳🇱",
-    server_country: "Нидерланды",
-    server_city: "Амстердам",
-    server_protocol: "VLESS + Reality",
-    server_tls: "TLS 1.3",
-    server_host: "vpn.starvpn.ru",
-    server_sni: "www.google.com",
-    server_port: 443,
   },
   devices: [
     {

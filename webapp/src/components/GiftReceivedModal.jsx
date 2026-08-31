@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { GiftIcon, CheckIcon } from "./icons.jsx";
+import { GiftIcon, CheckIcon, CloseIcon } from "./icons.jsx";
 
 const COLORS = ["#FFB800", "#FF6B6B", "#4ECDC4", "#A8E6CF", "#FFD93D", "#6BCB77", "#4D96FF", "#FF6B9D"];
 
@@ -55,9 +55,9 @@ export default function GiftReceivedModal({ gift, onClose }) {
         <div className="relative flex flex-col items-center text-center">
           <button
             onClick={onClose}
-            className="absolute -top-1 -right-1 w-7 h-7 rounded-[9px] bg-white/[.06] border border-white/[.08] flex items-center justify-center text-ink/50 text-xs"
+            className="absolute -top-1 -right-1 w-7 h-7 rounded-[9px] bg-white/[.06] border border-white/[.08] flex items-center justify-center"
           >
-            ✕
+            <CloseIcon color="rgba(245,243,238,.5)" />
           </button>
           <div className="w-16 h-16 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center mb-4">
             <GiftIcon size={30} />

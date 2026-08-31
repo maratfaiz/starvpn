@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 import * as api from "../data/mockApi.js";
 import BottomSheet from "../components/BottomSheet.jsx";
+import {
+  UsersIcon,
+  MegaphoneIcon,
+  BoltIcon,
+  SearchIcon,
+  BanIcon,
+  ChartIcon,
+  RefreshIcon,
+  CheckIcon,
+  XCircleIcon,
+} from "../components/icons.jsx";
 
 const STRIP_ITEMS = [
   { key: "users_total", label: "Юзеров", color: "text-ink" },
@@ -18,9 +29,9 @@ const FILTERS = [
 ];
 
 const SUB_TABS = [
-  { id: "users", label: "👥 Юзеры" },
-  { id: "bc", label: "📢 Рассылка" },
-  { id: "act", label: "⚡ Действия" },
+  { id: "users", label: "Юзеры", icon: UsersIcon },
+  { id: "bc", label: "Рассылка", icon: MegaphoneIcon },
+  { id: "act", label: "Действия", icon: BoltIcon },
 ];
 
 function fmtUser(u) {
@@ -89,17 +100,17 @@ export default function AdminScreen({ showToast }) {
 
   const grantDays = async () => {
     await api.adminGrantDays(selectedUser.tg_id, 30);
-    showToast("✅ Выдано 30 дней");
+    showToast("Выдано 30 дней", <CheckIcon size={15} />);
     refreshSelectedUser();
   };
   const banUser = async () => {
     await api.adminBanUser(selectedUser.tg_id);
-    showToast("🚫 Пользователь забанен");
+    showToast("Пользователь забанен", <BanIcon size={15} color="#E2554F" />);
     refreshSelectedUser();
   };
   const unbanUser = async () => {
     await api.adminUnbanUser(selectedUser.tg_id);
-    showToast("✅ Разбанен");
+    showToast("Разбанен", <CheckIcon size={15} />);
     refreshSelectedUser();
   };
   const messageUser = async () => {
@@ -107,9 +118,9 @@ export default function AdminScreen({ showToast }) {
     if (!text) return;
     try {
       await api.adminMessageUser(selectedUser.tg_id, text);
-      showToast("✅ Сообщение отправлено");
+      showToast("Сообщение отправлено", <CheckIcon size={15} />);
     } catch (e) {
-      showToast("❌ " + e.message);
+      showToast(e.message, <XCircleIcon size={15} color="#E2554F" />);
     }
   };
 
@@ -117,10 +128,10 @@ export default function AdminScreen({ showToast }) {
     setBroadcastSending(true);
     try {
       const res = await api.sendBroadcast(broadcastText);
-      showToast(`✅ Отправлено ${res.sent_to} пользователям`);
+      showToast(`Отправлено ${res.sent_to} пользователям`, <CheckIcon size={15} />);
       setBroadcastText("");
     } catch (e) {
-      showToast("❌ " + e.message);
+      showToast(e.message, <XCircleIcon size={15} color="#E2554F" />);
     } finally {
       setBroadcastSending(false);
     }
@@ -135,14 +146,14 @@ export default function AdminScreen({ showToast }) {
     a.download = "star_vpn_users.csv";
     a.click();
     URL.revokeObjectURL(url);
-    showToast("📊 CSV выгружен");
+    showToast("CSV выгружен", <ChartIcon size={15} />);
   };
 
   const banById = async () => {
     const id = window.prompt("Telegram ID для бана:");
     if (!id) return;
     await api.adminBanUser(Number(id));
-    showToast("🚫 Забанен ID " + id);
+    showToast("Забанен ID " + id, <BanIcon size={15} color="#E2554F" />);
     loadUsers(true);
   };
 
@@ -160,17 +171,19 @@ export default function AdminScreen({ showToast }) {
       <div className="flex gap-1.5 overflow-x-auto">
         {SUB_TABS.map((t) => {
           const active = t.id === subTab;
+          const color = active ? "#FFB800" : "rgba(245,243,238,.55)";
           return (
             <button
               key={t.id}
               onClick={() => setSubTab(t.id)}
-              className="relative px-3 py-2 rounded-xl font-display font-semibold text-xs whitespace-nowrap flex-shrink-0"
+              className="relative flex items-center gap-1.5 px-3 py-2 rounded-xl font-display font-semibold text-xs whitespace-nowrap flex-shrink-0"
               style={{
                 background: active ? "rgba(255,184,0,.12)" : "#0C0E12",
                 border: `1px solid ${active ? "rgba(255,184,0,.4)" : "rgba(255,255,255,.06)"}`,
-                color: active ? "#FFB800" : "rgba(245,243,238,.55)",
+                color,
               }}
             >
+              <t.icon size={14} color={color} />
               {t.label}
             </button>
           );
@@ -179,12 +192,15 @@ export default function AdminScreen({ showToast }) {
 
       {subTab === "users" && (
         <div className="flex flex-col gap-3">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="🔍 Поиск по @username или ID"
-            className="w-full bg-app-card border border-white/10 rounded-[13px] px-3.5 py-3 font-medium text-sm text-ink outline-none placeholder:text-ink/30"
-          />
+          <div className="relative">
+            <SearchIcon size={15} color="rgba(245,243,238,.3)" className="absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Поиск по @username или ID"
+              className="w-full bg-app-card border border-white/10 rounded-[13px] pl-10 pr-3.5 py-3 font-medium text-sm text-ink outline-none placeholder:text-ink/30"
+            />
+          </div>
           <div className="flex gap-1.5 overflow-x-auto">
             {FILTERS.map((f) => (
               <button
@@ -245,12 +261,14 @@ export default function AdminScreen({ showToast }) {
 
       {subTab === "bc" && (
         <div className="flex flex-col gap-2.5">
-          <div className="font-semibold text-[13px] text-ink">📢 Рассылка пользователям</div>
+          <div className="flex items-center gap-1.5 font-semibold text-[13px] text-ink">
+            <MegaphoneIcon size={15} color="#FFB800" /> Рассылка пользователям
+          </div>
           <textarea
             value={broadcastText}
             onChange={(e) => setBroadcastText(e.target.value)}
             rows={5}
-            placeholder={"Текст сообщения (HTML поддерживается)\n\nПример:\n<b>Акция!</b> 7 дней бесплатно 🎉"}
+            placeholder={"Текст сообщения (HTML поддерживается)\n\nПример:\n<b>Акция!</b> 7 дней бесплатно"}
             className="w-full resize-none bg-app-card border border-white/10 rounded-[13px] px-3.5 py-3 font-medium text-[13px] text-ink outline-none placeholder:text-ink/30 leading-relaxed"
           />
           <div className="font-semibold text-[10.5px] text-ink/40 uppercase tracking-wide">Предпросмотр</div>
@@ -273,23 +291,28 @@ export default function AdminScreen({ showToast }) {
           <button
             onClick={() => {
               loadStats();
-              showToast("✅ Обновлено");
+              showToast("Обновлено", <CheckIcon size={15} />);
             }}
             className="bg-app-card border border-white/[.06] rounded-2xl py-4 px-3 text-center font-display font-semibold text-xs text-ink"
           >
-            🔄<div className="mt-1.5">Обновить статистику</div>
+            <RefreshIcon size={20} className="mx-auto" />
+            <div className="mt-1.5">Обновить статистику</div>
           </button>
           <button onClick={() => setSubTab("bc")} className="bg-app-card border border-white/[.06] rounded-2xl py-4 px-3 text-center font-display font-semibold text-xs text-ink">
-            📢<div className="mt-1.5">Сделать рассылку</div>
+            <MegaphoneIcon size={20} className="mx-auto" />
+            <div className="mt-1.5">Сделать рассылку</div>
           </button>
           <button onClick={exportCSV} className="bg-app-card border border-white/[.06] rounded-2xl py-4 px-3 text-center font-display font-semibold text-xs text-ink">
-            📊<div className="mt-1.5">Экспорт CSV</div>
+            <ChartIcon size={20} className="mx-auto" />
+            <div className="mt-1.5">Экспорт CSV</div>
           </button>
           <button onClick={() => setSubTab("users")} className="bg-app-card border border-white/[.06] rounded-2xl py-4 px-3 text-center font-display font-semibold text-xs text-ink">
-            🔍<div className="mt-1.5">Найти юзера</div>
+            <SearchIcon size={20} className="mx-auto" />
+            <div className="mt-1.5">Найти юзера</div>
           </button>
           <button onClick={banById} className="bg-danger/[.08] border border-danger/30 rounded-2xl py-4 px-3 text-center font-display font-semibold text-xs text-danger">
-            🚫<div className="mt-1.5">Бан по ID</div>
+            <BanIcon size={20} className="mx-auto" />
+            <div className="mt-1.5">Бан по ID</div>
           </button>
         </div>
       )}
