@@ -139,6 +139,7 @@ main{min-width:0;display:flex;flex-direction:column}
 
 /* ── Filters / table ──────────────────────────────────────── */
 .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.filters select.ipt{cursor:pointer;min-width:160px}
 .filter-pill{cursor:pointer;font-size:13px;font-weight:500;padding:8px 15px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:transparent;color:#8A7A60;white-space:nowrap;transition:all .15s}
 .filter-pill .n{font-family:'JetBrains Mono',monospace;font-size:11px;opacity:.7;margin-left:7px}
 .filter-pill.sel{border-color:rgba(255,184,0,.4);background:rgba(255,184,0,.09);color:#FFB800}
@@ -212,7 +213,9 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 .tkt-acc{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 16px;margin-top:12px;flex-wrap:wrap}
 .tkt-acc-title{font-weight:600;font-size:13.5px;color:#EBE0CC}
 .tkt-acc-sub{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#8A7A60;margin-top:3px}
-.tkt-acc.none{color:#8A7A60;font-size:12.5px;font-style:italic}
+.tkt-ctrl{display:flex;flex-wrap:wrap;gap:10px 24px;margin:16px 0}
+.tkt-ctrl-group{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tkt-ctrl-lbl{font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#3A3028}
 
 /* Заявки на узком экране — таблица превращается в стопку карточек:
    заголовки скрыты, у каждой ячейки вместо них подпись из data-label. */
@@ -1007,23 +1010,26 @@ async function renderSupport() {
   const c = document.getElementById('content');
   try {
     const data = await api('GET', '/web/tickets' + tktQueryString());
-    const statusFilters = [
-      { id: 'all', label: 'Все' }, { id: 'open', label: 'Открытые' },
-      { id: 'answered', label: 'Отвечены' }, { id: 'closed', label: 'Закрытые' },
-    ];
-    const priorityFilters = [
-      { id: '', label: 'Любой приоритет' }, { id: 'urgent', label: 'Срочные' },
-      { id: 'normal', label: 'Обычные' }, { id: 'low', label: 'Низкий' },
-    ];
-    const assignedFilters = [
-      { id: '', label: 'Все' }, { id: 'me', label: 'Мои' }, { id: 'unassigned', label: 'Не назначены' },
-    ];
     const cols = ['№', 'Пользователь', 'Тема', 'Способ связи', 'Приоритет', 'Статус', 'Назначено', 'Обновлено'];
     c.innerHTML = `
-      <div class="filters">${statusFilters.map(f => `<div class="filter-pill ${f.id === filter ? 'sel' : ''}" onclick="filter='${f.id}';renderSupport()">${f.label}</div>`).join('')}</div>
-      <div class="filters" style="margin-top:8px">
-        ${priorityFilters.map(f => `<div class="filter-pill ${f.id === tktPriorityFilter ? 'sel' : ''}" onclick="tktPriorityFilter='${f.id}';renderSupport()">${f.label}</div>`).join('')}
-        ${assignedFilters.map(f => `<div class="filter-pill ${f.id === tktAssignedFilter ? 'sel' : ''}" onclick="tktAssignedFilter='${f.id}';renderSupport()">${f.label}</div>`).join('')}
+      <div class="filters">
+        <select class="ipt" onchange="filter=this.value;renderSupport()">
+          <option value="all" ${filter === 'all' ? 'selected' : ''}>Все статусы</option>
+          <option value="open" ${filter === 'open' ? 'selected' : ''}>Открытые</option>
+          <option value="answered" ${filter === 'answered' ? 'selected' : ''}>Отвечены</option>
+          <option value="closed" ${filter === 'closed' ? 'selected' : ''}>Закрытые</option>
+        </select>
+        <select class="ipt" onchange="tktPriorityFilter=this.value;renderSupport()">
+          <option value="" ${tktPriorityFilter === '' ? 'selected' : ''}>Любой приоритет</option>
+          <option value="urgent" ${tktPriorityFilter === 'urgent' ? 'selected' : ''}>Срочные</option>
+          <option value="normal" ${tktPriorityFilter === 'normal' ? 'selected' : ''}>Обычные</option>
+          <option value="low" ${tktPriorityFilter === 'low' ? 'selected' : ''}>Низкий</option>
+        </select>
+        <select class="ipt" onchange="tktAssignedFilter=this.value;renderSupport()">
+          <option value="" ${tktAssignedFilter === '' ? 'selected' : ''}>Все заявки</option>
+          <option value="me" ${tktAssignedFilter === 'me' ? 'selected' : ''}>Мои</option>
+          <option value="unassigned" ${tktAssignedFilter === 'unassigned' ? 'selected' : ''}>Не назначены</option>
+        </select>
       </div>
       <div class="tbl-wrap" style="margin-top:12px">
         <div class="tbl-scroll">
@@ -1064,40 +1070,52 @@ async function openTicket(id) {
   el.innerHTML = `<div class="detail"><div class="spinner-wrap"><div class="spinner"></div></div></div>`;
   try {
     const t = await api('GET', `/web/tickets/${id}`);
+    const contactTitle = t.account
+      ? (t.account.full_name || (t.account.username ? '@' + t.account.username : (t.account.email || 'Аккаунт')))
+      : TICKET_CHANNEL[t.channel][0];
+    const contactSub = t.account
+      ? `${TICKET_CHANNEL[t.channel][0]}: ${esc(t.channel_value)} · ${t.account.is_web_only ? 'веб-аккаунт' : 'привязан Telegram'} · ${t.account.subscription_active ? 'подписка активна' : 'подписка не активна'}`
+      : `${esc(t.channel_value)} · без аккаунта на сайте`;
     el.innerHTML = `
       <div class="detail">
         <div class="detail-head">
           <div>
             <div class="detail-title">${esc(t.topic_label)}</div>
-            <div class="detail-sub">${esc(t.user_label)} · ${esc(t.platform || '—')} · ${fmtDateTime(t.created_at)} · ${t.public_id}</div>
-            <div style="margin-top:8px"><span class="chip ${TICKET_CHANNEL[t.channel][1]}">${TICKET_CHANNEL[t.channel][0]}${t.channel !== 'telegram' ? ': ' + esc(t.channel_value) : ''}</span></div>
+            <div class="detail-sub">${t.public_id} · ${esc(t.platform || '—')} · ${fmtDateTime(t.created_at)}</div>
           </div>
           <div class="detail-actions">
             ${t.status !== 'closed' ? `<div class="act-btn plain" onclick="setTicketStatus(${t.id}, 'closed')">Закрыть</div>` : `<div class="act-btn plain" onclick="setTicketStatus(${t.id}, 'open')">Открыть заново</div>`}
             <div class="close-x" onclick="closeTicketDetail()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
           </div>
         </div>
-        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:18px">
-          <span class="chip grey">${TICKET_STATUS[t.status][0]}</span>
-          <span style="width:1px;height:16px;background:rgba(255,255,255,.1)"></span>
-          ${['low', 'normal', 'urgent'].map(p => `<div class="act-btn ${p === t.priority ? 'gold' : 'plain'}" style="padding:5px 12px;font-size:11.5px" onclick="setTicketPriority(${t.id}, '${p}')">${TICKET_PRIORITY[p][0]}</div>`).join('')}
-          <span style="width:1px;height:16px;background:rgba(255,255,255,.1)"></span>
-          <div class="act-btn plain" style="padding:5px 12px;font-size:11.5px" onclick="assignTicket(${t.id}, ${t.assigned_admin_id ? 'null' : "'me'"})">${t.assigned_admin_id ? 'Снять с себя' : 'Взять в работу'}</div>
-        </div>
+
         <div class="tkt-msg">
           <div class="tkt-msg-label">Обращение</div>
           <div class="tkt-msg-text">${esc(t.latest_user_message.body)}</div>
         </div>
-        ${t.account ? `
-          <div class="tkt-acc">
-            <div>
-              <div class="tkt-acc-title">${esc(t.account.full_name || (t.account.username ? '@' + t.account.username : (t.account.email || 'Аккаунт')))}</div>
-              <div class="tkt-acc-sub">${t.account.is_web_only ? 'веб-аккаунт' : t.account.telegram_id}${t.account.username ? ' · @' + esc(t.account.username) : ''}${t.account.email ? ' · ' + esc(t.account.email) : ''} · ${t.account.subscription_active ? 'подписка активна' : 'подписка не активна'}</div>
-            </div>
-            <div class="act-btn plain" onclick="openUserDetail(${t.account.telegram_id})">Открыть аккаунт →</div>
+
+        <div class="tkt-acc">
+          <div>
+            <div class="tkt-acc-title">${esc(contactTitle)}</div>
+            <div class="tkt-acc-sub">${contactSub}</div>
           </div>
-        ` : `<div class="tkt-acc none">Обращение без привязки к аккаунту</div>`}
-        <textarea class="ipt" id="replyInput" placeholder="Ответ пользователю…" style="width:100%;min-height:100px;margin-top:14px"></textarea>
+          ${t.account ? `<div class="act-btn plain" onclick="openUserDetail(${t.account.telegram_id})">Открыть аккаунт →</div>` : ''}
+        </div>
+
+        <div class="tkt-ctrl">
+          <div class="tkt-ctrl-group">
+            <span class="tkt-ctrl-lbl">Приоритет</span>
+            ${['low', 'normal', 'urgent'].map(p => `<div class="act-btn ${p === t.priority ? 'gold' : 'plain'}" style="padding:5px 12px;font-size:11.5px" onclick="setTicketPriority(${t.id}, '${p}')">${TICKET_PRIORITY[p][0]}</div>`).join('')}
+          </div>
+          <div class="tkt-ctrl-group">
+            <span class="tkt-ctrl-lbl">Статус</span>
+            <span class="chip grey">${TICKET_STATUS[t.status][0]}</span>
+            <div class="act-btn plain" style="padding:5px 12px;font-size:11.5px" onclick="assignTicket(${t.id}, ${t.assigned_admin_id ? 'null' : "'me'"})">${t.assigned_admin_id ? 'Снять с себя' : 'Взять в работу'}</div>
+          </div>
+        </div>
+
+        <div class="tkt-ctrl-lbl" style="margin-bottom:8px">Ответ</div>
+        <textarea class="ipt" id="replyInput" placeholder="Ответ пользователю…" style="width:100%;min-height:100px"></textarea>
         <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px">
           <span style="font-size:12px;color:${t.channel === 'telegram_manual' || t.channel === 'unknown' ? '#F87171' : '#3A3028'}">${{
             telegram: 'Ответ уйдёт в бота — придёт кнопка «Ответить», чтобы переписка продолжилась.',
