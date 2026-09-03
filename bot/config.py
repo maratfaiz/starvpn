@@ -12,7 +12,6 @@ class Settings(BaseSettings):
     telegram_api_token: str = Field(..., env="TELEGRAM_API_TOKEN")
     telegram_admin_id: int = Field(..., env="TELEGRAM_ADMIN_ID")
     bot_username: str = Field("starisvpnbot", env="BOT_USERNAME")
-    support_username: str = Field("@hashprojects", env="SUPPORT_USERNAME")
     webapp_url: str = Field("", env="WEBAPP_URL")
 
     # CryptoPay (@CryptoBot) — оплата в USDT / TON / BTC / ETH

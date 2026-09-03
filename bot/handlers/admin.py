@@ -704,7 +704,7 @@ async def _do_ban(msg: Message, user: User, session: AsyncSession) -> None:
             f"🚫 <b>Ваш аккаунт заблокирован в STAR VPN.</b>\n\n"
             f"Причина: нарушение Политики конфиденциальности сервиса.\n\n"
             f"📄 <a href=\"https://starvpn.ru/privacy\">Политика конфиденциальности STAR VPN</a>\n\n"
-            f"По вопросам разблокировки обратитесь в поддержку: {settings.support_username}",
+            f"По вопросам разблокировки оформите заявку в поддержку: {settings.site_url}/support",
             parse_mode="HTML",
             disable_web_page_preview=True,
         )

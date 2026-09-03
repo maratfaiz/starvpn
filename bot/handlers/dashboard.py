@@ -170,7 +170,7 @@ async def conn_show_key(callback: CallbackQuery, session: AsyncSession) -> None:
 
     if not link:
         await callback.message.answer(
-            f"⚠️ Ссылка недоступна. Обратись в поддержку: {settings.support_username}"
+            f"⚠️ Ссылка недоступна. Оформи заявку в поддержку: {settings.site_url}/support"
         )
         return
 
