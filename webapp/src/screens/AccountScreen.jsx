@@ -60,7 +60,7 @@ export default function AccountScreen({
           className="absolute top-1/2 right-0 w-2/3 h-px -translate-y-4 rotate-[-8deg] pointer-events-none"
           style={{ background: "linear-gradient(90deg, transparent, rgba(255,184,0,.5), transparent)" }}
         />
-        <div className="relative w-[58px] h-[58px] rounded-full bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center font-display font-extrabold text-xl text-[#1A1408] flex-shrink-0 shadow-[0_0_22px_rgba(255,184,0,.4)] ring-2 ring-gold/30">
+        <div className="relative w-[58px] h-[58px] rounded-full bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center font-display font-extrabold text-xl text-[#1A1408] flex-shrink-0">
           {account.initials}
         </div>
         <div className="relative flex-1 min-w-0">
@@ -133,36 +133,36 @@ export default function AccountScreen({
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-2 gap-2">
         <button
           onClick={onOpenInstructions}
-          className="bg-app-card border border-gold/20 rounded-2xl p-3.5 text-left flex flex-col gap-3"
+          className="bg-app-card border border-gold/20 rounded-lg p-2.5 text-left flex flex-col gap-2"
         >
           <div className="flex items-center justify-between">
-            <div className="w-9 h-9 rounded-[10px] bg-gold/[.08] border border-gold/20 flex items-center justify-center flex-shrink-0">
+            <div className="w-7 h-7 rounded-md bg-gold/[.08] border border-gold/20 flex items-center justify-center flex-shrink-0">
               <SettingIcon name="info" color="#FFB800" />
             </div>
             <ChevronIcon />
           </div>
           <div>
-            <div className="font-semibold text-[13.5px] text-ink">Как подключиться</div>
-            <div className="font-medium text-[11px] text-ink/40 mt-0.5">Пошаговая инструкция для всех устройств</div>
+            <div className="font-semibold text-[12.5px] text-ink">Как подключиться</div>
+            <div className="font-medium text-[10px] text-ink/40 mt-0.5">Инструкция для всех устройств</div>
           </div>
         </button>
 
         <button
           onClick={() => openExternal(`${account.siteUrl}/support`)}
-          className="bg-app-card border border-gold/20 rounded-2xl p-3.5 text-left flex flex-col gap-3"
+          className="bg-app-card border border-gold/20 rounded-lg p-2.5 text-left flex flex-col gap-2"
         >
           <div className="flex items-center justify-between">
-            <div className="w-9 h-9 rounded-[10px] bg-gold/[.08] border border-gold/20 flex items-center justify-center flex-shrink-0">
+            <div className="w-7 h-7 rounded-md bg-gold/[.08] border border-gold/20 flex items-center justify-center flex-shrink-0">
               <HeadsetIcon size={16} />
             </div>
             <ChevronIcon />
           </div>
           <div>
-            <div className="font-semibold text-[13.5px] text-ink">Написать в поддержку</div>
-            <div className="font-medium text-[11px] text-ink/40 mt-0.5">Оформить заявку — ответим в боте</div>
+            <div className="font-semibold text-[12.5px] text-ink">Написать в поддержку</div>
+            <div className="font-medium text-[10px] text-ink/40 mt-0.5">Оформить заявку — ответим в боте</div>
           </div>
         </button>
       </div>
