@@ -581,9 +581,16 @@ function closeBottomSheet() {
 }
 
 function goto(s) {
+  const changedSection = s !== section;
   section = s;
-  filter = 'all'; query = ''; selectedRow = null; selectedTicket = null;
-  document.getElementById('globalQuery').value = '';
+  // Сбрасываем фильтры/выбор только при переходе в другой раздел — иначе
+  // debounce-поиск (onQueryInput) сам же стирал только что введённый query
+  // на каждом ре-рендере текущего раздела, и глобальный поиск не работал
+  // ни для одной секции, использующей `query` (users, support и т.д.).
+  if (changedSection) {
+    filter = 'all'; query = ''; selectedRow = null; selectedTicket = null;
+    document.getElementById('globalQuery').value = '';
+  }
   renderSidebar();
   const [title, sub] = PAGE_META[s] || [s, ''];
   document.getElementById('tbTitle').textContent = title;
@@ -974,33 +981,61 @@ async function renderServers() {
    SUPPORT
 ═══════════════════════════════════════════════════════════ */
 let selectedTicket = null;
+let tktPriorityFilter = '';
+let tktAssignedFilter = '';
 const TICKET_STATUS = { open: ['Открыт', '#FFB800'], answered: ['Отвечен', '#4ADE80'], closed: ['Закрыт', '#3A3028'] };
+const TICKET_PRIORITY = { urgent: ['Срочно', 'red'], normal: ['Обычный', 'grey'], low: ['Низкий', 'grey'] };
+
+function tktQueryString() {
+  const p = new URLSearchParams();
+  if (filter !== 'all') p.set('status', filter);
+  if (tktPriorityFilter) p.set('priority', tktPriorityFilter);
+  if (tktAssignedFilter) p.set('assigned', tktAssignedFilter);
+  if (query.trim()) p.set('q', query.trim());
+  const s = p.toString();
+  return s ? '?' + s : '';
+}
 
 async function renderSupport() {
   const c = document.getElementById('content');
   try {
-    const data = await api('GET', '/web/tickets' + (filter !== 'all' ? '?status=' + filter : ''));
-    const filters = [
+    const data = await api('GET', '/web/tickets' + tktQueryString());
+    const statusFilters = [
       { id: 'all', label: 'Все' }, { id: 'open', label: 'Открытые' },
       { id: 'answered', label: 'Отвечены' }, { id: 'closed', label: 'Закрытые' },
     ];
+    const priorityFilters = [
+      { id: '', label: 'Любой приоритет' }, { id: 'urgent', label: 'Срочные' },
+      { id: 'normal', label: 'Обычные' }, { id: 'low', label: 'Низкий' },
+    ];
+    const assignedFilters = [
+      { id: '', label: 'Все' }, { id: 'me', label: 'Мои' }, { id: 'unassigned', label: 'Не назначены' },
+    ];
     c.innerHTML = `
-      <div class="filters">${filters.map(f => `<div class="filter-pill ${f.id === filter ? 'sel' : ''}" onclick="filter='${f.id}';renderSupport()">${f.label}</div>`).join('')}</div>
-      <div class="support-grid">
+      <div class="filters">${statusFilters.map(f => `<div class="filter-pill ${f.id === filter ? 'sel' : ''}" onclick="filter='${f.id}';renderSupport()">${f.label}</div>`).join('')}</div>
+      <div class="filters" style="margin-top:8px">
+        ${priorityFilters.map(f => `<div class="filter-pill ${f.id === tktPriorityFilter ? 'sel' : ''}" onclick="tktPriorityFilter='${f.id}';renderSupport()">${f.label}</div>`).join('')}
+        ${assignedFilters.map(f => `<div class="filter-pill ${f.id === tktAssignedFilter ? 'sel' : ''}" onclick="tktAssignedFilter='${f.id}';renderSupport()">${f.label}</div>`).join('')}
+      </div>
+      <div class="support-grid" style="margin-top:12px">
         <div class="tkt-list">
           ${data.tickets.length ? data.tickets.map(t => `
             <div class="tkt-card ${selectedTicket === t.id ? 'sel' : ''}" onclick="openTicket(${t.id})">
               <div class="tkt-card-top">
                 <span style="width:7px;height:7px;border-radius:50%;background:${TICKET_STATUS[t.status][1]};flex-shrink:0"></span>
                 <span class="tkt-user">${esc(t.user_label)}</span>
-                <span class="chip grey" style="font-size:10.5px">${TICKET_STATUS[t.status][0]}</span>
+                ${t.has_unread ? '<span class="chip gold" style="font-size:10px;padding:2px 7px">Новое</span>' : ''}
+                <span class="chip ${TICKET_PRIORITY[t.priority][1]}" style="font-size:10.5px">${TICKET_PRIORITY[t.priority][0]}</span>
               </div>
               <div class="tkt-subject">${esc(t.topic_label)}</div>
-              <div class="tkt-foot"><span>${fmtDateTime(t.created_at)}</span><span>${t.public_id}</span></div>
+              <div class="tkt-foot">
+                <span>${fmtDateTime(t.last_message_at)}</span>
+                <span>${t.assigned_admin_username ? '@' + esc(t.assigned_admin_username) : t.public_id}</span>
+              </div>
             </div>
-          `).join('') : '<div class="empty">Нет обращений</div>'}
+          `).join('') : '<div class="empty">Нет заявок</div>'}
         </div>
-        <div id="ticketDetail">${selectedTicket ? '' : '<div style="border:1px dashed rgba(255,255,255,.12);border-radius:16px;padding:60px 30px;text-align:center;color:#3A3028;font-size:14px">Выберите обращение слева</div>'}</div>
+        <div id="ticketDetail">${selectedTicket ? '' : '<div style="border:1px dashed rgba(255,255,255,.12);border-radius:16px;padding:60px 30px;text-align:center;color:#3A3028;font-size:14px">Выберите заявку слева</div>'}</div>
       </div>
     `;
     if (selectedTicket) openTicket(selectedTicket);
@@ -1012,12 +1047,10 @@ async function renderSupport() {
 async function openTicket(id) {
   selectedTicket = id;
   const el = document.getElementById('ticketDetail');
-  document.querySelectorAll('.tkt-card').forEach(x => x.classList.remove('sel'));
+  document.querySelectorAll('.tkt-card').forEach(x => x.classList.toggle('sel', x.getAttribute('onclick') === `openTicket(${id})`));
   el.innerHTML = `<div class="tkt-detail"><div class="spinner-wrap"><div class="spinner"></div></div></div>`;
   try {
-    const data = await api('GET', '/web/tickets');
-    const t = data.tickets.find(x => x.id === id);
-    if (!t) { el.innerHTML = '<div class="empty">Тикет не найден</div>'; return; }
+    const t = await api('GET', `/web/tickets/${id}`);
     el.innerHTML = `
       <div class="tkt-detail">
         <div class="tkt-detail-head">
@@ -1026,25 +1059,28 @@ async function openTicket(id) {
             <div class="detail-sub">${esc(t.user_label)} · ${esc(t.platform || '—')} · ${fmtDateTime(t.created_at)} · ${t.public_id}</div>
           </div>
           <div class="detail-actions">
-            <span class="chip grey">${TICKET_STATUS[t.status][0]}</span>
             ${t.status !== 'closed' ? `<div class="act-btn plain" onclick="setTicketStatus(${t.id}, 'closed')">Закрыть</div>` : `<div class="act-btn plain" onclick="setTicketStatus(${t.id}, 'open')">Открыть заново</div>`}
           </div>
         </div>
-        <div class="msg-bubble user">
-          <div class="msg-who" style="color:#8A7A60">${esc(t.user_label)}</div>
-          <div class="msg-text">${esc(t.message)}</div>
-          <div class="msg-time">${fmtDateTime(t.created_at)}</div>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:18px">
+          <span class="chip grey">${TICKET_STATUS[t.status][0]}</span>
+          <span style="width:1px;height:16px;background:rgba(255,255,255,.1)"></span>
+          ${['low', 'normal', 'urgent'].map(p => `<div class="act-btn ${p === t.priority ? 'gold' : 'plain'}" style="padding:5px 12px;font-size:11.5px" onclick="setTicketPriority(${t.id}, '${p}')">${TICKET_PRIORITY[p][0]}</div>`).join('')}
+          <span style="width:1px;height:16px;background:rgba(255,255,255,.1)"></span>
+          <div class="act-btn plain" style="padding:5px 12px;font-size:11.5px" onclick="assignTicket(${t.id}, ${t.assigned_admin_id ? 'null' : "'me'"})">${t.assigned_admin_id ? 'Снять с себя' : 'Взять в работу'}</div>
         </div>
-        ${t.admin_reply ? `
-          <div class="msg-bubble admin">
-            <div class="msg-who" style="color:#FFB800">Поддержка</div>
-            <div class="msg-text">${esc(t.admin_reply)}</div>
-            <div class="msg-time">${fmtDateTime(t.updated_at)}</div>
-          </div>
-        ` : ''}
-        <textarea class="ipt" id="replyInput" placeholder="Ответ пользователю…" style="width:100%;min-height:110px;margin-top:14px"></textarea>
+        <div class="thread">
+          ${t.messages.map(m => `
+            <div class="msg-bubble ${m.sender}">
+              <div class="msg-who" style="color:${m.sender === 'admin' ? '#FFB800' : '#8A7A60'}">${m.sender === 'admin' ? 'Поддержка' + (m.admin_username ? ' · @' + esc(m.admin_username) : '') : esc(t.user_label)}</div>
+              <div class="msg-text">${esc(m.body)}</div>
+              <div class="msg-time">${fmtDateTime(m.created_at)}</div>
+            </div>
+          `).join('')}
+        </div>
+        <textarea class="ipt" id="replyInput" placeholder="Ответ пользователю…" style="width:100%;min-height:110px;margin-top:6px"></textarea>
         <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px">
-          <span style="font-size:12px;color:#3A3028">Ответ уйдёт в бота или на email — туда, откуда пришло обращение.</span>
+          <span style="font-size:12px;color:#3A3028">Ответ уйдёт в бота (с кнопкой «Ответить», чтобы переписка продолжилась) или на email — туда, откуда пришло обращение.</span>
           <div class="primary-btn" onclick="sendReply(${t.id})">Отправить</div>
         </div>
       </div>
@@ -1067,7 +1103,22 @@ async function sendReply(id) {
 async function setTicketStatus(id, status) {
   try {
     await api('POST', `/web/tickets/${id}/reply`, { reply: '', status });
-    toast(status === 'closed' ? 'Тикет закрыт' : 'Тикет открыт заново');
+    toast(status === 'closed' ? 'Заявка закрыта' : 'Заявка открыта заново');
+    renderSupport();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function setTicketPriority(id, priority) {
+  try {
+    await api('POST', `/web/tickets/${id}/priority`, { priority });
+    renderSupport();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function assignTicket(id, adminId) {
+  try {
+    await api('POST', `/web/tickets/${id}/assign`, { admin_id: adminId });
+    toast(adminId ? 'Заявка взята в работу' : 'Назначение снято');
     renderSupport();
   } catch (e) { toast(e.message, true); }
 }

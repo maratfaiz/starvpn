@@ -36,7 +36,6 @@ export const account = {
   siteUrl: "https://starvpnservice.ru",
   privacyUrl: "https://starvpnservice.ru/privacy.html",
   termsUrl: "https://starvpnservice.ru/terms.html",
-  supportUrl: "https://t.me/hashprojects",
 };
 
 export const settingsRows = [

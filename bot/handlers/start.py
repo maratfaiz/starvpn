@@ -179,11 +179,12 @@ async def cmd_start(
 async def support_handler(message: Message) -> None:
     await message.answer(
         "🎧 <b>Служба поддержки</b>\n\n"
-        "Возникли вопросы? Не работает подключение?\n"
-        "Напиши нашему администратору — решим любую проблему.\n\n"
-        f"👉 <a href=\"https://t.me/{settings.support_username.lstrip('@')}\">Написать в поддержку</a>",
+        "Возникли вопросы? Не работает подключение? Оформи заявку — "
+        "ответим прямо сюда, в этот чат, как только разберёмся.",
         parse_mode="HTML",
-        disable_web_page_preview=True,
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
+            InlineKeyboardButton(text="📝 Оставить заявку", url=f"{settings.site_url}/support"),
+        ]]),
     )
 
 

@@ -15,7 +15,7 @@ from bot.utils.database import init_db, AsyncSessionLocal
 from bot.utils import admin_auth
 from bot.middlewares.db import DbSessionMiddleware
 from bot.middlewares.ban import BanMiddleware
-from bot.handlers import admin, start, payment, profile, referral, instructions, gift, devices, crypto_payment, card_payment
+from bot.handlers import admin, start, payment, profile, referral, instructions, gift, devices, crypto_payment, card_payment, support
 from bot.tasks.scheduler import scheduler_loop
 
 logging.basicConfig(
@@ -51,6 +51,7 @@ async def main() -> None:
     dp.include_router(devices.router)
     dp.include_router(gift.router)
     dp.include_router(start.router)
+    dp.include_router(support.router)
     dp.include_router(payment.router)
     dp.include_router(profile.router)
     dp.include_router(referral.router)

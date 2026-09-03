@@ -30,3 +30,9 @@ class GiftForm(StatesGroup):
 class DeviceForm(StatesGroup):
     """FSM для добавления нового устройства."""
     name = State()  # пользователь вводит название устройства
+
+
+class SupportForm(StatesGroup):
+    """Ожидание ответа пользователя в тикет после нажатия «✍️ Ответить»
+    под уведомлением об ответе поддержки. ticket_id хранится в data."""
+    waiting_reply = State()

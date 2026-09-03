@@ -597,6 +597,7 @@ _SUPPORT_TOPICS = {"connect", "payment", "account", "other"}
 @app.post("/api/support")
 async def create_support_ticket(request: Request, x_telegram_init_data: str | None = Header(default=None)):
     from bot.models.support_ticket import SupportTicket
+    from bot.models.support_ticket_message import SupportTicketMessage
 
     body = await request.json()
     topic = (body.get("topic") or "other").strip()
@@ -621,6 +622,10 @@ async def create_support_ticket(request: Request, x_telegram_init_data: str | No
             message=message, platform=platform,
         )
         session.add(ticket)
+        await session.flush()
+        # Первое сообщение треда — сам текст заявки, чтобы вся переписка
+        # (включая исходное обращение) лежала в одном месте.
+        session.add(SupportTicketMessage(ticket_id=ticket.id, sender="user", body=message))
         await session.commit()
         await session.refresh(ticket)
 
@@ -726,7 +731,7 @@ async def get_me(request: Request, x_telegram_init_data: str | None = Header(def
         "traffic_gb": traffic_gb,
         "device_count": device_count,
         "created_at": user.created_at.isoformat() if user.created_at else None,
-        "support_url": f"https://t.me/{settings.support_username.lstrip('@')}",
+        "support_url": f"{settings.site_url}/support",
         "bot_username": settings.bot_username,
         "max_devices": MAX_DEVICES,
         "server_host": settings.server_host,
@@ -1036,12 +1041,15 @@ def _require_admin(tg_id: int) -> None:
         raise HTTPException(403, "Admin only")
 
 
-async def _tg_send(chat_id: int, text: str) -> None:
+async def _tg_send(chat_id: int, text: str, reply_markup: dict | None = None) -> None:
     """Отправить сообщение через Telegram Bot API напрямую."""
+    payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
+    if reply_markup:
+        payload["reply_markup"] = reply_markup
     async with httpx.AsyncClient(timeout=10) as client:
         await client.post(
             f"https://api.telegram.org/bot{settings.telegram_api_token}/sendMessage",
-            json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
+            json=payload,
         )
 
 
@@ -3079,28 +3087,61 @@ async def web_broadcast(request: Request, authorization: str | None = Header(def
 
 
 # ─── Тикеты поддержки (админка) ───────────────────────────────────────────────
+#
+# Модель: SupportTicket — карточка заявки (кто, о чём, приоритет, кому
+# назначена, когда было последнее сообщение). SupportTicketMessage — вся
+# переписка построчно (и пользователь, и админ пишут туда, включая самое
+# первое сообщение — см. create_support_ticket). До этой правки был только
+# один текстовый admin_reply на тикет — т.е. второй ответ физически
+# затирал первый. Теперь это настоящий тред.
 
 TICKET_TOPIC_LABELS = {
     "connect": "Не подключается", "payment": "Оплата",
     "account": "Аккаунт", "other": "Другое",
 }
+TICKET_PRIORITIES = {"low", "normal", "urgent"}
+TICKET_PRIORITY_LABELS = {"low": "Низкий", "normal": "Обычный", "urgent": "Срочно"}
+
+
+def _ticket_user_label(t, u: User | None) -> str:
+    if u:
+        return u.email or (f"@{u.username}" if u.username else str(u.telegram_id))
+    return t.contact or "—"
 
 
 @app.get("/web/tickets")
-async def web_tickets(status: str = "", authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+async def web_tickets(
+    status: str = "", priority: str = "", assigned: str = "", q: str = "",
+    authorization: str | None = Header(default=None),
+):
+    identity = _web_auth(authorization)
     from bot.models.support_ticket import SupportTicket
+    from bot.models.admin_account import AdminAccount
 
     async with AsyncSessionLocal() as session:
         query = select(SupportTicket, User).outerjoin(User, User.telegram_id == SupportTicket.user_id)
         if status:
             query = query.where(SupportTicket.status == status)
-        rows = (await session.execute(query.order_by(SupportTicket.created_at.desc()).limit(300))).all()
+        if priority:
+            query = query.where(SupportTicket.priority == priority)
+        if assigned == "me":
+            query = query.where(SupportTicket.assigned_admin_id == identity.admin_id)
+        elif assigned == "unassigned":
+            query = query.where(SupportTicket.assigned_admin_id.is_(None))
+        elif assigned.isdigit():
+            query = query.where(SupportTicket.assigned_admin_id == int(assigned))
+        rows = (await session.execute(
+            query.order_by(SupportTicket.last_message_at.desc()).limit(300)
+        )).all()
 
-    def label(t: "SupportTicket", u: User | None) -> str:
-        if u:
-            return u.email or (f"@{u.username}" if u.username else str(u.telegram_id))
-        return t.contact or "—"
+        admins = {a.id: a.username for a in (await session.execute(select(AdminAccount))).scalars().all()}
+
+    if q:
+        needle = q.strip().lower()
+        rows = [
+            (t, u) for t, u in rows
+            if needle in _ticket_user_label(t, u).lower() or needle in t.message.lower()
+        ]
 
     return {
         "tickets": [
@@ -3108,25 +3149,76 @@ async def web_tickets(status: str = "", authorization: str | None = Header(defau
                 "id": t.id,
                 "public_id": f"S-{t.id:06d}",
                 "user_id": t.user_id,
-                "user_label": label(t, u),
+                "user_label": _ticket_user_label(t, u),
                 "topic": t.topic,
                 "topic_label": TICKET_TOPIC_LABELS.get(t.topic, t.topic),
                 "message": t.message,
                 "platform": t.platform or "",
                 "status": t.status,
-                "admin_reply": t.admin_reply or "",
+                "priority": t.priority,
+                "priority_label": TICKET_PRIORITY_LABELS.get(t.priority, t.priority),
+                "assigned_admin_id": t.assigned_admin_id,
+                "assigned_admin_username": admins.get(t.assigned_admin_id) if t.assigned_admin_id else None,
+                "last_message_at": t.last_message_at.isoformat() if t.last_message_at else None,
+                "last_message_sender": t.last_message_sender,
+                "has_unread": t.last_message_sender == "user" and t.status != "closed",
                 "created_at": t.created_at.isoformat() if t.created_at else None,
                 "updated_at": t.updated_at.isoformat() if t.updated_at else None,
             }
             for t, u in rows
-        ]
+        ],
+        "me": {"admin_id": identity.admin_id, "username": identity.username},
+    }
+
+
+@app.get("/web/tickets/{ticket_id}")
+async def web_ticket_detail(ticket_id: int, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.support_ticket import SupportTicket
+    from bot.models.support_ticket_message import SupportTicketMessage
+
+    async with AsyncSessionLocal() as session:
+        t = (await session.execute(select(SupportTicket).where(SupportTicket.id == ticket_id))).scalar_one_or_none()
+        if not t:
+            raise HTTPException(404, "Ticket not found")
+        u = (await session.execute(select(User).where(User.telegram_id == t.user_id))).scalar_one_or_none() if t.user_id else None
+        msgs = (await session.execute(
+            select(SupportTicketMessage)
+            .where(SupportTicketMessage.ticket_id == ticket_id)
+            .order_by(SupportTicketMessage.created_at.asc())
+        )).scalars().all()
+
+    return {
+        "id": t.id,
+        "public_id": f"S-{t.id:06d}",
+        "user_id": t.user_id,
+        "user_label": _ticket_user_label(t, u),
+        "topic": t.topic,
+        "topic_label": TICKET_TOPIC_LABELS.get(t.topic, t.topic),
+        "platform": t.platform or "",
+        "status": t.status,
+        "priority": t.priority,
+        "priority_label": TICKET_PRIORITY_LABELS.get(t.priority, t.priority),
+        "assigned_admin_id": t.assigned_admin_id,
+        "created_at": t.created_at.isoformat() if t.created_at else None,
+        "messages": [
+            {
+                "id": m.id,
+                "sender": m.sender,
+                "admin_username": m.admin_username,
+                "body": m.body,
+                "created_at": m.created_at.isoformat() if m.created_at else None,
+            }
+            for m in msgs
+        ],
     }
 
 
 @app.post("/web/tickets/{ticket_id}/reply")
 async def web_ticket_reply(ticket_id: int, request: Request, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    identity = _web_auth(authorization)
     from bot.models.support_ticket import SupportTicket
+    from bot.models.support_ticket_message import SupportTicketMessage
 
     body = await request.json()
     reply = (body.get("reply") or "").strip()[:4000]
@@ -3139,19 +3231,36 @@ async def web_ticket_reply(ticket_id: int, request: Request, authorization: str 
         if not t:
             raise HTTPException(404, "Ticket not found")
         if reply:
-            t.admin_reply = reply
+            session.add(SupportTicketMessage(
+                ticket_id=t.id, sender="admin", body=reply,
+                admin_id=identity.admin_id, admin_username=identity.username,
+            ))
+            t.last_message_at = datetime.utcnow()
+            t.last_message_sender = "admin"
+            # Отвечая на неназначенный тикет, админ автоматически берёт его
+            # себе — чтобы у заявки не было формального ответа без владельца.
+            if t.assigned_admin_id is None:
+                t.assigned_admin_id = identity.admin_id
         t.status = new_status
         user_id, contact, topic_label = t.user_id, t.contact, TICKET_TOPIC_LABELS.get(t.topic, t.topic)
         user = (await session.execute(select(User).where(User.telegram_id == user_id))).scalar_one_or_none() if user_id else None
         await session.commit()
 
     if reply:
-        # Аккаунт с реальным Telegram — шлём в бота. Веб-аккаунт (telegram_id
-        # синтетический) или анонимное обращение с email-контактом — на почту.
+        # Аккаунт с реальным Telegram — шлём в бота с кнопкой «Ответить»,
+        # чтобы дальнейшая переписка тоже шла в тред. Веб-аккаунт (telegram_id
+        # синтетический) или анонимное обращение с email-контактом — на почту
+        # (без кнопки: обратный путь у email — просто написать ещё раз на /support).
         # @username без привязанного аккаунта Bot API написать не даёт —
         # для таких тикетов остаётся только ручной ответ через сам контакт.
         if user and user.telegram_id > 0:
-            await _tg_send(user.telegram_id, f"💬 <b>Ответ поддержки по тикету «{topic_label}»:</b>\n\n{reply}")
+            await _tg_send(
+                user.telegram_id,
+                f"💬 <b>Ответ поддержки по заявке «{topic_label}» (S-{ticket_id:06d}):</b>\n\n{reply}",
+                reply_markup={"inline_keyboard": [[
+                    {"text": "✍️ Ответить", "callback_data": f"ticket_reply:{ticket_id}"},
+                ]]},
+            )
         else:
             email = (user.email if user else None) or (contact if contact and "@" in contact and not contact.startswith("@") else None)
             if email:
@@ -3160,6 +3269,44 @@ async def web_ticket_reply(ticket_id: int, request: Request, authorization: str 
                     await send_ticket_reply_email(email, topic_label, reply)
                 except Exception as e:
                     logger.error("Failed to email ticket reply to %s: %s", email, e)
+    return {"ok": True}
+
+
+@app.post("/web/tickets/{ticket_id}/priority")
+async def web_ticket_priority(ticket_id: int, request: Request, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.support_ticket import SupportTicket
+
+    body = await request.json()
+    priority = (body.get("priority") or "").strip()
+    if priority not in TICKET_PRIORITIES:
+        raise HTTPException(400, "Invalid priority")
+
+    async with AsyncSessionLocal() as session:
+        t = (await session.execute(select(SupportTicket).where(SupportTicket.id == ticket_id))).scalar_one_or_none()
+        if not t:
+            raise HTTPException(404, "Ticket not found")
+        t.priority = priority
+        await session.commit()
+    return {"ok": True}
+
+
+@app.post("/web/tickets/{ticket_id}/assign")
+async def web_ticket_assign(ticket_id: int, request: Request, authorization: str | None = Header(default=None)):
+    identity = _web_auth(authorization)
+    from bot.models.support_ticket import SupportTicket
+
+    body = await request.json()
+    admin_id = body.get("admin_id", "me")
+    if admin_id == "me":
+        admin_id = identity.admin_id
+
+    async with AsyncSessionLocal() as session:
+        t = (await session.execute(select(SupportTicket).where(SupportTicket.id == ticket_id))).scalar_one_or_none()
+        if not t:
+            raise HTTPException(404, "Ticket not found")
+        t.assigned_admin_id = admin_id
+        await session.commit()
     return {"ok": True}
 
 

@@ -7,12 +7,6 @@ function openExternal(url) {
   else window.open(url, "_blank");
 }
 
-function openTelegram(url) {
-  const tg = window.Telegram?.WebApp;
-  if (tg?.openTelegramLink) tg.openTelegramLink(url);
-  else window.open(url, "_blank");
-}
-
 const GlobeIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFB800" strokeWidth="2" strokeLinecap="round">
     <circle cx="12" cy="12" r="10" />
@@ -157,7 +151,7 @@ export default function AccountScreen({
         </button>
 
         <button
-          onClick={() => openTelegram(account.supportUrl)}
+          onClick={() => openExternal(`${account.siteUrl}/support`)}
           className="bg-app-card border border-gold/20 rounded-2xl p-3.5 text-left flex flex-col gap-3"
         >
           <div className="flex items-center justify-between">
@@ -168,7 +162,7 @@ export default function AccountScreen({
           </div>
           <div>
             <div className="font-semibold text-[13.5px] text-ink">Написать в поддержку</div>
-            <div className="font-medium text-[11px] text-ink/40 mt-0.5">Мы онлайн 24/7</div>
+            <div className="font-medium text-[11px] text-ink/40 mt-0.5">Оформить заявку — ответим в боте</div>
           </div>
         </button>
       </div>
