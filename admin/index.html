@@ -205,24 +205,15 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 .dev-name{font-size:13.5px;font-weight:600;color:#EBE0CC}
 .dev-meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:#8A7A60;margin-top:2px}
 
-/* ── Support ─────────────────────────────────────────────── */
-.support-grid{display:grid;grid-template-columns:340px 1fr;gap:12px;align-items:start}
-@media(max-width:820px){.support-grid{grid-template-columns:1fr}}
-.tkt-list{display:flex;flex-direction:column;gap:9px}
-.tkt-card{cursor:pointer;background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:15px 17px;transition:all .15s}
-.tkt-card.sel{border-color:rgba(255,184,0,.4);background:rgba(255,184,0,.06)}
-.tkt-card-top{display:flex;align-items:center;gap:9px;margin-bottom:7px}
-.tkt-user{font-size:12.5px;font-weight:600;color:#EBE0CC;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tkt-subject{font-size:13.5px;color:#EBE0CC;line-height:1.45;margin-bottom:8px}
-.tkt-foot{display:flex;justify-content:space-between;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#3A3028}
-.tkt-detail{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px}
-.tkt-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:18px}
-.msg-bubble{max-width:88%;border-radius:14px;padding:14px 16px;margin-bottom:12px}
-.msg-bubble.user{background:#0B0A09;border:1px solid rgba(255,255,255,.08)}
-.msg-bubble.admin{background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.22);margin-left:auto}
-.msg-who{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;margin-bottom:6px}
-.msg-text{font-size:14px;line-height:1.6;color:#EBE0CC;white-space:pre-wrap}
-.msg-time{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#3A3028;margin-top:7px}
+/* ── Support (таблица заявок, не чат) ───────────────────────── */
+.tkt-log{border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}
+.tkt-log-row{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);border-left:3px solid rgba(255,255,255,.14)}
+.tkt-log-row:last-child{border-bottom:none}
+.tkt-log-row.admin{border-left-color:#FFB800;background:rgba(255,184,0,.04)}
+.tkt-log-who{font-family:'Space Grotesk',sans-serif;font-size:11.5px;font-weight:600;color:#8A7A60;margin-bottom:5px;display:flex;justify-content:space-between;gap:10px}
+.tkt-log-row.admin .tkt-log-who{color:#FFB800}
+.tkt-log-time{font-family:'JetBrains Mono',monospace;font-weight:400;color:#3A3028;font-size:11px;white-space:nowrap}
+.tkt-log-text{font-size:13.5px;line-height:1.6;color:#EBE0CC;white-space:pre-wrap}
 
 /* ── Servers ─────────────────────────────────────────────── */
 .srv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
@@ -1011,33 +1002,37 @@ async function renderSupport() {
     const assignedFilters = [
       { id: '', label: 'Все' }, { id: 'me', label: 'Мои' }, { id: 'unassigned', label: 'Не назначены' },
     ];
+    const cols = ['№', 'Пользователь', 'Тема', 'Приоритет', 'Статус', 'Назначено', 'Обновлено'];
     c.innerHTML = `
       <div class="filters">${statusFilters.map(f => `<div class="filter-pill ${f.id === filter ? 'sel' : ''}" onclick="filter='${f.id}';renderSupport()">${f.label}</div>`).join('')}</div>
       <div class="filters" style="margin-top:8px">
         ${priorityFilters.map(f => `<div class="filter-pill ${f.id === tktPriorityFilter ? 'sel' : ''}" onclick="tktPriorityFilter='${f.id}';renderSupport()">${f.label}</div>`).join('')}
         ${assignedFilters.map(f => `<div class="filter-pill ${f.id === tktAssignedFilter ? 'sel' : ''}" onclick="tktAssignedFilter='${f.id}';renderSupport()">${f.label}</div>`).join('')}
       </div>
-      <div class="support-grid" style="margin-top:12px">
-        <div class="tkt-list">
-          ${data.tickets.length ? data.tickets.map(t => `
-            <div class="tkt-card ${selectedTicket === t.id ? 'sel' : ''}" onclick="openTicket(${t.id})">
-              <div class="tkt-card-top">
-                <span style="width:7px;height:7px;border-radius:50%;background:${TICKET_STATUS[t.status][1]};flex-shrink:0"></span>
-                <span class="tkt-user">${esc(t.user_label)}</span>
-                ${t.has_unread ? '<span class="chip gold" style="font-size:10px;padding:2px 7px">Новое</span>' : ''}
-                <span class="chip ${TICKET_PRIORITY[t.priority][1]}" style="font-size:10.5px">${TICKET_PRIORITY[t.priority][0]}</span>
-              </div>
-              <div class="tkt-subject">${esc(t.topic_label)}</div>
-              <div class="tkt-foot">
-                <span>${fmtDateTime(t.last_message_at)}</span>
-                <span>${t.assigned_admin_username ? '@' + esc(t.assigned_admin_username) : t.public_id}</span>
-              </div>
-            </div>
-          `).join('') : '<div class="empty">Нет заявок</div>'}
+      <div class="tbl-wrap" style="margin-top:12px">
+        <div class="tbl-scroll">
+          <table>
+            <thead><tr>${cols.map(cl => `<th>${cl}</th>`).join('')}</tr></thead>
+            <tbody>${data.tickets.length ? data.tickets.map(t => `
+              <tr class="${selectedTicket === t.id ? 'sel' : ''}" data-ticket="${t.id}">
+                <td><span class="mono" style="color:#3A3028">${t.public_id}</span></td>
+                <td><div>${esc(t.user_label)}</div>${t.has_unread ? `<span class="sub" style="color:#FFB800">Новое сообщение</span>` : ''}</td>
+                <td>${esc(t.topic_label)}</td>
+                <td><span class="chip ${TICKET_PRIORITY[t.priority][1]}">${TICKET_PRIORITY[t.priority][0]}</span></td>
+                <td><span style="width:7px;height:7px;border-radius:50%;background:${TICKET_STATUS[t.status][1]};display:inline-block;margin-right:6px"></span>${TICKET_STATUS[t.status][0]}</td>
+                <td>${t.assigned_admin_username ? '@' + esc(t.assigned_admin_username) : '<span class="sub">не назначена</span>'}</td>
+                <td><span style="color:#8A7A60;font-size:12px">${fmtDateTime(t.last_message_at)}</span></td>
+              </tr>
+            `).join('') : `<tr><td colspan="${cols.length}"><div class="empty">Нет заявок</div></td></tr>`}</tbody>
+          </table>
         </div>
-        <div id="ticketDetail">${selectedTicket ? '' : '<div style="border:1px dashed rgba(255,255,255,.12);border-radius:16px;padding:60px 30px;text-align:center;color:#3A3028;font-size:14px">Выберите заявку слева</div>'}</div>
+        <div class="tbl-foot"><span>Всего: ${data.tickets.length}</span></div>
       </div>
+      <div id="ticketDetail"></div>
     `;
+    c.querySelectorAll('tbody tr[data-ticket]').forEach(tr => {
+      tr.addEventListener('click', () => openTicket(Number(tr.dataset.ticket)));
+    });
     if (selectedTicket) openTicket(selectedTicket);
   } catch (e) {
     c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
@@ -1047,19 +1042,20 @@ async function renderSupport() {
 async function openTicket(id) {
   selectedTicket = id;
   const el = document.getElementById('ticketDetail');
-  document.querySelectorAll('.tkt-card').forEach(x => x.classList.toggle('sel', x.getAttribute('onclick') === `openTicket(${id})`));
-  el.innerHTML = `<div class="tkt-detail"><div class="spinner-wrap"><div class="spinner"></div></div></div>`;
+  document.querySelectorAll('tbody tr[data-ticket]').forEach(tr => tr.classList.toggle('sel', Number(tr.dataset.ticket) === id));
+  el.innerHTML = `<div class="detail"><div class="spinner-wrap"><div class="spinner"></div></div></div>`;
   try {
     const t = await api('GET', `/web/tickets/${id}`);
     el.innerHTML = `
-      <div class="tkt-detail">
-        <div class="tkt-detail-head">
+      <div class="detail">
+        <div class="detail-head">
           <div>
             <div class="detail-title">${esc(t.topic_label)}</div>
             <div class="detail-sub">${esc(t.user_label)} · ${esc(t.platform || '—')} · ${fmtDateTime(t.created_at)} · ${t.public_id}</div>
           </div>
           <div class="detail-actions">
             ${t.status !== 'closed' ? `<div class="act-btn plain" onclick="setTicketStatus(${t.id}, 'closed')">Закрыть</div>` : `<div class="act-btn plain" onclick="setTicketStatus(${t.id}, 'open')">Открыть заново</div>`}
+            <div class="close-x" onclick="closeTicketDetail()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
           </div>
         </div>
         <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:18px">
@@ -1069,16 +1065,18 @@ async function openTicket(id) {
           <span style="width:1px;height:16px;background:rgba(255,255,255,.1)"></span>
           <div class="act-btn plain" style="padding:5px 12px;font-size:11.5px" onclick="assignTicket(${t.id}, ${t.assigned_admin_id ? 'null' : "'me'"})">${t.assigned_admin_id ? 'Снять с себя' : 'Взять в работу'}</div>
         </div>
-        <div class="thread">
+        <div class="tkt-log">
           ${t.messages.map(m => `
-            <div class="msg-bubble ${m.sender}">
-              <div class="msg-who" style="color:${m.sender === 'admin' ? '#FFB800' : '#8A7A60'}">${m.sender === 'admin' ? 'Поддержка' + (m.admin_username ? ' · @' + esc(m.admin_username) : '') : esc(t.user_label)}</div>
-              <div class="msg-text">${esc(m.body)}</div>
-              <div class="msg-time">${fmtDateTime(m.created_at)}</div>
+            <div class="tkt-log-row ${m.sender}">
+              <div class="tkt-log-who">
+                <span>${m.sender === 'admin' ? 'Поддержка' + (m.admin_username ? ' · @' + esc(m.admin_username) : '') : esc(t.user_label)}</span>
+                <span class="tkt-log-time">${fmtDateTime(m.created_at)}</span>
+              </div>
+              <div class="tkt-log-text">${esc(m.body)}</div>
             </div>
           `).join('')}
         </div>
-        <textarea class="ipt" id="replyInput" placeholder="Ответ пользователю…" style="width:100%;min-height:110px;margin-top:6px"></textarea>
+        <textarea class="ipt" id="replyInput" placeholder="Ответ пользователю…" style="width:100%;min-height:100px;margin-top:14px"></textarea>
         <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px">
           <span style="font-size:12px;color:#3A3028">Ответ уйдёт в бота (с кнопкой «Ответить», чтобы переписка продолжилась) или на email — туда, откуда пришло обращение.</span>
           <div class="primary-btn" onclick="sendReply(${t.id})">Отправить</div>
@@ -1088,6 +1086,13 @@ async function openTicket(id) {
   } catch (e) {
     el.innerHTML = `<div class="empty">Ошибка: ${esc(e.message)}</div>`;
   }
+}
+
+function closeTicketDetail() {
+  selectedTicket = null;
+  const el = document.getElementById('ticketDetail');
+  if (el) el.innerHTML = '';
+  document.querySelectorAll('tbody tr[data-ticket]').forEach(tr => tr.classList.remove('sel'));
 }
 
 async function sendReply(id) {
