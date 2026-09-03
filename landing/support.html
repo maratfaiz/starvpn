@@ -71,7 +71,14 @@ main{position:relative;z-index:2;max-width:820px;margin:0 auto;padding:clamp(32p
 .topic{cursor:pointer;font-size:13px;font-weight:500;padding:9px 15px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--text2);transition:all .15s}
 .topic.sel{border-color:rgba(255,184,0,.45);background:rgba(255,184,0,.08);color:var(--gold)}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.field-row.single{grid-template-columns:1fr}
 @media(max-width:560px){.field-row{grid-template-columns:1fr}}
+.acct-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid rgba(255,184,0,.3);background:rgba(255,184,0,.06);border-radius:12px;padding:13px 15px;flex-wrap:wrap;margin-bottom:22px}
+.acct-row.off{border-color:rgba(255,255,255,.1);background:rgba(255,255,255,.02)}
+.acct-name{font-size:14px;font-weight:600;color:var(--text)}
+.acct-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.acct-toggle{cursor:pointer;background:none;border:1px solid rgba(255,255,255,.14);color:var(--text2);font-family:'Inter',sans-serif;font-size:12.5px;padding:8px 14px;border-radius:9px;transition:border-color .2s,color .2s}
+.acct-toggle:hover{border-color:rgba(255,184,0,.4);color:var(--gold)}
 input[type=text],select{width:100%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:13px 15px;color:var(--text);font-family:'Inter',sans-serif;font-size:14.5px;outline:none;transition:border-color .2s}
 input[type=text].err{border-color:rgba(248,113,113,.5)}
 .select-wrap{position:relative}
@@ -100,15 +107,6 @@ textarea.err{border-color:rgba(248,113,113,.5)}
 
 .side{display:flex;flex-direction:column;gap:14px}
 .side-card{background:#0D0C0A;border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:22px}
-.side-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:var(--text);margin-bottom:16px}
-.side-link{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.02);text-decoration:none;transition:border-color .2s}
-.side-link:hover{border-color:rgba(255,184,0,.35)}
-.side-link + .side-link{margin-top:10px}
-.side-link-icon{width:34px;height:34px;border-radius:10px;background:var(--gold-dim);border:1px solid rgba(255,184,0,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.side-link-icon svg{width:17px;height:17px;stroke:var(--gold);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.side-link-title{font-size:14px;font-weight:600;color:var(--text)}
-.side-link-sub{font-size:12.5px;color:var(--text2)}
-
 .tips-card{background:rgba(255,184,0,.05);border:1px solid rgba(255,184,0,.22);border-radius:18px;padding:20px}
 .tips-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
 .tip{display:flex;gap:9px;font-size:13.5px;line-height:1.5;color:var(--text);align-items:flex-start;margin-bottom:9px}
@@ -173,8 +171,19 @@ footer{border-top:1px solid rgba(255,255,255,.07)}
           <button type="button" class="topic" data-topic="other">Другое</button>
         </div>
 
+        <div id="acctBlock" style="display:none">
+          <label class="field-label">Аккаунт</label>
+          <div class="acct-row" id="acctRow">
+            <div>
+              <div class="acct-name" id="acctName"></div>
+              <div class="acct-sub" id="acctSub">Обращение будет привязано к этому аккаунту</div>
+            </div>
+            <button type="button" class="acct-toggle" id="acctToggle">Без аккаунта</button>
+          </div>
+        </div>
+
         <div class="field-row">
-          <div>
+          <div id="contactField">
             <label class="field-label" for="contact">Как с вами связаться</label>
             <input type="text" id="contact" placeholder="email или @username">
           </div>
@@ -214,18 +223,6 @@ footer{border-top:1px solid rgba(255,255,255,.07)}
     </div>
 
     <div class="side">
-      <div class="side-card">
-        <div class="side-title">Другие способы</div>
-        <a class="side-link" href="https://t.me/starisvpnbot">
-          <span class="side-link-icon"><svg viewBox="0 0 24 24"><path d="M22 3L2 10.5l6.5 2.5L11 20l3-4.5 5 3z"/></svg></span>
-          <div><div class="side-link-title">Чат в Telegram</div><div class="side-link-sub">@starisvpnbot</div></div>
-        </a>
-        <a class="side-link" href="/wiki/troubleshooting">
-          <span class="side-link-icon"><svg viewBox="0 0 24 24"><path d="M12 3l8 4v5c0 4-3 7-8 8-5-1-8-4-8-8V7z"/></svg></span>
-          <div><div class="side-link-title">Устранение неполадок</div><div class="side-link-sub">Решения частых проблем</div></div>
-        </a>
-      </div>
-
       <div class="tips-card">
         <div class="tips-label">Быстрее ответим, если</div>
         <div class="tip"><span>·</span>Указали платформу и приложение, которым пользуетесь</div>
@@ -307,6 +304,8 @@ document.querySelectorAll('.topic').forEach(btn => {
 });
 
 const contactInput = document.getElementById('contact');
+const contactField = document.getElementById('contactField');
+const fieldRow = contactField.closest('.field-row');
 const messageInput = document.getElementById('message');
 const platformSelect = document.getElementById('platform');
 const hintEl = document.getElementById('hint');
@@ -314,9 +313,45 @@ const charCountEl = document.getElementById('char-count');
 const submitBtn = document.getElementById('submit-btn');
 const formState = document.getElementById('formState');
 const sentState = document.getElementById('sentState');
+const acctBlock = document.getElementById('acctBlock');
+const acctRow = document.getElementById('acctRow');
+const acctName = document.getElementById('acctName');
+const acctSub = document.getElementById('acctSub');
+const acctToggle = document.getElementById('acctToggle');
 
 messageInput.addEventListener('input', () => {
   charCountEl.textContent = messageInput.value.length + ' / 1000';
+});
+
+/* ═══ Привязка к аккаунту ══════════════════════════════════════ */
+let accountLabel = null;
+let useAccount = false;
+
+function applyAccountState(){
+  contactField.style.display = useAccount ? 'none' : 'block';
+  fieldRow.classList.toggle('single', useAccount);
+  acctRow.classList.toggle('off', !useAccount);
+  acctToggle.textContent = useAccount ? 'Без аккаунта' : ('Использовать ' + accountLabel);
+  acctSub.textContent = useAccount
+    ? 'Обращение будет привязано к этому аккаунту'
+    : 'Не привязано — укажите контакт вручную ниже';
+}
+
+fetch('/api/me', { credentials: 'include' })
+  .then(r => r.ok ? r.json() : Promise.reject())
+  .then(me => {
+    accountLabel = me.email || (me.telegram_linked && me.username ? '@' + me.username : (me.telegram_linked ? 'Telegram ID ' + me.telegram_id : ''));
+    if (!accountLabel) return;
+    useAccount = true;
+    acctBlock.style.display = 'block';
+    acctName.textContent = accountLabel;
+    applyAccountState();
+  })
+  .catch(() => { /* не вошёл в аккаунт — форма работает как для гостя */ });
+
+acctToggle.addEventListener('click', () => {
+  useAccount = !useAccount;
+  applyAccountState();
 });
 
 function setValidity(contactBad, msgBad){
@@ -333,7 +368,7 @@ function setValidity(contactBad, msgBad){
 submitBtn.addEventListener('click', async () => {
   const contact = contactInput.value.trim();
   const message = messageInput.value.trim();
-  const contactBad = !contact;
+  const contactBad = !useAccount && !contact;
   const msgBad = message.length < 10;
   if (contactBad || msgBad) { setValidity(contactBad, msgBad); return; }
   setValidity(false, false);
@@ -346,7 +381,11 @@ submitBtn.addEventListener('click', async () => {
     const r = await fetch('/api/support', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topic, contact, platform: platformSelect.value, message }),
+      credentials: 'include',
+      body: JSON.stringify({
+        topic, contact, platform: platformSelect.value, message,
+        anonymous: accountLabel ? !useAccount : false,
+      }),
     });
     if (r.ok) {
       const d = await r.json();
@@ -355,7 +394,7 @@ submitBtn.addEventListener('click', async () => {
   } catch (e) { /* показываем локальный номер заявки как запасной вариант */ }
 
   document.getElementById('ticket-id').textContent = ticketId;
-  document.getElementById('sent-contact').textContent = contact;
+  document.getElementById('sent-contact').textContent = useAccount ? accountLabel : contact;
   formState.style.display = 'none';
   sentState.classList.add('show');
   submitBtn.disabled = false;

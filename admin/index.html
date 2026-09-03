@@ -206,14 +206,13 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 .dev-meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:#8A7A60;margin-top:2px}
 
 /* ── Support (таблица заявок, не чат) ───────────────────────── */
-.tkt-log{border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden}
-.tkt-log-row{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.06);border-left:3px solid rgba(255,255,255,.14)}
-.tkt-log-row:last-child{border-bottom:none}
-.tkt-log-row.admin{border-left-color:#FFB800;background:rgba(255,184,0,.04)}
-.tkt-log-who{font-family:'Space Grotesk',sans-serif;font-size:11.5px;font-weight:600;color:#8A7A60;margin-bottom:5px;display:flex;justify-content:space-between;gap:10px}
-.tkt-log-row.admin .tkt-log-who{color:#FFB800}
-.tkt-log-time{font-family:'JetBrains Mono',monospace;font-weight:400;color:#3A3028;font-size:11px;white-space:nowrap}
-.tkt-log-text{font-size:13.5px;line-height:1.6;color:#EBE0CC;white-space:pre-wrap}
+.tkt-msg{border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px}
+.tkt-msg-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#8A7A60;margin-bottom:8px}
+.tkt-msg-text{font-size:13.5px;line-height:1.6;color:#EBE0CC;white-space:pre-wrap}
+.tkt-acc{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 16px;margin-top:12px;flex-wrap:wrap}
+.tkt-acc-title{font-weight:600;font-size:13.5px;color:#EBE0CC}
+.tkt-acc-sub{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#8A7A60;margin-top:3px}
+.tkt-acc.none{color:#8A7A60;font-size:12.5px;font-style:italic}
 
 /* Заявки на узком экране — таблица превращается в стопку карточек:
    заголовки скрыты, у каждой ячейки вместо них подпись из data-label. */
@@ -1033,7 +1032,7 @@ async function renderSupport() {
             <tbody>${data.tickets.length ? data.tickets.map(t => `
               <tr class="${selectedTicket === t.id ? 'sel' : ''}" data-ticket="${t.id}">
                 <td data-label="№"><span class="mono" style="color:#3A3028">${t.public_id}</span></td>
-                <td data-label="Пользователь"><div>${esc(t.user_label)}</div>${t.has_unread ? `<span class="sub" style="color:#FFB800">Новое сообщение</span>` : ''}</td>
+                <td data-label="Пользователь"><div>${esc(t.user_label)}${t.account_linked ? `<span class="chip grey" style="margin-left:6px;font-size:10px;vertical-align:middle">Аккаунт</span>` : ''}</div>${t.has_unread ? `<span class="sub" style="color:#FFB800">Новое сообщение</span>` : ''}</td>
                 <td data-label="Тема">${esc(t.topic_label)}</td>
                 <td data-label="Способ связи"><span class="chip ${TICKET_CHANNEL[t.channel][1]}">${TICKET_CHANNEL[t.channel][0]}</span></td>
                 <td data-label="Приоритет"><span class="chip ${TICKET_PRIORITY[t.priority][1]}">${TICKET_PRIORITY[t.priority][0]}</span></td>
@@ -1047,6 +1046,7 @@ async function renderSupport() {
         <div class="tbl-foot"><span>Всего: ${data.tickets.length}</span></div>
       </div>
       <div id="ticketDetail"></div>
+      <div id="detailSlot"></div>
     `;
     c.querySelectorAll('tbody tr[data-ticket]').forEach(tr => {
       tr.addEventListener('click', () => openTicket(Number(tr.dataset.ticket)));
@@ -1084,17 +1084,19 @@ async function openTicket(id) {
           <span style="width:1px;height:16px;background:rgba(255,255,255,.1)"></span>
           <div class="act-btn plain" style="padding:5px 12px;font-size:11.5px" onclick="assignTicket(${t.id}, ${t.assigned_admin_id ? 'null' : "'me'"})">${t.assigned_admin_id ? 'Снять с себя' : 'Взять в работу'}</div>
         </div>
-        <div class="tkt-log">
-          ${t.messages.map(m => `
-            <div class="tkt-log-row ${m.sender}">
-              <div class="tkt-log-who">
-                <span>${m.sender === 'admin' ? 'Поддержка' + (m.admin_username ? ' · @' + esc(m.admin_username) : '') : esc(t.user_label)}</span>
-                <span class="tkt-log-time">${fmtDateTime(m.created_at)}</span>
-              </div>
-              <div class="tkt-log-text">${esc(m.body)}</div>
-            </div>
-          `).join('')}
+        <div class="tkt-msg">
+          <div class="tkt-msg-label">Обращение</div>
+          <div class="tkt-msg-text">${esc(t.latest_user_message.body)}</div>
         </div>
+        ${t.account ? `
+          <div class="tkt-acc">
+            <div>
+              <div class="tkt-acc-title">${esc(t.account.full_name || (t.account.username ? '@' + t.account.username : (t.account.email || 'Аккаунт')))}</div>
+              <div class="tkt-acc-sub">${t.account.is_web_only ? 'веб-аккаунт' : t.account.telegram_id}${t.account.username ? ' · @' + esc(t.account.username) : ''}${t.account.email ? ' · ' + esc(t.account.email) : ''} · ${t.account.subscription_active ? 'подписка активна' : 'подписка не активна'}</div>
+            </div>
+            <div class="act-btn plain" onclick="openUserDetail(${t.account.telegram_id})">Открыть аккаунт →</div>
+          </div>
+        ` : `<div class="tkt-acc none">Обращение без привязки к аккаунту</div>`}
         <textarea class="ipt" id="replyInput" placeholder="Ответ пользователю…" style="width:100%;min-height:100px;margin-top:14px"></textarea>
         <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px">
           <span style="font-size:12px;color:${t.channel === 'telegram_manual' || t.channel === 'unknown' ? '#F87171' : '#3A3028'}">${{

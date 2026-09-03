@@ -606,12 +606,14 @@ async def create_support_ticket(request: Request, x_telegram_init_data: str | No
     contact = (body.get("contact") or "").strip()[:320]
     message = (body.get("message") or "").strip()[:4000]
     platform = (body.get("platform") or "").strip()[:32] or None
+    anonymous = bool(body.get("anonymous"))
 
     async with AsyncSessionLocal() as session:
         # Если пользователь уже вошёл (Mini App или сессия личного кабинета) —
-        # привязываем тикет к аккаунту автоматически, но поле contact в форме
-        # остаётся обязательным для всех: это то, куда реально можно ответить.
-        tg_id = await _resolve_tg_id_optional(request, x_telegram_init_data, session)
+        # привязываем тикет к аккаунту автоматически, если он сам это не
+        # отключил (поле "Без аккаунта" в форме) — тогда обращение анонимное
+        # и требует ручной contact, даже если сессия/initData есть.
+        tg_id = None if anonymous else await _resolve_tg_id_optional(request, x_telegram_init_data, session)
         if not contact and tg_id is None:
             raise HTTPException(400, "Укажите email или @username для связи")
         if len(message) < 10:
@@ -3172,6 +3174,7 @@ async def web_tickets(
             "public_id": f"S-{t.id:06d}",
             "user_id": t.user_id,
             "user_label": _ticket_user_label(t, u),
+            "account_linked": bool(u),
             "topic": t.topic,
             "topic_label": TICKET_TOPIC_LABELS.get(t.topic, t.topic),
             "message": t.message,
@@ -3214,6 +3217,13 @@ async def web_ticket_detail(ticket_id: int, authorization: str | None = Header(d
         )).scalars().all()
 
     channel, channel_value = _ticket_channel(t, u)
+    # Админка больше не показывает переписку как ленту сообщений (см.
+    # AGENTS/architecture/support-system.md) — только текущий текст обращения
+    # (последнее сообщение от пользователя, если он писал ещё раз через
+    # кнопку «Ответить» в боте) + карточку аккаунта, если обращение подано
+    # из-под входа. Полный список msgs всё ещё нужен только чтобы найти
+    # последнее сообщение пользователя, сама переписка построчно не отдаётся.
+    last_user_msg = next((m for m in reversed(msgs) if m.sender == "user"), None)
     return {
         "id": t.id,
         "public_id": f"S-{t.id:06d}",
@@ -3229,16 +3239,26 @@ async def web_ticket_detail(ticket_id: int, authorization: str | None = Header(d
         "channel_value": channel_value,
         "assigned_admin_id": t.assigned_admin_id,
         "created_at": t.created_at.isoformat() if t.created_at else None,
-        "messages": [
+        "latest_user_message": {
+            "body": last_user_msg.body if last_user_msg else t.message,
+            "created_at": (
+                last_user_msg.created_at.isoformat()
+                if last_user_msg and last_user_msg.created_at
+                else (t.created_at.isoformat() if t.created_at else None)
+            ),
+        },
+        "account": (
             {
-                "id": m.id,
-                "sender": m.sender,
-                "admin_username": m.admin_username,
-                "body": m.body,
-                "created_at": m.created_at.isoformat() if m.created_at else None,
+                "telegram_id": u.telegram_id,
+                "is_web_only": u.telegram_id <= 0,
+                "full_name": u.full_name or "",
+                "username": u.username or "",
+                "email": u.email or "",
+                "subscription_active": bool(u.subscription_expires_at and u.subscription_expires_at > datetime.utcnow()),
             }
-            for m in msgs
-        ],
+            if u
+            else None
+        ),
     }
 
 
