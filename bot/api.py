@@ -3109,6 +3109,28 @@ def _ticket_user_label(t, u: User | None) -> str:
     return t.contact or "—"
 
 
+def _ticket_channel(t, u: User | None) -> tuple[str, str]:
+    """Куда реально уйдёт ответ, если админ нажмёт «Отправить».
+
+    - telegram: реальный (положительный) telegram_id — уходит в бота.
+    - email: есть email (свой аккаунта или из contact формы) — уходит письмом
+      через bot/utils/mailer.py (нужен настроенный SMTP_HOST в .env).
+    - telegram_manual: указан только "@username" без привязанного аккаунта —
+      Bot API не даёт написать первым без предварительного /start, поэтому
+      это не автоматизировано, нужен ручной контакт.
+    - unknown: контакта нет вообще (не должно происходить — форма требует
+      contact для анонимных обращений, но встречается в старых записях).
+    """
+    if u and u.telegram_id and u.telegram_id > 0:
+        return "telegram", (f"@{u.username}" if u.username else str(u.telegram_id))
+    contact = ((u.email if u else None) or t.contact or "").strip()
+    if contact.startswith("@"):
+        return "telegram_manual", contact
+    if "@" in contact:
+        return "email", contact
+    return "unknown", contact or "—"
+
+
 @app.get("/web/tickets")
 async def web_tickets(
     status: str = "", priority: str = "", assigned: str = "", q: str = "",
@@ -3143,30 +3165,33 @@ async def web_tickets(
             if needle in _ticket_user_label(t, u).lower() or needle in t.message.lower()
         ]
 
+    def row_dict(t, u):
+        channel, channel_value = _ticket_channel(t, u)
+        return {
+            "id": t.id,
+            "public_id": f"S-{t.id:06d}",
+            "user_id": t.user_id,
+            "user_label": _ticket_user_label(t, u),
+            "topic": t.topic,
+            "topic_label": TICKET_TOPIC_LABELS.get(t.topic, t.topic),
+            "message": t.message,
+            "platform": t.platform or "",
+            "status": t.status,
+            "priority": t.priority,
+            "priority_label": TICKET_PRIORITY_LABELS.get(t.priority, t.priority),
+            "channel": channel,
+            "channel_value": channel_value,
+            "assigned_admin_id": t.assigned_admin_id,
+            "assigned_admin_username": admins.get(t.assigned_admin_id) if t.assigned_admin_id else None,
+            "last_message_at": t.last_message_at.isoformat() if t.last_message_at else None,
+            "last_message_sender": t.last_message_sender,
+            "has_unread": t.last_message_sender == "user" and t.status != "closed",
+            "created_at": t.created_at.isoformat() if t.created_at else None,
+            "updated_at": t.updated_at.isoformat() if t.updated_at else None,
+        }
+
     return {
-        "tickets": [
-            {
-                "id": t.id,
-                "public_id": f"S-{t.id:06d}",
-                "user_id": t.user_id,
-                "user_label": _ticket_user_label(t, u),
-                "topic": t.topic,
-                "topic_label": TICKET_TOPIC_LABELS.get(t.topic, t.topic),
-                "message": t.message,
-                "platform": t.platform or "",
-                "status": t.status,
-                "priority": t.priority,
-                "priority_label": TICKET_PRIORITY_LABELS.get(t.priority, t.priority),
-                "assigned_admin_id": t.assigned_admin_id,
-                "assigned_admin_username": admins.get(t.assigned_admin_id) if t.assigned_admin_id else None,
-                "last_message_at": t.last_message_at.isoformat() if t.last_message_at else None,
-                "last_message_sender": t.last_message_sender,
-                "has_unread": t.last_message_sender == "user" and t.status != "closed",
-                "created_at": t.created_at.isoformat() if t.created_at else None,
-                "updated_at": t.updated_at.isoformat() if t.updated_at else None,
-            }
-            for t, u in rows
-        ],
+        "tickets": [row_dict(t, u) for t, u in rows],
         "me": {"admin_id": identity.admin_id, "username": identity.username},
     }
 
@@ -3188,6 +3213,7 @@ async def web_ticket_detail(ticket_id: int, authorization: str | None = Header(d
             .order_by(SupportTicketMessage.created_at.asc())
         )).scalars().all()
 
+    channel, channel_value = _ticket_channel(t, u)
     return {
         "id": t.id,
         "public_id": f"S-{t.id:06d}",
@@ -3199,6 +3225,8 @@ async def web_ticket_detail(ticket_id: int, authorization: str | None = Header(d
         "status": t.status,
         "priority": t.priority,
         "priority_label": TICKET_PRIORITY_LABELS.get(t.priority, t.priority),
+        "channel": channel,
+        "channel_value": channel_value,
         "assigned_admin_id": t.assigned_admin_id,
         "created_at": t.created_at.isoformat() if t.created_at else None,
         "messages": [

@@ -215,6 +215,17 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 .tkt-log-time{font-family:'JetBrains Mono',monospace;font-weight:400;color:#3A3028;font-size:11px;white-space:nowrap}
 .tkt-log-text{font-size:13.5px;line-height:1.6;color:#EBE0CC;white-space:pre-wrap}
 
+/* Заявки на узком экране — таблица превращается в стопку карточек:
+   заголовки скрыты, у каждой ячейки вместо них подпись из data-label. */
+@media(max-width:680px){
+  .tkt-table{min-width:0}
+  .tkt-table thead{display:none}
+  .tkt-table tbody tr{display:block;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
+  .tkt-table tbody tr:last-child{border-bottom:none}
+  .tkt-table td{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:none;white-space:normal;text-align:right}
+  .tkt-table td[data-label]::before{content:attr(data-label);font-family:'Space Grotesk',sans-serif;font-size:9.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#3A3028;text-align:left;flex-shrink:0}
+}
+
 /* ── Servers ─────────────────────────────────────────────── */
 .srv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
 .srv-card{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px}
@@ -976,6 +987,12 @@ let tktPriorityFilter = '';
 let tktAssignedFilter = '';
 const TICKET_STATUS = { open: ['Открыт', '#FFB800'], answered: ['Отвечен', '#4ADE80'], closed: ['Закрыт', '#3A3028'] };
 const TICKET_PRIORITY = { urgent: ['Срочно', 'red'], normal: ['Обычный', 'grey'], low: ['Низкий', 'grey'] };
+const TICKET_CHANNEL = {
+  telegram: ['Telegram', 'gold'],
+  email: ['Email', 'grey'],
+  telegram_manual: ['Вручную', 'red'],
+  unknown: ['Нет контакта', 'red'],
+};
 
 function tktQueryString() {
   const p = new URLSearchParams();
@@ -1002,7 +1019,7 @@ async function renderSupport() {
     const assignedFilters = [
       { id: '', label: 'Все' }, { id: 'me', label: 'Мои' }, { id: 'unassigned', label: 'Не назначены' },
     ];
-    const cols = ['№', 'Пользователь', 'Тема', 'Приоритет', 'Статус', 'Назначено', 'Обновлено'];
+    const cols = ['№', 'Пользователь', 'Тема', 'Способ связи', 'Приоритет', 'Статус', 'Назначено', 'Обновлено'];
     c.innerHTML = `
       <div class="filters">${statusFilters.map(f => `<div class="filter-pill ${f.id === filter ? 'sel' : ''}" onclick="filter='${f.id}';renderSupport()">${f.label}</div>`).join('')}</div>
       <div class="filters" style="margin-top:8px">
@@ -1011,17 +1028,18 @@ async function renderSupport() {
       </div>
       <div class="tbl-wrap" style="margin-top:12px">
         <div class="tbl-scroll">
-          <table>
+          <table class="tkt-table">
             <thead><tr>${cols.map(cl => `<th>${cl}</th>`).join('')}</tr></thead>
             <tbody>${data.tickets.length ? data.tickets.map(t => `
               <tr class="${selectedTicket === t.id ? 'sel' : ''}" data-ticket="${t.id}">
-                <td><span class="mono" style="color:#3A3028">${t.public_id}</span></td>
-                <td><div>${esc(t.user_label)}</div>${t.has_unread ? `<span class="sub" style="color:#FFB800">Новое сообщение</span>` : ''}</td>
-                <td>${esc(t.topic_label)}</td>
-                <td><span class="chip ${TICKET_PRIORITY[t.priority][1]}">${TICKET_PRIORITY[t.priority][0]}</span></td>
-                <td><span style="width:7px;height:7px;border-radius:50%;background:${TICKET_STATUS[t.status][1]};display:inline-block;margin-right:6px"></span>${TICKET_STATUS[t.status][0]}</td>
-                <td>${t.assigned_admin_username ? '@' + esc(t.assigned_admin_username) : '<span class="sub">не назначена</span>'}</td>
-                <td><span style="color:#8A7A60;font-size:12px">${fmtDateTime(t.last_message_at)}</span></td>
+                <td data-label="№"><span class="mono" style="color:#3A3028">${t.public_id}</span></td>
+                <td data-label="Пользователь"><div>${esc(t.user_label)}</div>${t.has_unread ? `<span class="sub" style="color:#FFB800">Новое сообщение</span>` : ''}</td>
+                <td data-label="Тема">${esc(t.topic_label)}</td>
+                <td data-label="Способ связи"><span class="chip ${TICKET_CHANNEL[t.channel][1]}">${TICKET_CHANNEL[t.channel][0]}</span></td>
+                <td data-label="Приоритет"><span class="chip ${TICKET_PRIORITY[t.priority][1]}">${TICKET_PRIORITY[t.priority][0]}</span></td>
+                <td data-label="Статус"><span style="width:7px;height:7px;border-radius:50%;background:${TICKET_STATUS[t.status][1]};display:inline-block;margin-right:6px"></span>${TICKET_STATUS[t.status][0]}</td>
+                <td data-label="Назначено">${t.assigned_admin_username ? '@' + esc(t.assigned_admin_username) : '<span class="sub">не назначена</span>'}</td>
+                <td data-label="Обновлено"><span style="color:#8A7A60;font-size:12px">${fmtDateTime(t.last_message_at)}</span></td>
               </tr>
             `).join('') : `<tr><td colspan="${cols.length}"><div class="empty">Нет заявок</div></td></tr>`}</tbody>
           </table>
@@ -1052,6 +1070,7 @@ async function openTicket(id) {
           <div>
             <div class="detail-title">${esc(t.topic_label)}</div>
             <div class="detail-sub">${esc(t.user_label)} · ${esc(t.platform || '—')} · ${fmtDateTime(t.created_at)} · ${t.public_id}</div>
+            <div style="margin-top:8px"><span class="chip ${TICKET_CHANNEL[t.channel][1]}">${TICKET_CHANNEL[t.channel][0]}${t.channel !== 'telegram' ? ': ' + esc(t.channel_value) : ''}</span></div>
           </div>
           <div class="detail-actions">
             ${t.status !== 'closed' ? `<div class="act-btn plain" onclick="setTicketStatus(${t.id}, 'closed')">Закрыть</div>` : `<div class="act-btn plain" onclick="setTicketStatus(${t.id}, 'open')">Открыть заново</div>`}
@@ -1078,7 +1097,12 @@ async function openTicket(id) {
         </div>
         <textarea class="ipt" id="replyInput" placeholder="Ответ пользователю…" style="width:100%;min-height:100px;margin-top:14px"></textarea>
         <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px">
-          <span style="font-size:12px;color:#3A3028">Ответ уйдёт в бота (с кнопкой «Ответить», чтобы переписка продолжилась) или на email — туда, откуда пришло обращение.</span>
+          <span style="font-size:12px;color:${t.channel === 'telegram_manual' || t.channel === 'unknown' ? '#F87171' : '#3A3028'}">${{
+            telegram: 'Ответ уйдёт в бота — придёт кнопка «Ответить», чтобы переписка продолжилась.',
+            email: `Ответ уйдёт письмом на ${esc(t.channel_value)} (через настроенный SMTP).`,
+            telegram_manual: `⚠️ Автоматически не отправится — Bot API не даёт написать первым без /start. Свяжитесь с ${esc(t.channel_value)} вручную.`,
+            unknown: '⚠️ Нет контакта для автоматической отправки — свяжитесь вручную.',
+          }[t.channel]}</span>
           <div class="primary-btn" onclick="sendReply(${t.id})">Отправить</div>
         </div>
       </div>
