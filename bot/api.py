@@ -521,21 +521,29 @@ async def account_logout(request: Request):
 
 _TG_OAUTH_COOKIE = "tg_oauth_pkce"
 _TG_OAUTH_COOKIE_PATH = "/api/telegram-oauth"
+# Куда вернуть после успешного входа — по умолчанию /account, но вход можно
+# начать и с других страниц (например, /support — форма обращения предлагает
+# войти, чтобы привязать заявку к аккаунту). Список явно ограничен, чтобы
+# ?next= нельзя было превратить в open redirect.
+_OAUTH_ALLOWED_NEXT = {"/account", "/support"}
 
 
 @app.get("/api/telegram-oauth/start", include_in_schema=False)
-async def telegram_oauth_start():
+async def telegram_oauth_start(next: str = "/account"):
     from bot.utils.telegram_oauth import build_authorize_url, generate_pkce_pair
 
     if not settings.telegram_oauth_client_id or not settings.telegram_oauth_client_secret:
         return HTMLResponse("Вход через Telegram временно недоступен", status_code=503)
+
+    if next not in _OAUTH_ALLOWED_NEXT:
+        next = "/account"
 
     state = secrets.token_urlsafe(24)
     verifier, challenge = generate_pkce_pair()
 
     resp = RedirectResponse(build_authorize_url(state, challenge), status_code=302)
     resp.set_cookie(
-        _TG_OAUTH_COOKIE, f"{state}.{verifier}",
+        _TG_OAUTH_COOKIE, f"{state}.{verifier}.{next}",
         max_age=600, httponly=True, secure=True, samesite="lax", path=_TG_OAUTH_COOKIE_PATH,
     )
     return resp
@@ -558,7 +566,10 @@ async def telegram_oauth_callback(
     if error or not code or not state:
         return _fail()
 
-    saved_state, _, verifier = (request.cookies.get(_TG_OAUTH_COOKIE) or "").partition(".")
+    cookie_parts = (request.cookies.get(_TG_OAUTH_COOKIE) or "").split(".", 2)
+    saved_state = cookie_parts[0] if len(cookie_parts) > 0 else ""
+    verifier = cookie_parts[1] if len(cookie_parts) > 1 else ""
+    next_path = cookie_parts[2] if len(cookie_parts) > 2 and cookie_parts[2] in _OAUTH_ALLOWED_NEXT else "/account"
     if not verifier or not hmac.compare_digest(saved_state, state):
         return _fail()
 
@@ -579,7 +590,7 @@ async def telegram_oauth_callback(
         user = await get_or_create_user_by_telegram_id(tg_id, username, full_name, session)
         session_token = await create_web_session(user, session)
 
-    resp = RedirectResponse(f"{settings.site_url}/account", status_code=302)
+    resp = RedirectResponse(f"{settings.site_url}{next_path}", status_code=302)
     resp.delete_cookie(_TG_OAUTH_COOKIE, path=_TG_OAUTH_COOKIE_PATH)
     resp.set_cookie(
         SESSION_COOKIE_NAME, session_token,
@@ -632,6 +643,73 @@ async def create_support_ticket(request: Request, x_telegram_init_data: str | No
         await session.refresh(ticket)
 
     return {"ok": True, "id": f"S-{ticket.id:06d}"}
+
+
+@app.get("/api/support/tickets")
+async def list_my_support_tickets(request: Request, x_telegram_init_data: str | None = Header(default=None)):
+    """Раздел «Мои обращения» в личном кабинете — только свои тикеты
+    (те, что были поданы из-под этого же аккаунта, см. `anonymous` в
+    create_support_ticket — анонимные обращения сюда не попадают, у них
+    нет `user_id`)."""
+    from bot.models.support_ticket import SupportTicket
+
+    async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+        rows = (await session.execute(
+            select(SupportTicket)
+            .where(SupportTicket.user_id == tg_id)
+            .order_by(SupportTicket.last_message_at.desc())
+        )).scalars().all()
+
+    return {
+        "tickets": [
+            {
+                "id": t.id,
+                "public_id": f"S-{t.id:06d}",
+                "topic": t.topic,
+                "topic_label": TICKET_TOPIC_LABELS.get(t.topic, t.topic),
+                "status": t.status,
+                "created_at": t.created_at.isoformat() if t.created_at else None,
+                "last_message_at": t.last_message_at.isoformat() if t.last_message_at else None,
+                "last_message_sender": t.last_message_sender,
+            }
+            for t in rows
+        ]
+    }
+
+
+@app.get("/api/support/tickets/{ticket_id}")
+async def get_my_support_ticket(
+    ticket_id: int, request: Request, x_telegram_init_data: str | None = Header(default=None)
+):
+    from bot.models.support_ticket import SupportTicket
+    from bot.models.support_ticket_message import SupportTicketMessage
+
+    async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+        t = (await session.execute(select(SupportTicket).where(SupportTicket.id == ticket_id))).scalar_one_or_none()
+        # 404, а не 403 — чтобы не подтверждать посторонним сам факт
+        # существования чужого тикета с этим ID.
+        if not t or t.user_id != tg_id:
+            raise HTTPException(404, "Ticket not found")
+        msgs = (await session.execute(
+            select(SupportTicketMessage)
+            .where(SupportTicketMessage.ticket_id == ticket_id)
+            .order_by(SupportTicketMessage.created_at.asc())
+        )).scalars().all()
+
+    return {
+        "id": t.id,
+        "public_id": f"S-{t.id:06d}",
+        "topic": t.topic,
+        "topic_label": TICKET_TOPIC_LABELS.get(t.topic, t.topic),
+        "status": t.status,
+        "created_at": t.created_at.isoformat() if t.created_at else None,
+        "messages": [
+            {"sender": m.sender, "body": m.body, "created_at": m.created_at.isoformat() if m.created_at else None}
+            for m in msgs
+        ],
+    }
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────

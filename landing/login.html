@@ -243,6 +243,21 @@ if (new URLSearchParams(location.search).get('tg_error')) {
   history.replaceState(null, '', location.pathname);
 }
 
+/* ── Куда вернуть после входа ──────────────────────────────────
+   По умолчанию — /account, но сюда можно попасть и с других страниц
+   (например, форма /support предлагает войти, чтобы привязать
+   обращение к аккаунту) — список сознательно ограничен, чтобы ?next=
+   нельзя было превратить в открытый редирект на чужой домен. */
+const ALLOWED_NEXT = ['/account', '/support'];
+const NEXT_PATH = ALLOWED_NEXT.includes(new URLSearchParams(location.search).get('next'))
+  ? new URLSearchParams(location.search).get('next')
+  : '/account';
+if (NEXT_PATH !== '/account') {
+  document.querySelectorAll('a[href^="/api/telegram-oauth/start"]').forEach(a => {
+    a.href = '/api/telegram-oauth/start?next=' + encodeURIComponent(NEXT_PATH);
+  });
+}
+
 function showAuthPane(tab) {
   codePane.classList.remove('show');
   authPane.classList.add('show');
@@ -281,7 +296,7 @@ document.getElementById('loginFormEl').addEventListener('submit', async (e) => {
   btn.disabled = true; btn.textContent = 'Входим…';
   try {
     const r = await API('/api/account/login', {method: 'POST', body: JSON.stringify({email, password})});
-    if (r.ok) { window.location.href = '/account'; return; }
+    if (r.ok) { window.location.href = NEXT_PATH; return; }
     const data = await r.json().catch(() => ({}));
     if (r.status === 403 && data.detail === 'email_not_verified') {
       await API('/api/account/resend-code', {method: 'POST', body: JSON.stringify({email})}).catch(() => {});
@@ -331,7 +346,7 @@ document.getElementById('codeFormEl').addEventListener('submit', async (e) => {
   btn.disabled = true; btn.textContent = 'Проверяем…';
   try {
     const r = await API('/api/account/verify-email', {method: 'POST', body: JSON.stringify({email: pendingEmail, code})});
-    if (r.ok) { window.location.href = '/account'; return; }
+    if (r.ok) { window.location.href = NEXT_PATH; return; }
     const data = await r.json().catch(() => ({}));
     setErr(codeErr, data.detail || 'Неверный или устаревший код');
   } catch (err) {

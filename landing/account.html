@@ -254,6 +254,27 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 .ref-status.paid{color:var(--success);background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.28)}
 .ref-status.unpaid{color:var(--text2);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)}
 
+.tkt-table-wrap{background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden}
+.tkt-table-head,.tkt-row{display:grid;grid-template-columns:1.4fr 100px 90px 130px;gap:10px;padding:14px 20px;align-items:center}
+.tkt-table-head{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);border-bottom:1px solid rgba(255,255,255,.07)}
+.tkt-row{border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;font-size:13.5px;color:var(--text);transition:background .15s}
+.tkt-row:last-child{border-bottom:none}
+.tkt-row:hover{background:rgba(255,255,255,.03)}
+.tkt-status{font-size:11px;font-weight:600;border-radius:7px;padding:4px 10px;white-space:nowrap;display:inline-block}
+.tkt-status.open{color:var(--gold);background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.28)}
+.tkt-status.answered{color:var(--success);background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.28)}
+.tkt-status.closed{color:var(--text2);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)}
+@media(max-width:640px){
+  .tkt-table-head{display:none}
+  .tkt-row{grid-template-columns:1fr;gap:6px}
+  .tkt-row [data-label]::before{content:attr(data-label);display:block;font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+}
+.tkt-msg-card{border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 18px;margin-top:12px}
+.tkt-msg-card.reply{border-color:rgba(255,184,0,.25);background:rgba(255,184,0,.04)}
+.tkt-msg-lbl{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text2);margin-bottom:8px}
+.tkt-msg-card.reply .tkt-msg-lbl{color:var(--gold)}
+.tkt-msg-text{font-size:13.5px;line-height:1.6;color:var(--text);white-space:pre-wrap}
+
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:150;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.show{display:flex}
 .modal{background:#0B0A09;border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:26px;max-width:380px;width:100%;text-align:center;position:relative}
@@ -318,6 +339,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
             <button class="dropdown-item" data-goto="subscription"><svg viewBox="0 0 24 24"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg>Подписка</button>
             <button class="dropdown-item" data-goto="devices"><svg viewBox="0 0 24 24"><path d="M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1M17 7h4v8h-4"/></svg>Устройства</button>
             <button class="dropdown-item" data-goto="referral"><svg viewBox="0 0 24 24"><path d="M6 14a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 7.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 21a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8.2 10.3l7.6-3.6M8.2 13.2l7.6 3.6"/></svg>Приглашения</button>
+            <button class="dropdown-item" data-goto="support"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Обращения</button>
             <button class="dropdown-item" data-goto="profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6"/></svg>Профиль</button>
             <div class="dropdown-divider"></div>
             <button class="dropdown-item danger" id="logoutLink"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Выйти</button>
@@ -356,6 +378,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
         <button class="side-menu-item active" data-tab="subscription"><svg viewBox="0 0 24 24"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/><path d="M5 20h14"/></svg><span>Подписка</span></button>
         <button class="side-menu-item" data-tab="devices"><svg viewBox="0 0 24 24"><path d="M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1M17 7h4v8h-4"/></svg><span>Устройства</span><span class="side-menu-count" id="sideDeviceCount">—</span></button>
         <button class="side-menu-item" data-tab="referral"><svg viewBox="0 0 24 24"><path d="M6 14a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 7.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 21a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8.2 10.3l7.6-3.6M8.2 13.2l7.6 3.6"/></svg><span>Приглашения</span></button>
+        <button class="side-menu-item" data-tab="support"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span>Обращения</span></button>
       </div>
     </div>
 
@@ -466,6 +489,14 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
       <div id="referralContent"><div class="empty">Загружаем...</div></div>
     </div>
 
+    <!-- Обращения -->
+    <div class="tab-panel" id="tab-support">
+      <div class="page-title">Мои обращения</div>
+      <div class="page-sub">Заявки в поддержку, отправленные из-под этого аккаунта, и ответы на них.</div>
+      <a class="btn" href="/support" style="max-width:220px;display:block;margin-bottom:16px">Новое обращение</a>
+      <div id="supportContent"><div class="empty">Загружаем...</div></div>
+    </div>
+
     <!-- Подарить -->
     <div class="tab-panel" id="tab-gift">
       <div class="page-title">Подарить подписку</div>
@@ -540,6 +571,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
           <a class="btn-ghost" href="/wiki" style="flex:1;min-width:140px">Wiki</a>
           <a class="btn-ghost" href="/wiki/faq" style="flex:1;min-width:140px">Частые вопросы</a>
           <a class="btn-ghost" href="/support" style="flex:1;min-width:140px">Написать в поддержку</a>
+          <button class="btn-ghost" data-goto="support" style="flex:1;min-width:140px">Мои обращения</button>
         </div>
       </div>
 
@@ -657,6 +689,11 @@ function fmtDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   return d.toLocaleDateString('ru-RU', {day: 'numeric', month: 'long', year: 'numeric'});
+}
+
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('ru-RU', {day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit'});
 }
 
 function daysLeft(iso) {
@@ -830,6 +867,7 @@ function initTabs() {
       if (tab === 'renew') loadRenew();
       if (tab === 'referral') loadReferral();
       if (tab === 'gift') initGift();
+      if (tab === 'support') loadSupportTickets();
     }
   }
 
@@ -1438,6 +1476,74 @@ async function loadReferral() {
     navigator.clipboard.writeText(ref.link);
     showToast('Ссылка скопирована');
   });
+}
+
+/* ── Мои обращения ──────────────────────────────────────────── */
+const SUPPORT_STATUS = { open: 'Открыт', answered: 'Отвечен', closed: 'Закрыт' };
+let openSupportTicketId = null;
+
+async function loadSupportTickets() {
+  const el = document.getElementById('supportContent');
+  try {
+    const r = await API('/api/support/tickets');
+    if (!r.ok) { el.innerHTML = '<div class="empty">Не удалось загрузить</div>'; return; }
+    const data = await r.json();
+    renderSupportTable(data.tickets || []);
+  } catch (e) {
+    el.innerHTML = '<div class="empty">Не удалось загрузить</div>';
+  }
+}
+
+function renderSupportTable(tickets) {
+  const el = document.getElementById('supportContent');
+  if (!tickets.length) {
+    el.innerHTML = '<div class="empty">Обращений пока нет — вы ничего не отправляли из-под этого аккаунта.</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div class="tkt-table-wrap">
+      <div class="tkt-table-head"><span>Тема</span><span>№</span><span>Статус</span><span>Обновлено</span></div>
+      ${tickets.map(t => `
+        <div class="tkt-row" data-id="${t.id}">
+          <span data-label="Тема">${escHtml(t.topic_label)}</span>
+          <span class="mono" data-label="№" style="color:var(--text2)">${t.public_id}</span>
+          <span data-label="Статус"><span class="tkt-status ${t.status}">${SUPPORT_STATUS[t.status] || t.status}</span></span>
+          <span data-label="Обновлено" style="color:var(--text2);font-size:12.5px">${fmtDateTime(t.last_message_at)}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div id="supportDetail"></div>
+  `;
+  el.querySelectorAll('.tkt-row').forEach(row => {
+    row.addEventListener('click', () => openSupportTicket(Number(row.dataset.id)));
+  });
+  if (openSupportTicketId) openSupportTicket(openSupportTicketId);
+}
+
+async function openSupportTicket(id) {
+  openSupportTicketId = id;
+  const slot = document.getElementById('supportDetail');
+  if (!slot) return;
+  slot.innerHTML = '<div class="empty">Загружаем...</div>';
+  try {
+    const r = await API(`/api/support/tickets/${id}`);
+    if (!r.ok) { slot.innerHTML = '<div class="empty">Не удалось загрузить</div>'; return; }
+    const t = await r.json();
+    slot.innerHTML = `
+      <div class="card" style="margin-top:14px">
+        <div class="card-title">${escHtml(t.topic_label)} · ${t.public_id}</div>
+        ${t.messages.map(m => `
+          <div class="tkt-msg-card ${m.sender === 'admin' ? 'reply' : ''}">
+            <div class="tkt-msg-lbl">${m.sender === 'admin' ? 'Ответ поддержки' : 'Вы'} · ${fmtDateTime(m.created_at)}</div>
+            <div class="tkt-msg-text">${escHtml(m.body)}</div>
+          </div>
+        `).join('')}
+        ${t.messages.some(m => m.sender === 'admin') ? '' : '<p style="color:var(--text2);font-size:12.5px;margin-top:12px">Пока без ответа — обычно отвечаем в течение нескольких часов.</p>'}
+      </div>
+    `;
+  } catch (e) {
+    slot.innerHTML = '<div class="empty">Не удалось загрузить</div>';
+  }
 }
 
 boot();
