@@ -712,6 +712,38 @@ async def get_my_support_ticket(
     }
 
 
+@app.post("/api/support/tickets/{ticket_id}/reply")
+async def reply_my_support_ticket(
+    ticket_id: int, request: Request, x_telegram_init_data: str | None = Header(default=None)
+):
+    """Позволяет владельцу тикета дописать сообщение прямо из личного
+    кабинета — тот же тред, что и у ответа через бота (см.
+    bot/handlers/support.py::ticket_reply_capture), просто ещё один
+    способ добавить сообщение с стороны пользователя."""
+    from bot.models.support_ticket import SupportTicket
+    from bot.models.support_ticket_message import SupportTicketMessage
+
+    body = await request.json()
+    text = (body.get("message") or "").strip()[:4000]
+    if not text:
+        raise HTTPException(400, "Пустое сообщение")
+
+    async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+        t = (await session.execute(select(SupportTicket).where(SupportTicket.id == ticket_id))).scalar_one_or_none()
+        if not t or t.user_id != tg_id:
+            raise HTTPException(404, "Ticket not found")
+        if t.status == "closed":
+            raise HTTPException(400, "Обращение закрыто — оформите новое")
+        session.add(SupportTicketMessage(ticket_id=t.id, sender="user", body=text))
+        t.status = "open"
+        t.last_message_at = datetime.utcnow()
+        t.last_message_sender = "user"
+        await session.commit()
+
+    return {"ok": True}
+
+
 # ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def _fmt_online(online_at: int | None, now_ts: int) -> str:

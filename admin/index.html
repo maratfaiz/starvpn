@@ -1122,7 +1122,7 @@ async function openTicket(id) {
             email: `Ответ уйдёт письмом на ${esc(t.channel_value)} (через настроенный SMTP).`,
             telegram_manual: `⚠️ Автоматически не отправится — Bot API не даёт написать первым без /start. Свяжитесь с ${esc(t.channel_value)} вручную.`,
             unknown: '⚠️ Нет контакта для автоматической отправки — свяжитесь вручную.',
-          }[t.channel]}</span>
+          }[t.channel]}${t.account ? ' Также появится в «Мои обращения» личного кабинета.' : ''}</span>
           <div class="primary-btn" onclick="sendReply(${t.id})">Отправить</div>
         </div>
       </div>
