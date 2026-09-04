@@ -4,6 +4,8 @@
 Задачи:
   • check_expiring_subscriptions — предупреждение за ~24 ч до истечения
   • deactivate_expired_subscriptions — деактивация устройств в Marzban при истечении
+  • credit_vested_referrals (bot/handlers/payment.py) — начисление реферальных
+    дней после 30-дневной выдержки
   • scheduler_loop — бесконечный цикл, запуск каждый час
 """
 
@@ -190,5 +192,11 @@ async def scheduler_loop(bot: Bot) -> None:
             await deactivate_expired_subscriptions(bot)
         except Exception as e:
             logger.error("deactivate_expired_subscriptions error: %s", e)
+
+        try:
+            from bot.handlers.payment import credit_vested_referrals
+            await credit_vested_referrals(bot)
+        except Exception as e:
+            logger.error("credit_vested_referrals error: %s", e)
 
         await asyncio.sleep(3600)  # следующий запуск через 1 час

@@ -17,12 +17,12 @@ export default {
         // STAR VPN dark/gold design system
         app: {
           bg: "#05070A",
-          card: "#12151C",
+          card: "#0C0E12",
           sheet: "#0E1116",
         },
         gold: {
-          DEFAULT: "#F7CE68",
-          dark: "#C9962F",
+          DEFAULT: "#FFB800",
+          dark: "#CC8A00",
         },
         ink: "#F5F3EE",
         success: "#2ED9A6",

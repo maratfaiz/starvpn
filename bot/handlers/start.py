@@ -120,14 +120,14 @@ async def cmd_start(
 
         if command.args and command.args.startswith("ref") and command.args[3:].isdigit():
             referrer_id = int(command.args[3:])
+            # referral_count раньше увеличивался и здесь, и повторно при первой
+            # оплате — из-за этого цифра "оплативших друзей" была завышена.
+            # Единственное место, где он растёт теперь — credit_vested_referrals()
+            # в bot/tasks/scheduler.py, после того как реферал платит И
+            # переживает 30-дневную выдержку. Здесь только фиксируем, кто кого
+            # пригласил (immutable — можно поставить лишь один раз, при первом /start).
             if referrer_id != tg_id:
                 user.referrer_id = referrer_id
-                ref_result = await session.execute(
-                    select(User).where(User.telegram_id == referrer_id)
-                )
-                referrer: User | None = ref_result.scalar_one_or_none()
-                if referrer:
-                    referrer.referral_count = (referrer.referral_count or 0) + 1
 
         session.add(user)
         await session.commit()
@@ -179,11 +179,12 @@ async def cmd_start(
 async def support_handler(message: Message) -> None:
     await message.answer(
         "🎧 <b>Служба поддержки</b>\n\n"
-        "Возникли вопросы? Не работает подключение?\n"
-        "Напиши нашему администратору — решим любую проблему.\n\n"
-        f"👉 <a href=\"https://t.me/{settings.support_username.lstrip('@')}\">Написать в поддержку</a>",
+        "Возникли вопросы? Не работает подключение? Оформи заявку — "
+        "ответим прямо сюда, в этот чат, как только разберёмся.",
         parse_mode="HTML",
-        disable_web_page_preview=True,
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
+            InlineKeyboardButton(text="📝 Оставить заявку", url=f"{settings.site_url}/support"),
+        ]]),
     )
 
 

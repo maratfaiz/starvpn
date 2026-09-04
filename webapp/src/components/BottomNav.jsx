@@ -1,7 +1,7 @@
 import { NavIcon } from "./icons.jsx";
 
 const TABS = [
-  { id: "home", label: "Главная", icon: "home" },
+  { id: "home", label: "Подписка", icon: "home" },
   { id: "devices", label: "Устройства", icon: "devices" },
   { id: "referral", label: "Рефералы", icon: "referral" },
   { id: "account", label: "Аккаунт", icon: "account" },
@@ -13,12 +13,12 @@ export default function BottomNav({ active, onChange, showAdmin }) {
   const tabs = showAdmin ? [...TABS, ADMIN_TAB] : TABS;
   return (
     <div
-      className="flex flex-shrink-0 px-3 pt-2 bg-app-bg border-t border-white/[.06]"
+      className="flex flex-shrink-0 px-3 pt-2 border-t border-white/[.06]"
       style={{ paddingBottom: "calc(8px + env(safe-area-inset-bottom, 0px))" }}
     >
       {tabs.map((tab) => {
         const isActive = tab.id === active;
-        const color = isActive ? "#F7CE68" : "rgba(245,243,238,.4)";
+        const color = isActive ? "#FFB800" : "rgba(245,243,238,.4)";
         return (
           <button
             key={tab.id}

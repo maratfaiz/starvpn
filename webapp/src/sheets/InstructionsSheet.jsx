@@ -1,5 +1,8 @@
 import { useState } from "react";
 import BottomSheet from "../components/BottomSheet.jsx";
+import { RocketIcon, DownloadIcon } from "../components/icons.jsx";
+
+const Dot = () => <span className="inline-block w-2 h-2 rounded-full align-middle" style={{ background: "#2ED9A6" }} />;
 
 const PLATFORMS = [
   {
@@ -13,7 +16,7 @@ const PLATFORMS = [
       <>Перейди на вкладку <b>Устройства</b> в этом приложении и нажми на своё устройство</>,
       <>Нажми <b>«Показать QR-код и ссылку»</b> и скопируй ключ</>,
       <>В Streisand нажми <b>«+»</b> → <b>«Импорт из буфера обмена»</b> → вставь ключ</>,
-      <>Нажми <b>Connect</b> — готово! VPN подключён 🚀</>,
+      <>Нажми <b>Connect</b> — готово! VPN подключён <RocketIcon size={13} color="#FFB800" /></>,
     ],
   },
   {
@@ -27,7 +30,7 @@ const PLATFORMS = [
       <>Перейди на вкладку <b>Устройства</b> и нажми на своё устройство → <b>«Показать ключ»</b></>,
       <>Скопируй строку ключа (начинается на <b>vless://</b>)</>,
       <>В v2rayNG нажми <b>«+»</b> → <b>«Импорт из буфера обмена»</b></>,
-      <>Нажми кнопку запуска (треугольник) — VPN активен 🟢</>,
+      <>Нажми кнопку запуска (треугольник) — VPN активен <Dot /></>,
     ],
   },
   {
@@ -55,7 +58,7 @@ const PLATFORMS = [
       <>Перейди в раздел <b>Устройства</b>, нажми на устройство → <b>«Показать ключ»</b></>,
       <>Скопируй строку ключа (начинается на <b>vless://</b>)</>,
       <>В V2Box нажми <b>«+»</b> → <b>«Import from clipboard»</b> → вставь ключ</>,
-      <>Нажми <b>Connect</b> — VPN активен 🚀</>,
+      <>Нажми <b>Connect</b> — VPN активен <RocketIcon size={13} color="#FFB800" /></>,
     ],
   },
 ];
@@ -78,9 +81,9 @@ export default function InstructionsSheet({ open, onClose }) {
               onClick={() => setTab(p.id)}
               className="px-3 py-2 rounded-xl font-display font-semibold text-xs whitespace-nowrap flex-shrink-0"
               style={{
-                background: active ? "rgba(247,206,104,.12)" : "#12151C",
-                border: `1px solid ${active ? "rgba(247,206,104,.4)" : "rgba(255,255,255,.06)"}`,
-                color: active ? "#F7CE68" : "rgba(245,243,238,.55)",
+                background: active ? "rgba(255,184,0,.12)" : "#0C0E12",
+                border: `1px solid ${active ? "rgba(255,184,0,.4)" : "rgba(255,255,255,.06)"}`,
+                color: active ? "#FFB800" : "rgba(245,243,238,.55)",
               }}
             >
               {p.label}
@@ -102,9 +105,9 @@ export default function InstructionsSheet({ open, onClose }) {
 
       <button
         onClick={() => (tg?.openLink ? tg.openLink(platform.storeUrl) : window.open(platform.storeUrl, "_blank"))}
-        className="w-full py-3.5 rounded-2xl bg-gold/10 border border-gold/30 font-display font-bold text-[13.5px] text-gold"
+        className="w-full py-3.5 rounded-2xl bg-gold/10 border border-gold/30 flex items-center justify-center gap-1.5 font-display font-bold text-[13.5px] text-gold"
       >
-        ⬇️ Скачать {platform.app} ({platform.store})
+        <DownloadIcon size={14} /> Скачать {platform.app} ({platform.store})
       </button>
     </BottomSheet>
   );

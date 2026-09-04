@@ -6,6 +6,7 @@ import Starfield from "./components/Starfield.jsx";
 import Onboarding, { onboardingSeen } from "./components/Onboarding.jsx";
 import TelegramGate from "./components/TelegramGate.jsx";
 import GiftReceivedModal from "./components/GiftReceivedModal.jsx";
+import { CheckIcon, CardIcon, GiftIcon } from "./components/icons.jsx";
 
 import HomeScreen from "./screens/HomeScreen.jsx";
 import DevicesScreen from "./screens/DevicesScreen.jsx";
@@ -24,8 +25,6 @@ import InstructionsSheet from "./sheets/InstructionsSheet.jsx";
 
 import * as api from "./data/mockApi.js";
 import {
-  server,
-  speedValue,
   referral,
   daysHistoryInitial,
   account,
@@ -106,17 +105,16 @@ export default function App() {
 
   // mutable app state (mock, no backend yet)
   const [daysHistory, setDaysHistory] = useState(daysHistoryInitial);
-  const [autoServer, setAutoServer] = useState(true);
   const [trialActivating, setTrialActivating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   // toast
-  const [toast, setToast] = useState("");
+  const [toast, setToast] = useState({ message: "", icon: null });
   const toastTimer = useRef(null);
-  const showToast = (message) => {
-    setToast(message);
+  const showToast = (message, icon = null) => {
+    setToast({ message, icon });
     clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(""), 2200);
+    toastTimer.current = setTimeout(() => setToast({ message: "", icon: null }), 2200);
   };
 
   // settings sheet
@@ -134,9 +132,8 @@ export default function App() {
   // renew sheet
   const [renewOpen, setRenewOpen] = useState(false);
   const [renewStep, setRenewStep] = useState("form");
-  const [renewPlanId, setRenewPlanId] = useState(2);
   const [renewMethod, setRenewMethod] = useState("stars");
-  const [customDays, setCustomDays] = useState(14);
+  const [customDays, setCustomDays] = useState(90);
   const [lastAddedDays, setLastAddedDays] = useState(0);
   const [justRenewed, setJustRenewed] = useState(false);
 
@@ -207,10 +204,12 @@ export default function App() {
     const basePlan = renewPlans[0];
     const pricePerDay = basePlan.price / basePlan.days;
     const rubPerDay = basePlan.rub / basePlan.days;
-    const plan =
-      renewPlanId === "custom"
-        ? { label: `${customDays} дней`, days: customDays, price: Math.max(1, Math.round(customDays * pricePerDay)), rub: Math.max(1, Math.round(customDays * rubPerDay)) }
-        : renewPlans.find((p) => p.id === renewPlanId) || basePlan;
+    const plan = {
+      label: `${customDays} дней`,
+      days: customDays,
+      price: Math.max(1, Math.round(customDays * pricePerDay)),
+      rub: Math.max(1, Math.round(customDays * rubPerDay)),
+    };
 
     haptic("notification");
 
@@ -218,8 +217,13 @@ export default function App() {
       // Real endpoint: POST /api/invoice/card -> tg.openLink(Robokassa url);
       // confirmation arrives later via the /card/webhook ResultURL, so we
       // don't touch the subscription state here — only the invoice was created.
+      // NOTE: per ADR-015, /api/invoice/card only supports the 3 fixed plan
+      // tiers, not arbitrary day counts — now that this sheet always offers
+      // a custom-days slider, wiring the "Карта" tab to the real endpoint
+      // needs either extending that endpoint or hiding "Карта" here and
+      // keeping it fixed-tier elsewhere. Flagged, not resolved by this mock.
       setRenewOpen(false);
-      showToast("💳 Счёт создан — оплати картой на защищённой странице");
+      showToast("Счёт создан — оплати картой на защищённой странице", <CardIcon size={15} color="#5FD068" />);
       return;
     }
 
@@ -246,7 +250,7 @@ export default function App() {
       const me = await api.activateTrial();
       setSubscription(meToSubscription(me));
       haptic("notification");
-      showToast("🎁 Триал активирован на 2 дня!");
+      showToast("Триал активирован на 2 дня!", <GiftIcon size={15} />);
     } finally {
       setTrialActivating(false);
     }
@@ -263,7 +267,7 @@ export default function App() {
     await api.deleteDevice(id);
     setDevices((prev) => prev.filter((d) => d.id !== id));
     setDeviceSheetId(null);
-    showToast("✅ Устройство удалено");
+    showToast("Устройство удалено", <CheckIcon size={15} />);
   };
 
   const openAddDevice = () => {
@@ -277,7 +281,7 @@ export default function App() {
       setDevices((prev) => [...prev, device]);
       setAddDeviceOpen(false);
       setDeviceSheetId(device.id);
-      showToast("✅ Устройство добавлено");
+      showToast("Устройство добавлено", <CheckIcon size={15} />);
     } finally {
       setAddingDevice(false);
     }
@@ -299,12 +303,19 @@ export default function App() {
 
   const copyDeviceLink = () => {
     navigator.clipboard?.writeText(linkSheet.link).catch(() => {});
-    showToast("✅ Ссылка скопирована!");
+    showToast("Ссылка скопирована!", <CheckIcon size={15} />);
+  };
+
+  const copyPrimaryDeviceLink = async (device) => {
+    haptic("light");
+    const { link } = await api.getDeviceLink(device.id);
+    navigator.clipboard?.writeText(link).catch(() => {});
+    showToast("Ссылка скопирована!", <CheckIcon size={15} />);
   };
 
   const copyDeviceSubUrl = () => {
     navigator.clipboard?.writeText(subSheet.subUrl).catch(() => {});
-    showToast("✅ Ссылка подписки скопирована!");
+    showToast("Ссылка подписки скопирована!", <CheckIcon size={15} />);
   };
 
   const copyReferralCode = () => {
@@ -328,11 +339,6 @@ export default function App() {
     }
   };
 
-  const toggleAutoServer = () => {
-    haptic("light");
-    setAutoServer((v) => !v);
-  };
-
   const logout = () => {
     haptic("light");
     showToast("Функция выхода скоро появится");
@@ -343,7 +349,7 @@ export default function App() {
     showToast("Обновляю...");
     try {
       await loadAll();
-      showToast("✅ Обновлено");
+      showToast("Обновлено", <CheckIcon size={15} />);
     } finally {
       setRefreshing(false);
     }
@@ -402,11 +408,13 @@ export default function App() {
           {activeTab === "home" && (
             <HomeScreen
               subscription={subscription}
-              server={server}
-              speedValue={speedValue}
+              primaryDevice={devices[0] || null}
+              devicesCount={devices.length}
+              devicesLimit={maxDevices}
               trafficUsedTotal={totalTrafficGb.toFixed(1)}
-              autoServer={autoServer}
-              onToggleAutoServer={toggleAutoServer}
+              onShowKey={showDeviceLink}
+              onCopyKey={copyPrimaryDeviceLink}
+              onAddDevice={openAddDevice}
               onOpenRenew={openRenew}
               onOpenGift={openGift}
               onActivateTrial={activateTrial}
@@ -480,8 +488,6 @@ export default function App() {
         step={renewStep}
         onClose={closeRenew}
         plans={renewPlans}
-        selectedPlanId={renewPlanId}
-        onSelectPlan={setRenewPlanId}
         method={renewMethod}
         onSelectMethod={setRenewMethod}
         customDays={customDays}
@@ -521,7 +527,7 @@ export default function App() {
 
       <GiftReceivedModal gift={pendingGift} onClose={closeGiftReceived} />
 
-      <Toast message={toast} />
+      <Toast message={toast.message} icon={toast.icon} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import BottomSheet from "../components/BottomSheet.jsx";
-import { DeviceIcon } from "../components/icons.jsx";
+import { DeviceIcon, KeyIcon, LinkIcon } from "../components/icons.jsx";
 
 const STATUS_COLOR = {
   Онлайн: "#2ED9A6",
@@ -78,15 +78,15 @@ export default function DeviceSheet({ open, device, onClose, onDelete, onShowLin
         <div className="flex gap-2.5">
           <button
             onClick={() => onShowLink(device)}
-            className="flex-1 border border-gold/35 bg-gold/[.08] py-3.5 rounded-[14px] font-display font-bold text-[13.5px] text-gold"
+            className="flex-1 border border-gold/35 bg-gold/[.08] py-3.5 rounded-[14px] flex items-center justify-center gap-1.5 font-display font-bold text-[13.5px] text-gold"
           >
-            🔑 Ключ
+            <KeyIcon size={14} /> Ключ
           </button>
           <button
             onClick={() => onShowSubscription(device)}
-            className="flex-1 border border-gold/35 bg-gold/[.08] py-3.5 rounded-[14px] font-display font-bold text-[13.5px] text-gold"
+            className="flex-1 border border-gold/35 bg-gold/[.08] py-3.5 rounded-[14px] flex items-center justify-center gap-1.5 font-display font-bold text-[13.5px] text-gold"
           >
-            🔗 Ссылка
+            <LinkIcon size={14} /> Ссылка
           </button>
         </div>
         <button

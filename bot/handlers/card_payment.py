@@ -136,7 +136,7 @@ async def handle_card_webhook(payment_id: int, bot: Bot) -> None:
     Вызывается из /card/webhook после верификации подписи Robokassa.
     """
     from datetime import datetime
-    from bot.handlers.payment import _grant_subscription
+    from bot.handlers.payment import _grant_subscription, _mark_first_payment
 
     async with AsyncSessionLocal() as session:
         result = await session.execute(
@@ -183,6 +183,8 @@ async def handle_card_webhook(payment_id: int, bot: Bot) -> None:
         if payment.is_gift:
             await _notify_gift_recipient(payment, user, plan_label, bot, session)
         else:
+            await _mark_first_payment(user, session)
+            await session.commit()
             try:
                 await bot.send_message(
                     payment.telegram_id,

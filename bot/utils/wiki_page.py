@@ -129,7 +129,7 @@ footer{{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-alig
   <div class="footer-links">
     <a href="/tariffs">Тарифы</a><a href="/wiki">Wiki</a><a href="/connect">Подключение</a>
     <a href="/privacy">Конфиденциальность</a><a href="/terms">Условия</a>
-    <a href="https://t.me/hashprojects">Поддержка</a>
+    <a href="/support">Поддержка</a>
   </div>
   <div class="footer-copy">© 2026 STAR VPN · VLESS Reality · Zero Logs</div>
 </footer>

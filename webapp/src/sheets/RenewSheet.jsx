@@ -13,8 +13,6 @@ export default function RenewSheet({
   step,
   onClose,
   plans,
-  selectedPlanId,
-  onSelectPlan,
   method,
   onSelectMethod,
   customDays,
@@ -25,13 +23,10 @@ export default function RenewSheet({
   const basePlan = plans[0];
   const pricePerDay = basePlan.price / basePlan.days;
   const rubPerDay = basePlan.rub / basePlan.days;
-  const isCustom = selectedPlanId === "custom";
   const customStars = Math.max(1, Math.round(customDays * pricePerDay));
   const customRub = Math.max(1, Math.round(customDays * rubPerDay));
 
-  const selectedPlan = isCustom
-    ? { label: `${customDays} дней`, days: customDays, price: customStars, rub: customRub }
-    : plans.find((p) => p.id === selectedPlanId) || basePlan;
+  const selectedPlan = { label: `${customDays} дней`, days: customDays, price: customStars, rub: customRub };
 
   if (step === "success") {
     return (
@@ -41,8 +36,8 @@ export default function RenewSheet({
             <CheckIcon size={28} color="#2ED9A6" />
           </div>
           <div className="font-display font-extrabold text-[17px] text-ink">Подписка продлена!</div>
-          <div className="font-medium text-[13.5px] text-ink/45 mt-1.5 max-w-[260px]">
-            Добавлено {lastAddedDays} дней. Спасибо, что выбираете STAR VPN ⭐
+          <div className="font-medium text-[13.5px] text-ink/45 mt-1.5 max-w-[260px] inline-flex items-center gap-1 flex-wrap justify-center">
+            Добавлено {lastAddedDays} дней. Спасибо, что выбираете STAR VPN <StarIcon size={12} />
           </div>
           <button
             onClick={onClose}
@@ -59,7 +54,7 @@ export default function RenewSheet({
     <BottomSheet open={open} onClose={onClose} maxHeight="86%">
       <div className="flex items-center justify-between mb-4 -mt-1">
         <div className="flex items-center gap-2">
-          <BoltIcon size={18} color="#F7CE68" />
+          <BoltIcon size={18} color="#FFB800" />
           <span className="font-display font-extrabold text-base text-ink">Продлить подписку</span>
         </div>
       </div>
@@ -68,9 +63,9 @@ export default function RenewSheet({
         <button
           onClick={() => onSelectMethod("stars")}
           className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-display font-semibold text-[12.5px]"
-          style={{ background: method === "stars" ? "rgba(247,206,104,.14)" : "transparent", color: method === "stars" ? "#F7CE68" : "rgba(245,243,238,.5)" }}
+          style={{ background: method === "stars" ? "rgba(255,184,0,.14)" : "transparent", color: method === "stars" ? "#FFB800" : "rgba(245,243,238,.5)" }}
         >
-          <StarIcon size={12} color={method === "stars" ? "#F7CE68" : "rgba(245,243,238,.5)"} /> Stars
+          <StarIcon size={12} color={method === "stars" ? "#FFB800" : "rgba(245,243,238,.5)"} /> Stars
         </button>
         <button
           onClick={() => onSelectMethod("card")}
@@ -81,98 +76,58 @@ export default function RenewSheet({
         </button>
       </div>
 
-      <div className="flex flex-col gap-2.5">
-        {plans.map((p) => {
-          const selected = p.id === selectedPlanId;
-          return (
-            <button
-              key={p.id}
-              onClick={() => onSelectPlan(p.id)}
-              className="relative flex items-center justify-between px-4 py-[15px] rounded-2xl"
-              style={{
-                background: selected ? "rgba(247,206,104,.1)" : "#12151C",
-                border: `1.5px solid ${selected ? "rgba(247,206,104,.5)" : "rgba(255,255,255,.06)"}`,
-              }}
-            >
-              {p.popular && (
-                <span className="absolute -top-[9px] left-3.5 font-display font-bold text-[9.5px] text-[#1A1408] bg-gold px-2 py-0.5 rounded-full">
-                  ВЫГОДНО
-                </span>
-              )}
-              <div className="text-left">
-                <div className="font-display font-bold text-[14.5px] text-ink">{p.label}</div>
-                <div className="font-medium text-[11.5px] text-ink/40 mt-0.5">{p.perMonth}</div>
-              </div>
-              <div className="flex items-center gap-1.5">
-                {method === "stars" ? (
-                  <>
-                    <StarIcon size={13} />
-                    <span className="font-display font-extrabold text-base text-gold">{p.price}</span>
-                  </>
-                ) : (
-                  <span className="font-display font-extrabold text-base text-[#5FD068]">{p.rub} ₽</span>
-                )}
-              </div>
-            </button>
-          );
-        })}
-
-        <button
-          onClick={() => onSelectPlan("custom")}
-          className="relative flex items-center justify-between px-4 py-[15px] rounded-2xl"
-          style={{
-            background: isCustom ? "rgba(247,206,104,.1)" : "#12151C",
-            border: `1.5px solid ${isCustom ? "rgba(247,206,104,.5)" : "rgba(255,255,255,.06)"}`,
-          }}
-        >
-          <div className="text-left">
-            <div className="font-display font-bold text-[14.5px] text-ink">Свой срок</div>
-            <div className="font-medium text-[11.5px] text-ink/40 mt-0.5">Укажи количество дней</div>
+      <div className="bg-app-card border border-white/10 rounded-2xl px-4 pt-4 pb-3.5">
+        <div className="flex items-end justify-between">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-display font-extrabold text-[38px] leading-none text-ink">{customDays}</span>
+            <span className="font-medium text-sm text-ink/40">дней</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="text-right">
             {method === "stars" ? (
-              <>
-                <StarIcon size={13} />
-                <span className="font-display font-extrabold text-base text-gold">{customStars}</span>
-              </>
+              <div className="flex items-center gap-1 justify-end">
+                <StarIcon size={14} />
+                <span className="font-display font-extrabold text-lg text-gold">{customStars}</span>
+              </div>
             ) : (
-              <span className="font-display font-extrabold text-base text-[#5FD068]">{customRub} ₽</span>
+              <span className="font-display font-extrabold text-lg text-[#5FD068]">{customRub} ₽</span>
             )}
+            <div className="flex items-center gap-1 justify-end font-medium text-[11px] text-ink/35 mt-0.5">
+              {method === "stars" ? (
+                <>
+                  {pricePerDay.toFixed(1)} <StarIcon size={9} /> в день
+                </>
+              ) : (
+                `${rubPerDay.toFixed(1)} ₽ в день`
+              )}
+            </div>
           </div>
-        </button>
+        </div>
 
-        {isCustom && (
-          <div className="flex items-center gap-3 bg-app-card border border-white/10 rounded-2xl px-4 py-3">
-            <input
-              type="range"
-              min="1"
-              max="730"
-              value={customDays}
-              onChange={(e) => onCustomDaysChange(Number(e.target.value))}
-              className="flex-1 accent-gold"
-            />
-            <input
-              type="number"
-              min="1"
-              max="730"
-              value={customDays}
-              onChange={(e) => onCustomDaysChange(Math.max(1, Math.min(730, Number(e.target.value) || 1)))}
-              className="w-16 bg-white/[.05] border border-white/10 rounded-lg px-2 py-1.5 text-center font-display font-bold text-sm text-ink outline-none"
-            />
-            <span className="font-medium text-xs text-ink/40 flex-shrink-0">дней</span>
-          </div>
-        )}
+        <input
+          type="range"
+          min="7"
+          max="180"
+          value={customDays}
+          onChange={(e) => onCustomDaysChange(Number(e.target.value))}
+          className="w-full mt-3.5 accent-gold"
+        />
+        <div className="flex justify-between mt-1 font-medium text-[10.5px] text-ink/30">
+          <span>7 дней</span>
+          <span>180 дней</span>
+        </div>
       </div>
 
       <button
         onClick={onSubmit}
         className="w-full mt-[18px] border-none py-4 rounded-2xl flex items-center justify-center gap-2"
-        style={{ background: method === "stars" ? "linear-gradient(135deg,#F7CE68,#C9962F)" : "linear-gradient(135deg,#5FD068,#3AA84A)" }}
+        style={{ background: method === "stars" ? "linear-gradient(135deg,#FFB800,#CC8A00)" : "linear-gradient(135deg,#5FD068,#3AA84A)" }}
       >
         {method === "stars" ? (
           <>
             <BoltIcon size={14} />
-            <span className="font-display font-bold text-[15px] text-[#1A1408]">Оплатить {selectedPlan.price} ⭐</span>
+            <span className="font-display font-bold text-[15px] text-[#1A1408] inline-flex items-center gap-1">
+              Оплатить {selectedPlan.price} <StarIcon size={13} color="#1A1408" />
+            </span>
           </>
         ) : (
           <>

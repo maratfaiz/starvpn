@@ -1,28 +1,29 @@
-import { StarIcon, BoltIcon, GiftIcon, LocationIcon } from "../components/icons.jsx";
+import { StarIcon, BoltIcon, GiftIcon, KeyIcon, QrIcon, CopyIcon, DeviceIcon, CloudIcon } from "../components/icons.jsx";
+import { planLabel } from "../utils/plan.js";
 
 export default function HomeScreen({
   subscription,
-  server,
-  speedValue,
+  primaryDevice,
+  devicesCount,
+  devicesLimit,
   trafficUsedTotal,
-  autoServer,
-  onToggleAutoServer,
+  onShowKey,
+  onCopyKey,
+  onAddDevice,
   onOpenRenew,
   onOpenGift,
   onActivateTrial,
   trialActivating,
 }) {
   const active = subscription.active;
-  const percentPassed = active
-    ? Math.round(((subscription.totalDays - subscription.daysLeft) / subscription.totalDays) * 100)
-    : 0;
+  const percentLeft = active ? Math.round((subscription.daysLeft / subscription.totalDays) * 100) : 0;
   const showTrialCard = !active && !subscription.trialUsed;
 
   return (
     <div className="flex flex-col gap-4">
       {/* hero subscription card */}
-      <div className="relative rounded-3xl p-[22px] overflow-hidden border border-gold/30 bg-[linear-gradient(160deg,#1A1408_0%,#13161D_55%)]">
-        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[radial-gradient(circle,rgba(247,206,104,.25),transparent_70%)]" />
+      <div className="relative rounded-3xl p-[22px] overflow-hidden border border-gold/30 bg-[linear-gradient(160deg,#120E06_0%,#0C0E12_55%)]">
+        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[radial-gradient(circle,rgba(255,184,0,.25),transparent_70%)]" />
         <StarIcon size={11} className="absolute top-3.5 right-[18px] animate-[starTwinkle_2.6s_ease-in-out_infinite]" />
         <StarIcon size={7} className="absolute top-[46px] right-[54px] animate-[starTwinkle_3.2s_ease-in-out_.6s_infinite]" />
 
@@ -39,7 +40,7 @@ export default function HomeScreen({
           </span>
           {active && (
             <span className="ml-auto font-display font-semibold text-[11px] text-gold bg-gold/10 px-2.5 py-[3px] rounded-full border border-gold/25">
-              {subscription.planName}
+              {planLabel(subscription.planName)}
             </span>
           )}
         </div>
@@ -57,61 +58,96 @@ export default function HomeScreen({
         <div className="mt-4 h-1.5 rounded-full bg-white/[.07] overflow-hidden">
           <div
             className="h-full rounded-full bg-gradient-to-r from-gold-dark to-gold"
-            style={{ width: `${percentPassed}%` }}
+            style={{ width: `${percentLeft}%` }}
           />
+        </div>
+
+        <div className="relative flex gap-2.5 mt-4">
+          <button
+            onClick={onOpenRenew}
+            className="flex-1 py-3.5 rounded-[16px] bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center gap-2"
+          >
+            <BoltIcon size={14} />
+            <span className="font-display font-bold text-[13.5px] text-[#1A1408]">Продлить</span>
+          </button>
+          <button
+            onClick={onOpenGift}
+            className="flex-1 py-3.5 rounded-[16px] border-[1.5px] border-gold/35 bg-gold/[.08] flex items-center justify-center gap-2"
+          >
+            <GiftIcon size={14} />
+            <span className="font-display font-bold text-[13.5px] text-gold">Подарить</span>
+          </button>
         </div>
       </div>
 
-      {/* server + quick stats bento */}
+      {/* devices + traffic tiles */}
       {active && (
-        <div className="grid grid-cols-[1.3fr_1fr] grid-rows-2 gap-2.5">
-          <div className="row-span-2 bg-app-card border border-white/[.06] rounded-[18px] p-4 flex flex-col justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm">{server.flag}</span>
-              <span className="font-semibold text-xs text-ink/50">текущий сервер</span>
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="bg-app-card border border-white/[.06] rounded-[18px] p-3.5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-[12px] text-ink/50">Устройства</span>
+              <DeviceIcon size={15} color="rgba(245,243,238,.35)" />
             </div>
-            <div>
-              <div className="font-display font-bold text-base text-ink">{server.name}</div>
-              <div className="font-medium text-[11.5px] text-ink/40 mt-0.5">
-                {server.ping} мс · {server.protocol}
-              </div>
+            <div className="font-display font-extrabold text-lg text-ink">
+              {devicesCount} из {devicesLimit}
             </div>
-            <span className="font-display font-bold text-xs text-gold">Сменить →</span>
           </div>
           <div className="bg-app-card border border-white/[.06] rounded-[18px] p-3.5">
-            <div className="font-display font-extrabold text-[22px] text-ink">{speedValue}</div>
-            <div className="font-medium text-[10.5px] text-ink/40 mt-0.5">Мбит/с сейчас</div>
-          </div>
-          <div className="bg-app-card border border-white/[.06] rounded-[18px] p-3.5">
-            <div className="font-display font-extrabold text-[22px] text-ink">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-medium text-[12px] text-ink/50">Трафик</span>
+              <CloudIcon size={15} color="rgba(245,243,238,.35)" />
+            </div>
+            <div className="font-display font-extrabold text-lg text-ink">
               {trafficUsedTotal}
               <span className="text-[13px] text-ink/40"> ГБ</span>
             </div>
-            <div className="font-medium text-[10.5px] text-ink/40 mt-0.5">за этот месяц</div>
           </div>
         </div>
       )}
 
-      <div className="flex gap-2.5">
-        <button
-          onClick={onOpenRenew}
-          className="flex-1 py-4 rounded-[18px] bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center gap-2"
-        >
-          <BoltIcon size={15} />
-          <span className="font-display font-bold text-[14.5px] text-[#1A1408]">Продлить</span>
-        </button>
-        <button
-          onClick={onOpenGift}
-          className="flex-1 py-4 rounded-[18px] border-[1.5px] border-gold/35 bg-gold/[.08] flex items-center justify-center gap-2"
-        >
-          <GiftIcon size={15} />
-          <span className="font-display font-bold text-[14.5px] text-gold">Подарить VPN</span>
-        </button>
-      </div>
+      {/* subscription key card */}
+      {active && primaryDevice && (
+        <div className="bg-app-card border border-white/[.06] rounded-[18px] p-4">
+          <div className="mb-3">
+            <span className="font-display font-semibold text-[11px] text-ink/40 tracking-widest uppercase">
+              Ваш ключ
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-[38px] h-[38px] rounded-[11px] bg-white/[.05] flex items-center justify-center flex-shrink-0">
+              <KeyIcon size={17} />
+            </div>
+            <div className="min-w-0">
+              <div className="font-display font-bold text-base text-ink truncate">{primaryDevice.name}</div>
+              <div className="font-medium text-[11.5px] text-ink/40 mt-0.5">слот {primaryDevice.slot}</div>
+            </div>
+          </div>
+
+          <div className="flex gap-2.5">
+            <button
+              onClick={() => onShowKey(primaryDevice)}
+              className="flex-1 py-3 rounded-[14px] border border-gold/35 bg-gold/[.08] flex items-center justify-center gap-2"
+            >
+              <QrIcon size={14} />
+              <span className="font-display font-bold text-[13px] text-gold">Показать QR</span>
+            </button>
+            <button
+              onClick={() => onCopyKey(primaryDevice)}
+              className="flex-1 py-3 rounded-[14px] border border-white/10 flex items-center justify-center gap-2"
+            >
+              <CopyIcon size={14} />
+              <span className="font-display font-bold text-[13px] text-ink/70">Копировать</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {showTrialCard && (
         <div className="rounded-2xl border border-gold/40 bg-app-card text-center px-4 py-5">
-          <div className="text-[28px] mb-2">🎁</div>
+          <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center">
+            <GiftIcon size={22} />
+          </div>
           <div className="font-display font-bold text-[15px] text-ink mb-1.5">Попробуй бесплатно — 2 дня</div>
           <div className="font-medium text-xs text-ink/45 mb-3.5">Полный безлимит · без ограничений</div>
           <button
@@ -127,29 +163,14 @@ export default function HomeScreen({
         </div>
       )}
 
-      {active && (
-        <div className="flex items-center justify-between px-4 py-3.5 bg-app-card border border-white/[.06] rounded-2xl">
-          <div className="flex items-center gap-2.5">
-            <div className="w-[34px] h-[34px] rounded-[10px] bg-white/[.05] flex items-center justify-center">
-              <LocationIcon />
-            </div>
-            <div>
-              <div className="font-medium text-[13px] text-ink">Авто-выбор сервера</div>
-              <div className="font-medium text-[11px] text-ink/40">Подключает самый быстрый узел</div>
-            </div>
-          </div>
-          <button
-            onClick={onToggleAutoServer}
-            className="w-[42px] h-6 rounded-full relative flex-shrink-0"
-            style={{ background: autoServer ? "linear-gradient(135deg,#F7CE68,#C9962F)" : "rgba(255,255,255,.1)" }}
-            aria-pressed={autoServer}
-          >
-            <div
-              className="absolute top-0.5 w-5 h-5 rounded-full bg-[#1A1408] transition-all"
-              style={{ left: autoServer ? "20px" : "2px" }}
-            />
-          </button>
-        </div>
+      {active && devicesCount < devicesLimit && (
+        <button
+          onClick={onAddDevice}
+          className="w-full py-3.5 rounded-2xl border-[1.5px] border-dashed border-gold/35 flex items-center justify-center gap-2"
+        >
+          <span className="font-display font-bold text-[15px] text-gold">+</span>
+          <span className="font-display font-bold text-[13.5px] text-gold">Подключить ещё устройство</span>
+        </button>
       )}
     </div>
   );

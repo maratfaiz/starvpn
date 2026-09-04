@@ -29,6 +29,7 @@ from bot.config import settings
 from bot.models.device import Device, MAX_DEVICES
 from bot.models.gift_notification import GiftNotification
 from bot.models.payment import Payment
+from bot.models.referral_credit import ReferralCredit
 from bot.models.user import User
 from bot.utils.database import AsyncSessionLocal
 from bot.utils.marzban import marzban
@@ -520,21 +521,29 @@ async def account_logout(request: Request):
 
 _TG_OAUTH_COOKIE = "tg_oauth_pkce"
 _TG_OAUTH_COOKIE_PATH = "/api/telegram-oauth"
+# Куда вернуть после успешного входа — по умолчанию /account, но вход можно
+# начать и с других страниц (например, /support — форма обращения предлагает
+# войти, чтобы привязать заявку к аккаунту). Список явно ограничен, чтобы
+# ?next= нельзя было превратить в open redirect.
+_OAUTH_ALLOWED_NEXT = {"/account", "/support"}
 
 
 @app.get("/api/telegram-oauth/start", include_in_schema=False)
-async def telegram_oauth_start():
+async def telegram_oauth_start(next: str = "/account"):
     from bot.utils.telegram_oauth import build_authorize_url, generate_pkce_pair
 
     if not settings.telegram_oauth_client_id or not settings.telegram_oauth_client_secret:
         return HTMLResponse("Вход через Telegram временно недоступен", status_code=503)
+
+    if next not in _OAUTH_ALLOWED_NEXT:
+        next = "/account"
 
     state = secrets.token_urlsafe(24)
     verifier, challenge = generate_pkce_pair()
 
     resp = RedirectResponse(build_authorize_url(state, challenge), status_code=302)
     resp.set_cookie(
-        _TG_OAUTH_COOKIE, f"{state}.{verifier}",
+        _TG_OAUTH_COOKIE, f"{state}.{verifier}.{next}",
         max_age=600, httponly=True, secure=True, samesite="lax", path=_TG_OAUTH_COOKIE_PATH,
     )
     return resp
@@ -557,7 +566,10 @@ async def telegram_oauth_callback(
     if error or not code or not state:
         return _fail()
 
-    saved_state, _, verifier = (request.cookies.get(_TG_OAUTH_COOKIE) or "").partition(".")
+    cookie_parts = (request.cookies.get(_TG_OAUTH_COOKIE) or "").split(".", 2)
+    saved_state = cookie_parts[0] if len(cookie_parts) > 0 else ""
+    verifier = cookie_parts[1] if len(cookie_parts) > 1 else ""
+    next_path = cookie_parts[2] if len(cookie_parts) > 2 and cookie_parts[2] in _OAUTH_ALLOWED_NEXT else "/account"
     if not verifier or not hmac.compare_digest(saved_state, state):
         return _fail()
 
@@ -578,7 +590,7 @@ async def telegram_oauth_callback(
         user = await get_or_create_user_by_telegram_id(tg_id, username, full_name, session)
         session_token = await create_web_session(user, session)
 
-    resp = RedirectResponse(f"{settings.site_url}/account", status_code=302)
+    resp = RedirectResponse(f"{settings.site_url}{next_path}", status_code=302)
     resp.delete_cookie(_TG_OAUTH_COOKIE, path=_TG_OAUTH_COOKIE_PATH)
     resp.set_cookie(
         SESSION_COOKIE_NAME, session_token,
@@ -596,6 +608,7 @@ _SUPPORT_TOPICS = {"connect", "payment", "account", "other"}
 @app.post("/api/support")
 async def create_support_ticket(request: Request, x_telegram_init_data: str | None = Header(default=None)):
     from bot.models.support_ticket import SupportTicket
+    from bot.models.support_ticket_message import SupportTicketMessage
 
     body = await request.json()
     topic = (body.get("topic") or "other").strip()
@@ -604,12 +617,14 @@ async def create_support_ticket(request: Request, x_telegram_init_data: str | No
     contact = (body.get("contact") or "").strip()[:320]
     message = (body.get("message") or "").strip()[:4000]
     platform = (body.get("platform") or "").strip()[:32] or None
+    anonymous = bool(body.get("anonymous"))
 
     async with AsyncSessionLocal() as session:
         # Если пользователь уже вошёл (Mini App или сессия личного кабинета) —
-        # привязываем тикет к аккаунту автоматически, но поле contact в форме
-        # остаётся обязательным для всех: это то, куда реально можно ответить.
-        tg_id = await _resolve_tg_id_optional(request, x_telegram_init_data, session)
+        # привязываем тикет к аккаунту автоматически, если он сам это не
+        # отключил (поле "Без аккаунта" в форме) — тогда обращение анонимное
+        # и требует ручной contact, даже если сессия/initData есть.
+        tg_id = None if anonymous else await _resolve_tg_id_optional(request, x_telegram_init_data, session)
         if not contact and tg_id is None:
             raise HTTPException(400, "Укажите email или @username для связи")
         if len(message) < 10:
@@ -620,10 +635,113 @@ async def create_support_ticket(request: Request, x_telegram_init_data: str | No
             message=message, platform=platform,
         )
         session.add(ticket)
+        await session.flush()
+        # Первое сообщение треда — сам текст заявки, чтобы вся переписка
+        # (включая исходное обращение) лежала в одном месте.
+        session.add(SupportTicketMessage(ticket_id=ticket.id, sender="user", body=message))
         await session.commit()
         await session.refresh(ticket)
 
     return {"ok": True, "id": f"S-{ticket.id:06d}"}
+
+
+@app.get("/api/support/tickets")
+async def list_my_support_tickets(request: Request, x_telegram_init_data: str | None = Header(default=None)):
+    """Раздел «Мои обращения» в личном кабинете — только свои тикеты
+    (те, что были поданы из-под этого же аккаунта, см. `anonymous` в
+    create_support_ticket — анонимные обращения сюда не попадают, у них
+    нет `user_id`)."""
+    from bot.models.support_ticket import SupportTicket
+
+    async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+        rows = (await session.execute(
+            select(SupportTicket)
+            .where(SupportTicket.user_id == tg_id)
+            .order_by(SupportTicket.last_message_at.desc())
+        )).scalars().all()
+
+    return {
+        "tickets": [
+            {
+                "id": t.id,
+                "public_id": f"S-{t.id:06d}",
+                "topic": t.topic,
+                "topic_label": TICKET_TOPIC_LABELS.get(t.topic, t.topic),
+                "status": t.status,
+                "created_at": t.created_at.isoformat() if t.created_at else None,
+                "last_message_at": t.last_message_at.isoformat() if t.last_message_at else None,
+                "last_message_sender": t.last_message_sender,
+            }
+            for t in rows
+        ]
+    }
+
+
+@app.get("/api/support/tickets/{ticket_id}")
+async def get_my_support_ticket(
+    ticket_id: int, request: Request, x_telegram_init_data: str | None = Header(default=None)
+):
+    from bot.models.support_ticket import SupportTicket
+    from bot.models.support_ticket_message import SupportTicketMessage
+
+    async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+        t = (await session.execute(select(SupportTicket).where(SupportTicket.id == ticket_id))).scalar_one_or_none()
+        # 404, а не 403 — чтобы не подтверждать посторонним сам факт
+        # существования чужого тикета с этим ID.
+        if not t or t.user_id != tg_id:
+            raise HTTPException(404, "Ticket not found")
+        msgs = (await session.execute(
+            select(SupportTicketMessage)
+            .where(SupportTicketMessage.ticket_id == ticket_id)
+            .order_by(SupportTicketMessage.created_at.asc())
+        )).scalars().all()
+
+    return {
+        "id": t.id,
+        "public_id": f"S-{t.id:06d}",
+        "topic": t.topic,
+        "topic_label": TICKET_TOPIC_LABELS.get(t.topic, t.topic),
+        "status": t.status,
+        "created_at": t.created_at.isoformat() if t.created_at else None,
+        "messages": [
+            {"sender": m.sender, "body": m.body, "created_at": m.created_at.isoformat() if m.created_at else None}
+            for m in msgs
+        ],
+    }
+
+
+@app.post("/api/support/tickets/{ticket_id}/reply")
+async def reply_my_support_ticket(
+    ticket_id: int, request: Request, x_telegram_init_data: str | None = Header(default=None)
+):
+    """Позволяет владельцу тикета дописать сообщение прямо из личного
+    кабинета — тот же тред, что и у ответа через бота (см.
+    bot/handlers/support.py::ticket_reply_capture), просто ещё один
+    способ добавить сообщение с стороны пользователя."""
+    from bot.models.support_ticket import SupportTicket
+    from bot.models.support_ticket_message import SupportTicketMessage
+
+    body = await request.json()
+    text = (body.get("message") or "").strip()[:4000]
+    if not text:
+        raise HTTPException(400, "Пустое сообщение")
+
+    async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+        t = (await session.execute(select(SupportTicket).where(SupportTicket.id == ticket_id))).scalar_one_or_none()
+        if not t or t.user_id != tg_id:
+            raise HTTPException(404, "Ticket not found")
+        if t.status == "closed":
+            raise HTTPException(400, "Обращение закрыто — оформите новое")
+        session.add(SupportTicketMessage(ticket_id=t.id, sender="user", body=text))
+        t.status = "open"
+        t.last_message_at = datetime.utcnow()
+        t.last_message_sender = "user"
+        await session.commit()
+
+    return {"ok": True}
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -725,7 +843,7 @@ async def get_me(request: Request, x_telegram_init_data: str | None = Header(def
         "traffic_gb": traffic_gb,
         "device_count": device_count,
         "created_at": user.created_at.isoformat() if user.created_at else None,
-        "support_url": f"https://t.me/{settings.support_username.lstrip('@')}",
+        "support_url": f"{settings.site_url}/support",
         "bot_username": settings.bot_username,
         "max_devices": MAX_DEVICES,
         "server_host": settings.server_host,
@@ -974,7 +1092,20 @@ async def get_referral(request: Request, x_telegram_init_data: str | None = Head
         )
         referrals = refs_r.scalars().all()
 
-    from bot.handlers.payment import REFERRAL_DAYS_BONUS, REFERRAL_MILESTONE_SIZE, REFERRAL_ACHIEVEMENTS
+        history_r = await session.execute(
+            select(ReferralCredit)
+            .where(ReferralCredit.referrer_id == tg_id)
+            .order_by(ReferralCredit.created_at.desc())
+            .limit(20)
+        )
+        history = history_r.scalars().all()
+
+    from bot.handlers.payment import (
+        REFERRAL_DAYS_PER_REFERRAL,
+        REFERRAL_VESTING_DAYS,
+        REFERRAL_MONTHLY_CAP_DAYS,
+        REFERRAL_ACHIEVEMENTS,
+    )
 
     paying = int(user.referral_count or 0)
 
@@ -982,15 +1113,15 @@ async def get_referral(request: Request, x_telegram_init_data: str | None = Head
         "extra_days_granted": int(user.extra_days_granted or 0),
         "link": f"https://t.me/{settings.bot_username}?start=ref{tg_id}",
         "referral_count": paying,
-        "days_bonus": REFERRAL_DAYS_BONUS,
-        "milestone_size": REFERRAL_MILESTONE_SIZE,
+        "days_per_referral": REFERRAL_DAYS_PER_REFERRAL,
+        "vesting_days": REFERRAL_VESTING_DAYS,
+        "monthly_cap_days": REFERRAL_MONTHLY_CAP_DAYS,
         "achievements": [
             {
                 "key": a["key"],
                 "icon": a["icon"],
                 "title": a["title"],
                 "threshold": a["threshold"],
-                "bonus_days": a["bonus_days"],
                 "unlocked": paying >= a["threshold"],
             }
             for a in REFERRAL_ACHIEVEMENTS
@@ -1002,6 +1133,13 @@ async def get_referral(request: Request, x_telegram_init_data: str | None = Head
                 "paid": bool(r.referral_bonus_counted),
             }
             for r in referrals
+        ],
+        "history": [
+            {
+                "days": h.days,
+                "date": h.created_at.strftime("%d.%m.%Y") if h.created_at else "",
+            }
+            for h in history
         ],
     }
 
@@ -1015,12 +1153,15 @@ def _require_admin(tg_id: int) -> None:
         raise HTTPException(403, "Admin only")
 
 
-async def _tg_send(chat_id: int, text: str) -> None:
+async def _tg_send(chat_id: int, text: str, reply_markup: dict | None = None) -> None:
     """Отправить сообщение через Telegram Bot API напрямую."""
+    payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
+    if reply_markup:
+        payload["reply_markup"] = reply_markup
     async with httpx.AsyncClient(timeout=10) as client:
         await client.post(
             f"https://api.telegram.org/bot{settings.telegram_api_token}/sendMessage",
-            json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
+            json=payload,
         )
 
 
@@ -3058,54 +3199,184 @@ async def web_broadcast(request: Request, authorization: str | None = Header(def
 
 
 # ─── Тикеты поддержки (админка) ───────────────────────────────────────────────
+#
+# Модель: SupportTicket — карточка заявки (кто, о чём, приоритет, кому
+# назначена, когда было последнее сообщение). SupportTicketMessage — вся
+# переписка построчно (и пользователь, и админ пишут туда, включая самое
+# первое сообщение — см. create_support_ticket). До этой правки был только
+# один текстовый admin_reply на тикет — т.е. второй ответ физически
+# затирал первый. Теперь это настоящий тред.
 
 TICKET_TOPIC_LABELS = {
     "connect": "Не подключается", "payment": "Оплата",
     "account": "Аккаунт", "other": "Другое",
 }
+TICKET_PRIORITIES = {"low", "normal", "urgent"}
+TICKET_PRIORITY_LABELS = {"low": "Низкий", "normal": "Обычный", "urgent": "Срочно"}
+
+
+def _ticket_user_label(t, u: User | None) -> str:
+    if u:
+        return u.email or (f"@{u.username}" if u.username else str(u.telegram_id))
+    return t.contact or "—"
+
+
+def _ticket_channel(t, u: User | None) -> tuple[str, str]:
+    """Куда реально уйдёт ответ, если админ нажмёт «Отправить».
+
+    - telegram: реальный (положительный) telegram_id — уходит в бота.
+    - email: есть email (свой аккаунта или из contact формы) — уходит письмом
+      через bot/utils/mailer.py (нужен настроенный SMTP_HOST в .env).
+    - telegram_manual: указан только "@username" без привязанного аккаунта —
+      Bot API не даёт написать первым без предварительного /start, поэтому
+      это не автоматизировано, нужен ручной контакт.
+    - unknown: контакта нет вообще (не должно происходить — форма требует
+      contact для анонимных обращений, но встречается в старых записях).
+    """
+    if u and u.telegram_id and u.telegram_id > 0:
+        return "telegram", (f"@{u.username}" if u.username else str(u.telegram_id))
+    contact = ((u.email if u else None) or t.contact or "").strip()
+    if contact.startswith("@"):
+        return "telegram_manual", contact
+    if "@" in contact:
+        return "email", contact
+    return "unknown", contact or "—"
 
 
 @app.get("/web/tickets")
-async def web_tickets(status: str = "", authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+async def web_tickets(
+    status: str = "", priority: str = "", assigned: str = "", q: str = "",
+    authorization: str | None = Header(default=None),
+):
+    identity = _web_auth(authorization)
     from bot.models.support_ticket import SupportTicket
+    from bot.models.admin_account import AdminAccount
 
     async with AsyncSessionLocal() as session:
         query = select(SupportTicket, User).outerjoin(User, User.telegram_id == SupportTicket.user_id)
         if status:
             query = query.where(SupportTicket.status == status)
-        rows = (await session.execute(query.order_by(SupportTicket.created_at.desc()).limit(300))).all()
+        if priority:
+            query = query.where(SupportTicket.priority == priority)
+        if assigned == "me":
+            query = query.where(SupportTicket.assigned_admin_id == identity.admin_id)
+        elif assigned == "unassigned":
+            query = query.where(SupportTicket.assigned_admin_id.is_(None))
+        elif assigned.isdigit():
+            query = query.where(SupportTicket.assigned_admin_id == int(assigned))
+        rows = (await session.execute(
+            query.order_by(SupportTicket.last_message_at.desc()).limit(300)
+        )).all()
 
-    def label(t: "SupportTicket", u: User | None) -> str:
-        if u:
-            return u.email or (f"@{u.username}" if u.username else str(u.telegram_id))
-        return t.contact or "—"
+        admins = {a.id: a.username for a in (await session.execute(select(AdminAccount))).scalars().all()}
+
+    if q:
+        needle = q.strip().lower()
+        rows = [
+            (t, u) for t, u in rows
+            if needle in _ticket_user_label(t, u).lower() or needle in t.message.lower()
+        ]
+
+    def row_dict(t, u):
+        channel, channel_value = _ticket_channel(t, u)
+        return {
+            "id": t.id,
+            "public_id": f"S-{t.id:06d}",
+            "user_id": t.user_id,
+            "user_label": _ticket_user_label(t, u),
+            "account_linked": bool(u),
+            "topic": t.topic,
+            "topic_label": TICKET_TOPIC_LABELS.get(t.topic, t.topic),
+            "message": t.message,
+            "platform": t.platform or "",
+            "status": t.status,
+            "priority": t.priority,
+            "priority_label": TICKET_PRIORITY_LABELS.get(t.priority, t.priority),
+            "channel": channel,
+            "channel_value": channel_value,
+            "assigned_admin_id": t.assigned_admin_id,
+            "assigned_admin_username": admins.get(t.assigned_admin_id) if t.assigned_admin_id else None,
+            "last_message_at": t.last_message_at.isoformat() if t.last_message_at else None,
+            "last_message_sender": t.last_message_sender,
+            "has_unread": t.last_message_sender == "user" and t.status != "closed",
+            "created_at": t.created_at.isoformat() if t.created_at else None,
+            "updated_at": t.updated_at.isoformat() if t.updated_at else None,
+        }
 
     return {
-        "tickets": [
+        "tickets": [row_dict(t, u) for t, u in rows],
+        "me": {"admin_id": identity.admin_id, "username": identity.username},
+    }
+
+
+@app.get("/web/tickets/{ticket_id}")
+async def web_ticket_detail(ticket_id: int, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.support_ticket import SupportTicket
+    from bot.models.support_ticket_message import SupportTicketMessage
+
+    async with AsyncSessionLocal() as session:
+        t = (await session.execute(select(SupportTicket).where(SupportTicket.id == ticket_id))).scalar_one_or_none()
+        if not t:
+            raise HTTPException(404, "Ticket not found")
+        u = (await session.execute(select(User).where(User.telegram_id == t.user_id))).scalar_one_or_none() if t.user_id else None
+        msgs = (await session.execute(
+            select(SupportTicketMessage)
+            .where(SupportTicketMessage.ticket_id == ticket_id)
+            .order_by(SupportTicketMessage.created_at.asc())
+        )).scalars().all()
+
+    channel, channel_value = _ticket_channel(t, u)
+    # Админка больше не показывает переписку как ленту сообщений (см.
+    # AGENTS/architecture/support-system.md) — только текущий текст обращения
+    # (последнее сообщение от пользователя, если он писал ещё раз через
+    # кнопку «Ответить» в боте) + карточку аккаунта, если обращение подано
+    # из-под входа. Полный список msgs всё ещё нужен только чтобы найти
+    # последнее сообщение пользователя, сама переписка построчно не отдаётся.
+    last_user_msg = next((m for m in reversed(msgs) if m.sender == "user"), None)
+    return {
+        "id": t.id,
+        "public_id": f"S-{t.id:06d}",
+        "user_id": t.user_id,
+        "user_label": _ticket_user_label(t, u),
+        "topic": t.topic,
+        "topic_label": TICKET_TOPIC_LABELS.get(t.topic, t.topic),
+        "platform": t.platform or "",
+        "status": t.status,
+        "priority": t.priority,
+        "priority_label": TICKET_PRIORITY_LABELS.get(t.priority, t.priority),
+        "channel": channel,
+        "channel_value": channel_value,
+        "assigned_admin_id": t.assigned_admin_id,
+        "created_at": t.created_at.isoformat() if t.created_at else None,
+        "latest_user_message": {
+            "body": last_user_msg.body if last_user_msg else t.message,
+            "created_at": (
+                last_user_msg.created_at.isoformat()
+                if last_user_msg and last_user_msg.created_at
+                else (t.created_at.isoformat() if t.created_at else None)
+            ),
+        },
+        "account": (
             {
-                "id": t.id,
-                "public_id": f"S-{t.id:06d}",
-                "user_id": t.user_id,
-                "user_label": label(t, u),
-                "topic": t.topic,
-                "topic_label": TICKET_TOPIC_LABELS.get(t.topic, t.topic),
-                "message": t.message,
-                "platform": t.platform or "",
-                "status": t.status,
-                "admin_reply": t.admin_reply or "",
-                "created_at": t.created_at.isoformat() if t.created_at else None,
-                "updated_at": t.updated_at.isoformat() if t.updated_at else None,
+                "telegram_id": u.telegram_id,
+                "is_web_only": u.telegram_id <= 0,
+                "full_name": u.full_name or "",
+                "username": u.username or "",
+                "email": u.email or "",
+                "subscription_active": bool(u.subscription_expires_at and u.subscription_expires_at > datetime.utcnow()),
             }
-            for t, u in rows
-        ]
+            if u
+            else None
+        ),
     }
 
 
 @app.post("/web/tickets/{ticket_id}/reply")
 async def web_ticket_reply(ticket_id: int, request: Request, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    identity = _web_auth(authorization)
     from bot.models.support_ticket import SupportTicket
+    from bot.models.support_ticket_message import SupportTicketMessage
 
     body = await request.json()
     reply = (body.get("reply") or "").strip()[:4000]
@@ -3118,19 +3389,36 @@ async def web_ticket_reply(ticket_id: int, request: Request, authorization: str 
         if not t:
             raise HTTPException(404, "Ticket not found")
         if reply:
-            t.admin_reply = reply
+            session.add(SupportTicketMessage(
+                ticket_id=t.id, sender="admin", body=reply,
+                admin_id=identity.admin_id, admin_username=identity.username,
+            ))
+            t.last_message_at = datetime.utcnow()
+            t.last_message_sender = "admin"
+            # Отвечая на неназначенный тикет, админ автоматически берёт его
+            # себе — чтобы у заявки не было формального ответа без владельца.
+            if t.assigned_admin_id is None:
+                t.assigned_admin_id = identity.admin_id
         t.status = new_status
         user_id, contact, topic_label = t.user_id, t.contact, TICKET_TOPIC_LABELS.get(t.topic, t.topic)
         user = (await session.execute(select(User).where(User.telegram_id == user_id))).scalar_one_or_none() if user_id else None
         await session.commit()
 
     if reply:
-        # Аккаунт с реальным Telegram — шлём в бота. Веб-аккаунт (telegram_id
-        # синтетический) или анонимное обращение с email-контактом — на почту.
+        # Аккаунт с реальным Telegram — шлём в бота с кнопкой «Ответить»,
+        # чтобы дальнейшая переписка тоже шла в тред. Веб-аккаунт (telegram_id
+        # синтетический) или анонимное обращение с email-контактом — на почту
+        # (без кнопки: обратный путь у email — просто написать ещё раз на /support).
         # @username без привязанного аккаунта Bot API написать не даёт —
         # для таких тикетов остаётся только ручной ответ через сам контакт.
         if user and user.telegram_id > 0:
-            await _tg_send(user.telegram_id, f"💬 <b>Ответ поддержки по тикету «{topic_label}»:</b>\n\n{reply}")
+            await _tg_send(
+                user.telegram_id,
+                f"💬 <b>Ответ поддержки по заявке «{topic_label}» (S-{ticket_id:06d}):</b>\n\n{reply}",
+                reply_markup={"inline_keyboard": [[
+                    {"text": "✍️ Ответить", "callback_data": f"ticket_reply:{ticket_id}"},
+                ]]},
+            )
         else:
             email = (user.email if user else None) or (contact if contact and "@" in contact and not contact.startswith("@") else None)
             if email:
@@ -3139,6 +3427,44 @@ async def web_ticket_reply(ticket_id: int, request: Request, authorization: str 
                     await send_ticket_reply_email(email, topic_label, reply)
                 except Exception as e:
                     logger.error("Failed to email ticket reply to %s: %s", email, e)
+    return {"ok": True}
+
+
+@app.post("/web/tickets/{ticket_id}/priority")
+async def web_ticket_priority(ticket_id: int, request: Request, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.support_ticket import SupportTicket
+
+    body = await request.json()
+    priority = (body.get("priority") or "").strip()
+    if priority not in TICKET_PRIORITIES:
+        raise HTTPException(400, "Invalid priority")
+
+    async with AsyncSessionLocal() as session:
+        t = (await session.execute(select(SupportTicket).where(SupportTicket.id == ticket_id))).scalar_one_or_none()
+        if not t:
+            raise HTTPException(404, "Ticket not found")
+        t.priority = priority
+        await session.commit()
+    return {"ok": True}
+
+
+@app.post("/web/tickets/{ticket_id}/assign")
+async def web_ticket_assign(ticket_id: int, request: Request, authorization: str | None = Header(default=None)):
+    identity = _web_auth(authorization)
+    from bot.models.support_ticket import SupportTicket
+
+    body = await request.json()
+    admin_id = body.get("admin_id", "me")
+    if admin_id == "me":
+        admin_id = identity.admin_id
+
+    async with AsyncSessionLocal() as session:
+        t = (await session.execute(select(SupportTicket).where(SupportTicket.id == ticket_id))).scalar_one_or_none()
+        if not t:
+            raise HTTPException(404, "Ticket not found")
+        t.assigned_admin_id = admin_id
+        await session.commit()
     return {"ok": True}
 
 
