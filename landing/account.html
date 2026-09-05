@@ -462,7 +462,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
     <!-- Приглашения -->
     <div class="tab-panel" id="tab-referral">
       <div class="page-title">Приглашения</div>
-      <div class="page-sub">Другу — +2 дня сразу, вам — дни за достижения. Автоматически.</div>
+      <div class="page-sub">Другу — +2 дня сразу, вам — дни после того, как друг остаётся с нами. Автоматически.</div>
       <div id="referralContent"><div class="empty">Загружаем...</div></div>
     </div>
 
@@ -1400,16 +1400,10 @@ async function loadReferral() {
         <button class="ref-copy" id="copyRefBtn">Копировать</button>
       </div>
       <p style="font-size:12.5px;color:var(--text2);line-height:1.6">
-        Приглашай друзей — друг сразу получает +2 дня за переход по ссылке
-        и первую оплату, а ты открываешь дни за достижения ниже, по мере
-        роста числа оплативших друзей. Без баланса и вывода.
+        Друг оплачивает подписку (любым способом) — сразу получает +${ref.referee_bonus_days} дня.
+        Остаётся активным ${ref.vesting_days} дней — вам автоматически начисляется
+        +${ref.days_per_referral} дней. Без баланса и вывода, лимит ${ref.monthly_cap_days} дней в месяц.
       </p>
-      ${ref.next_achievement ? `
-        <p style="font-size:12.5px;color:var(--text2);line-height:1.6;margin-top:6px">
-          До следующего достижения: <b style="color:var(--text)">ещё ${ref.next_achievement.remaining}</b>
-          ${ref.next_achievement.remaining === 1 ? 'друг' : 'друзей'} — и +${ref.next_achievement.bonus_days} дней.
-        </p>
-      ` : ''}
     </div>
     <div class="stat-grid">
       <div class="stat-box"><div class="val">${ref.referral_count}</div><div class="lbl">оплативших друзей</div></div>
@@ -1421,7 +1415,7 @@ async function loadReferral() {
         <div class="badge-card ${a.unlocked ? 'unlocked' : 'locked'}">
           <div class="em">${a.icon}</div>
           <div class="t">${a.title}</div>
-          <div class="d">${a.unlocked ? `+${a.bonus_days} дней получено` : `${a.threshold} друзей · +${a.bonus_days} дней`}</div>
+          <div class="d">${a.unlocked ? 'Открыто' : `от ${a.threshold} друзей`}</div>
         </div>
       `).join('')}
     </div>

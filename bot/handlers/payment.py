@@ -28,12 +28,14 @@ from aiogram.types import (
     SuccessfulPayment,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from bot.config import settings
 from bot.models.device import Device
 from bot.models.payment import Payment
+from bot.models.referral_credit import ReferralCredit
 from bot.models.user import User
+from bot.utils.database import AsyncSessionLocal
 from bot.utils.marzban import marzban
 from bot.utils.qr import make_qr_photo
 from bot.handlers.gift import handle_gift_payment
@@ -92,22 +94,26 @@ PLANS: dict[str, dict] = {
     "plan_6m": {"days": 180, "stars": 449, "label": "6 месяцев", "desc": "180 дней · скидка 25%"},
 }
 
-# Бонус самому приглашённому другу — начисляется один раз, в момент его
-# первой оплаты по реферальной ссылке (одновременно с разблокировкой
-# очередного достижения у пригласившего, см. _credit_referral).
+# Бонус самому приглашённому другу — начисляется один раз, сразу в момент
+# его первой оплаты по реферальной ссылке (не ждёт выдержку ниже — это
+# маленький приветственный подарок, не экономически значимая сумма, для
+# него нет смысла в анти-фрод задержке).
 REFEREE_BONUS_DAYS = 2
 
-# Достижения рефереру по общему числу оплативших рефералов — выдаются один
-# раз, ровно когда referral_count достигает threshold. Никакой отдельной
-# "пачки за каждые N друзей" больше нет (была раньше, до 2026-08-31) — вся
-# щедрость только здесь, с намеренно уменьшающейся отдачей на друга по мере
-# роста порога (8→18→35→90 дней на 2/5/10/25 друзей, а не линейно). Порядок
-# важен для отображения в /partner.
+REFERRAL_DAYS_PER_REFERRAL = 15    # дней рефереру за каждого друга, оплатившего и оставшегося с нами
+REFERRAL_VESTING_DAYS = 30         # сколько друг должен продержаться активным до начисления бонуса
+REFERRAL_MONTHLY_CAP_DAYS = 90     # максимум реферальных дней за скользящие 30 дней на реферера
+
+# Статусы-достижения по общему числу оплативших+переживших выдержку
+# рефералов — чисто визуальные бейджи, без дополнительных дней (раньше
+# стековались поверх базового бонуса и на 25 рефералах давали 585 дней —
+# см. AGENTS/architecture/referral-system.md и AGENTS/decisions/ADR.md).
+# Порядок важен для отображения в /partner.
 REFERRAL_ACHIEVEMENTS = [
-    {"key": "first",      "threshold": 2,  "icon": "🥉", "title": "Первая ласточка",  "bonus_days": 8},
-    {"key": "ambassador", "threshold": 5,  "icon": "🥈", "title": "Амбассадор",       "bonus_days": 18},
-    {"key": "legend",     "threshold": 10, "icon": "🥇", "title": "Легенда STAR VPN", "bonus_days": 35},
-    {"key": "vip",        "threshold": 25, "icon": "💎", "title": "Партнёр года",     "bonus_days": 90},
+    {"key": "first",      "threshold": 1,  "icon": "🥉", "title": "Первая ласточка"},
+    {"key": "ambassador", "threshold": 5,  "icon": "🥈", "title": "Амбассадор"},
+    {"key": "legend",     "threshold": 10, "icon": "🥇", "title": "Легенда STAR VPN"},
+    {"key": "vip",        "threshold": 25, "icon": "💎", "title": "Партнёр года"},
 ]
 
 
@@ -157,67 +163,149 @@ async def _grant_subscription(user: User, days: int, session: AsyncSession) -> N
     await session.commit()
 
 
-async def _credit_referral(buyer: User, session: AsyncSession, bot: Bot) -> None:
+async def _mark_first_payment(buyer: User, session: AsyncSession, bot: Bot | None = None) -> None:
     """
-    Достижения-бонусы рефереру по общему числу оплативших рефералов
-    (REFERRAL_ACHIEVEMENTS: 2/5/10/25 друзей), плюс разовый REFEREE_BONUS_DAYS
-    самому приглашённому другу за его первую оплату по ссылке. Считается один
-    раз на человека (buyer.referral_bonus_counted), а не на каждую его
-    покупку/продление — иначе один и тот же реферал накручивал бы счётчик
-    (и получал бы бонус) при каждом продлении.
+    Отмечает момент первой реальной самостоятельной оплаты покупателя —
+    Stars, карта или крипта, но НЕ подарок (подарок — не покупка себе, его
+    нельзя засчитывать как обращение реферала). С этого момента отсчитывается
+    REFERRAL_VESTING_DAYS до начисления бонуса рефереру, см.
+    credit_vested_referrals() ниже. Ставится один раз и не двигается на
+    повторных продлениях/покупках.
+
+    Заодно, если это первая оплата и покупатель пришёл по реферальной
+    ссылке, сразу (без выдержки — это маленький приветственный подарок, не
+    экономически значимая сумма) начисляет самому покупателю
+    REFEREE_BONUS_DAYS дней.
     """
-    if not buyer.referrer_id or buyer.referral_bonus_counted:
+    if buyer.first_payment_at is not None:
         return
 
-    result = await session.execute(
-        select(User).where(User.telegram_id == buyer.referrer_id)
-    )
-    referrer: User | None = result.scalar_one_or_none()
-    if not referrer:
-        return
+    buyer.first_payment_at = datetime.utcnow()
 
-    buyer.referral_bonus_counted = True
-    referrer.referral_count = (referrer.referral_count or 0) + 1
-
-    await _grant_subscription(buyer, REFEREE_BONUS_DAYS, session)
-    buyer.extra_days_granted = (buyer.extra_days_granted or 0) + REFEREE_BONUS_DAYS
-    try:
-        await bot.send_message(
-            buyer.telegram_id,
-            f"🎁 +{REFEREE_BONUS_DAYS} дня VPN — бонус за переход по реферальной ссылке!",
-            parse_mode="HTML",
-        )
-    except Exception as e:
-        logger.warning("Failed to notify referee %s: %s", buyer.telegram_id, e)
-
-    unlocked_achievement = next(
-        (a for a in REFERRAL_ACHIEVEMENTS if a["threshold"] == referrer.referral_count), None
-    )
-
-    if unlocked_achievement:
-        bonus_days = unlocked_achievement["bonus_days"]
-        await _grant_subscription(referrer, bonus_days, session)
-        referrer.extra_days_granted = (referrer.extra_days_granted or 0) + bonus_days
-        try:
-            await bot.send_message(
-                referrer.telegram_id,
-                f"🏆 <b>Новое достижение!</b>\n\n"
-                f"{unlocked_achievement['icon']} +{bonus_days} дней — "
-                f"достижение «{unlocked_achievement['title']}»"
-                f"\n\nВсего оплативших друзей: <b>{referrer.referral_count}</b>. "
-                f"Подписка продлена автоматически.",
-                parse_mode="HTML",
-            )
-        except Exception as e:
-            logger.warning("Failed to notify referrer %s: %s", referrer.telegram_id, e)
+    if buyer.referrer_id:
+        await _grant_subscription(buyer, REFEREE_BONUS_DAYS, session)
+        buyer.extra_days_granted = (buyer.extra_days_granted or 0) + REFEREE_BONUS_DAYS
+        if bot is not None:
+            try:
+                await bot.send_message(
+                    buyer.telegram_id,
+                    f"🎁 +{REFEREE_BONUS_DAYS} дня VPN — бонус за переход по реферальной ссылке!",
+                    parse_mode="HTML",
+                )
+            except Exception as e:
+                logger.warning("Failed to notify referee %s: %s", buyer.telegram_id, e)
 
     await session.commit()
 
-    logger.info(
-        "Referral: tg_id=%s now has %s paying referrals (buyer tg_id=%s, +%s achievement days, +%s referee days)",
-        referrer.telegram_id, referrer.referral_count, buyer.telegram_id,
-        unlocked_achievement["bonus_days"] if unlocked_achievement else 0, REFEREE_BONUS_DAYS,
-    )
+
+async def credit_vested_referrals(bot: Bot) -> None:
+    """
+    Вызывается раз в час из bot/tasks/scheduler.py::scheduler_loop. Находит
+    рефералов, чья первая самостоятельная оплата состоялась
+    >= REFERRAL_VESTING_DAYS назад и ещё не была разобрана, и — если реферал
+    всё ещё активный подписчик (не забанен, подписка не истекла) —
+    начисляет его рефереру REFERRAL_DAYS_PER_REFERRAL дней, при условии что
+    у реферера остался запас в пределах REFERRAL_MONTHLY_CAP_DAYS за
+    последние 30 дней (скользящее окно, не календарный месяц).
+
+    Это единственное место, где увеличивается referrer.referral_count —
+    раньше он бился дважды (один раз на /start ещё до оплаты, второй раз
+    при оплате), из-за чего цифра "оплативших друзей" была завышена и не
+    соответствовала реальности.
+    """
+    now = datetime.utcnow()
+    cutoff = now - timedelta(days=REFERRAL_VESTING_DAYS)
+    month_ago = now - timedelta(days=30)
+
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(User).where(
+                User.referrer_id.is_not(None),
+                User.referral_bonus_counted.is_(False),
+                User.first_payment_at.is_not(None),
+                User.first_payment_at <= cutoff,
+            )
+        )
+        vested_buyers = list(result.scalars().all())
+
+        for buyer in vested_buyers:
+            # Помечаем разобранным независимо от исхода ниже — это не retry-очередь,
+            # у выдержки есть ровно один момент оценки.
+            buyer.referral_bonus_counted = True
+
+            still_active = bool(
+                not buyer.is_banned
+                and buyer.subscription_expires_at
+                and buyer.subscription_expires_at > now
+            )
+            if not still_active:
+                logger.info(
+                    "Referral vesting: buyer tg_id=%s not active at vesting time — no credit",
+                    buyer.telegram_id,
+                )
+                continue
+
+            ref_result = await session.execute(
+                select(User).where(User.telegram_id == buyer.referrer_id)
+            )
+            referrer: User | None = ref_result.scalar_one_or_none()
+            if not referrer:
+                continue
+
+            credited_this_month = (await session.execute(
+                select(func.coalesce(func.sum(ReferralCredit.days), 0)).where(
+                    ReferralCredit.referrer_id == referrer.telegram_id,
+                    ReferralCredit.created_at >= month_ago,
+                )
+            )).scalar_one()
+
+            if credited_this_month >= REFERRAL_MONTHLY_CAP_DAYS:
+                try:
+                    await bot.send_message(
+                        referrer.telegram_id,
+                        "📈 <b>Месячный лимит реферальных дней достигнут</b>\n\n"
+                        f"За последние 30 дней начислено {credited_this_month} дней — "
+                        "это максимум. Новые оплатившие друзья по-прежнему учитываются "
+                        "в статистике, но дни временно не начисляются.",
+                        parse_mode="HTML",
+                    )
+                except Exception as e:
+                    logger.warning("Failed to notify referrer %s about cap: %s", referrer.telegram_id, e)
+                continue
+
+            referrer.referral_count = (referrer.referral_count or 0) + 1
+            days = REFERRAL_DAYS_PER_REFERRAL
+            await _grant_subscription(referrer, days, session)
+            referrer.extra_days_granted = (referrer.extra_days_granted or 0) + days
+            session.add(ReferralCredit(referrer_id=referrer.telegram_id, referred_id=buyer.telegram_id, days=days))
+
+            unlocked_achievement = next(
+                (a for a in REFERRAL_ACHIEVEMENTS if a["threshold"] == referrer.referral_count), None
+            )
+
+            try:
+                lines = [f"🎉 +{days} дней — друг оплатил подписку и остался с нами {REFERRAL_VESTING_DAYS} дней"]
+                if unlocked_achievement:
+                    lines.append(f"{unlocked_achievement['icon']} Новый статус: «{unlocked_achievement['title']}»!")
+                await bot.send_message(
+                    referrer.telegram_id,
+                    "<b>Реферальный бонус!</b>\n\n" + "\n".join(lines) +
+                    f"\n\nВсего оплативших друзей: <b>{referrer.referral_count}</b>. "
+                    "Подписка продлена автоматически.",
+                    parse_mode="HTML",
+                )
+            except Exception as e:
+                logger.warning("Failed to notify referrer %s: %s", referrer.telegram_id, e)
+
+            logger.info(
+                "Referral vesting: credited referrer tg_id=%s +%s days (buyer tg_id=%s, total referrals=%s)",
+                referrer.telegram_id, days, buyer.telegram_id, referrer.referral_count,
+            )
+
+        await session.commit()
+
+    if vested_buyers:
+        logger.info("Referral vesting check: processed %d buyers", len(vested_buyers))
 
 
 async def _notify_admin_purchase(bot: Bot, user: User, plan: dict) -> None:
@@ -391,7 +479,7 @@ async def on_stars_payment(message: Message, session: AsyncSession) -> None:
 
     stars = payment.total_amount
 
-    await _credit_referral(user, session, message.bot)
+    await _mark_first_payment(user, session, message.bot)
     await _notify_admin_purchase(message.bot, user, plan)
 
     db_payment = Payment(

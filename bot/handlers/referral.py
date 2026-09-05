@@ -1,12 +1,15 @@
 """
 👥 Партнёрка — реферальная программа на днях подписки.
 
-Механика (с 2026-08-31, см. ADR-016 в AGENTS/decisions/ADR.md):
+Механика (с 2026-09-05, см. ADR-018 в AGENTS/decisions/ADR.md):
   • Приглашённый друг получает +REFEREE_BONUS_DAYS дней сразу при первой
-    оплате подписки по твоей ссылке.
-  • Пригласивший получает дни только за достижения (REFERRAL_ACHIEVEMENTS,
-    разово на порогах 2/5/10/25 оплативших друзей) — никакой отдельной
-    "пачки за каждые N друзей" больше нет.
+    оплате подписки по твоей ссылке (любым способом — Stars/карта/крипта).
+  • Друг оплачивает и остаётся активным REFERRAL_VESTING_DAYS дней (защита
+    от возвратов/чарджбэков) — только после этого тебе автоматически
+    начисляется REFERRAL_DAYS_PER_REFERRAL дней.
+  • Лимит — REFERRAL_MONTHLY_CAP_DAYS дней за скользящие 30 дней.
+  • Достижения (REFERRAL_ACHIEVEMENTS) — статусы за общее число оплативших
+    и переживших выдержку друзей, без дополнительных дней.
 """
 
 import logging
@@ -22,7 +25,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from bot.models.user import User
-from bot.handlers.payment import REFEREE_BONUS_DAYS, REFERRAL_ACHIEVEMENTS
+from bot.handlers.payment import (
+    REFEREE_BONUS_DAYS,
+    REFERRAL_DAYS_PER_REFERRAL,
+    REFERRAL_VESTING_DAYS,
+    REFERRAL_MONTHLY_CAP_DAYS,
+    REFERRAL_ACHIEVEMENTS,
+)
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -56,37 +65,28 @@ async def referral_info(message: Message, session: AsyncSession) -> None:
         )],
     ]
 
-    next_achievement = next((a for a in REFERRAL_ACHIEVEMENTS if a["threshold"] > paying), None)
-    next_milestone_line = (
-        f"Ещё {next_achievement['threshold'] - paying} — и получишь +{next_achievement['bonus_days']} дней "
-        f"(«{next_achievement['title']}»).\n\n"
-        if next_achievement
-        else "Все достижения уже открыты — ты в топе партнёров STAR VPN! 🎉\n\n"
-    )
-
     achievements_lines = []
     for a in REFERRAL_ACHIEVEMENTS:
         if paying >= a["threshold"]:
             achievements_lines.append(f"{a['icon']} {a['title']} ✅")
         else:
-            achievements_lines.append(
-                f"{a['icon']} {a['title']} — ещё {a['threshold'] - paying} до +{a['bonus_days']} дней"
-            )
+            achievements_lines.append(f"{a['icon']} {a['title']} — от {a['threshold']} друзей")
     achievements_block = "\n".join(achievements_lines)
 
     await message.answer(
         f"👥 <b>Партнёрская программа STAR VPN</b>\n\n"
         f"<b>Как работает:</b>\n"
-        f"Делись ссылкой → друг покупает подписку → он сразу получает "
-        f"<b>+{REFEREE_BONUS_DAYS} дня</b>, а тебе открываются достижения ниже "
-        f"по мере роста числа оплативших друзей. "
-        f"Никакого вывода — бонус применяется сразу.\n\n"
+        f"Делись ссылкой → друг оплачивает подписку (любым способом) → он сразу "
+        f"получает <b>+{REFEREE_BONUS_DAYS} дня</b>, а ты — после того как друг "
+        f"остаётся активным {REFERRAL_VESTING_DAYS} дней (это защита от возвратов) — "
+        f"получаешь <b>+{REFERRAL_DAYS_PER_REFERRAL} дней</b> за каждого такого друга. "
+        f"Лимит — {REFERRAL_MONTHLY_CAP_DAYS} дней в месяц. Никакого вывода — только "
+        f"дни к подписке.\n\n"
         f"📈 <b>Твоя статистика:</b>\n"
         f"👤 Приглашено: <b>{total}</b> чел.\n"
-        f"✅ Оплатили подписку: <b>{paying}</b> чел.\n"
+        f"✅ Оплатили и остались: <b>{paying}</b> чел.\n"
         f"🎁 Всего получено дней: <b>{days_earned}</b>\n\n"
-        f"{next_milestone_line}"
-        f"🏆 <b>Достижения:</b>\n"
+        f"🏆 <b>Статусы:</b>\n"
         f"{achievements_block}\n\n"
         f"🔗 <b>Твоя реферальная ссылка:</b>\n"
         f"<code>{ref_link}</code>",

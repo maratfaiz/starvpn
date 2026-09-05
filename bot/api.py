@@ -29,6 +29,7 @@ from bot.config import settings
 from bot.models.device import Device, MAX_DEVICES
 from bot.models.gift_notification import GiftNotification
 from bot.models.payment import Payment
+from bot.models.referral_credit import ReferralCredit
 from bot.models.user import User
 from bot.utils.database import AsyncSessionLocal
 from bot.utils.marzban import marzban
@@ -974,28 +975,38 @@ async def get_referral(request: Request, x_telegram_init_data: str | None = Head
         )
         referrals = refs_r.scalars().all()
 
-    from bot.handlers.payment import REFEREE_BONUS_DAYS, REFERRAL_ACHIEVEMENTS
+        history_r = await session.execute(
+            select(ReferralCredit)
+            .where(ReferralCredit.referrer_id == tg_id)
+            .order_by(ReferralCredit.created_at.desc())
+            .limit(20)
+        )
+        history = history_r.scalars().all()
+
+    from bot.handlers.payment import (
+        REFEREE_BONUS_DAYS,
+        REFERRAL_DAYS_PER_REFERRAL,
+        REFERRAL_VESTING_DAYS,
+        REFERRAL_MONTHLY_CAP_DAYS,
+        REFERRAL_ACHIEVEMENTS,
+    )
 
     paying = int(user.referral_count or 0)
-    next_achievement = next((a for a in REFERRAL_ACHIEVEMENTS if a["threshold"] > paying), None)
 
     return {
         "extra_days_granted": int(user.extra_days_granted or 0),
         "link": f"https://t.me/{settings.bot_username}?start=ref{tg_id}",
         "referral_count": paying,
         "referee_bonus_days": REFEREE_BONUS_DAYS,
-        "next_achievement": {
-            "threshold": next_achievement["threshold"],
-            "bonus_days": next_achievement["bonus_days"],
-            "remaining": next_achievement["threshold"] - paying,
-        } if next_achievement else None,
+        "days_per_referral": REFERRAL_DAYS_PER_REFERRAL,
+        "vesting_days": REFERRAL_VESTING_DAYS,
+        "monthly_cap_days": REFERRAL_MONTHLY_CAP_DAYS,
         "achievements": [
             {
                 "key": a["key"],
                 "icon": a["icon"],
                 "title": a["title"],
                 "threshold": a["threshold"],
-                "bonus_days": a["bonus_days"],
                 "unlocked": paying >= a["threshold"],
             }
             for a in REFERRAL_ACHIEVEMENTS
@@ -1007,6 +1018,13 @@ async def get_referral(request: Request, x_telegram_init_data: str | None = Head
                 "paid": bool(r.referral_bonus_counted),
             }
             for r in referrals
+        ],
+        "history": [
+            {
+                "days": h.days,
+                "date": h.created_at.strftime("%d.%m.%Y") if h.created_at else "",
+            }
+            for h in history
         ],
     }
 
