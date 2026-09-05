@@ -829,6 +829,13 @@ async def _do_stats(msg: Message, session: AsyncSession) -> None:
         pays   = (await session.execute(
             select(func.count(Payment.id)).where(Payment.status == "paid")
         )).scalar_one()
+        trial_paid = (await session.execute(
+            select(func.count(func.distinct(User.telegram_id)))
+            .select_from(User)
+            .join(Payment, Payment.telegram_id == User.telegram_id)
+            .where(User.trial_used.is_(True), Payment.status == "paid")
+        )).scalar_one()
+        conversion_pct = round(trial_paid / trial * 100, 1) if trial else 0.0
         ref_days_total = int((await session.execute(
             select(func.sum(User.extra_days_granted))
         )).scalar_one() or 0)
@@ -853,7 +860,7 @@ async def _do_stats(msg: Message, session: AsyncSession) -> None:
     await msg.answer(
         f"📊 <b>Статистика STAR VPN</b>\n\n"
         f"👤 Всего пользователей: <b>{total}</b>\n"
-        f"🎁 Использовали триал: <b>{trial}</b>\n"
+        f"🎁 Использовали триал: <b>{trial}</b> (конверсия в оплату: <b>{conversion_pct}%</b>)\n"
         f"✅ Активных подписок: <b>{active}</b>\n"
         f"🟢 Онлайн прямо сейчас: {online_str}\n"
         f"🚫 Забаненных: <b>{banned}</b>\n\n"
