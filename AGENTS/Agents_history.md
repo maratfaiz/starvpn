@@ -1598,3 +1598,71 @@
  Если попросят переименование и из бота — там своя копия логики
  создания устройства, придётся добавлять отдельно, это не то же
  самое место в коде.
+
+### 2026-09-05 — Реферальная система: обнаружен и разрешён конфликт двух параллельных редизайнов (ADR-018)
+
+- **Роль:** backend + frontend
+- **Кто:** Claude (Claude Code)
+- **Что сделал:**
+ - Пользователь попросил синхронизироваться с GitHub перед новой задачей
+   ("посмотреть все бранчи, там что-то изменилось"). `git fetch` вскрыл
+   две новые ветки; одна (`claude/designer-backend-instructions-g1di1q`,
+   PR #7) оказалась независимым, несовместимым редизайном той же самой
+   реферальной системы, которую эта сессия только что переделала в ADR-017
+   (предыдущая запись выше) — обе ветки разошлись от одного коммита,
+   ни одна не видела изменений другой.
+ - Сравнил обе версии подробно (см. ADR-018 в `AGENTS/decisions/ADR.md`
+   для полного разбора). Их версия оказалась инженерно зрелее: нашла
+   и починила два реальных бага, которых ADR-017 не заметила
+   (`referral_count` бился дважды; бонус вообще не работал для оплаты
+   картой/крипто — только Stars), добавила 30-дневную выдержку и
+   месячный лимит с журналом начислений (`referral_credits`). У ADR-017
+   был бонус приглашённому другу (+2 дня), которого в их версии не было
+   вообще.
+ - Спросил пользователя, какую версию оставить — ответ: "определись сам,
+   какая новее/лучше, ту и возьми". Выбрал их механику как базу (реально
+   более корректная и антифрод-устойчивая) и перенёс сверху бонус другу
+   из ADR-017 — это дополнение не конфликтует технически (выдержка
+   касается только начисления рефереру).
+ - Пересобрал всё заново в этой сессии, а не смёржил ветки git — их PR
+   тащит за собой много несвязанного (редизайн Mini App, полная
+   переделка системы поддержки), затягивать это сюда не было смысла.
+   Взял 1-в-1 их константы/логику (`credit_vested_referrals()`, модель
+   `ReferralCredit`, миграция `0014_referral_redesign`, фикс двойного
+   инкремента в `bot/handlers/start.py`, вызовы `_mark_first_payment()`
+   в `card_payment.py`/`crypto_payment.py`), добавил `REFEREE_BONUS_DAYS`
+   и мгновенное начисление другу поверх.
+ - Переписал все публичные тексты под финальную механику: `bot/handlers/referral.py`
+   (`/partner`), `landing/account.html`, `landing/wiki/referrals.html`,
+   `landing/index.html`, `landing/tariffs.html`, `landing/terms.html`,
+   `landing/wiki/faq.html`, `landing/wiki/index.html`, мок и экран
+   Mini App (`webapp/src/data/mockData.js`, `webapp/src/screens/ReferralsScreen.jsx`,
+   пересобран `webapp/app.html`).
+ - Проверено: `python3 -m py_compile` по всем изменённым `.py`, `ruff check`
+   (только предсуществующие несвязанные находки, ничего нового), синтаксис
+   инлайн-скриптов во всех тронутых `.html`, полная пересборка Mini App.
+- **Затронутые файлы/папки:** `bot/handlers/payment.py`, `bot/handlers/start.py`,
+ `bot/handlers/card_payment.py`, `bot/handlers/crypto_payment.py`,
+ `bot/handlers/referral.py`, `bot/api.py`, `bot/models/user.py`,
+ `bot/models/referral_credit.py` (новый), `bot/utils/database.py`,
+ `bot/tasks/scheduler.py`, `alembic/versions/0014_referral_redesign.py`
+ (новый), `landing/account.html`, `landing/index.html`, `landing/tariffs.html`,
+ `landing/terms.html`, `landing/wiki/faq.html`, `landing/wiki/index.html`,
+ `landing/wiki/referrals.html`, `webapp/src/data/mockData.js`,
+ `webapp/src/screens/ReferralsScreen.jsx`, `webapp/app.html` (пересобран),
+ `CLAUDE.md`, `AGENTS/architecture/referral-system.md`, `AGENTS/decisions/ADR.md`
+- **Важно для следующего агента:**
+ - PR #7 (`claude/designer-backend-instructions-g1di1q`) всё ещё открыт и
+   несёт другие, несвязанные изменения (редизайн Mini App, система
+   поддержки/тикетов) — этот ADR их не отменяет и не оценивает, они не
+   были предметом ревью в этой сессии.
+ - Известная неаккуратность, унаследованная из их версии и сознательно не
+   починенная (не входило в задачу): `GET /api/referral`'s `referrals[].paid`
+   теперь означает "прошёл 30-дневную проверку", а не буквально "оплатил" —
+   друг, который реально заплатил, но ещё не пережил выдержку, покажется
+   как "Ещё нет". См. `AGENTS/architecture/referral-system.md`.
+ - Главный урок: именно отсутствие проверки `git branch -a`/`git log` на
+   другие свежие ветки перед началом задачи привело к двум несовместимым
+   redesign'ам одной фичи за один день — шаг синхронизации уже добавлен в
+   `AGENTS/new_agent.md`, но был добавлен после того, как обе сессии уже
+   стартовали.

@@ -462,7 +462,7 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
     <!-- Приглашения -->
     <div class="tab-panel" id="tab-referral">
       <div class="page-title">Приглашения</div>
-      <div class="page-sub">Двое друзей с оплаченной подпиской — +30 дней к вашей. Автоматически.</div>
+      <div class="page-sub">Другу — +2 дня сразу, вам — дни после того, как друг остаётся с нами. Автоматически.</div>
       <div id="referralContent"><div class="empty">Загружаем...</div></div>
     </div>
 
@@ -1400,8 +1400,9 @@ async function loadReferral() {
         <button class="ref-copy" id="copyRefBtn">Копировать</button>
       </div>
       <p style="font-size:12.5px;color:var(--text2);line-height:1.6">
-        За каждые ${ref.milestone_size} друзей, оформивших платную подписку — автоматически
-        +${ref.days_bonus} дней к вашей подписке. Без баланса и вывода.
+        Друг оплачивает подписку (любым способом) — сразу получает +${ref.referee_bonus_days} дня.
+        Остаётся активным ${ref.vesting_days} дней — вам автоматически начисляется
+        +${ref.days_per_referral} дней. Без баланса и вывода, лимит ${ref.monthly_cap_days} дней в месяц.
       </p>
     </div>
     <div class="stat-grid">
@@ -1414,7 +1415,7 @@ async function loadReferral() {
         <div class="badge-card ${a.unlocked ? 'unlocked' : 'locked'}">
           <div class="em">${a.icon}</div>
           <div class="t">${a.title}</div>
-          <div class="d">${a.unlocked ? `+${a.bonus_days} дней получено` : `${a.threshold} друзей · +${a.bonus_days} дней`}</div>
+          <div class="d">${a.unlocked ? 'Открыто' : `от ${a.threshold} друзей`}</div>
         </div>
       `).join('')}
     </div>

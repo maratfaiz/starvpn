@@ -1,11 +1,15 @@
 """
 👥 Партнёрка — реферальная программа на днях подписки.
 
-Механика:
-  • За каждые 2 друзей, оформивших платную подписку по твоей ссылке,
-    рефереру автоматически начисляется +30 дней к своей подписке.
-  • Никакого баланса и вывода — бонус применяется сразу, как только
-    накопится нужное количество оплативших рефералов.
+Механика (с 2026-09-05, см. ADR-018 в AGENTS/decisions/ADR.md):
+  • Приглашённый друг получает +REFEREE_BONUS_DAYS дней сразу при первой
+    оплате подписки по твоей ссылке (любым способом — Stars/карта/крипта).
+  • Друг оплачивает и остаётся активным REFERRAL_VESTING_DAYS дней (защита
+    от возвратов/чарджбэков) — только после этого тебе автоматически
+    начисляется REFERRAL_DAYS_PER_REFERRAL дней.
+  • Лимит — REFERRAL_MONTHLY_CAP_DAYS дней за скользящие 30 дней.
+  • Достижения (REFERRAL_ACHIEVEMENTS) — статусы за общее число оплативших
+    и переживших выдержку друзей, без дополнительных дней.
 """
 
 import logging
@@ -21,7 +25,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from bot.models.user import User
-from bot.handlers.payment import REFERRAL_DAYS_BONUS, REFERRAL_MILESTONE_SIZE, REFERRAL_ACHIEVEMENTS
+from bot.handlers.payment import (
+    REFEREE_BONUS_DAYS,
+    REFERRAL_DAYS_PER_REFERRAL,
+    REFERRAL_VESTING_DAYS,
+    REFERRAL_MONTHLY_CAP_DAYS,
+    REFERRAL_ACHIEVEMENTS,
+)
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -43,9 +53,6 @@ async def referral_info(message: Message, session: AsyncSession) -> None:
 
     paying = user.referral_count or 0
     days_earned = user.extra_days_granted or 0
-    left_to_next = REFERRAL_MILESTONE_SIZE - (paying % REFERRAL_MILESTONE_SIZE)
-    if left_to_next == REFERRAL_MILESTONE_SIZE:
-        left_to_next = 0
 
     bot_info = await message.bot.get_me()
     ref_link = f"https://t.me/{bot_info.username}?start=ref{tg_id}"
@@ -58,35 +65,28 @@ async def referral_info(message: Message, session: AsyncSession) -> None:
         )],
     ]
 
-    next_milestone_line = (
-        f"Ещё {left_to_next} — и начислим +{REFERRAL_DAYS_BONUS} дней автоматически.\n\n"
-        if left_to_next
-        else f"Следующие +{REFERRAL_DAYS_BONUS} дней — за ещё {REFERRAL_MILESTONE_SIZE} оплативших друзей.\n\n"
-    )
-
     achievements_lines = []
     for a in REFERRAL_ACHIEVEMENTS:
         if paying >= a["threshold"]:
             achievements_lines.append(f"{a['icon']} {a['title']} ✅")
         else:
-            achievements_lines.append(
-                f"{a['icon']} {a['title']} — ещё {a['threshold'] - paying} до +{a['bonus_days']} дней"
-            )
+            achievements_lines.append(f"{a['icon']} {a['title']} — от {a['threshold']} друзей")
     achievements_block = "\n".join(achievements_lines)
 
     await message.answer(
         f"👥 <b>Партнёрская программа STAR VPN</b>\n\n"
         f"<b>Как работает:</b>\n"
-        f"Делись ссылкой → друг покупает подписку → "
-        f"за каждые <b>{REFERRAL_MILESTONE_SIZE} оплативших друзей</b> тебе автоматически "
-        f"добавляется <b>+{REFERRAL_DAYS_BONUS} дней</b> к твоей подписке. "
-        f"Никакого вывода — бонус применяется сразу.\n\n"
+        f"Делись ссылкой → друг оплачивает подписку (любым способом) → он сразу "
+        f"получает <b>+{REFEREE_BONUS_DAYS} дня</b>, а ты — после того как друг "
+        f"остаётся активным {REFERRAL_VESTING_DAYS} дней (это защита от возвратов) — "
+        f"получаешь <b>+{REFERRAL_DAYS_PER_REFERRAL} дней</b> за каждого такого друга. "
+        f"Лимит — {REFERRAL_MONTHLY_CAP_DAYS} дней в месяц. Никакого вывода — только "
+        f"дни к подписке.\n\n"
         f"📈 <b>Твоя статистика:</b>\n"
         f"👤 Приглашено: <b>{total}</b> чел.\n"
-        f"✅ Оплатили подписку: <b>{paying}</b> чел.\n"
+        f"✅ Оплатили и остались: <b>{paying}</b> чел.\n"
         f"🎁 Всего получено дней: <b>{days_earned}</b>\n\n"
-        f"{next_milestone_line}"
-        f"🏆 <b>Достижения:</b>\n"
+        f"🏆 <b>Статусы:</b>\n"
         f"{achievements_block}\n\n"
         f"🔗 <b>Твоя реферальная ссылка:</b>\n"
         f"<code>{ref_link}</code>",

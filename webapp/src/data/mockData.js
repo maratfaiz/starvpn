@@ -11,24 +11,30 @@ export const server = {
 
 export const speedValue = "184";
 
+// Reward mechanic (2026-09-05): +2 days to the referred friend immediately
+// on their first payment; +15 days to the referrer per paying friend, but
+// only after a 30-day vesting hold (friend must still be an active,
+// non-banned subscriber 30 days after their first payment — refund/
+// chargeback protection); capped at 90 days per rolling 30-day window per
+// referrer (= 6 friends/month at the cap). Mirrors
+// bot/handlers/payment.py's REFEREE_BONUS_DAYS/REFERRAL_DAYS_PER_REFERRAL/
+// REFERRAL_VESTING_DAYS/REFERRAL_MONTHLY_CAP_DAYS. Kept intentionally
+// simple — no achievements/levels/leaderboards on this screen (still shown
+// in the bot and on the wiki page — an intentional per-surface difference).
 export const referral = {
   code: "STAR-9X4K2",
-  bonusDays: 30,
-  milestoneSize: 2,
+  refereeBonusDays: 2,
+  daysPerReferral: 15,
+  vestingDays: 30,
+  monthlyCapDays: 90,
+  monthlyCapReferrals: 6,
   invitedCount: 6,
-  paidCount: 5,
   daysEarned: 85,
-  achievements: [
-    { key: "first", icon: "🥉", title: "Первая ласточка", threshold: 1, bonusDays: 5, unlocked: true },
-    { key: "ambassador", icon: "🥈", title: "Амбассадор", threshold: 5, bonusDays: 20, unlocked: true },
-    { key: "legend", icon: "🥇", title: "Легенда STAR VPN", threshold: 10, bonusDays: 50, unlocked: false },
-    { key: "vip", icon: "💎", title: "Партнёр года", threshold: 25, bonusDays: 150, unlocked: false },
-  ],
 };
 
 export const daysHistoryInitial = [
-  { id: 1, label: "Бонус за 2 друзей", date: "3 дня назад", days: 30, type: "bonus" },
-  { id: 2, label: "Бонус за 2 друзей", date: "2 недели назад", days: 30, type: "bonus" },
+  { id: 1, label: "Реферальный бонус", date: "3 дня назад", days: 15, type: "bonus" },
+  { id: 2, label: "Реферальный бонус", date: "2 недели назад", days: 15, type: "bonus" },
   { id: 3, label: "Продление подписки", date: "месяц назад", days: 30, type: "purchase" },
 ];
 
