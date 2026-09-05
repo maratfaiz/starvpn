@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Подключение на Android — STAR VPN</title>
-<meta name="description" content="Как подключить STAR VPN на Android: v2rayNG или Hiddify — пошагово.">
+<title>Split-tunneling: обход VPN для российских сайтов — Wiki STAR VPN</title>
+<meta name="description" content="Как настроить раздельное туннелирование, чтобы российские сайты и сервисы работали напрямую, без VPN, а остальной трафик — как обычно.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -75,7 +75,7 @@ a:hover{color:var(--gold2)}
 .start-modal p{color:var(--text2);margin-bottom:26px}
 .start-modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
 .start-modal-opt{display:block;border-radius:18px;padding:22px;text-decoration:none;transition:border-color .2s}
-.start-modal-opt.opt-site{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1)}
+.start-modal-opt.opt-site{background:#0D0C0A;border:1px solid rgba(255,255,255,.1)}
 .start-modal-opt.opt-site:hover{border-color:var(--gold-border)}
 .start-modal-opt.opt-tg{background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.3)}
 .start-modal-opt.opt-tg:hover{border-color:rgba(255,184,0,.5)}
@@ -97,65 +97,53 @@ a:hover{color:var(--gold2)}
 .side-item:hover{color:var(--gold)}
 .side-item.current{border-color:rgba(255,184,0,.3);color:var(--gold);background:rgba(255,184,0,.07)}
 
-article{min-width:0;max-width:76ch;padding-bottom:60px}
+article{min-width:0;max-width:74ch;padding-bottom:60px}
 .crumbs{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--text3);margin-bottom:20px;flex-wrap:wrap}
 .crumbs a{color:var(--text2)}
 article h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(30px,4.4vw,50px);font-weight:700;line-height:1.08;letter-spacing:-.02em;margin-bottom:18px}
-.lede{font-size:18px;color:var(--text2);margin-bottom:26px}
-article h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(23px,3vw,32px);font-weight:700;line-height:1.2;margin:40px 0 12px;scroll-margin-top:88px}
+.lede{font-size:18px;color:var(--text2);margin-bottom:22px}
+.doc-meta-row{display:flex;gap:16px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text3);padding-bottom:28px;margin-bottom:36px;border-bottom:1px solid rgba(255,255,255,.08)}
+article h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(23px,3vw,32px);font-weight:700;line-height:1.2;margin:40px 0 16px;scroll-margin-top:88px}
 article h2:first-of-type{margin-top:0}
 article p{margin-bottom:18px}
 
-.platform-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px}
-.platform-pill{font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:600;padding:9px 18px;border-radius:10px;border:1px solid rgba(255,255,255,.1);color:var(--text2)}
-.platform-pill.current{border-color:rgba(255,184,0,.4);color:var(--gold);background:rgba(255,184,0,.08)}
+.flow{display:flex;flex-direction:column;gap:1px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;margin-bottom:36px}
+.flow-row{background:#080807;padding:18px 22px;display:flex;gap:16px;align-items:flex-start}
+.flow-num{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#000;background:var(--gold);width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.flow-text{font-size:14.5px;line-height:1.6;color:var(--text)}
 
-.source-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:18px}
-@media(min-width:720px){.source-grid{grid-template-columns:1fr 1fr}}
-.source-card{cursor:pointer;background:rgba(255,255,255,.026);border:1px solid rgba(255,255,255,.09);border-radius:18px;padding:24px;display:flex;flex-direction:column;transition:border-color .2s,background .2s}
-.source-card.active{background:rgba(255,184,0,.07);border-color:rgba(255,184,0,.42)}
-.source-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-.source-tag{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--text2)}
-.source-card.active .source-tag{color:var(--gold)}
-.source-dot{width:18px;height:18px;border-radius:50%;border:1px solid rgba(255,255,255,.18);flex-shrink:0}
-.source-card.active .source-dot{border-color:var(--gold);background:var(--gold)}
-.source-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:600;color:var(--text);margin-bottom:8px}
-.source-text{font-size:14px;line-height:1.6;color:var(--text2);margin-bottom:18px}
-.source-cta{margin-top:auto;text-align:center;background:transparent;color:var(--gold);border:1px solid rgba(255,184,0,.3);font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:700;padding:12px;border-radius:11px;text-decoration:none}
-.source-card.active .source-cta{background:var(--gold);color:#000}
+.case-list{display:flex;flex-direction:column;gap:10px;margin-bottom:36px}
+.case-item{background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;transition:border-color .2s}
+.case-item.open{border-color:rgba(255,184,0,.3)}
+.case-btn{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 20px;width:100%;background:none;border:none;text-align:left;font-family:'Space Grotesk',sans-serif;font-size:15.5px;font-weight:600;color:var(--text)}
+.case-sign{color:var(--gold);font-size:18px;flex-shrink:0;line-height:1}
+.case-body{padding:0 20px 20px;display:none}
+.case-item.open .case-body{display:flex;flex-direction:column;gap:10px}
+.fix-item{display:flex;gap:10px;font-size:14.5px;line-height:1.6;color:var(--text2);align-items:flex-start}
+.fix-item::before{content:'→';color:var(--gold);flex-shrink:0}
 
-.notice{display:flex;gap:16px;align-items:flex-start;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:16px;padding:20px 22px;margin-bottom:36px}
+.notice{display:flex;gap:16px;align-items:flex-start;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:16px;padding:20px 22px;margin:0 0 28px}
 .notice-icon{width:32px;height:32px;border-radius:10px;background:rgba(255,184,0,.12);border:1px solid rgba(255,184,0,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .notice-icon svg{width:16px;height:16px;stroke:var(--gold);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .notice-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
-.notice-text{font-size:14.5px;line-height:1.65;color:var(--text)}
+.notice-text{font-size:14.5px;line-height:1.7;color:var(--text)}
 
-.client-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
-.client-tab{cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;padding:11px 22px;border-radius:11px;border:1px solid rgba(255,255,255,.1);color:var(--text2);background:none}
-.client-tab.active{border-color:rgba(255,184,0,.4);color:var(--gold);background:rgba(255,184,0,.08)}
-
-.client-panel{background:#0D0C0A;border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:clamp(22px,3vw,32px);margin-bottom:36px;display:none}
-.client-panel.active{display:block}
-.client-head{display:flex;gap:18px;flex-wrap:wrap;align-items:baseline;margin-bottom:8px}
-.client-head h3{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:var(--text)}
-.client-badge{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gold)}
-.client-intro{color:var(--text2);margin-bottom:26px}
-.client-steps{display:flex;flex-direction:column;gap:1px;background:rgba(255,255,255,.08);border-radius:16px;overflow:hidden}
-.client-step{background:#0A0908;padding:20px 22px;display:flex;gap:18px;align-items:flex-start}
-.step-num{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#000;background:var(--gold);width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.step-title{font-family:'Space Grotesk',sans-serif;font-size:15.5px;font-weight:600;color:var(--text);margin-bottom:4px}
-.step-text{font-size:14px;line-height:1.65;color:var(--text2)}
-
-.problem-list{display:flex;flex-direction:column;gap:10px;margin-bottom:32px}
-.problem-card{background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px 20px}
-.problem-q{font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:600;color:var(--text);margin-bottom:5px}
-.problem-a{font-size:14px;line-height:1.6;color:var(--text2)}
+.copy-box{display:flex;align-items:center;gap:10px;background:#0D0C0A;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 16px;margin:0 0 28px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text)}
+.copy-box a{color:var(--gold);word-break:break-all}
+.copy-box button{flex-shrink:0;background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.25);color:var(--gold);font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;padding:8px 14px;border-radius:9px;cursor:pointer}
+.copy-box button:hover{background:rgba(255,184,0,.18)}
 
 .doc-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:36px;padding-top:32px;border-top:1px solid rgba(255,255,255,.08)}
 .btn-gold{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:700;padding:14px 28px;border-radius:12px;text-decoration:none}
 .btn-gold:hover{background:var(--gold2);color:#000}
 .btn-ghost{border:1px solid rgba(255,255,255,.14);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:600;padding:13px 28px;border-radius:12px;text-decoration:none;transition:border-color .2s,color .2s}
 .btn-ghost:hover{border-color:rgba(255,184,0,.4);color:var(--gold)}
+
+.next-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:40px}
+.next-card{display:block;background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px 22px;text-decoration:none;transition:border-color .2s}
+.next-card:hover{border-color:rgba(255,184,0,.35)}
+.next-kicker{font-size:11px;font-family:'Space Grotesk',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.next-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:var(--text)}
 
 .toc{display:none;position:sticky;top:88px;padding-bottom:24px}
 @media(min-width:1240px){.toc{display:block}}
@@ -242,14 +230,14 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
       <div class="side-items">
         <a class="side-item" href="/wiki/vless-reality">VLESS + Reality</a>
         <a class="side-item" href="/wiki/zero-logs">Zero Logs</a>
-        <a class="side-item" href="/wiki/split-tunneling">Split-tunneling</a>
+        <a class="side-item current" href="/wiki/split-tunneling">Split-tunneling</a>
       </div>
     </div>
     <div class="side-group">
       <div class="side-group-title">Подключение</div>
       <div class="side-items">
         <a class="side-item" href="/wiki/install-ios">iOS — Happ, Streisand</a>
-        <a class="side-item current" href="/wiki/install-android">Android — v2rayNG, Hiddify</a>
+        <a class="side-item" href="/wiki/install-android">Android — v2rayNG, Hiddify</a>
         <a class="side-item" href="/wiki/install-windows">Windows — v2rayN</a>
         <a class="side-item" href="/wiki/install-macos">macOS — V2Box</a>
       </div>
@@ -273,97 +261,63 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
   </aside>
 
   <article>
-    <div class="crumbs"><a href="/wiki">Wiki</a><span>/</span><span>Подключение</span><span>/</span><span style="color:var(--text2)">Android</span></div>
-    <h1>Подключение на Android</h1>
-    <p class="lede">Понадобится ссылка подписки из личного кабинета или бота. Два бесплатных клиента на выбор — подключение занимает пару минут.</p>
+    <div class="crumbs"><a href="/wiki">Wiki</a><span>/</span><span>Технологии</span><span>/</span><span style="color:var(--text2)">Split-tunneling</span></div>
+    <h1>Split-tunneling: пускаем российские сайты в обход VPN</h1>
+    <p class="lede">По умолчанию весь трафик идёт через VPN — это и есть смысл сервиса. Но для российских сайтов и сервисов это иногда лишнее: они и так доступны напрямую, а лишний туннель добавляет задержку и может мешать некоторым из них работать штатно. Раздельное туннелирование решает это точечно.</p>
+    <div class="doc-meta-row"><span>6 мин чтения</span><span>·</span><span>Маршрутизация</span><span>·</span><span>обновлено 09.2026</span></div>
 
-    <div class="platform-pills">
-      <a class="platform-pill" href="/wiki/install-ios">iOS</a>
-      <a class="platform-pill current" href="/wiki/install-android">Android</a>
-      <a class="platform-pill" href="/wiki/install-windows">Windows</a>
-      <a class="platform-pill" href="/wiki/install-macos">macOS</a>
+    <h2 id="what">Что это такое</h2>
+    <p>Split-tunneling (раздельное туннелирование) — это правило в самом VPN-клиенте: часть трафика идёт напрямую («Direct» / «Bypass»), а остальной — как обычно, через VPN. Настраивается это не на нашей стороне, а в приложении, которым вы пользуетесь (Happ, v2rayNG, v2rayN, V2Box, NekoRay и т.д.) — почти во всех них есть раздел с маршрутизацией или правилами прокси.</p>
+    <p>Мы поддерживаем готовый список доменов основных российских сервисов, который можно один раз добавить в правило «обход VPN» в настройках клиента.</p>
+
+    <h2 id="list">Список доменов</h2>
+    <p>Актуальный список обновляется на нашей стороне — используйте прямую ссылку, а не копию, чтобы не работать со старой версией.</p>
+    <div class="copy-box">
+      <a href="/rules/ru-bypass.txt" target="_blank" rel="noopener">/rules/ru-bypass.txt</a>
+      <button type="button" onclick="navigator.clipboard.writeText(location.origin + '/rules/ru-bypass.txt').then(() => { this.textContent = 'Скопировано'; setTimeout(() => this.textContent = 'Копировать', 1500); })">Копировать</button>
+    </div>
+    <p>В список входят домены крупных сервисов: Яндекс, VK, Госуслуги, основные банки (Сбер, Т-Банк, Альфа-Банк, ВТБ), маркетплейсы (Wildberries, Ozon, Avito), Кинопоиск, Rutube и другие. Если каких-то доменов не хватает — напишите в поддержку, дополним.</p>
+
+    <h2 id="setup">Как подключить в клиенте</h2>
+    <p>Точные шаги отличаются от приложения к приложению и меняются с обновлениями, поэтому опишем общий принцип, а не конкретные экраны:</p>
+    <div class="flow">
+      <div class="flow-row"><span class="flow-num">1</span><div class="flow-text">Откройте настройки клиента и найдите раздел маршрутизации — обычно называется «Routing», «Маршрутизация», «Правила прокси» или «Bypass».</div></div>
+      <div class="flow-row"><span class="flow-num">2</span><div class="flow-text">Создайте или отредактируйте правило типа «Direct» / «Прямое подключение» — оно определяет, что идёт мимо VPN.</div></div>
+      <div class="flow-row"><span class="flow-num">3</span><div class="flow-text">Добавьте туда домены из нашего списка — вручную или через импорт, если клиент поддерживает вставку списком.</div></div>
+      <div class="flow-row"><span class="flow-num">4</span><div class="flow-text">Сохраните и переподключитесь. Проверьте на одном из сайтов из списка (например, ya.ru), что запрос уходит напрямую.</div></div>
     </div>
 
-    <h2 id="source">Шаг 0. Откуда взять ссылку подписки</h2>
-    <p>Есть два пути, и оба дают один и тот же ключ. Выберите тот, что вам удобнее — дальнейшая инструкция подстроится.</p>
-    <div class="source-grid" id="source-grid">
-      <div class="source-card" data-source="site">
-        <div class="source-top"><span class="source-tag">На сайте</span><span class="source-dot"></span></div>
-        <div class="source-title">Личный кабинет</div>
-        <div class="source-text">Войдите по email — ссылка подписки лежит в карточке устройства. Кабинет работает без Telegram.</div>
-        <a class="source-cta" href="/login">Открыть кабинет</a>
-      </div>
-      <div class="source-card" data-source="telegram">
-        <div class="source-top"><span class="source-tag">Через Telegram</span><span class="source-dot"></span></div>
-        <div class="source-title">Взять ссылку в боте</div>
-        <div class="source-text">В @starisvpnbot нажмите «Моя подписка» и скопируйте ссылку. Здесь же активируются пробные два дня.</div>
-        <a class="source-cta" href="https://t.me/starisvpnbot">Открыть бота</a>
-      </div>
-    </div>
     <div class="notice">
       <span class="notice-icon"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5h.01M12 3.6l8.5 15a1 1 0 01-.9 1.4H4.4a1 1 0 01-.9-1.4z"/></svg></span>
       <div>
-        <div class="notice-label" id="source-hint-title">Что выбрать</div>
-        <div class="notice-text" id="source-hint-text">Если Telegram открывается — берите ссылку в боте: там продление, статус и поддержка. Если нет — покупайте ключ на сайте.</div>
+        <div class="notice-label">Если в клиенте нет такого раздела</div>
+        <div class="notice-text">Не все версии всех клиентов дают доступ к тонкой настройке маршрутизации из подписки — иногда это глобальная настройка на всё устройство, иногда её вовсе нет в мобильной версии. Это ограничение конкретного приложения, а не подписки STAR VPN. Если не находите нужный раздел — напишите в @starisvpnbot, подскажем для вашего конкретного клиента.</div>
       </div>
     </div>
-
-    <h2 id="apps">Какой клиент выбрать</h2>
-    <p>Оба работают с VLESS + Reality. Разница — в удобстве интерфейса, а не в скорости.</p>
-    <div class="client-tabs">
-      <button class="client-tab active" data-client="v2rayng">v2rayNG</button>
-      <button class="client-tab" data-client="hiddify">Hiddify</button>
-    </div>
-
-    <div class="client-panel active" data-panel="v2rayng">
-      <div class="client-head"><h3>v2rayNG</h3><span class="client-badge">бесплатно · стандарт</span></div>
-      <p class="client-intro">Самый распространённый клиент под Android. Работает с VLESS + Reality и импортирует подписку по ссылке.</p>
-      <div class="client-steps">
-        <div class="client-step"><span class="step-num">1</span><div><div class="step-title">Установите v2rayNG</div><div class="step-text">Из Google Play по названию v2rayNG или APK со страницы релизов проекта на GitHub.</div></div></div>
-        <div class="client-step"><span class="step-num">2</span><div><div class="step-title">Скопируйте ссылку подписки</div><div class="step-text">В личном кабинете на сайте или в боте @starisvpnbot нажмите «Моя подписка» и скопируйте ссылку целиком.</div></div></div>
-        <div class="client-step"><span class="step-num">3</span><div><div class="step-title">Добавьте подписку</div><div class="step-text">Нажмите «+» → «Импорт из буфера обмена» либо откройте «Группы подписок» и вставьте ссылку.</div></div></div>
-        <div class="client-step"><span class="step-num">4</span><div><div class="step-title">Обновите серверы</div><div class="step-text">В меню подписок выберите «Обновить» — v2rayNG загрузит список серверов.</div></div></div>
-        <div class="client-step"><span class="step-num">5</span><div><div class="step-title">Подключитесь</div><div class="step-text">Выберите сервер и нажмите кнопку в правом нижнем углу. Разрешите создание VPN-подключения.</div></div></div>
-      </div>
-    </div>
-
-    <div class="client-panel" data-panel="hiddify">
-      <div class="client-head"><h3>Hiddify</h3><span class="client-badge">бесплатно · удобнее</span></div>
-      <p class="client-intro">Более дружелюбный интерфейс и автоматический подбор рабочего сервера. Хороший выбор, если v2rayNG кажется сложным.</p>
-      <div class="client-steps">
-        <div class="client-step"><span class="step-num">1</span><div><div class="step-title">Установите Hiddify</div><div class="step-text">Из Google Play или APK со страницы релизов проекта Hiddify на GitHub.</div></div></div>
-        <div class="client-step"><span class="step-num">2</span><div><div class="step-title">Скопируйте ссылку подписки</div><div class="step-text">Ссылка доступна в личном кабинете на сайте и в боте @starisvpnbot.</div></div></div>
-        <div class="client-step"><span class="step-num">3</span><div><div class="step-title">Добавьте профиль</div><div class="step-text">Нажмите «Новый профиль» → «Добавить из буфера обмена» и вставьте ссылку подписки.</div></div></div>
-        <div class="client-step"><span class="step-num">4</span><div><div class="step-title">Разрешите VPN</div><div class="step-text">При первом запуске Android попросит разрешить создание VPN-соединения — подтвердите.</div></div></div>
-        <div class="client-step"><span class="step-num">5</span><div><div class="step-title">Подключитесь</div><div class="step-text">Нажмите большую кнопку подключения. Hiddify сам выберет доступный сервер.</div></div></div>
-      </div>
-    </div>
-
-    <h2 id="check">Проверка после подключения</h2>
-    <p>Откройте любой сайт, который раньше не открывался, и проверьте IP на сервисе вроде «мой ip» — он должен отличаться от домашнего. Если страница грузится, но IP прежний, значит клиент подключён, но трафик идёт мимо: проверьте, что профиль выбран и переключатель активен.</p>
-    <div class="problem-list">
-      <div class="problem-card"><div class="problem-q">Подключается, но сайты не открываются</div><div class="problem-a">Проверьте режим маршрутизации: в v2rayNG нужен режим «Global proxy», в Hiddify — правило «весь трафик».</div></div>
-      <div class="problem-card"><div class="problem-q">Список серверов пустой</div><div class="problem-a">Ссылка вставлена не целиком или подписка истекла. Скопируйте её заново и обновите подписку в клиенте.</div></div>
-      <div class="problem-card"><div class="problem-q">Android блокирует установку APK</div><div class="problem-a">Разрешите установку из этого источника в настройках или ставьте клиент из Google Play.</div></div>
-      <div class="problem-card"><div class="problem-q">VPN отключается в фоне</div><div class="problem-a">Отключите оптимизацию батареи для клиента и разрешите ему автозапуск в настройках Android.</div></div>
-    </div>
-
-    <h2 id="devices">Второе и третье устройство</h2>
-    <p>Ссылка подписки одна на аккаунт — её же вставляют в клиент на iPad, ноутбуке или Android-телефоне. Всего одновременно можно держать до трёх устройств. Отдельные ключи под каждое устройство создавать не нужно.</p>
 
     <div class="doc-cta">
-      <a class="btn-gold" href="https://t.me/starisvpnbot">Получить ссылку подписки</a>
-      <a class="btn-ghost" href="/wiki/troubleshooting">Если не подключается</a>
+      <a class="btn-gold" href="/rules/ru-bypass.txt" target="_blank" rel="noopener">Открыть список доменов</a>
+      <a class="btn-ghost" href="https://t.me/starisvpnbot">Написать в поддержку</a>
+    </div>
+
+    <div class="next-grid">
+      <a class="next-card" href="/wiki/vless-reality">
+        <div class="next-kicker">Технологии</div>
+        <div class="next-title">Как устроен VLESS + Reality</div>
+      </a>
+      <a class="next-card" href="/wiki/troubleshooting">
+        <div class="next-kicker">Помощь</div>
+        <div class="next-title">Устранение неполадок</div>
+      </a>
     </div>
   </article>
 
   <aside class="toc">
     <div class="toc-label">На этой странице</div>
     <div class="toc-items">
-      <a href="#source">Откуда взять ссылку</a>
-      <a href="#apps">Какой клиент выбрать</a>
-      <a href="#check">Проверка после подключения</a>
-      <a href="#devices">Второе и третье устройство</a>
+      <a href="#what">Что это такое</a>
+      <a href="#list">Список доменов</a>
+      <a href="#setup">Как подключить</a>
     </div>
   </aside>
 </div>
@@ -434,45 +388,6 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
       }
     });
   });
-})();
-
-/* ═══ Client tabs ══════════════════════════════════════════════ */
-document.querySelectorAll('.client-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.client-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.client-panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    document.querySelector(`.client-panel[data-panel="${tab.dataset.client}"]`).classList.add('active');
-  });
-});
-
-/* ═══ Subscription source picker ═══════════════════════════════ */
-(function(){
-  const hints = {
-    site: { title: 'Вы выбрали сайт', text: 'Ссылку подписки покажет страница оплаты. Сохраните её: аккаунта на сайте нет, и повторно выдать ключ можно только через поддержку.' },
-    telegram: { title: 'Вы выбрали Telegram', text: 'Ссылка всегда доступна в боте по кнопке «Моя подписка» — её можно скопировать заново в любой момент.' },
-    null: { title: 'Что выбрать', text: 'Если Telegram открывается — берите ссылку в боте: там продление, статус и поддержка. Если нет — покупайте ключ на сайте.' },
-  };
-  let channel = null;
-  try { const saved = localStorage.getItem('star_vpn_channel'); if (saved === 'site' || saved === 'telegram') channel = saved; } catch(e){}
-
-  function apply(){
-    document.querySelectorAll('.source-card').forEach(card => {
-      card.classList.toggle('active', card.dataset.source === channel);
-    });
-    const h = hints[channel] || hints.null;
-    document.getElementById('source-hint-title').textContent = h.title;
-    document.getElementById('source-hint-text').textContent = h.text;
-  }
-  document.querySelectorAll('.source-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      if (e.target.closest('.source-cta')) return;
-      channel = card.dataset.source;
-      try { localStorage.setItem('star_vpn_channel', channel); } catch(e){}
-      apply();
-    });
-  });
-  apply();
 })();
 </script>
 

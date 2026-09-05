@@ -1,0 +1,55 @@
+# STAR VPN — список российских доменов для обхода туннеля (split-tunneling)
+#
+# Что это: домены сервисов, которые работают быстрее (а иногда — только так
+# и работают) при прямом подключении, без VPN. Добавьте их в правило
+# "Direct" / "Bypass" / "Прямое подключение" в настройках маршрутизации
+# вашего VPN-клиента — см. /wiki/split-tunneling за инструкцией.
+#
+# Список поддерживается вручную и обновляется по мере необходимости.
+# Обновлено: 2026-09.
+
+# Поиск и портал
+yandex.ru
+ya.ru
+dzen.ru
+
+# Соцсети и мессенджеры
+vk.com
+vk.ru
+ok.ru
+mail.ru
+
+# Госуслуги и госсервисы
+gosuslugi.ru
+nalog.gov.ru
+mos.ru
+
+# Банки
+sberbank.ru
+sber.ru
+online.sberbank.ru
+tinkoff.ru
+tbank.ru
+alfabank.ru
+vtb.ru
+
+# Маркетплейсы
+wildberries.ru
+ozon.ru
+avito.ru
+
+# Видео и медиа
+kinopoisk.ru
+rutube.ru
+ivi.ru
+
+# Новости
+ria.ru
+tass.ru
+lenta.ru
+
+# Прочее
+2gis.ru
+rzd.ru
+pochta.ru
+rambler.ru

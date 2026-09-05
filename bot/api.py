@@ -307,6 +307,16 @@ async def serve_apple_touch_icon():
     return HTMLResponse(content="", status_code=404)
 
 
+@app.get("/rules/ru-bypass.txt", include_in_schema=False)
+async def serve_ru_bypass_rules():
+    """Список доменов для split-tunneling — см. /wiki/split-tunneling."""
+    from fastapi.responses import FileResponse
+    p = _LANDING_DIR / "ru-bypass.txt"
+    if p.exists():
+        return FileResponse(str(p), media_type="text/plain")
+    return HTMLResponse(content="", status_code=404)
+
+
 # ─── Auth ─────────────────────────────────────────────────────────────────────
 
 def _parse_tg_id(init_data: str) -> int:
