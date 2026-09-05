@@ -1055,6 +1055,12 @@ async def admin_stats(x_telegram_init_data: str | None = Header(default=None)):
         pays_count = (await session.execute(
             select(func.count(Payment.id)).where(Payment.status == "paid")
         )).scalar_one()
+        trial_paid = (await session.execute(
+            select(func.count(func.distinct(User.telegram_id)))
+            .select_from(User)
+            .join(Payment, Payment.telegram_id == User.telegram_id)
+            .where(User.trial_used.is_(True), Payment.status == "paid")
+        )).scalar_one()
 
     # Онлайн из Marzban
     online_count = 0
@@ -1073,6 +1079,7 @@ async def admin_stats(x_telegram_init_data: str | None = Header(default=None)):
         "online_now": online_count,
         "total_stars": int(stars_sum or 0),
         "total_payments": pays_count,
+        "trial_to_paid_pct": round(trial_paid / trial * 100, 1) if trial else 0.0,
     }
 
 
@@ -2496,6 +2503,12 @@ async def web_stats(authorization: str | None = Header(default=None)):
         pays = (await session.execute(
             select(func.count(Payment.id)).where(Payment.status == "paid")
         )).scalar_one()
+        trial_paid = (await session.execute(
+            select(func.count(func.distinct(User.telegram_id)))
+            .select_from(User)
+            .join(Payment, Payment.telegram_id == User.telegram_id)
+            .where(User.trial_used.is_(True), Payment.status == "paid")
+        )).scalar_one()
         revenue_rows, new_rows = [], []
         for i in range(6, -1, -1):
             day_start = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -2513,6 +2526,7 @@ async def web_stats(authorization: str | None = Header(default=None)):
         "total_users": total, "active_subscriptions": active, "banned": banned,
         "trial_used": trial, "total_stars": int(stars), "total_payments": pays,
         "online_now": -1, "revenue_chart": revenue_rows, "users_chart": new_rows,
+        "trial_to_paid_pct": round(trial_paid / trial * 100, 1) if trial else 0.0,
     }
 
 
