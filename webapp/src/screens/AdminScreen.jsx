@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import * as api from "../data/mockApi.js";
+import * as api from "../data/api.js";
 import BottomSheet from "../components/BottomSheet.jsx";
 
 const STRIP_ITEMS = [
@@ -126,8 +126,9 @@ export default function AdminScreen({ showToast }) {
     }
   };
 
-  const exportCSV = () => {
-    const csv = api.exportUsersCSV();
+  const exportCSV = async () => {
+    showToast("Готовим CSV…");
+    const csv = await api.exportUsersCSV();
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

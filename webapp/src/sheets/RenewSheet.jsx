@@ -20,6 +20,7 @@ export default function RenewSheet({
   customDays,
   onCustomDaysChange,
   onSubmit,
+  submitting,
   lastAddedDays,
 }) {
   const basePlan = plans[0];
@@ -117,46 +118,39 @@ export default function RenewSheet({
           );
         })}
 
-        <button
-          onClick={() => onSelectPlan("custom")}
-          className="relative flex items-center justify-between px-4 py-[15px] rounded-2xl"
-          style={{
-            background: isCustom ? "rgba(247,206,104,.1)" : "#12151C",
-            border: `1.5px solid ${isCustom ? "rgba(247,206,104,.5)" : "rgba(255,255,255,.06)"}`,
-          }}
-        >
-          <div className="text-left">
-            <div className="font-display font-bold text-[14.5px] text-ink">Свой срок</div>
-            <div className="font-medium text-[11.5px] text-ink/40 mt-0.5">Укажи количество дней</div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            {method === "stars" ? (
-              <>
-                <StarIcon size={13} />
-                <span className="font-display font-extrabold text-base text-gold">{customStars}</span>
-              </>
-            ) : (
-              <span className="font-display font-extrabold text-base text-[#5FD068]">{customRub} ₽</span>
-            )}
-          </div>
-        </button>
+        {method === "card" && (
+          <button
+            onClick={() => onSelectPlan("custom")}
+            className="relative flex items-center justify-between px-4 py-[15px] rounded-2xl"
+            style={{
+              background: isCustom ? "rgba(247,206,104,.1)" : "#12151C",
+              border: `1.5px solid ${isCustom ? "rgba(247,206,104,.5)" : "rgba(255,255,255,.06)"}`,
+            }}
+          >
+            <div className="text-left">
+              <div className="font-display font-bold text-[14.5px] text-ink">Свой срок</div>
+              <div className="font-medium text-[11.5px] text-ink/40 mt-0.5">Укажи количество дней (7–180)</div>
+            </div>
+            <span className="font-display font-extrabold text-base text-[#5FD068]">{customRub} ₽</span>
+          </button>
+        )}
 
-        {isCustom && (
+        {isCustom && method === "card" && (
           <div className="flex items-center gap-3 bg-app-card border border-white/10 rounded-2xl px-4 py-3">
             <input
               type="range"
-              min="1"
-              max="730"
+              min="7"
+              max="180"
               value={customDays}
               onChange={(e) => onCustomDaysChange(Number(e.target.value))}
               className="flex-1 accent-gold"
             />
             <input
               type="number"
-              min="1"
-              max="730"
+              min="7"
+              max="180"
               value={customDays}
-              onChange={(e) => onCustomDaysChange(Math.max(1, Math.min(730, Number(e.target.value) || 1)))}
+              onChange={(e) => onCustomDaysChange(Math.max(7, Math.min(180, Number(e.target.value) || 7)))}
               className="w-16 bg-white/[.05] border border-white/10 rounded-lg px-2 py-1.5 text-center font-display font-bold text-sm text-ink outline-none"
             />
             <span className="font-medium text-xs text-ink/40 flex-shrink-0">дней</span>

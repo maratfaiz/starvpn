@@ -1055,6 +1055,9 @@ async def admin_stats(x_telegram_init_data: str | None = Header(default=None)):
         pays_count = (await session.execute(
             select(func.count(Payment.id)).where(Payment.status == "paid")
         )).scalar_one()
+        referral_days_sum = (await session.execute(
+            select(func.sum(User.extra_days_granted))
+        )).scalar_one()
 
     # Онлайн из Marzban
     online_count = 0
@@ -1073,6 +1076,7 @@ async def admin_stats(x_telegram_init_data: str | None = Header(default=None)):
         "online_now": online_count,
         "total_stars": int(stars_sum or 0),
         "total_payments": pays_count,
+        "referral_days_total": int(referral_days_sum or 0),
     }
 
 
