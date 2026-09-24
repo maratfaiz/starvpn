@@ -1855,81 +1855,13 @@ async def gift_seen(request: Request, x_telegram_init_data: str | None = Header(
     return {"ok": True}
 
 
-# ─── GET /api/crypto/plans ───────────────────────────────────────────────────
-
-@app.get("/api/crypto/plans")
-async def get_crypto_plans(x_telegram_init_data: str | None = Header(default=None)):
-    """Тарифы для оплаты криптой (USD). Возвращает [] если CRYPTOPAY_TOKEN не задан или отключено в админке."""
-    _tg_id(x_telegram_init_data)
-    if not settings.cryptopay_token:
-        return []
-    from bot.utils.settings_store import is_provider_enabled
-    async with AsyncSessionLocal() as session:
-        if not await is_provider_enabled(session, "crypto"):
-            return []
-    from bot.utils.cryptopay import CRYPTO_PLANS
-    return [
-        {
-            "key": k,
-            "label": v["label"],
-            "usd": float(v["usd"]),
-            "days": v["days"],
-            "desc": v["desc"],
-        }
-        for k, v in CRYPTO_PLANS.items()
-    ]
-
-
-# ─── POST /api/invoice/crypto ────────────────────────────────────────────────
-
-@app.post("/api/invoice/crypto")
-async def create_crypto_invoice(
-    request: Request,
-    x_telegram_init_data: str | None = Header(default=None),
-):
-    """Создаёт CryptoPay инвойс и возвращает ссылку для оплаты (мини-апп)."""
-    tg_id = _tg_id(x_telegram_init_data)
-    body = await request.json()
-    plan_key = body.get("plan")
-
-    from bot.utils.settings_store import is_provider_enabled
-    async with AsyncSessionLocal() as session:
-        if not await is_provider_enabled(session, "crypto"):
-            raise HTTPException(status_code=503, detail="Оплата криптовалютой временно недоступна")
-
-    from bot.utils.cryptopay import cryptopay, CRYPTO_PLANS
-    plan = CRYPTO_PLANS.get(plan_key)
-    if not plan:
-        raise HTTPException(status_code=400, detail="Неизвестный тариф")
-
-    try:
-        invoice = await cryptopay.create_invoice(
-            usd_amount=plan["usd"],
-            payload=f"{plan_key}:{tg_id}",
-            description=f"STAR VPN — {plan['label']}",
-        )
-    except Exception as e:
-        logger.error("CryptoPay create_invoice error for tg=%s: %s", tg_id, e)
-        raise HTTPException(status_code=502, detail="Ошибка CryptoPay. Попробуйте позже.")
-
-    invoice_id = invoice.get("invoice_id")
-    pay_url = invoice.get("bot_invoice_url") or invoice.get("mini_app_invoice_url", "")
-
-    # Сохраняем pending-платёж
-    async with AsyncSessionLocal() as session:
-        payment = Payment(
-            order_id=f"crypto_{invoice_id}",
-            telegram_id=tg_id,
-            amount=float(plan["usd"]),
-            status="pending",
-            payment_method="crypto",
-            invoice_id=invoice_id,
-            days=plan["days"],
-        )
-        session.add(payment)
-        await session.commit()
-
-    return {"url": pay_url, "invoice_id": invoice_id}
+# GET /api/crypto/plans and POST /api/invoice/crypto used to be defined here
+# a second time (a leftover from an earlier Mini-App-only pass) with the same
+# paths as the "site" versions further down — Starlette matches routes in
+# registration order, so this earlier pair silently shadowed the later ones,
+# which are the only ones that support cookie-session auth (_resolve_tg_id).
+# That made the website's own crypto checkout 401 in practice. Removed;
+# see the "(сайт/личный кабинет)" versions below, which now serve both.
 
 
 # ─── POST /crypto/webhook ────────────────────────────────────────────────────
