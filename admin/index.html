@@ -17,7 +17,7 @@ body{background:#060606;color:#EBE0CC;font-family:'Inter',system-ui,sans-serif;f
 a{color:#FFB800;text-decoration:none}
 a:hover{color:#FFD84D}
 input,textarea,select,button{font-family:inherit}
-input::placeholder,textarea::placeholder{color:#3A3028}
+input::placeholder,textarea::placeholder{color:#6E6250}
 textarea{resize:vertical}
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.09);border-radius:6px}
@@ -40,11 +40,11 @@ textarea{resize:vertical}
 .login-btn{width:100%;padding:15px;background:#FFB800;color:#000;border:none;border-radius:13px;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;transition:background .15s;margin-top:8px}
 .login-btn:hover{background:#FFD84D}
 .login-err{color:#F87171;font-size:12.5px;margin-top:4px;min-height:16px}
-.login-note{font-size:12px;color:#3A3028;margin-top:16px;line-height:1.6;text-align:center}
+.login-note{font-size:12px;color:#6E6250;margin-top:16px;line-height:1.6;text-align:center}
 .login-tabs{display:flex;gap:6px;background:rgba(0,0,0,.4);border-radius:12px;padding:4px;margin-bottom:22px}
 .login-tab{flex:1;padding:10px;border-radius:9px;background:transparent;color:#8A7A60;font-size:13px;font-weight:600;transition:background .15s,color .15s}
 .login-tab.active{background:rgba(255,184,0,.14);color:#FFB800}
-.login-back{display:block;text-align:center;margin-top:22px;font-size:13px;color:#3A3028}
+.login-back{display:block;text-align:center;margin-top:22px;font-size:13px;color:#6E6250}
 .login-back:hover{color:#8A7A60}
 
 /* ── Shell ─────────────────────────────────────────────────── */
@@ -52,22 +52,22 @@ textarea{resize:vertical}
 aside{display:flex;flex-direction:column;background:#0A0908;border-right:1px solid rgba(255,255,255,.07);position:sticky;top:0;height:100vh}
 .sb-head{display:flex;align-items:center;gap:10px;padding:20px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
 .sb-head-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;letter-spacing:.04em;color:#FFB800;line-height:1.2}
-.sb-head-sub{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#3A3028}
+.sb-head-sub{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#6E6250}
 .sb-nav{padding:14px 12px;flex:1;overflow:auto}
 .sb-group{margin-bottom:18px}
-.sb-group-title{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#3A3028;padding:0 10px;margin-bottom:8px}
+.sb-group-title{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#6E6250;padding:0 10px;margin-bottom:8px}
 .sb-item{cursor:pointer;display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;color:#8A7A60;transition:background .15s;margin-bottom:2px}
 .sb-item:hover{background:rgba(255,255,255,.045)}
 .sb-item.active{background:rgba(255,184,0,.09);color:#FFB800}
 .sb-item svg{width:17px;height:17px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .sb-item span{font-size:13.5px;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sb-item .cnt{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#3A3028;background:rgba(255,255,255,.05);border-radius:6px;padding:2px 7px}
+.sb-item .cnt{flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#8A7A60;background:rgba(255,255,255,.06);border-radius:6px;padding:2px 7px;min-width:22px;text-align:center}
 .sb-item.active .cnt{color:#FFB800;background:rgba(255,184,0,.12)}
 .sb-foot{padding:14px;border-top:1px solid rgba(255,255,255,.07)}
 .sb-foot-inner{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:11px;background:rgba(255,255,255,.03)}
 .sb-avatar{width:30px;height:30px;border-radius:9px;background:rgba(255,184,0,.14);border:1px solid rgba(255,184,0,.3);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;color:#FFB800;flex-shrink:0}
 .sb-foot-name{font-size:12.5px;font-weight:600;color:#EBE0CC}
-.sb-foot-role{font-size:10.5px;color:#3A3028}
+.sb-foot-role{font-size:10.5px;color:#6E6250}
 .sb-logout{font-size:11px;color:#8A7A60;white-space:nowrap;cursor:pointer}
 .sb-logout:hover{color:#FFB800}
 
@@ -88,10 +88,10 @@ main{min-width:0;display:flex;flex-direction:column}
 #topbar{position:sticky;top:0;z-index:50;background:rgba(6,6,6,.92);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,.07);padding:0 26px}
 .tb-inner{display:flex;align-items:center;gap:16px;height:60px;flex-wrap:wrap}
 .tb-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;color:#EBE0CC;line-height:1.2}
-.tb-sub{font-size:11.5px;color:#3A3028}
+.tb-sub{font-size:11.5px;color:#6E6250}
 .tb-search{display:flex;align-items:center;gap:8px;background:#161513;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:0 12px;min-width:200px}
 .tb-search input{flex:1;background:transparent;border:0;outline:0;color:#EBE0CC;font-size:13.5px;padding:9px 0;min-width:0}
-.tb-search svg{width:15px;height:15px;flex-shrink:0;stroke:#3A3028;fill:none;stroke-width:1.7}
+.tb-search svg{width:15px;height:15px;flex-shrink:0;stroke:#6E6250;fill:none;stroke-width:1.7}
 .tb-status{display:flex;align-items:center;gap:7px;border:1px solid rgba(74,222,128,.28);background:rgba(74,222,128,.08);border-radius:100px;padding:5px 11px;white-space:nowrap;font-size:11.5px;font-weight:600;color:#4ADE80}
 .tb-status.down{border-color:rgba(248,113,113,.28);background:rgba(248,113,113,.08);color:#F87171}
 .tb-status .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
@@ -115,10 +115,14 @@ main{min-width:0;display:flex;flex-direction:column}
 
 /* ── Stat cards / Dashboard ───────────────────────────────── */
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:14px}
-.stat-card{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px 20px}
-.stat-label{font-size:10.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:#3A3028;margin-bottom:10px}
+.stat-card{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.stat-top{display:flex;align-items:center;gap:10px}
+.stat-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(255,184,0,.1);color:#FFB800}
+.stat-ico svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.stat-label{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#8A7A60;line-height:1.35}
 .stat-val{font-family:'Space Grotesk',sans-serif;font-size:27px;font-weight:700;color:#EBE0CC;line-height:1}
 .stat-delta{font-size:12px;color:#4ADE80;margin-top:6px}
+@media(max-width:860px){.stat-grid{grid-template-columns:1fr 1fr;gap:10px}.stat-card{padding:14px}.stat-val{font-size:23px}.stat-ico{width:26px;height:26px}}
 
 .dash-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:12px}
 @media(max-width:900px){.dash-grid{grid-template-columns:1fr}}
@@ -128,14 +132,14 @@ main{min-width:0;display:flex;flex-direction:column}
 .bars{display:flex;align-items:flex-end;gap:6px;height:150px;margin-top:16px}
 .bar-col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;position:relative}
 .bar{width:100%;border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,#FFD84D,#FFB800);min-height:2px}
-.bar-lbl{font-size:10px;color:#3A3028;text-align:center;margin-top:6px;white-space:nowrap;overflow:hidden}
+.bar-lbl{font-size:10px;color:#6E6250;text-align:center;margin-top:6px;white-space:nowrap;overflow:hidden}
 .bar-val{font-family:'JetBrains Mono',monospace;font-size:10px;color:#8A7A60;text-align:center;margin-bottom:4px}
 
 .activity-row{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
 .activity-row:last-child{margin-bottom:0}
 .activity-dot{width:7px;height:7px;border-radius:50%;margin-top:7px;flex-shrink:0}
 .activity-text{font-size:13.5px;color:#EBE0CC}
-.activity-time{font-family:'JetBrains Mono',monospace;font-size:11px;color:#3A3028;margin-top:2px}
+.activity-time{font-family:'JetBrains Mono',monospace;font-size:11px;color:#6E6250;margin-top:2px}
 
 /* ── Filters / table ──────────────────────────────────────── */
 .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
@@ -150,7 +154,7 @@ main{min-width:0;display:flex;flex-direction:column}
 .tbl-wrap{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden}
 .tbl-scroll{overflow-x:auto}
 table{width:100%;border-collapse:collapse;min-width:640px}
-th{text-align:left;padding:13px 18px;font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#3A3028;border-bottom:1px solid rgba(255,255,255,.08);white-space:nowrap}
+th{text-align:left;padding:13px 18px;font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6E6250;border-bottom:1px solid rgba(255,255,255,.08);white-space:nowrap}
 td{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.05);white-space:nowrap;font-size:13.5px}
 tbody tr{cursor:pointer;transition:background .15s}
 tbody tr:hover{background:rgba(255,255,255,.035)}
@@ -161,9 +165,9 @@ tbody tr.sel{background:rgba(255,184,0,.06)}
 .chip.red{color:#F87171;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.28)}
 .chip.grey{color:#8A7A60;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
 .mono{font-family:'JetBrains Mono',monospace}
-.sub{display:block;font-size:11.5px;color:#3A3028;margin-top:3px}
-.tbl-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 18px;border-top:1px solid rgba(255,255,255,.07);flex-wrap:wrap;font-size:12.5px;color:#3A3028}
-.empty{text-align:center;padding:50px 20px;color:#3A3028;font-size:13.5px}
+.sub{display:block;font-size:11.5px;color:#6E6250;margin-top:3px}
+.tbl-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 18px;border-top:1px solid rgba(255,255,255,.07);flex-wrap:wrap;font-size:12.5px;color:#6E6250}
+.empty{text-align:center;padding:50px 20px;color:#6E6250;font-size:13.5px}
 
 /* ── Detail panel ─────────────────────────────────────────── */
 .detail{margin-top:12px;background:rgba(255,184,0,.05);border:1px solid rgba(255,184,0,.22);border-radius:16px;padding:22px}
@@ -181,7 +185,7 @@ tbody tr.sel{background:rgba(255,184,0,.06)}
 .close-x{cursor:pointer;display:flex;align-items:center;color:#8A7A60;padding:8px 12px;border:1px solid rgba(255,255,255,.12);border-radius:9px}
 .field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden}
 .field-box{background:#0B0A09;padding:14px 16px}
-.field-lbl{font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#3A3028;margin-bottom:5px}
+.field-lbl{font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6E6250;margin-bottom:5px}
 .field-val{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#EBE0CC}
 
 .sub-panel{margin-top:14px;background:rgba(0,0,0,.4);border-radius:14px;padding:20px}
@@ -214,7 +218,7 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 .tkt-card-top{display:flex;align-items:center;gap:9px;margin-bottom:7px}
 .tkt-user{font-size:12.5px;font-weight:600;color:#EBE0CC;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tkt-subject{font-size:13.5px;color:#EBE0CC;line-height:1.45;margin-bottom:8px}
-.tkt-foot{display:flex;justify-content:space-between;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#3A3028}
+.tkt-foot{display:flex;justify-content:space-between;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#6E6250}
 .tkt-detail{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px}
 .tkt-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:18px}
 .msg-bubble{max-width:88%;border-radius:14px;padding:14px 16px;margin-bottom:12px}
@@ -222,14 +226,14 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 .msg-bubble.admin{background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.22);margin-left:auto}
 .msg-who{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;margin-bottom:6px}
 .msg-text{font-size:14px;line-height:1.6;color:#EBE0CC;white-space:pre-wrap}
-.msg-time{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#3A3028;margin-top:7px}
+.msg-time{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#6E6250;margin-top:7px}
 
 /* ── Servers ─────────────────────────────────────────────── */
 .srv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
 .srv-card{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px}
 .srv-card.down{border-color:rgba(248,113,113,.3)}
 .srv-name{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:#EBE0CC}
-.srv-host{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#3A3028;margin-top:2px}
+.srv-host{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6E6250;margin-top:2px}
 .srv-load-track{height:6px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;margin:8px 0 16px}
 .srv-load-bar{height:100%;background:#FFB800;border-radius:4px}
 .srv-stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden}
@@ -238,7 +242,7 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 /* ── Wiki ────────────────────────────────────────────────── */
 .wiki-row{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .wiki-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#EBE0CC}
-.wiki-slug{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#3A3028}
+.wiki-slug{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6E6250}
 .editor-grid{display:grid;grid-template-columns:1.7fr 1fr;gap:12px;align-items:start}
 @media(max-width:900px){.editor-grid{grid-template-columns:1fr}}
 .editor-card{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px}
@@ -251,7 +255,7 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 .editor-toolbar + .editor-body{border-radius:0 0 12px 12px;border-top:none}
 .tb-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:7px;width:28px;height:28px;color:#EBE0CC;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .tb-btn:hover{border-color:rgba(255,184,0,.4);color:#FFB800}
-.tb-hint{font-size:11px;color:#5A5040;font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-hint{font-size:11px;color:#7E705B;font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:700px){.tb-hint{display:none}}
 .tb-btn:disabled{opacity:.3;cursor:default;border-color:rgba(255,255,255,.1);color:#EBE0CC}
 .tb-select{background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);border-radius:7px;height:28px;color:#EBE0CC;font-size:12.5px;padding:0 8px;outline:none;margin-right:4px}
@@ -263,7 +267,7 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 .seg button{background:transparent;border:none;border-radius:6px;padding:5px 11px;font-size:12px;font-weight:600;color:#8A7A60;cursor:pointer}
 .seg button.on{background:rgba(255,184,0,.14);color:#FFB800}
 details.editor-card > summary{list-style:none}
-details.editor-card > summary::after{content:' ▸';color:#5A5040}
+details.editor-card > summary::after{content:' ▸';color:#7E705B}
 details.editor-card[open] > summary::after{content:' ▾'}
 
 
@@ -292,13 +296,13 @@ details.editor-card[open] > summary::after{content:' ▾'}
 .fnode.own{background:rgba(255,184,0,.06);border-color:rgba(255,184,0,.55)}
 .fnode-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .fnode-title{flex:1;font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:600;color:#EBE0CC;line-height:1.3}
-.fnode-tag{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5A5040;white-space:nowrap}
+.fnode-tag{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#7E705B;white-space:nowrap}
 .fnode-tag.warn{color:#F87171}
 .fnode-text{font-size:11.5px;line-height:1.5;color:#8A7A60;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .fnode-btns{display:flex;flex-direction:column;gap:4px}
 .fnode-btn{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#EBE0CC;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:5px 8px}
 .fnode-btn span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fnode-btn em{font-style:normal;font-size:10.5px;color:#5A5040;white-space:nowrap}
+.fnode-btn em{font-style:normal;font-size:10.5px;color:#7E705B;white-space:nowrap}
 .fnode-btn.pseudo{background:transparent;border-style:dashed;color:#8A7A60}
 .fnode-btn.off{opacity:.35;text-decoration:line-through}
 .bot-panel{display:flex;flex-direction:column;gap:12px;position:sticky;top:84px;max-height:calc(100vh - 100px);overflow:auto}
@@ -314,7 +318,7 @@ details.editor-card[open] > summary::after{content:' ▾'}
 .bfield{display:flex;align-items:center;gap:8px;margin-bottom:4px}
 .bfield .ipt{flex:1;min-width:0}
 .bfield-hide{display:flex;align-items:center;gap:5px;font-size:11.5px;color:#8A7A60;white-space:nowrap;cursor:pointer}
-.bfield-hint{font-size:11px;color:#5A5040;margin:0 0 10px 2px}
+.bfield-hint{font-size:11px;color:#7E705B;margin:0 0 10px 2px}
 .cb-btn{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:9px;margin-bottom:8px}
 .cb-btn .ipt{padding:8px 10px}
 .cb-target .ipt{width:100%}
@@ -330,6 +334,11 @@ details.editor-card[open] > summary::after{content:' ▾'}
 .tg-reply span{background:#2B5278;color:#fff;text-align:center;border-radius:6px;padding:8px 4px;font-size:12.5px;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
 
 /* ── Settings ────────────────────────────────────────────── */
+.copy-field{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:6px 6px 6px 12px;font-size:12.5px;margin-bottom:8px}
+.copy-field .mono{flex:1;min-width:0;word-break:break-all}
+.copy-btn{flex-shrink:0;width:30px;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#8A7A60;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.copy-btn:hover{color:#FFB800;border-color:rgba(255,184,0,.4)}
+.copy-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8}
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
 @media(max-width:820px){.settings-grid{grid-template-columns:1fr}}
 .tariff-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px;margin-bottom:10px}
@@ -550,6 +559,23 @@ async function api(method, path, body) {
 function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fmtDate(iso) { if (!iso) return '—'; return new Date(iso).toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit',year:'2-digit'}); }
 function fmtDateTime(iso) { if (!iso) return '—'; return new Date(iso).toLocaleString('ru-RU', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+function copyText(text) {
+  const done = () => toast('Скопировано');
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { toast('Не удалось скопировать', true); }
+  ta.remove();
+}
+/* Поле с моноширинным значением и кнопкой «Скопировать». */
+function copyField(value, color) {
+  return `<div class="copy-field"><span class="mono" style="color:${color || '#EBE0CC'}">${esc(value)}</span><button type="button" class="copy-btn" title="Скопировать" onclick="copyText(this.dataset.v)" data-v="${esc(value)}"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg></button></div>`;
+}
 function toast(msg, isErr) {
   const el = document.createElement('div');
   el.className = 'toast-item' + (isErr ? ' err' : '');
@@ -657,7 +683,35 @@ function closeBottomSheet() {
   document.getElementById('bottomSheetOverlay').classList.remove('open');
 }
 
+/* ── Несохранённые правки ─────────────────────────────────
+   Любой ввод в редакторе (Wiki, Бот, Реклама) помечает страницу как
+   изменённую; уход с неё спрашивает подтверждение. */
+let unsaved = false;
+function confirmLeave() {
+  if (unsaved && !confirm('Есть несохранённые изменения. Уйти без сохранения?')) return false;
+  unsaved = false;
+  return true;
+}
+window.addEventListener('beforeunload', (e) => { if (unsaved) { e.preventDefault(); e.returnValue = ''; } });
+
+/* Горячие клавиши: «/» — поиск, Ctrl/Cmd+S — сохранить в редакторе. */
+function hotkeys(e) {
+  const t = e.target;
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable;
+  if (e.key === '/' && !typing) {
+    e.preventDefault();
+    document.getElementById('globalQuery').focus();
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+    const btn = document.querySelector('#content [data-save]');
+    if (btn) { e.preventDefault(); btn.click(); }
+  } else if (e.key === 'Escape' && typeof selectedRow !== 'undefined' && selectedRow) {
+    closeDetail();
+  }
+}
+document.addEventListener('keydown', hotkeys);
+
 function goto(s) {
+  if (!confirmLeave()) return;
   section = s;
   filter = 'all'; query = ''; selectedRow = null; selectedTicket = null;
   document.getElementById('globalQuery').value = '';
@@ -701,6 +755,18 @@ async function loadCounts() {
 /* ═══════════════════════════════════════════════════════════
    DASHBOARD
 ═══════════════════════════════════════════════════════════ */
+const STAT_ICONS = {
+  users: 'M12 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5',
+  active: 'M12 3l7 3v5c0 4.5-3 8.2-7 9.5-4-1.3-7-5-7-9.5V6zM9 12l2 2 4-4',
+  banned: 'M12 21a9 9 0 100-18 9 9 0 000 18zM5.6 5.6l12.8 12.8',
+  trial: 'M20 12v8H4v-8M2 8h20v4H2zM12 20V8M12 8H8a2 2 0 110-4c2.5 0 4 4 4 4zm0 0h4a2 2 0 100-4c-2.5 0-4 4-4 4z',
+  payments: 'M3 6h18v12H3zM3 10h18M6.5 14.5h3',
+};
+function statCard(icon, label, val, color) {
+  const tint = color ? `background:${color}1A;color:${color}` : '';
+  return `<div class="stat-card"><div class="stat-top"><span class="stat-ico" style="${tint}"><svg viewBox="0 0 24 24"><path d="${STAT_ICONS[icon]}"/></svg></span><div class="stat-label">${label}</div></div><div class="stat-val" ${color ? `style="color:${color}"` : ''}>${val}</div></div>`;
+}
+
 async function renderDashboard() {
   const c = document.getElementById('content');
   try {
@@ -709,11 +775,11 @@ async function renderDashboard() {
     const maxUsr = Math.max(1, ...s.users_chart.map(r => r.count));
     c.innerHTML = `
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-label">Всего аккаунтов</div><div class="stat-val">${s.total_users}</div></div>
-        <div class="stat-card"><div class="stat-label">Активных подписок</div><div class="stat-val">${s.active_subscriptions}</div></div>
-        <div class="stat-card"><div class="stat-label">Забанено</div><div class="stat-val" style="color:#F87171">${s.banned}</div></div>
-        <div class="stat-card"><div class="stat-label">Пробный использовали</div><div class="stat-val">${s.trial_used}</div></div>
-        <div class="stat-card"><div class="stat-label">Всего платежей</div><div class="stat-val">${s.total_payments}</div></div>
+        ${statCard('users', 'Всего аккаунтов', s.total_users)}
+        ${statCard('active', 'Активных подписок', s.active_subscriptions, '#4ADE80')}
+        ${statCard('trial', 'Пробный использовали', s.trial_used)}
+        ${statCard('payments', 'Всего платежей', s.total_payments)}
+        ${statCard('banned', 'Забанено', s.banned, '#F87171')}
       </div>
       <div class="dash-grid">
         <div class="dcard">
@@ -768,9 +834,9 @@ async function loadActivity() {
         <span class="activity-dot" style="background:${e.dot}"></span>
         <div><div class="activity-text">${esc(e.text)}</div><div class="activity-time">${fmtDateTime(e.time)}</div></div>
       </div>
-    `).join('') : '<div style="color:#3A3028;font-size:13px">Пока пусто</div>';
+    `).join('') : '<div style="color:#6E6250;font-size:13px">Пока пусто</div>';
   } catch (e) {
-    el.innerHTML = `<div style="color:#3A3028;font-size:13px">Ошибка загрузки</div>`;
+    el.innerHTML = `<div style="color:#6E6250;font-size:13px">Ошибка загрузки</div>`;
   }
 }
 
@@ -837,7 +903,7 @@ async function renderTable(sec) {
       const icoGem = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/></svg>';
       const methodChip = { stars: [icoStar + ' Stars', 'gold'], card: [icoCard + ' Карта', 'grey'], crypto: [icoGem + ' Крипта', 'gold'] };
       rows = data.payments.map(p => { const mc = methodChip[p.method] || ['—', 'grey']; return { key: p.id, owner: p.telegram_id, cells: [
-        `<span class="mono" style="color:#3A3028">#${p.id}</span>`,
+        `<span class="mono" style="color:#6E6250">#${p.id}</span>`,
         `<a href="#" onclick="event.preventDefault();openUserDetail(${p.telegram_id})">${p.telegram_id}</a>`,
         `<span class="mono" style="color:#FFB800;font-weight:700">${p.amount}</span>`,
         `<span class="chip ${mc[1]}">${mc[0]}</span>`,
@@ -923,7 +989,7 @@ async function openUserDetail(tgId) {
             <div class="dev-row">
               <span class="dev-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#FFB800" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg></span>
               <div style="flex:1;min-width:0"><div class="dev-name">${esc(d.name)}</div><div class="dev-meta">${esc(d.marzban_username)} · ${d.status}</div></div>
-              <span style="width:7px;height:7px;border-radius:50%;background:${d.status === 'active' ? '#4ADE80' : '#3A3028'}"></span>
+              <span style="width:7px;height:7px;border-radius:50%;background:${d.status === 'active' ? '#4ADE80' : '#6E6250'}"></span>
             </div>
           `).join('') : '<div style="font-size:13px;color:#8A7A60">Нет активных устройств.</div>'}
         </div>
@@ -1051,7 +1117,7 @@ async function renderServers() {
    SUPPORT
 ═══════════════════════════════════════════════════════════ */
 let selectedTicket = null;
-const TICKET_STATUS = { open: ['Открыт', '#FFB800'], answered: ['Отвечен', '#4ADE80'], closed: ['Закрыт', '#3A3028'] };
+const TICKET_STATUS = { open: ['Открыт', '#FFB800'], answered: ['Отвечен', '#4ADE80'], closed: ['Закрыт', '#6E6250'] };
 
 async function renderSupport() {
   const c = document.getElementById('content');
@@ -1077,7 +1143,7 @@ async function renderSupport() {
             </div>
           `).join('') : '<div class="empty">Нет обращений</div>'}
         </div>
-        <div id="ticketDetail">${selectedTicket ? '' : '<div style="border:1px dashed rgba(255,255,255,.12);border-radius:16px;padding:60px 30px;text-align:center;color:#3A3028;font-size:14px">Выберите обращение слева</div>'}</div>
+        <div id="ticketDetail">${selectedTicket ? '' : '<div style="border:1px dashed rgba(255,255,255,.12);border-radius:16px;padding:60px 30px;text-align:center;color:#6E6250;font-size:14px">Выберите обращение слева</div>'}</div>
       </div>
     `;
     if (selectedTicket) openTicket(selectedTicket);
@@ -1121,7 +1187,7 @@ async function openTicket(id) {
         ` : ''}
         <textarea class="ipt" id="replyInput" placeholder="Ответ пользователю…" style="width:100%;min-height:110px;margin-top:14px"></textarea>
         <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px">
-          <span style="font-size:12px;color:#3A3028">Ответ уйдёт в бота или на email — туда, откуда пришло обращение.</span>
+          <span style="font-size:12px;color:#6E6250">Ответ уйдёт в бота или на email — туда, откуда пришло обращение.</span>
           <div class="primary-btn" onclick="sendReply(${t.id})">Отправить</div>
         </div>
       </div>
@@ -1241,10 +1307,10 @@ async function openWikiEditor(id) {
   wikiMode = 'visual';
   c.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-      <div class="ghost-btn" onclick="renderWiki()">← К списку</div>
+      <div class="ghost-btn" onclick="if (confirmLeave()) renderWiki()">← К списку</div>
       <div style="flex:1"></div>
       <div class="act-btn plain" onclick="previewWikiArticle()">Предпросмотр</div>
-      <div class="primary-btn" onclick="saveWikiArticle(${id || 'null'})">Сохранить</div>
+      <div class="primary-btn" data-save title="Ctrl+S" onclick="saveWikiArticle(${id || 'null'})">Сохранить</div>
     </div>
     <div class="editor-grid">
       <div class="editor-card">
@@ -1278,17 +1344,17 @@ async function openWikiEditor(id) {
           <div style="font-size:12.5px;color:#8A7A60;margin:-6px 0 14px" id="wPublishHint"></div>
           <label class="editor-label">Адрес страницы</label>
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-            <span class="mono" style="font-size:12px;color:#5A5040">/wiki/</span>
+            <span class="mono" style="font-size:12px;color:#7E705B">/wiki/</span>
             <input class="ipt mono" id="wSlug" value="${esc(a.slug)}" placeholder="kak-podklyuchitsya" style="flex:1;min-width:0">
           </div>
-          <div style="font-size:11.5px;color:#5A5040">Латиница, цифры и дефис. ${id && a.is_published ? `<a href="/wiki/${esc(a.slug)}" target="_blank" rel="noopener" style="color:#FFB800">Открыть на сайте ↗</a>` : ''}</div>
+          <div style="font-size:11.5px;color:#7E705B">Латиница, цифры и дефис. ${id && a.is_published ? `<a href="/wiki/${esc(a.slug)}" target="_blank" rel="noopener" style="color:#FFB800">Открыть на сайте ↗</a>` : ''}</div>
         </div>
         <div class="editor-card">
           <div class="dcard-title" style="margin-bottom:14px">Меню Wiki</div>
           <label class="editor-label">Раздел</label>
           <input class="ipt" id="wSection" list="wSectionList" value="${esc(a.section)}" style="width:100%;margin-bottom:6px">
           <datalist id="wSectionList">${sections.map(s => `<option value="${esc(s)}">`).join('')}</datalist>
-          <div style="font-size:11.5px;color:#5A5040;margin-bottom:14px">Выберите из списка или впишите новый раздел.</div>
+          <div style="font-size:11.5px;color:#7E705B;margin-bottom:14px">Выберите из списка или впишите новый раздел.</div>
           <label class="editor-label">Название в меню</label>
           <input class="ipt" id="wShort" value="${esc(a.short_title)}" placeholder="Коротко — если пусто, берётся заголовок" style="width:100%;margin-bottom:14px">
           <label class="editor-label">Ключевые слова для поиска</label>
@@ -1327,6 +1393,8 @@ function wikiInitFrame(html, css) {
     wikiApplyCss(css);
     const d = wikiDoc();
     d.execCommand('defaultParagraphSeparator', false, 'p');
+    ed.addEventListener('input', () => { unsaved = true; });
+    d.addEventListener('keydown', hotkeys);
     d.addEventListener('selectionchange', wikiSyncBlockSelect);
     // Вставка из Word/Google Docs приносит свои шрифты и цвета — берём только текст.
     ed.addEventListener('paste', (e) => {
@@ -1466,12 +1534,13 @@ function wikiPaintPublish() {
   const t = document.getElementById('wPublish');
   const on = !!window._wikiPublished;
   t.style.background = on ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)';
-  t.querySelector('.toggle-knob').style.cssText = `background:${on ? '#FFB800' : '#5A5040'};margin-left:${on ? 'auto' : '0'}`;
+  t.querySelector('.toggle-knob').style.cssText = `background:${on ? '#FFB800' : '#7E705B'};margin-left:${on ? 'auto' : '0'}`;
   document.getElementById('wPublishHint').textContent = on ? 'Статья видна на сайте после сохранения.' : 'Черновик — на сайте не показывается.';
 }
 
 function wikiTogglePublish() {
   window._wikiPublished = !window._wikiPublished;
+  unsaved = true;
   wikiPaintPublish();
 }
 
@@ -1496,6 +1565,7 @@ async function saveWikiArticle(id) {
   try {
     if (id) await api('PUT', `/web/wiki/${id}`, payload);
     else await api('POST', '/web/wiki', payload);
+    unsaved = false;
     toast('Сохранено');
     renderWiki();
   } catch (e) { toast(e.message, true); }
@@ -1690,6 +1760,7 @@ function botDrawEdges() {
 }
 
 function botSelect(id) {
+  if (id === botSel || !confirmLeave()) return;
   botSel = id;
   botDraft = null;
   botFocusKey = null;
@@ -1725,8 +1796,8 @@ function botRenderSystemPanel(p, node) {
       ${node.note ? `<div style="font-size:12.5px;color:#8A7A60;margin-bottom:14px">${esc(node.note)}</div>` : ''}
       ${texts.map(tx => botTextField(tx)).join('')}
       ${keyed.length ? `<div class="editor-label" style="margin-top:6px">Кнопки</div>${keyed.map(b => botButtonField(b.text)).join('')}` : ''}
-      ${!texts.length && !keyed.length ? '<div style="font-size:13px;color:#5A5040">Здесь нечего редактировать: этот экран полностью собирается в коде.</div>' : ''}
-      ${texts.length || keyed.length ? `<div style="display:flex;gap:8px;margin-top:16px"><div class="primary-btn" onclick="botSaveSystem()">Сохранить</div><div class="ghost-btn" onclick="botRenderPanel()">Отменить правки</div></div>` : ''}
+      ${!texts.length && !keyed.length ? '<div style="font-size:13px;color:#7E705B">Здесь нечего редактировать: этот экран полностью собирается в коде.</div>' : ''}
+      ${texts.length || keyed.length ? `<div style="display:flex;gap:8px;margin-top:16px"><div class="primary-btn" data-save title="Ctrl+S" onclick="botSaveSystem()">Сохранить</div><div class="ghost-btn" onclick="unsaved=false;botRenderPanel()">Отменить правки</div></div>` : ''}
     </div>
     ${texts.length ? `<div class="editor-card"><div class="editor-label">Как увидит пользователь</div><div id="tgPreview"></div></div>` : ''}`;
   botUpdatePreview();
@@ -1757,7 +1828,7 @@ function botButtonField(tx) {
   return `
     <div class="bfield" data-key="${tx.key}">
       <input class="ipt" id="tf-${tx.key}" value="${esc(tx.value)}" data-default="${esc(tx.default)}" maxlength="64" oninput="botFieldChanged('${tx.key}')" placeholder="${esc(tx.default)}">
-      ${tx.hideable ? `<label class="bfield-hide" title="Показывать кнопку в меню"><input type="checkbox" id="hd-${tx.key}" ${tx.hidden ? '' : 'checked'} onchange="botUpdatePreview()"> видна</label>` : ''}
+      ${tx.hideable ? `<label class="bfield-hide" title="Показывать кнопку в меню"><input type="checkbox" id="hd-${tx.key}" ${tx.hidden ? '' : 'checked'} onchange="unsaved=true;botUpdatePreview()"> видна</label>` : ''}
       <span class="tfield-reset" style="${tx.overridden ? '' : 'display:none'}" onclick="botResetField('${tx.key}')">Сбросить</span>
     </div>
     ${tx.hint ? `<div class="bfield-hint">${esc(tx.hint)}</div>` : ''}`;
@@ -1838,6 +1909,7 @@ async function botSaveSystem() {
   if (!Object.keys(values).length && !Object.keys(hidden).length) { toast('Изменений нет'); return; }
   try {
     await api('PUT', '/web/bot/texts', { values, hidden });
+    unsaved = false;
     toast('Сохранено: бот уже говорит по-новому');
     await renderBot();
   } catch (e) { toast(e.message, true); }
@@ -1919,18 +1991,19 @@ function botUpdatePreview() {
       if (hd ? !hd.checked : b.text.hidden) return '';
       return `<span>${esc(botLabel(b.text.key))}</span>`;
     }).join('')}${botSchema.custom.filter(b => b.show_in_menu && b.menu_label).map(b => `<span>${esc(b.menu_label)}</span>`).join('')}</div>
-    <div style="font-size:11.5px;color:#5A5040;margin-top:8px">Нижняя клавиатура: пользователь видит только кнопки, подходящие под его статус (есть подписка или нет).</div>`;
+    <div style="font-size:11.5px;color:#7E705B;margin-top:8px">Нижняя клавиатура: пользователь видит только кнопки, подходящие под его статус (есть подписка или нет).</div>`;
   }
   box.innerHTML = html;
 }
 
 function botTgBubble(text, buttons) {
-  return `<div class="tg-chat"><div class="tg-bubble">${text.trim() ? botTgHtml(botFill(text)) : '<span style="color:#5A5040">Пустое сообщение</span>'}</div>
+  return `<div class="tg-chat"><div class="tg-bubble">${text.trim() ? botTgHtml(botFill(text)) : '<span style="color:#7E705B">Пустое сообщение</span>'}</div>
     ${buttons.length ? `<div class="tg-kb">${buttons.map(b => `<div>${esc(b)}</div>`).join('')}</div>` : ''}</div>`;
 }
 
 /* ── Свои блоки ────────────────────────────────────────────── */
 function botNewBlock() {
+  if (!confirmLeave()) return;
   botSel = 'new';
   botDraft = { title: '', text: '', buttons: [], show_in_menu: false, menu_label: '', command: '' };
   document.querySelectorAll('.fnode').forEach(el => el.classList.remove('sel'));
@@ -1972,11 +2045,11 @@ function botRenderCustomPanel(p) {
         <span class="mono" style="color:#8A7A60">/</span>
         <input class="ipt mono" id="cbCommand" value="${esc(b.command)}" maxlength="32" placeholder="команда (необязательно), например help" style="flex:1;min-width:0">
       </div>
-      <div style="font-size:11.5px;color:#5A5040;margin-top:6px">Блок также открывается кнопкой из любого другого блока.</div>
+      <div style="font-size:11.5px;color:#7E705B;margin-top:6px">Блок также открывается кнопкой из любого другого блока.</div>
 
       <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">
-        <div class="primary-btn" onclick="botSaveCustom()">${isNew ? 'Создать блок' : 'Сохранить'}</div>
-        ${isNew ? `<div class="ghost-btn" onclick="botSel=null;botDraft=null;botRenderPanel()">Отмена</div>` : `<div class="act-btn danger" onclick="botDeleteCustom()">Удалить блок</div>`}
+        <div class="primary-btn" data-save title="Ctrl+S" onclick="botSaveCustom()">${isNew ? 'Создать блок' : 'Сохранить'}</div>
+        ${isNew ? `<div class="ghost-btn" onclick="unsaved=false;botSel=null;botDraft=null;botRenderPanel()">Отмена</div>` : `<div class="act-btn danger" onclick="botDeleteCustom()">Удалить блок</div>`}
       </div>
     </div>
     <div class="editor-card"><div class="editor-label">Как увидит пользователь</div><div id="tgPreview"></div></div>`;
@@ -2027,11 +2100,11 @@ function botSyncDraft() {
 }
 
 function botCbAddButton() {
-  botSyncDraft();
+  botSyncDraft(); unsaved = true;
   botDraft.buttons.push({ label: '', type: 'screen', target: 'plans' });
   botRenderPanel();
 }
-function botCbRemove(i) { botSyncDraft(); botDraft.buttons.splice(i, 1); botRenderPanel(); }
+function botCbRemove(i) { botSyncDraft(); unsaved = true; botDraft.buttons.splice(i, 1); botRenderPanel(); }
 function botCbMove(i, d) {
   botSyncDraft();
   const [x] = botDraft.buttons.splice(i, 1);
@@ -2072,6 +2145,7 @@ async function botSaveCustom() {
       toast('Сохранено: бот уже отвечает по-новому');
     }
     botDraft = null;
+    unsaved = false;
     await renderBot();
   } catch (e) { toast(e.message, true); }
 }
@@ -2107,7 +2181,7 @@ async function renderSettings() {
                 <div class="mono" style="color:#EBE0CC">${t.rub} ₽</div>
                 <div class="mono" style="color:#8A7A60;display:inline-flex;align-items:center;gap:4px">${t.stars}<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.7 1.1 6.6L12 17.1l-5.8 3.2 1.1-6.6L2.5 9l6.6-.9z"/></svg></div>
                 <div style="flex:1"></div>
-                <div style="font-size:12px;color:#3A3028">${t.days} дней</div>
+                <div style="font-size:12px;color:#6E6250">${t.days} дней</div>
               </div>
             `).join('')}
           </div>
@@ -2121,7 +2195,7 @@ async function renderSettings() {
                 <div class="toggle-track" data-provider="${key}" data-on="${p.enabled ? '1' : '0'}"
                      style="background:${p.enabled ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'};cursor:pointer"
                      onclick="togglePaymentProvider('${key}')" title="${p.enabled ? 'Выключить' : 'Включить'}">
-                  <div class="toggle-knob" style="background:${p.enabled ? '#FFB800' : '#5A5040'};margin-left:${p.enabled ? 'auto' : '0'}"></div>
+                  <div class="toggle-knob" style="background:${p.enabled ? '#FFB800' : '#7E705B'};margin-left:${p.enabled ? 'auto' : '0'}"></div>
                 </div>
               </div>
             `).join('')}
@@ -2159,9 +2233,9 @@ async function renderSettings() {
 const TG_LOGIN_HINTS = {
   not_configured: 'В .env не заданы TELEGRAM_OAUTH_CLIENT_ID / TELEGRAM_OAUTH_CLIENT_SECRET.',
   token: 'Telegram не выдал токен: чаще всего неверный Client Secret или Redirect URI не зарегистрирован в BotFather.',
-  aud: 'TELEGRAM_OAUTH_CLIENT_ID не совпадает с ботом, в котором включён Web Login (это числовой ID бота — часть токена до двоеточия).',
+  aud: 'TELEGRAM_OAUTH_CLIENT_ID не совпадает с ботом, в котором настроен Login Widget (это числовой ID бота — часть токена до двоеточия).',
   state: 'Вход начат на другом домене (www / без www) или прошло больше 10 минут. SITE_URL должен совпадать с адресом, по которому открывают сайт.',
-  provider: 'Telegram вернул ошибку — проверьте Allowed URLs в BotFather.',
+  provider: 'Telegram вернул ошибку — проверьте Redirect URIs и Trusted Origins в BotFather.',
   denied: 'Пользователь отменил вход в Telegram — это не ошибка настройки.',
   claims: 'В ответе Telegram нет Telegram ID пользователя.',
   server: 'Ошибка на нашей стороне при создании сессии — см. лог бота.',
@@ -2176,9 +2250,11 @@ function telegramLoginCard(t) {
         <div class="dcard-title" style="flex:1">Вход через Telegram на сайте</div>
         <span class="chip ${t.configured ? 'green' : 'grey'}">${t.configured ? 'Настроено' : 'Не настроено'}</span>
       </div>
-      <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">@BotFather → ваш бот → Bot Settings → Web Login. В «Allowed URLs» добавьте оба адреса:</div>
-      <div class="mono" style="background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:10px 12px;font-size:12px;color:#EBE0CC;word-break:break-all;margin-bottom:6px">${esc(t.origin)}</div>
-      <div class="mono" style="background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:10px 12px;font-size:12px;color:#EBE0CC;word-break:break-all;margin-bottom:10px">${esc(t.redirect_uri)}</div>
+      <div style="font-size:13px;color:#8A7A60;margin-bottom:12px">@BotFather → ваш бот → Bot Settings → Login Widget. Адреса должны совпадать символ в символ.</div>
+      <div class="field-lbl">Redirect URIs</div>
+      ${copyField(t.redirect_uri)}
+      <div class="field-lbl" style="margin-top:6px">Trusted Origins</div>
+      ${copyField(t.origin)}
       <div style="font-size:12.5px;color:#8A7A60">Client ID из .env: <span class="mono" style="color:#EBE0CC">${esc(t.client_id || '—')}</span></div>
       ${err ? `
         <div style="margin-top:12px;border:1px solid rgba(255,90,90,.25);background:rgba(255,90,90,.06);border-radius:10px;padding:10px 12px">
@@ -2208,7 +2284,7 @@ async function renderProfile() {
           <div class="dcard-title" style="margin-bottom:14px">Приглашения</div>
           ${me.rank === 'admin' ? `
             <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">Дайте этот ключ новому сотруднику — при первом входе (вкладка «Первый вход») он создаст свой логин и пароль рангом «Работник» (без права приглашать).</div>
-            <div class="mono" style="background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:10px 12px;font-size:13px;color:#FFB800;word-break:break-all">${esc(me.invite_key || '—')}</div>
+            ${me.invite_key ? copyField(me.invite_key, '#FFB800') : '<div class="mono" style="color:#8A7A60">—</div>'}
           ` : `
             <div style="font-size:13px;color:#8A7A60">Ранг «Работник» не может приглашать новых сотрудников — эта возможность только у ранга Admin.</div>
           `}
@@ -2274,12 +2350,12 @@ async function renderAdBanner() {
           <div style="flex:1;font-size:14px;font-weight:600;color:#EBE0CC">Показывать на сайте</div>
           <div class="toggle-track" id="abToggle" data-on="${b.enabled ? '1' : '0'}"
                style="background:${b.enabled ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'};cursor:pointer"
-               onclick="this.dataset.on = this.dataset.on === '1' ? '0' : '1'; this.style.background = this.dataset.on === '1' ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'; this.querySelector('.toggle-knob').style.marginLeft = this.dataset.on === '1' ? 'auto' : '0'; this.querySelector('.toggle-knob').style.background = this.dataset.on === '1' ? '#FFB800' : '#5A5040';">
-            <div class="toggle-knob" style="background:${b.enabled ? '#FFB800' : '#5A5040'};margin-left:${b.enabled ? 'auto' : '0'}"></div>
+               onclick="this.dataset.on = this.dataset.on === '1' ? '0' : '1'; this.style.background = this.dataset.on === '1' ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'; this.querySelector('.toggle-knob').style.marginLeft = this.dataset.on === '1' ? 'auto' : '0'; this.querySelector('.toggle-knob').style.background = this.dataset.on === '1' ? '#FFB800' : '#7E705B';">
+            <div class="toggle-knob" style="background:${b.enabled ? '#FFB800' : '#7E705B'};margin-left:${b.enabled ? 'auto' : '0'}"></div>
           </div>
         </div>
 
-        <button class="login-btn" style="margin-top:4px" onclick="saveAdBanner()">Сохранить</button>
+        <button class="login-btn" style="margin-top:4px" data-save title="Ctrl+S" onclick="saveAdBanner()">Сохранить</button>
       </div>
     `;
   } catch (e) {
@@ -2294,6 +2370,7 @@ async function saveAdBanner() {
   const enabled = document.getElementById('abToggle').dataset.on === '1';
   try {
     await api('POST', '/web/ad-banner', { text, link_url, link_label, enabled, icon: selectedBannerIcon });
+    unsaved = false;
     toast('Баннер сохранён');
   } catch (e) { toast(e.message, true); }
 }
@@ -2309,6 +2386,10 @@ async function togglePaymentProvider(provider) {
 }
 
 /* ── Boot ──────────────────────────────────────────────────── */
+document.addEventListener('input', (e) => {
+  if (e.target.closest && e.target.closest('#content .editor-card, #content .bot-panel')) unsaved = true;
+});
+
 (function boot() {
   const saved = localStorage.getItem('adminToken');
   if (saved) {
