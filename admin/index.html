@@ -379,7 +379,40 @@ details.editor-card[open] > summary::after{content:' ▾'}
 @media(max-width:820px){.settings-grid{grid-template-columns:1fr}}
 .tariff-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px;margin-bottom:10px}
 .provider-row{display:flex;align-items:center;gap:14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px;margin-bottom:10px}
-.banner-icon-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px}
+.banner-icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:7px}
+.bn-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;align-items:start}
+.bn-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:980px){.bn-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.bn-two{grid-template-columns:1fr}}
+.bn-preview-wrap{display:flex;gap:14px;align-items:flex-start}
+.bn-frame{flex:1;min-width:0;border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden;background:#050505}
+.bn-frame-bar{display:flex;align-items:center;gap:5px;padding:8px 12px;background:#121110;border-bottom:1px solid rgba(255,255,255,.06);font-size:11px;color:#6B5E4A}
+.bn-frame-bar i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.12)}
+.bn-frame-bar span{margin-left:8px}
+.bn-frame-page{height:46px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 120px,transparent 120px 136px)}
+.bn-phone{width:250px;flex-shrink:0;border:1px solid rgba(255,255,255,.09);border-radius:18px;overflow:hidden;background:#050505;padding-top:14px}
+@media(max-width:760px){.bn-preview-wrap{flex-direction:column}.bn-phone{width:100%;max-width:300px}}
+.bn-strip{position:relative;background:var(--b-bg);border-bottom:1px solid var(--b-border);color:var(--b-text)}
+.bn-strip-inner{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:9px 40px;font-size:12.5px;text-align:center}
+.bn-strip.narrow .bn-strip-inner{padding:8px 32px 8px 12px;gap:6px;font-size:11.5px}
+.bn-strip-icon{display:inline-flex;color:var(--b-accent)}
+.bn-strip-icon img{width:18px;height:18px;object-fit:contain;border-radius:4px}
+.bn-strip a{font-weight:600;color:var(--b-accent);white-space:nowrap}
+.bn-strip-timer{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--b-accent);background:rgba(0,0,0,.18);border-radius:6px;padding:2px 7px;white-space:nowrap}
+.bn-strip-close{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:18px;opacity:.6}
+.bn-templates{display:flex;flex-direction:column;gap:5px}
+.bn-tpl{display:flex;gap:9px;align-items:center;padding:7px 10px;border-radius:9px;border:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.25);font-size:12.5px;color:#C9BBA0;cursor:pointer;transition:border-color .15s,color .15s}
+.bn-tpl svg{color:#FFB800;flex-shrink:0}
+.bn-tpl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bn-tpl:hover{border-color:rgba(255,184,0,.3);color:#EBE0CC}
+.bn-styles{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.bn-style{cursor:pointer;border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:6px;transition:border-color .15s}
+.bn-style:hover{border-color:rgba(255,184,0,.3)}
+.bn-style.sel{border-color:#FFB800;background:rgba(255,184,0,.06)}
+.bn-style-sw{height:34px;border-radius:7px;border:1px solid;display:flex;align-items:center;gap:6px;padding:0 9px}
+.bn-style-sw span{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.bn-style-sw em{height:4px;border-radius:2px;flex:1;opacity:.7}
+.bn-style-lbl{font-size:12px;color:#C9BBA0;text-align:center;margin-top:6px}
 .banner-icon-opt{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:10px;color:#8A7A60;cursor:pointer;transition:border-color .15s,color .15s}
 .banner-icon-opt svg{width:18px;height:18px}
 .banner-icon-opt:hover{border-color:rgba(255,184,0,.3);color:#EBE0CC}
@@ -608,8 +641,9 @@ function imageRefUrl(ref) {
   if (!ref) return '';
   return ref.startsWith('media:') ? '/media/' + ref.slice(6) : ref;
 }
-/* Виджет картинки. slot — строковый id «тип:ключ», по типу onImageChange находит обработчик. */
-function imagePickerHtml(slot, ref, hint) {
+/* Виджет картинки. slot — строковый id «тип:ключ», по типу onImageChange находит обработчик.
+   noUrl — только загрузка файла, без «Ссылки». */
+function imagePickerHtml(slot, ref, hint, noUrl) {
   const url = imageRefUrl(ref);
   return `
     <div class="img-picker">
@@ -617,7 +651,7 @@ function imagePickerHtml(slot, ref, hint) {
       <div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1">
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <label class="ghost-btn" style="padding:6px 11px;font-size:12px">Загрузить<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden onchange="onImagePicked('${slot}', this)"></label>
-          <div class="ghost-btn" style="padding:6px 11px;font-size:12px" onclick="onImageUrl('${slot}')">Ссылка</div>
+          ${noUrl ? '' : `<div class="ghost-btn" style="padding:6px 11px;font-size:12px" onclick="onImageUrl('${slot}')">Ссылка</div>`}
           ${url ? `<div class="ghost-btn" style="padding:6px 11px;font-size:12px;color:#F87171" onclick="onImageChange('${slot}', '')">Убрать</div>` : ''}
         </div>
         <div style="font-size:11px;color:#7E705B">${hint || 'PNG, JPEG, GIF или WebP до 5 МБ'}</div>
@@ -3164,83 +3198,253 @@ async function staffDelete(id, username) {
   catch (e) { toast(e.message, true); }
 }
 
-/* Тот же набор ключей — в landing/index.html (BANNER_ICONS), см. AD_BANNER_ICONS в bot/api.py */
-const BANNER_ICONS = {
-  sparkle: 'M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z',
-  star: 'M12 2L14.64 8.36L21.51 8.91L16.28 13.39L17.88 20.09L12 16.5L6.12 20.09L7.72 13.39L2.49 8.91L9.36 8.36Z',
-  fire: 'M12 2c1 3-3 4-3 8a3 3 0 006 0c0-2-1-2-1-4 2 1 3 3 3 6a5 5 0 01-10 0c0-5 3-6 5-10z',
-  gift: 'M4 11h16v10H4zM3 8h18v3H3zM11 8h2v13h-2zM8.5 4a2 2 0 100 4h2v-2a2 2 0 00-2-2zm7 0a2 2 0 010 4h-2v-2a2 2 0 012-2z',
-  percent: 'M6 6a2.5 2.5 0 100 5 2.5 2.5 0 000-5zm12 7a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM17.5 5.5l-11 13 1.5 1.5 11-13z',
-  bell: 'M12 2a1 1 0 011 1v1.06a8 8 0 016 7.74v3l1.6 2.4a1 1 0 01-.83 1.55H5.23a1 1 0 01-.83-1.55L6 14.8v-3a8 8 0 016-7.74V3a1 1 0 011-1zM9.5 20a2.5 2.5 0 005 0h-5z',
-  rocket: 'M12 2c3 2.5 4 6.5 4 9.5 0 2-.7 3.8-1.8 5.1l.3 4.4-2.5-2-2.5 2 .3-4.4C8.7 15.3 8 13.5 8 11.5 8 8.5 9 4.5 12 2zm0 6a2 2 0 100 4 2 2 0 000-4zM6.5 15l-2 5 4-3zM17.5 15l2 5-4-3z',
-  heart: 'M12 21s-7-4.6-9.3-9.1C1.4 9 2.6 5.8 5.6 5c2-.5 3.8.3 4.9 1.9C11.6 5.3 13.4 4.5 15.4 5c3 .8 4.2 4 3 6.9C16 16.4 12 21 12 21z',
-  zap: 'M13 2L3 14h6l-1 8 11-13h-6z',
-  clock: 'M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v5.5l4 2.3-1 1.7-5-3V7z',
+/* ═══════════════════════════════════════════════════════════
+   БАННЕР — полоса над шапкой главной страницы.
+   Иконки и оформления приходят с сервера (bot/utils/banner.py) —
+   те же, что рисует сайт, своей копии здесь нет.
+═══════════════════════════════════════════════════════════ */
+let bn = null;       // черновик баннера
+let bnMeta = null;   // {icons, styles}
+
+const BANNER_TEMPLATES = [
+  { icon: 'percent', style: 'sale', text: 'Скидка 20% на все тарифы — только до конца недели', link_url: '/tariffs', link_label: 'Выбрать тариф', show_countdown: true },
+  { icon: 'gift', style: 'gold', text: 'Подарите VPN близким — оплатите подписку и отправьте ссылку', link_url: '/account', link_label: 'Подарить' },
+  { icon: 'users', style: 'green', text: 'Приглашайте друзей: +30 дней за каждых двух оплативших', link_url: '/account', link_label: 'Пригласить' },
+  { icon: 'rocket', style: 'blue', text: 'Новые серверы в Европе — ещё быстрее и стабильнее', link_url: '/tariffs', link_label: 'Подробнее' },
+  { icon: 'bell', style: 'dark', text: 'Плановые работы на серверах сегодня с 03:00 до 04:00 МСК', link_url: '', link_label: '' },
+];
+const BANNER_STATUS = {
+  live: ['green', 'Показывается на сайте'],
+  off: ['grey', 'Выключен'],
+  empty: ['red', 'Нет текста — не показывается'],
+  scheduled: ['gold', 'Запланирован'],
+  ended: ['grey', 'Срок показа закончился'],
 };
-let selectedBannerIcon = 'sparkle';
 
-function bannerIconPickerHtml(selected) {
-  return Object.keys(BANNER_ICONS).map(key => `
-    <div class="banner-icon-opt ${key === selected ? 'sel' : ''}" data-icon="${key}" onclick="pickBannerIcon('${key}')" title="${key}">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="${BANNER_ICONS[key]}"></path></svg>
-    </div>
-  `).join('');
+function bnIconSvg(path, size) {
+  return `<svg viewBox="0 0 24 24" width="${size || 16}" height="${size || 16}" fill="currentColor"><path fill-rule="evenodd" d="${path}"></path></svg>`;
 }
-
-function pickBannerIcon(key) {
-  selectedBannerIcon = key;
-  document.querySelectorAll('.banner-icon-opt').forEach(el => el.classList.toggle('sel', el.dataset.icon === key));
+/* datetime-local ↔ ISO (UTC). В поле — местное время браузера. */
+function bnLocalInput(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+function bnStatus() {
+  if (!bn.enabled) return 'off';
+  if (!bn.text.trim()) return 'empty';
+  const now = Date.now();
+  if (bn.starts_at && now < new Date(bn.starts_at).getTime()) return 'scheduled';
+  if (bn.ends_at && now >= new Date(bn.ends_at).getTime()) return 'ended';
+  return 'live';
+}
+function bnCountdown() {
+  const left = Math.floor((new Date(bn.ends_at).getTime() - Date.now()) / 1000);
+  if (left <= 0) return '00:00:00';
+  const pad = n => String(n).padStart(2, '0');
+  const d = Math.floor(left / 86400);
+  return (d ? d + ' д ' : '') + pad(Math.floor(left % 86400 / 3600)) + ':' + pad(Math.floor(left % 3600 / 60)) + ':' + pad(left % 60);
+}
+function bnStripHtml(narrow) {
+  const st = bnMeta.styles[bn.style] || bnMeta.styles.gold;
+  const vars = `--b-bg:${st.bg};--b-border:${st.border};--b-text:${st.text};--b-accent:${st.accent}`;
+  const icon = bn.icon_url ? `<img src="${esc(bn.icon_url)}" alt="">` : bnIconSvg(bnMeta.icons[bn.icon].path);
+  return `
+    <div class="bn-strip${narrow ? ' narrow' : ''}" style="${vars}">
+      <div class="bn-strip-inner">
+        <span class="bn-strip-icon">${icon}</span>
+        <span>${esc(bn.text) || '<span style="opacity:.5">Текст баннера</span>'}</span>
+        ${bn.show_countdown && bn.ends_at ? `<span class="bn-strip-timer" data-bn-timer>${bnCountdown()}</span>` : ''}
+        ${bn.link_url ? `<a>${esc(bn.link_label || 'Подробнее')} →</a>` : ''}
+      </div>
+      ${bn.dismissible ? '<span class="bn-strip-close">×</span>' : ''}
+    </div>`;
+}
+function bnSwitch(field, hint) {
+  const on = !!bn[field];
+  return `<div class="toggle-track" onclick="bnSet('${field}', ${!on})" style="cursor:pointer;background:${on ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'}"${hint ? ` title="${esc(hint)}"` : ''}>
+    <div class="toggle-knob" style="background:${on ? '#FFB800' : '#7E705B'};margin-left:${on ? 'auto' : '0'}"></div></div>`;
 }
 
 async function renderAdBanner() {
   const c = document.getElementById('content');
   try {
     const b = await api('GET', '/web/ad-banner');
-    selectedBannerIcon = b.icon || 'sparkle';
-    c.innerHTML = `
-      <div class="editor-card" style="max-width:560px">
-        <div class="dcard-title" style="margin-bottom:6px">Баннер на верхней полосе главной</div>
-        <div style="font-size:13px;color:#8A7A60;margin-bottom:18px">Показывается на / (главной), пока включён и есть текст. Например: «Скидка 20% на VPN до конца августа».</div>
+    bnMeta = { icons: b.icons, styles: b.styles };
+    bn = {
+      enabled: b.enabled, text: b.text || '', link_url: b.link_url || '', link_label: b.link_label || '',
+      icon: b.icon in b.icons ? b.icon : 'sparkle', icon_media_id: b.icon_media_id, icon_url: b.icon_url,
+      style: b.style, starts_at: b.starts_at, ends_at: b.ends_at,
+      show_countdown: b.show_countdown, dismissible: b.dismissible,
+      views: b.views, clicks: b.clicks,
+    };
+  } catch (e) {
+    c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
+    return;
+  }
+  bnRender();
+}
 
-        <label class="login-label">Текст</label>
-        <input class="login-input" type="text" id="abText" maxlength="300" value="${esc(b.text || '')}" placeholder="Скидка 20% на VPN до конца августа">
+function bnRender() {
+  const c = document.getElementById('content');
+  const [chipCls, chipText] = BANNER_STATUS[bnStatus()];
+  const ctr = bn.views ? (bn.clicks / bn.views * 100).toFixed(1) + '%' : '—';
+  c.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+      <span class="chip ${chipCls}" id="bnChip">${chipText}</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:13px;color:#C9BBA0">Показывать на сайте</span>${bnSwitch('enabled')}
+      </div>
+      <div style="flex:1"></div>
+      <a class="ghost-btn" href="/" target="_blank" rel="noopener" style="text-decoration:none">Открыть сайт ↗</a>
+      <div class="primary-btn" data-save title="Ctrl+S" onclick="saveAdBanner()">Сохранить</div>
+    </div>
 
-        <label class="login-label">Ссылка (необязательно)</label>
-        <input class="login-input" type="text" id="abLinkUrl" value="${esc(b.link_url || '')}" placeholder="/tariffs">
+    <div class="editor-card" style="margin-bottom:12px">
+      <div class="dcard-title" style="margin-bottom:12px">Так увидят посетители</div>
+      <div class="bn-preview-wrap">
+        <div class="bn-frame"><div class="bn-frame-bar"><i></i><i></i><i></i><span>starvpn / главная</span></div><div id="bnPrev">${bnStripHtml(false)}</div><div class="bn-frame-page"></div></div>
+        <div class="bn-phone"><div id="bnPrevM">${bnStripHtml(true)}</div><div class="bn-frame-page"></div></div>
+      </div>
+    </div>
 
-        <label class="login-label">Текст ссылки</label>
-        <input class="login-input" type="text" id="abLinkLabel" value="${esc(b.link_label || '')}" placeholder="Подробнее">
+    <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+      <div class="stat-card"><div class="stat-label">Показы</div><div class="stat-val">${bn.views.toLocaleString('ru-RU')}</div></div>
+      <div class="stat-card"><div class="stat-label">Клики по ссылке</div><div class="stat-val">${bn.clicks.toLocaleString('ru-RU')}</div></div>
+      <div class="stat-card"><div class="stat-label">CTR</div><div class="stat-val">${ctr}</div></div>
+      <div class="stat-card" style="justify-content:space-between">
+        <div class="stat-label">Статистика</div>
+        <div style="font-size:12px;color:#7E705B">Без IP и cookie — просто счётчики.</div>
+        <div class="ghost-btn" style="align-self:flex-start;padding:6px 11px;font-size:12px" onclick="resetBannerStats()">Сбросить</div>
+      </div>
+    </div>
 
-        <label class="login-label">Иконка</label>
-        <div class="banner-icon-grid">${bannerIconPickerHtml(selectedBannerIcon)}</div>
+    <div class="bn-grid">
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div class="editor-card">
+          <div class="dcard-title" style="margin-bottom:14px">Содержание</div>
+          <div style="display:flex;align-items:baseline;gap:8px"><label class="editor-label" style="flex:1">Текст</label><span class="mono" id="bnCount" style="font-size:11px;color:#7E705B">${bn.text.length}/300</span></div>
+          <textarea class="ipt" id="bnText" rows="2" maxlength="300" placeholder="Скидка 20% на VPN до конца августа" oninput="bnInput('text', this.value)" style="width:100%;margin-bottom:10px">${esc(bn.text)}</textarea>
+          <div style="font-size:11.5px;color:#7E705B;margin-bottom:6px">Быстрые шаблоны:</div>
+          <div class="bn-templates">
+            ${BANNER_TEMPLATES.map((t, i) => `<div class="bn-tpl" onclick="bnApplyTemplate(${i})">${bnIconSvg(bnMeta.icons[t.icon].path, 13)}<span>${esc(t.text)}</span></div>`).join('')}
+          </div>
+          <div class="bn-two" style="margin-top:14px">
+            <div><label class="editor-label">Ссылка</label><input class="ipt" id="bnLinkUrl" value="${esc(bn.link_url)}" placeholder="/tariffs или https://…" oninput="bnInput('link_url', this.value)" style="width:100%"></div>
+            <div><label class="editor-label">Текст ссылки</label><input class="ipt" id="bnLinkLabel" maxlength="100" value="${esc(bn.link_label)}" placeholder="Подробнее" oninput="bnInput('link_label', this.value)" style="width:100%"></div>
+          </div>
+          <div style="font-size:11.5px;color:#7E705B;margin-top:6px">Страница сайта (/tariffs, /wiki/…) или внешняя ссылка https:// — внешние открываются в новой вкладке.</div>
+        </div>
 
-        <div class="provider-row" style="margin:14px 0">
-          <div style="flex:1;font-size:14px;font-weight:600;color:#EBE0CC">Показывать на сайте</div>
-          <div class="toggle-track" id="abToggle" data-on="${b.enabled ? '1' : '0'}"
-               style="background:${b.enabled ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'};cursor:pointer"
-               onclick="this.dataset.on = this.dataset.on === '1' ? '0' : '1'; this.style.background = this.dataset.on === '1' ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'; this.querySelector('.toggle-knob').style.marginLeft = this.dataset.on === '1' ? 'auto' : '0'; this.querySelector('.toggle-knob').style.background = this.dataset.on === '1' ? '#FFB800' : '#7E705B';">
-            <div class="toggle-knob" style="background:${b.enabled ? '#FFB800' : '#7E705B'};margin-left:${b.enabled ? 'auto' : '0'}"></div>
+        <div class="editor-card">
+          <div class="dcard-title" style="margin-bottom:4px">Иконка</div>
+          <div style="font-size:12px;color:#8A7A60;margin-bottom:12px">Цвет иконки берётся из оформления.</div>
+          <div class="banner-icon-grid">
+            ${Object.entries(bnMeta.icons).map(([key, ic]) => `
+              <div class="banner-icon-opt ${!bn.icon_url && key === bn.icon ? 'sel' : ''}" onclick="bnPickIcon('${key}')" title="${esc(ic.label)}">${bnIconSvg(ic.path, 18)}</div>`).join('')}
+          </div>
+          <div style="margin-top:12px">${imagePickerHtml('bnicon', bn.icon_media_id ? 'media:' + bn.icon_media_id : '', 'Своя иконка: PNG, WebP или GIF, лучше квадратная — заменит иконку из набора', true)}</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div class="editor-card">
+          <div class="dcard-title" style="margin-bottom:12px">Оформление</div>
+          <div class="bn-styles">
+            ${Object.entries(bnMeta.styles).map(([key, st]) => `
+              <div class="bn-style ${key === bn.style ? 'sel' : ''}" onclick="bnSet('style', '${key}')">
+                <div class="bn-style-sw" style="background:${st.bg};border-color:${st.border};color:${st.accent}"><span style="background:${st.accent}"></span><em style="background:${st.text}"></em></div>
+                <div class="bn-style-lbl">${esc(st.label)}</div>
+              </div>`).join('')}
           </div>
         </div>
 
-        <button class="login-btn" style="margin-top:4px" data-save title="Ctrl+S" onclick="saveAdBanner()">Сохранить</button>
+        <div class="editor-card">
+          <div class="dcard-title" style="margin-bottom:4px">Расписание</div>
+          <div style="font-size:12px;color:#8A7A60;margin-bottom:12px">Пусто — показывать всегда, пока баннер включён. Время — ваше местное.</div>
+          <div class="bn-two">
+            <div><label class="editor-label">Начать показ</label><input class="ipt" type="datetime-local" value="${bnLocalInput(bn.starts_at)}" onchange="bnSetDate('starts_at', this.value)" style="width:100%"></div>
+            <div><label class="editor-label">Закончить</label><input class="ipt" type="datetime-local" value="${bnLocalInput(bn.ends_at)}" onchange="bnSetDate('ends_at', this.value)" style="width:100%"></div>
+          </div>
+          <div class="provider-row" style="margin-top:12px;${bn.ends_at ? '' : 'opacity:.45;pointer-events:none'}">
+            <div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:#EBE0CC">Таймер обратного отсчёта</div><div style="font-size:11.5px;color:#7E705B">${bn.ends_at ? '«До конца акции» прямо в баннере' : 'Укажите окончание показа'}</div></div>
+            ${bnSwitch('show_countdown')}
+          </div>
+        </div>
+
+        <div class="editor-card">
+          <div class="dcard-title" style="margin-bottom:12px">Поведение</div>
+          <div class="provider-row">
+            <div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:#EBE0CC">Крестик «закрыть»</div><div style="font-size:11.5px;color:#7E705B">Закрытый баннер не показывается посетителю, пока вы его не измените и не сохраните.</div></div>
+            ${bnSwitch('dismissible')}
+          </div>
+        </div>
       </div>
-    `;
-  } catch (e) {
-    c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
-  }
+    </div>
+  `;
 }
 
+/* Перерисовать только превью и статус — без потери фокуса в полях ввода. */
+function bnRefreshPreview() {
+  document.getElementById('bnPrev').innerHTML = bnStripHtml(false);
+  document.getElementById('bnPrevM').innerHTML = bnStripHtml(true);
+  const [cls, text] = BANNER_STATUS[bnStatus()];
+  const chip = document.getElementById('bnChip');
+  chip.className = 'chip ' + cls; chip.textContent = text;
+}
+function bnInput(field, value) {
+  bn[field] = value;
+  if (field === 'text') document.getElementById('bnCount').textContent = value.length + '/300';
+  bnRefreshPreview();
+}
+function bnSet(field, value) { bn[field] = value; unsaved = true; bnRender(); }
+function bnSetDate(field, value) {
+  bn[field] = value ? new Date(value).toISOString() : null;
+  if (!bn.ends_at) bn.show_countdown = false;
+  unsaved = true;
+  bnRender();
+}
+function bnPickIcon(key) { bn.icon = key; bn.icon_media_id = null; bn.icon_url = null; unsaved = true; bnRender(); }
+function bnApplyTemplate(i) {
+  const t = BANNER_TEMPLATES[i];
+  Object.assign(bn, { icon: t.icon, icon_media_id: null, icon_url: null, style: t.style, text: t.text, link_url: t.link_url, link_label: t.link_label });
+  if (t.show_countdown && !bn.ends_at) {
+    const end = new Date(); end.setDate(end.getDate() + 7); end.setHours(23, 59, 0, 0);
+    bn.ends_at = end.toISOString();
+  }
+  bn.show_countdown = !!(t.show_countdown && bn.ends_at);
+  unsaved = true;
+  bnRender();
+}
+IMAGE_SLOTS.bnicon = (slot, ref) => {
+  const id = ref.startsWith('media:') ? parseInt(ref.slice(6), 10) : null;
+  bn.icon_media_id = id;
+  bn.icon_url = id ? '/media/' + id : null;
+  bnRender();
+};
+setInterval(() => {
+  const el = document.querySelectorAll('[data-bn-timer]');
+  if (el.length && bn && bn.ends_at) el.forEach(t => { t.textContent = bnCountdown(); });
+}, 1000);
+
 async function saveAdBanner() {
-  const text = document.getElementById('abText').value.trim();
-  const link_url = document.getElementById('abLinkUrl').value.trim();
-  const link_label = document.getElementById('abLinkLabel').value.trim();
-  const enabled = document.getElementById('abToggle').dataset.on === '1';
+  if (bn.enabled && !bn.text.trim()) { toast('Добавьте текст — пустой баннер не показывается', true); return; }
   try {
-    await api('POST', '/web/ad-banner', { text, link_url, link_label, enabled, icon: selectedBannerIcon });
+    const r = await api('POST', '/web/ad-banner', {
+      enabled: bn.enabled, text: bn.text.trim(), link_url: bn.link_url.trim(), link_label: bn.link_label.trim(),
+      icon: bn.icon, icon_media_id: bn.icon_media_id, style: bn.style,
+      starts_at: bn.starts_at, ends_at: bn.ends_at, show_countdown: bn.show_countdown, dismissible: bn.dismissible,
+    });
     unsaved = false;
-    toast('Баннер сохранён');
+    toast(r.status === 'live' ? 'Сохранено — баннер уже на сайте' : 'Сохранено');
+    bnRefreshPreview();
   } catch (e) { toast(e.message, true); }
+}
+
+async function resetBannerStats() {
+  if (!confirm('Обнулить показы и клики?')) return;
+  try { await api('POST', '/web/ad-banner/reset-stats'); bn.views = 0; bn.clicks = 0; bnRender(); toast('Статистика обнулена'); }
+  catch (e) { toast(e.message, true); }
 }
 
 async function togglePaymentProvider(provider) {

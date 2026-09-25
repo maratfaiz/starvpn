@@ -341,16 +341,23 @@ footer{
 /* ─── TOP BANNER ───────────────────────────────────────────── */
 .top-banner{
   position:relative;z-index:110;
-  background:rgba(255,184,0,.09);border-bottom:1px solid var(--gold-border);
+  --b-bg:rgba(255,184,0,.09);--b-border:var(--gold-border);--b-text:var(--text);--b-accent:var(--gold);
+  background:var(--b-bg);border-bottom:1px solid var(--b-border);color:var(--b-text);
 }
 .top-banner-inner{
-  max-width:var(--max);margin:0 auto;padding:9px 24px;
-  display:flex;gap:14px;align-items:center;justify-content:center;
-  flex-wrap:wrap;font-size:12.5px;color:var(--text);letter-spacing:.01em;
+  max-width:var(--max);margin:0 auto;padding:9px 48px;
+  display:flex;gap:12px;align-items:center;justify-content:center;
+  flex-wrap:wrap;font-size:12.5px;letter-spacing:.01em;text-align:center;
 }
-.top-banner-inner svg{width:14px;height:14px;flex-shrink:0}
-.top-banner-inner a{font-weight:600;white-space:nowrap;color:var(--gold);text-decoration:none}
-.top-banner-inner a:hover{color:var(--gold2)}
+.top-banner-icon{display:inline-flex;width:16px;height:16px;flex-shrink:0;color:var(--b-accent)}
+.top-banner-icon svg{width:16px;height:16px}
+.top-banner-icon img{width:18px;height:18px;object-fit:contain;border-radius:4px}
+.top-banner-timer{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;color:var(--b-accent);background:rgba(0,0,0,.18);border-radius:6px;padding:2px 8px;white-space:nowrap}
+.top-banner-inner a{font-weight:600;white-space:nowrap;color:var(--b-accent);text-decoration:none}
+.top-banner-inner a:hover{text-decoration:underline}
+.top-banner-close{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--b-text);opacity:.6;font-size:20px;line-height:1;cursor:pointer}
+.top-banner-close:hover{opacity:1;background:rgba(0,0,0,.15)}
+@media(max-width:640px){.top-banner-inner{padding:9px 40px 9px 16px;gap:8px}}
 
 /* ─── NAV login pill ───────────────────────────────────────── */
 .nav-login{
@@ -566,13 +573,15 @@ footer{
 <div id="progress"></div>
 <canvas id="bg-canvas"></canvas>
 
-<!-- ═══ TOP BANNER (управляется из админ-панели, раздел "Реклама") ═══ -->
+<!-- ═══ TOP BANNER (управляется из админ-панели, раздел «Баннер») ═══ -->
 <div class="top-banner" id="adBanner" style="display:none">
   <div class="top-banner-inner">
-    <svg viewBox="0 0 24 24" fill="#FFB800"><path id="adBannerIconPath" d="M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z"></path></svg>
+    <span class="top-banner-icon" id="adBannerIcon"></span>
     <span id="adBannerText"></span>
+    <span class="top-banner-timer" id="adBannerTimer" style="display:none"></span>
     <a href="#" id="adBannerLink" style="display:none"></a>
   </div>
+  <button type="button" class="top-banner-close" id="adBannerClose" aria-label="Закрыть" style="display:none">&times;</button>
 </div>
 
 <!-- ═══ NAV ═══════════════════════════════════════════════════ -->
@@ -1200,35 +1209,72 @@ footer{
   setTimeout(hideSplash, 3500); // на случай медленной загрузки — не держим сплэш вечно
 })();
 
-/* ═══ Рекламный баннер (редактируется из админ-панели) ═══════════ */
-/* Тот же набор ключей — в admin/index.html (BANNER_ICONS), см. AD_BANNER_ICONS в bot/api.py */
-const BANNER_ICONS = {
-  sparkle: 'M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z',
-  star: 'M12 2L14.64 8.36L21.51 8.91L16.28 13.39L17.88 20.09L12 16.5L6.12 20.09L7.72 13.39L2.49 8.91L9.36 8.36Z',
-  fire: 'M12 2c1 3-3 4-3 8a3 3 0 006 0c0-2-1-2-1-4 2 1 3 3 3 6a5 5 0 01-10 0c0-5 3-6 5-10z',
-  gift: 'M4 11h16v10H4zM3 8h18v3H3zM11 8h2v13h-2zM8.5 4a2 2 0 100 4h2v-2a2 2 0 00-2-2zm7 0a2 2 0 010 4h-2v-2a2 2 0 012-2z',
-  percent: 'M6 6a2.5 2.5 0 100 5 2.5 2.5 0 000-5zm12 7a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM17.5 5.5l-11 13 1.5 1.5 11-13z',
-  bell: 'M12 2a1 1 0 011 1v1.06a8 8 0 016 7.74v3l1.6 2.4a1 1 0 01-.83 1.55H5.23a1 1 0 01-.83-1.55L6 14.8v-3a8 8 0 016-7.74V3a1 1 0 011-1zM9.5 20a2.5 2.5 0 005 0h-5z',
-  rocket: 'M12 2c3 2.5 4 6.5 4 9.5 0 2-.7 3.8-1.8 5.1l.3 4.4-2.5-2-2.5 2 .3-4.4C8.7 15.3 8 13.5 8 11.5 8 8.5 9 4.5 12 2zm0 6a2 2 0 100 4 2 2 0 000-4zM6.5 15l-2 5 4-3zM17.5 15l2 5-4-3z',
-  heart: 'M12 21s-7-4.6-9.3-9.1C1.4 9 2.6 5.8 5.6 5c2-.5 3.8.3 4.9 1.9C11.6 5.3 13.4 4.5 15.4 5c3 .8 4.2 4 3 6.9C16 16.4 12 21 12 21z',
-  zap: 'M13 2L3 14h6l-1 8 11-13h-6z',
-  clock: 'M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v5.5l4 2.3-1 1.7-5-3V7z',
-};
+/* ═══ Баннер (редактируется из админ-панели → «Баннер») ═══════════ */
+/* Иконка, цвета и срок приходят из /api/ad-banner (bot/utils/banner.py). */
 (async function loadAdBanner(){
+  const CLOSED_KEY = 'star_banner_closed';
+  const ping = (ev) => fetch('/api/ad-banner/' + ev, { method: 'POST', keepalive: true }).catch(() => {});
   try {
     const r = await fetch('/api/ad-banner');
     const data = await r.json();
     if (!data.enabled || !data.text) return;
+    try { if (data.dismissible && localStorage.getItem(CLOSED_KEY) === String(data.version)) return; } catch (e) {}
+
+    const el = document.getElementById('adBanner');
+    Object.entries(data.style || {}).forEach(([k, v]) => el.style.setProperty('--b-' + k, v));
     document.getElementById('adBannerText').textContent = data.text;
-    const iconPath = BANNER_ICONS[data.icon] || BANNER_ICONS.sparkle;
-    document.getElementById('adBannerIconPath').setAttribute('d', iconPath);
+
+    const icon = document.getElementById('adBannerIcon');
+    if (data.icon_url) {
+      const img = document.createElement('img');
+      img.src = data.icon_url; img.alt = '';
+      icon.appendChild(img);
+    } else {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'currentColor');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('fill-rule', 'evenodd');
+      path.setAttribute('d', data.icon_path);
+      svg.appendChild(path);
+      icon.appendChild(svg);
+    }
+
     const linkEl = document.getElementById('adBannerLink');
     if (data.link_url) {
       linkEl.href = data.link_url;
       linkEl.textContent = (data.link_label || 'Подробнее') + ' →';
+      if (/^https?:/.test(data.link_url)) { linkEl.target = '_blank'; linkEl.rel = 'noopener'; }
       linkEl.style.display = '';
+      linkEl.addEventListener('click', () => ping('click'));
     }
-    document.getElementById('adBanner').style.display = '';
+
+    if (data.ends_at) {
+      const end = new Date(data.ends_at).getTime();
+      const timer = document.getElementById('adBannerTimer');
+      const pad = (n) => String(n).padStart(2, '0');
+      const tick = () => {
+        const left = Math.floor((end - Date.now()) / 1000);
+        if (left <= 0) { el.style.display = 'none'; clearInterval(iv); return; }
+        const d = Math.floor(left / 86400), h = Math.floor(left % 86400 / 3600);
+        const m = Math.floor(left % 3600 / 60), s = left % 60;
+        timer.textContent = (d ? d + ' д ' : '') + pad(h) + ':' + pad(m) + ':' + pad(s);
+      };
+      const iv = setInterval(tick, 1000);
+      tick();
+      timer.style.display = '';
+    }
+
+    if (data.dismissible) {
+      const close = document.getElementById('adBannerClose');
+      close.style.display = '';
+      close.addEventListener('click', () => {
+        el.style.display = 'none';
+        try { localStorage.setItem(CLOSED_KEY, String(data.version)); } catch (e) {}
+      });
+    }
+    el.style.display = '';
+    ping('view');
   } catch (e) { /* баннер просто не покажется */ }
 })();
 

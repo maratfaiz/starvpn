@@ -3460,15 +3460,8 @@ async def web_settings_payment_toggle(request: Request, authorization: str | Non
     return {"ok": True, "provider": provider, "enabled": enabled}
 
 
-# ─── Рекламный баннер (верхняя полоса главной) ───────────────────────────────
-
-# Фиксированный набор — не произвольная SVG-строка от админа (см. docstring
-# AdBanner.icon). Тот же список ключей отрисован в landing/index.html и
-# admin/index.html как BANNER_ICONS.
-AD_BANNER_ICONS = {
-    "sparkle", "star", "fire", "gift", "percent",
-    "bell", "rocket", "heart", "zap", "clock",
-}
+# ─── Баннер (верхняя полоса главной) ─────────────────────────────────────────
+# Иконки и оформления — в bot/utils/banner.py; сайт и админка берут их отсюда.
 
 
 async def _get_ad_banner(session: AsyncSession):
@@ -3482,60 +3475,146 @@ async def _get_ad_banner(session: AsyncSession):
     return row
 
 
-@app.get("/api/ad-banner")
-async def get_ad_banner_public():
-    """Публичный — отдаёт баннер только если он включён и есть текст."""
-    async with AsyncSessionLocal() as session:
-        banner = await _get_ad_banner(session)
-    if not banner.enabled or not banner.text.strip():
-        return {"enabled": False}
+def _banner_public_json(banner) -> dict:
+    from bot.utils import banner as bn
+    from bot.utils.media import media_url
     return {
         "enabled": True,
         "text": banner.text,
         "link_url": banner.link_url,
         "link_label": banner.link_label,
-        "icon": banner.icon,
+        "icon_path": bn.icon_path(banner.icon),
+        "icon_url": media_url(banner.icon_media_id) if banner.icon_media_id else None,
+        "style": bn.style_css(banner.style),
+        "ends_at": bn.iso_utc(banner.ends_at) if banner.show_countdown else None,
+        "dismissible": banner.dismissible,
+        # Меняется только при сохранении в админке — по нему сайт помнит «закрыл».
+        "version": int(banner.updated_at.timestamp()) if banner.updated_at else 0,
     }
+
+
+@app.get("/api/ad-banner")
+async def get_ad_banner_public():
+    """Публичный — отдаёт баннер, только если он включён, есть текст и идёт срок показа."""
+    from bot.utils import banner as bn
+    async with AsyncSessionLocal() as session:
+        banner = await _get_ad_banner(session)
+    if bn.status(banner) != "live":
+        return {"enabled": False}
+    return _banner_public_json(banner)
+
+
+@app.post("/api/ad-banner/{event}")
+async def ad_banner_event(event: str):
+    """Счётчики показов/кликов. Без IP и куки — просто +1 (Zero Logs)."""
+    from bot.models.ad_banner import AdBanner
+    if event not in ("view", "click"):
+        raise HTTPException(404)
+    column = AdBanner.views if event == "view" else AdBanner.clicks
+    async with AsyncSessionLocal() as session:
+        await session.execute(
+            update(AdBanner).where(AdBanner.id == 1)
+            # updated_at не трогаем: иначе сменится version и «закрытый» баннер вернётся.
+            .values({column: column + 1, AdBanner.updated_at: AdBanner.updated_at})
+        )
+        await session.commit()
+    return {"ok": True}
 
 
 @app.get("/web/ad-banner")
 async def get_ad_banner_admin(authorization: str | None = Header(default=None)):
     _web_auth(authorization, "banner")
+    from bot.utils import banner as bn
+    from bot.utils.media import media_url
     async with AsyncSessionLocal() as session:
-        banner = await _get_ad_banner(session)
+        b = await _get_ad_banner(session)
     return {
-        "enabled": banner.enabled,
-        "text": banner.text,
-        "link_url": banner.link_url,
-        "link_label": banner.link_label,
-        "icon": banner.icon,
+        "enabled": b.enabled,
+        "text": b.text,
+        "link_url": b.link_url,
+        "link_label": b.link_label,
+        "icon": b.icon,
+        "icon_media_id": b.icon_media_id,
+        "icon_url": media_url(b.icon_media_id) if b.icon_media_id else None,
+        "style": b.style if b.style in bn.BANNER_STYLES else "gold",
+        "starts_at": bn.iso_utc(b.starts_at),
+        "ends_at": bn.iso_utc(b.ends_at),
+        "show_countdown": b.show_countdown,
+        "dismissible": b.dismissible,
+        "views": b.views or 0,
+        "clicks": b.clicks or 0,
+        "status": bn.status(b),
+        "updated_at": bn.iso_utc(b.updated_at),
+        "icons": {k: {"label": lbl, "path": path} for k, (lbl, path) in bn.BANNER_ICONS.items()},
+        "styles": bn.BANNER_STYLES,
     }
 
 
 @app.post("/web/ad-banner")
 async def set_ad_banner(request: Request, authorization: str | None = Header(default=None)):
     _web_auth(authorization, "banner")
+    from bot.models.media_file import MediaFile
+    from bot.utils import banner as bn
     body = await request.json()
     text = (body.get("text") or "").strip()
     link_url = (body.get("link_url") or "").strip() or None
     link_label = (body.get("link_label") or "").strip() or None
-    enabled = bool(body.get("enabled"))
     icon = body.get("icon") or "sparkle"
-    if icon not in AD_BANNER_ICONS:
+    style = body.get("style") or "gold"
+    icon_media_id = body.get("icon_media_id") or None
+    if icon not in bn.BANNER_ICONS:
         raise HTTPException(400, "Неизвестная иконка")
-
+    if style not in bn.BANNER_STYLES:
+        raise HTTPException(400, "Неизвестное оформление")
     if len(text) > 300:
         raise HTTPException(400, "Текст баннера — максимум 300 символов")
+    if link_label and len(link_label) > 100:
+        raise HTTPException(400, "Текст ссылки — максимум 100 символов")
+    if link_url and not bn.valid_link(link_url):
+        raise HTTPException(400, "Ссылка должна начинаться с https:// или / (страница этого сайта)")
+    try:
+        starts_at = bn.parse_dt(body.get("starts_at"))
+        ends_at = bn.parse_dt(body.get("ends_at"))
+    except ValueError:
+        raise HTTPException(400, "Неверная дата")
+    if starts_at and ends_at and ends_at <= starts_at:
+        raise HTTPException(400, "Окончание показа должно быть позже начала")
 
     async with AsyncSessionLocal() as session:
+        if icon_media_id is not None:
+            if not isinstance(icon_media_id, int) or not await session.get(
+                MediaFile, icon_media_id
+            ):
+                raise HTTPException(400, "Картинка-иконка не найдена — загрузите её заново")
         banner = await _get_ad_banner(session)
-        banner.enabled = enabled
+        banner.enabled = bool(body.get("enabled"))
         banner.text = text
         banner.link_url = link_url
         banner.link_label = link_label
         banner.icon = icon
+        banner.icon_media_id = icon_media_id
+        banner.style = style
+        banner.starts_at = starts_at
+        banner.ends_at = ends_at
+        banner.show_countdown = bool(body.get("show_countdown")) and ends_at is not None
+        banner.dismissible = bool(body.get("dismissible", True))
+        banner.updated_at = datetime.utcnow()
         await session.commit()
+        status = bn.status(banner)
 
+    return {"ok": True, "status": status}
+
+
+@app.post("/web/ad-banner/reset-stats")
+async def reset_ad_banner_stats(authorization: str | None = Header(default=None)):
+    _web_auth(authorization, "banner")
+    from bot.models.ad_banner import AdBanner
+    async with AsyncSessionLocal() as session:
+        await session.execute(
+            update(AdBanner).where(AdBanner.id == 1)
+            .values(views=0, clicks=0, updated_at=AdBanner.updated_at)
+        )
+        await session.commit()
     return {"ok": True}
 
 
