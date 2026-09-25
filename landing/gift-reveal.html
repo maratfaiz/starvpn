@@ -32,11 +32,6 @@ a:hover{color:var(--gold2)}
 @keyframes confetti-fall{0%{transform:translateY(-10vh) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(540deg);opacity:0}}
 .confetti-piece{position:absolute;top:0}
 @media(prefers-reduced-motion:reduce){.confetti-piece{animation:none!important;display:none}}
-
-#nav{position:sticky;top:0;z-index:100;padding:0 24px;background:rgba(6,6,6,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
-.nav-inner{max-width:var(--max);margin:0 auto;display:flex;align-items:center;height:64px}
-.nav-logo{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
-
 main{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px;text-align:center}
 .wrap{max-width:460px;width:100%}
 
@@ -88,11 +83,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
 <canvas id="bg-canvas"></canvas>
 <div class="confetti-field" id="confettiField"></div>
 
-<nav id="nav">
-  <div class="nav-inner">
-    <a class="nav-logo" href="/">STAR VPN</a>
-  </div>
-</nav>
+<!--SITE_NAV-->
 
 <main>
   <div class="wrap" id="box">

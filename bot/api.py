@@ -3160,7 +3160,8 @@ async def web_wiki_preview(request: Request, authorization: str | None = Header(
     _apply_wiki_fields(a, body)
     async with AsyncSessionLocal() as session:
         published = [p for p in await _published_wiki_articles(session) if p.slug != a.slug]
-    return HTMLResponse(render_wiki_article_page(a, published + [a]))
+    from bot.utils.branding import brand_html
+    return HTMLResponse(brand_html(render_wiki_article_page(a, published + [a])))
 
 
 @app.delete("/web/wiki/{article_id}")
