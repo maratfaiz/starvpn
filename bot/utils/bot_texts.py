@@ -222,6 +222,14 @@ TEXTS: dict[str, tuple[str, str, tuple[str, ...], str]] = {
     ), (), "Смарт-ТВ"),
 }
 
+# Экраны, над текстом которых можно поставить картинку (/admin → Бот).
+# Хранится в BotText с ключом "image:<ключ текста>".
+IMAGE_KEYS = {
+    "start.welcome_new", "start.welcome_back", "menu.title", "sub.text", "pay.choose",
+    "stars.text", "plans.text", "paid.text", "trial.offer", "trial.activated",
+    "referral.text", "support.text", "instr.menu",
+}
+
 # Кнопки главного меню, которые можно скрыть (остальные — основа бота).
 HIDEABLE = {"btn.gift", "btn.referral", "btn.support"}
 # Кнопки нижней клавиатуры — их подписи должны быть уникальны: по ним бот
@@ -323,7 +331,7 @@ def _block_dict(b: BotBlock) -> dict:
     except ValueError:
         buttons = []
     return {
-        "id": b.id, "title": b.title, "text": b.text, "buttons": buttons,
+        "id": b.id, "title": b.title, "text": b.text, "buttons": buttons, "image": b.image or "",
         "show_in_menu": bool(b.show_in_menu), "menu_label": b.menu_label,
         "command": b.command, "sort_order": b.sort_order,
     }
@@ -367,6 +375,22 @@ def t(key: str, **values: object) -> str:
     return _PLACEHOLDER_RE.sub(
         lambda m: str(values[m.group(1)]) if m.group(1) in values else m.group(0), text
     )
+
+
+def image_for(key: str) -> str:
+    """Картинка над экраном: "media:<id>", https://… или ""."""
+    return _overrides.get(f"image:{key}", "") if key in IMAGE_KEYS else ""
+
+
+_IMAGE_URL_RE = re.compile(r"https?://\S{3,480}")
+
+
+def validate_image_ref(ref: str) -> str | None:
+    if not ref or ref.startswith("media:") and ref[6:].isdigit():
+        return None
+    if _IMAGE_URL_RE.fullmatch(ref):
+        return None
+    return "Картинка: загрузите файл или вставьте ссылку https://…"
 
 
 def is_hidden(key: str) -> bool:
@@ -509,7 +533,7 @@ def reply_labels(extra_overrides: dict[str, str | None] | None = None,
 
 
 async def save_texts(session: AsyncSession, values: dict[str, str | None],
-                     hidden: dict[str, bool]) -> None:
+                     hidden: dict[str, bool], images: dict[str, str] | None = None) -> None:
     for key, value in values.items():
         row = await session.get(BotText, key)
         if value is None or value == default(key):
@@ -519,6 +543,15 @@ async def save_texts(session: AsyncSession, values: dict[str, str | None],
             row.value = value
         else:
             session.add(BotText(key=key, value=value))
+    for key, ref in (images or {}).items():
+        ikey = f"image:{key}"
+        row = await session.get(BotText, ikey)
+        if not ref and row:
+            await session.delete(row)
+        elif ref and row:
+            row.value = ref
+        elif ref:
+            session.add(BotText(key=ikey, value=ref))
     for key, is_hide in hidden.items():
         hkey = f"hidden:{key}"
         row = await session.get(BotText, hkey)

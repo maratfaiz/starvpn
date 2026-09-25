@@ -328,10 +328,46 @@ details.editor-card[open] > summary::after{content:' ▾'}
 .tg-bubble a{color:#6AB2F2}
 .tg-bubble code,.tg-bubble pre{font-family:'JetBrains Mono',monospace;font-size:12px;color:#E5A06E}
 .tg-bubble blockquote{border-left:3px solid #6AB2F2;padding-left:8px;margin:2px 0}
+.img-picker{display:flex;gap:12px;align-items:center;background:rgba(0,0,0,.3);border:1px dashed rgba(255,255,255,.14);border-radius:12px;padding:10px;margin-bottom:8px}
+.img-thumb{width:84px;height:56px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-thumb span{font-size:10.5px;color:#7E705B;text-align:center;padding:0 4px}
+.tg-photo{padding:0;overflow:hidden}
+.tg-photo img{display:block;width:100%;max-height:240px;object-fit:cover}
+.tg-photo > div{padding:9px 12px}
 .tg-kb{display:flex;flex-direction:column;gap:4px;margin-top:4px}
 .tg-kb div{background:rgba(40,56,74,.85);color:#FFF;text-align:center;border-radius:8px;padding:8px;font-size:13px;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
 .tg-reply{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-top:10px;background:#17212B;border-radius:10px;padding:6px}
 .tg-reply span{background:#2B5278;color:#fff;text-align:center;border-radius:6px;padding:8px 4px;font-size:12.5px;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
+
+/* ── Профиль и команда ───────────────────────────────────── */
+.prof-hero{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:linear-gradient(135deg,rgba(255,184,0,.1),rgba(255,184,0,.02));border:1px solid rgba(255,184,0,.22);border-radius:18px;padding:22px}
+.prof-avatar{width:64px;height:64px;border-radius:18px;background:rgba(255,184,0,.16);border:1px solid rgba(255,184,0,.4);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:#FFB800;flex-shrink:0}
+.prof-name{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#EBE0CC}
+.prof-sub{font-size:12.5px;color:#8A7A60;margin-top:2px}
+.prof-stats{display:flex;gap:22px}
+.prof-stat-val{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:#EBE0CC}
+.prof-stat-lbl{font-size:11px;color:#8A7A60}
+.prof-team{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.prof-team div{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:10px;text-align:center}
+.prof-team b{display:block;font-family:'Space Grotesk',sans-serif;font-size:18px;color:#EBE0CC}
+.prof-team span{font-size:11px;color:#8A7A60}
+.sess-row{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.sess-row:last-child{border-bottom:none}
+.sess-dot{width:8px;height:8px;border-radius:50%;background:#5A5040;flex-shrink:0}
+.sess-dot.on{background:#4ADE80;box-shadow:0 0 0 3px rgba(74,222,128,.15)}
+.kbd-row{display:flex;align-items:center;gap:6px;font-size:13px;color:#8A7A60;margin-bottom:8px}
+.kbd-row span:last-child{margin-left:6px}
+.kbd{font-family:'JetBrains Mono',monospace;font-size:11px;color:#EBE0CC;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-bottom-width:2px;border-radius:6px;padding:2px 7px}
+.staff-table{width:100%;border-collapse:collapse;min-width:720px}
+.staff-table th{text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6E6250;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
+.staff-table td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;vertical-align:middle}
+.staff-table tr:last-child td{border-bottom:none}
+.staff-table tr.off td{opacity:.5}
+.tbl-scroll{overflow-x:auto}
+.role-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.role-card.editing{border-color:rgba(255,184,0,.4)}
+.role-sections{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
 /* ── Settings ────────────────────────────────────────────── */
 .copy-field{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:6px 6px 6px 12px;font-size:12.5px;margin-bottom:8px}
@@ -343,7 +379,40 @@ details.editor-card[open] > summary::after{content:' ▾'}
 @media(max-width:820px){.settings-grid{grid-template-columns:1fr}}
 .tariff-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px;margin-bottom:10px}
 .provider-row{display:flex;align-items:center;gap:14px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px;margin-bottom:10px}
-.banner-icon-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px}
+.banner-icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:7px}
+.bn-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:12px;align-items:start}
+.bn-two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:980px){.bn-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.bn-two{grid-template-columns:1fr}}
+.bn-preview-wrap{display:flex;gap:14px;align-items:flex-start}
+.bn-frame{flex:1;min-width:0;border:1px solid rgba(255,255,255,.09);border-radius:12px;overflow:hidden;background:#050505}
+.bn-frame-bar{display:flex;align-items:center;gap:5px;padding:8px 12px;background:#121110;border-bottom:1px solid rgba(255,255,255,.06);font-size:11px;color:#6B5E4A}
+.bn-frame-bar i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.12)}
+.bn-frame-bar span{margin-left:8px}
+.bn-frame-page{height:46px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 120px,transparent 120px 136px)}
+.bn-phone{width:250px;flex-shrink:0;border:1px solid rgba(255,255,255,.09);border-radius:18px;overflow:hidden;background:#050505;padding-top:14px}
+@media(max-width:760px){.bn-preview-wrap{flex-direction:column}.bn-phone{width:100%;max-width:300px}}
+.bn-strip{position:relative;background:var(--b-bg);border-bottom:1px solid var(--b-border);color:var(--b-text)}
+.bn-strip-inner{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:9px 40px;font-size:12.5px;text-align:center}
+.bn-strip.narrow .bn-strip-inner{padding:8px 32px 8px 12px;gap:6px;font-size:11.5px}
+.bn-strip-icon{display:inline-flex;color:var(--b-accent)}
+.bn-strip-icon img{width:18px;height:18px;object-fit:contain;border-radius:4px}
+.bn-strip a{font-weight:600;color:var(--b-accent);white-space:nowrap}
+.bn-strip-timer{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--b-accent);background:rgba(0,0,0,.18);border-radius:6px;padding:2px 7px;white-space:nowrap}
+.bn-strip-close{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:18px;opacity:.6}
+.bn-templates{display:flex;flex-direction:column;gap:5px}
+.bn-tpl{display:flex;gap:9px;align-items:center;padding:7px 10px;border-radius:9px;border:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.25);font-size:12.5px;color:#C9BBA0;cursor:pointer;transition:border-color .15s,color .15s}
+.bn-tpl svg{color:#FFB800;flex-shrink:0}
+.bn-tpl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bn-tpl:hover{border-color:rgba(255,184,0,.3);color:#EBE0CC}
+.bn-styles{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.bn-style{cursor:pointer;border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:6px;transition:border-color .15s}
+.bn-style:hover{border-color:rgba(255,184,0,.3)}
+.bn-style.sel{border-color:#FFB800;background:rgba(255,184,0,.06)}
+.bn-style-sw{height:34px;border-radius:7px;border:1px solid;display:flex;align-items:center;gap:6px;padding:0 9px}
+.bn-style-sw span{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.bn-style-sw em{height:4px;border-radius:2px;flex:1;opacity:.7}
+.bn-style-lbl{font-size:12px;color:#C9BBA0;text-align:center;margin-top:6px}
 .banner-icon-opt{aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:10px;color:#8A7A60;cursor:pointer;transition:border-color .15s,color .15s}
 .banner-icon-opt svg{width:18px;height:18px}
 .banner-icon-opt:hover{border-color:rgba(255,184,0,.3);color:#EBE0CC}
@@ -559,6 +628,55 @@ async function api(method, path, body) {
 function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function fmtDate(iso) { if (!iso) return '—'; return new Date(iso).toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit',year:'2-digit'}); }
 function fmtDateTime(iso) { if (!iso) return '—'; return new Date(iso).toLocaleString('ru-RU', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+/* ── Картинки: загрузка в /web/media и выбор «файл или ссылка» ── */
+async function uploadImage(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  const r = await fetch('/web/media', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || 'Не удалось загрузить картинку');
+  return data;  // {id, ref: "media:12", url: "/media/12"}
+}
+function imageRefUrl(ref) {
+  if (!ref) return '';
+  return ref.startsWith('media:') ? '/media/' + ref.slice(6) : ref;
+}
+/* Виджет картинки. slot — строковый id «тип:ключ», по типу onImageChange находит обработчик.
+   noUrl — только загрузка файла, без «Ссылки». */
+function imagePickerHtml(slot, ref, hint, noUrl) {
+  const url = imageRefUrl(ref);
+  return `
+    <div class="img-picker">
+      <div class="img-thumb">${url ? `<img src="${esc(url)}" alt="">` : '<span>Нет картинки</span>'}</div>
+      <div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <label class="ghost-btn" style="padding:6px 11px;font-size:12px">Загрузить<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden onchange="onImagePicked('${slot}', this)"></label>
+          ${noUrl ? '' : `<div class="ghost-btn" style="padding:6px 11px;font-size:12px" onclick="onImageUrl('${slot}')">Ссылка</div>`}
+          ${url ? `<div class="ghost-btn" style="padding:6px 11px;font-size:12px;color:#F87171" onclick="onImageChange('${slot}', '')">Убрать</div>` : ''}
+        </div>
+        <div style="font-size:11px;color:#7E705B">${hint || 'PNG, JPEG, GIF или WebP до 5 МБ'}</div>
+      </div>
+    </div>`;
+}
+async function onImagePicked(slot, input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  try {
+    const up = await uploadImage(file);
+    onImageChange(slot, up.ref);
+  } catch (e) { toast(e.message, true); }
+}
+function onImageUrl(slot) {
+  const url = prompt('Ссылка на картинку (https://…)', 'https://');
+  if (url && /^https?:\/\/\S+/.test(url.trim())) onImageChange(slot, url.trim());
+}
+const IMAGE_SLOTS = {};  // тип слота → function(slot, ref)
+function onImageChange(slot, ref) {
+  unsaved = true;
+  const handler = IMAGE_SLOTS[slot.split(':')[0]];
+  if (handler) handler(slot, ref);
+}
+
 function copyText(text) {
   const done = () => toast('Скопировано');
   if (navigator.clipboard && window.isSecureContext) {
@@ -597,15 +715,16 @@ const NAV_ICONS = {
   bot: 'M4 5h7v5H4zM13 14h7v5h-7zM7.5 10v4.5a2 2 0 002 2H13M4 14h5M17 5h3M17 10V5',
   settings: 'M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1M15 5v4M9 10v4M17 15v4',
   profile: 'M12 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5',
-  adbanner: 'M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z',
+  banner: 'M4 5h16v9H4zM8 18h8M12 14v4M7.5 9.5h9',
+  staff: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3 2.7-5 6-5s6 2 6 5M16 5.5a3 3 0 010 5.5M21 20c0-2.4-1.5-4.2-3.8-4.8',
 };
 const NAV_GROUPS = [
   { title: 'Обзор', items: [{ id: 'dash', label: 'Дашборд' }] },
   { title: 'VPN', items: [{ id: 'users', label: 'Аккаунты', countKey: 'users' }, { id: 'devices', label: 'Устройства', countKey: 'devices' }, { id: 'servers', label: 'Серверы' }] },
   { title: 'Деньги', items: [{ id: 'payments', label: 'Платежи', countKey: 'payments' }, { id: 'referrals', label: 'Рефералы', countKey: 'referrals' }] },
   { title: 'Поддержка', items: [{ id: 'support', label: 'Обращения', countKey: 'tickets' }] },
-  { title: 'Контент', items: [{ id: 'bot', label: 'Бот' }, { id: 'wiki', label: 'Wiki', countKey: 'wiki' }, { id: 'adbanner', label: 'Реклама' }] },
-  { title: 'Система', items: [{ id: 'settings', label: 'Настройки' }] },
+  { title: 'Контент', items: [{ id: 'bot', label: 'Бот' }, { id: 'wiki', label: 'Wiki', countKey: 'wiki' }, { id: 'banner', label: 'Баннер' }] },
+  { title: 'Система', items: [{ id: 'settings', label: 'Настройки' }, { id: 'staff', label: 'Команда' }] },
   { title: 'Аккаунт', items: [{ id: 'profile', label: 'Профиль' }] },
 ];
 // 3 основных раздела внизу на мобильном + 4-я кнопка "Меню" со всеми остальными (bottom sheet)
@@ -622,13 +741,15 @@ const PAGE_META = {
   wiki: ['Wiki', 'Статьи базы знаний — пишите и редактируйте прямо здесь'],
   settings: ['Настройки', 'Тарифы, лимиты и провайдеры оплаты'],
   profile: ['Профиль', 'Ваш аккаунт и права доступа'],
-  adbanner: ['Реклама', 'Баннер на верхней полосе главной страницы'],
+  banner: ['Баннер', 'Полоса с объявлением над главной страницей сайта'],
+  staff: ['Команда', 'Сотрудники админки и их роли'],
 };
 let navCounts = {};
 
 function renderSidebar() {
   const el = document.getElementById('sbNav');
-  el.innerHTML = NAV_GROUPS.map(g => `
+  const groups = NAV_GROUPS.map(g => ({ ...g, items: g.items.filter(it => navAllowed(it.id)) })).filter(g => g.items.length);
+  el.innerHTML = groups.map(g => `
     <div class="sb-group">
       <div class="sb-group-title">${g.title}</div>
       ${g.items.map(it => `
@@ -641,7 +762,7 @@ function renderSidebar() {
     </div>
   `).join('');
 
-  const allItems = NAV_GROUPS.flatMap(g => g.items);
+  const allItems = groups.flatMap(g => g.items);
   const findItem = id => allItems.find(it => it.id === id);
 
   const bn = document.getElementById('bottomNav');
@@ -660,7 +781,7 @@ function renderSidebar() {
     </div>
   `;
 
-  document.getElementById('bottomSheetContent').innerHTML = NAV_GROUPS.map(g => `
+  document.getElementById('bottomSheetContent').innerHTML = groups.map(g => `
     <div class="sb-group">
       <div class="sb-group-title">${g.title}</div>
       ${g.items.map(it => `
@@ -684,7 +805,7 @@ function closeBottomSheet() {
 }
 
 /* ── Несохранённые правки ─────────────────────────────────
-   Любой ввод в редакторе (Wiki, Бот, Реклама) помечает страницу как
+   Любой ввод в редакторе (Wiki, Бот, Баннер) помечает страницу как
    изменённую; уход с неё спрашивает подтверждение. */
 let unsaved = false;
 function confirmLeave() {
@@ -710,8 +831,14 @@ function hotkeys(e) {
 }
 document.addEventListener('keydown', hotkeys);
 
+function navAllowed(id) {
+  if (id === 'dash' || id === 'profile') return true;
+  return !!(myProfile && myProfile.allowed_sections && myProfile.allowed_sections.includes(id));
+}
+
 function goto(s) {
   if (!confirmLeave()) return;
+  if (!navAllowed(s)) s = 'dash';
   section = s;
   filter = 'all'; query = ''; selectedRow = null; selectedTicket = null;
   document.getElementById('globalQuery').value = '';
@@ -720,7 +847,7 @@ function goto(s) {
   document.getElementById('tbTitle').textContent = title;
   document.getElementById('tbSub').textContent = sub;
   document.getElementById('content').innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
-  const fns = { dash: renderDashboard, users: () => renderTable('users'), devices: () => renderTable('devices'), servers: renderServers, payments: () => renderTable('payments'), referrals: () => renderTable('referrals'), support: renderSupport, wiki: renderWiki, bot: renderBot, settings: renderSettings, profile: renderProfile, adbanner: renderAdBanner };
+  const fns = { dash: renderDashboard, users: () => renderTable('users'), devices: () => renderTable('devices'), servers: renderServers, payments: () => renderTable('payments'), referrals: () => renderTable('referrals'), support: renderSupport, wiki: renderWiki, bot: renderBot, settings: renderSettings, profile: renderProfile, banner: renderAdBanner, staff: renderStaff };
   (fns[s] || (() => {}))();
 }
 
@@ -741,15 +868,20 @@ async function checkMarzban() {
 }
 
 async function loadCounts() {
-  try {
-    const [u, d, p, r, t, w] = await Promise.all([
-      api('GET', '/web/users?limit=1'), api('GET', '/web/devices?limit=1'),
-      api('GET', '/web/payments?limit=1'), api('GET', '/web/referrals'),
-      api('GET', '/web/tickets?status=open'), api('GET', '/web/wiki'),
-    ]);
-    navCounts = { users: u.total, devices: d.total, payments: p.total, referrals: r.referrers_count, tickets: t.tickets.length, wiki: w.articles.length };
-    renderSidebar();
-  } catch (e) { /* ignore */ }
+  // Только разделы, доступные роли сотрудника — остальные ответили бы 403.
+  const sources = {
+    users: ['/web/users?limit=1', d => d.total],
+    devices: ['/web/devices?limit=1', d => d.total],
+    payments: ['/web/payments?limit=1', d => d.total],
+    referrals: ['/web/referrals', d => d.referrers_count],
+    tickets: ['/web/tickets?status=open', d => d.tickets.length, 'support'],
+    wiki: ['/web/wiki', d => d.articles.length],
+  };
+  await Promise.all(Object.entries(sources).map(async ([key, [url, pick, sec]]) => {
+    if (!navAllowed(sec || key)) return;
+    try { navCounts[key] = pick(await api('GET', url)); } catch (e) { /* ignore */ }
+  }));
+  renderSidebar();
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -824,7 +956,11 @@ async function loadActivity() {
   const el = document.getElementById('activityFeed');
   if (!el) return;
   try {
-    const [pays, tickets] = await Promise.all([api('GET', '/web/payments?limit=5'), api('GET', '/web/tickets')]);
+    const empty = key => Promise.resolve({ [key]: [] });
+    const [pays, tickets] = await Promise.all([
+      navAllowed('payments') ? api('GET', '/web/payments?limit=5') : empty('payments'),
+      navAllowed('support') ? api('GET', '/web/tickets') : empty('tickets'),
+    ]);
     const events = [
       ...pays.payments.map(p => ({ text: `Платёж ${p.amount} ₽ от ${p.telegram_id}`, time: p.paid_at, dot: '#4ADE80' })),
       ...tickets.tickets.slice(0, 5).map(t => ({ text: `Тикет «${t.topic_label}» от ${esc(t.user_label)}`, time: t.created_at, dot: '#FFB800' })),
@@ -1281,8 +1417,10 @@ const WIKI_TOOLS = [
   ['ol', 'Нумерованный список', '<span style="font-size:11px;font-weight:700">1.</span>'],
   ['quote', 'Цитата', '<span style="font-size:17px;line-height:1">“</span>'],
   ['callout', 'Заметка (жёлтая плашка)', '<span style="font-weight:700">!</span>'],
+  ['toggle', 'Раскрывающийся блок', '<span style="font-size:11px">▸</span>'],
+  ['table', 'Таблица', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="10" y1="4" x2="10" y2="20"/></svg>'],
   ['code', 'Код', '<span class="mono" style="font-size:11px">&lt;/&gt;</span>'],
-  ['image', 'Картинка по ссылке', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-9 9"/></svg>'],
+  ['image', 'Картинка: загрузить (можно перетащить или вставить Ctrl+V)', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-9 9"/></svg>'],
   ['hr', 'Разделитель', '—'],
   ['clear', 'Убрать оформление', '<span style="font-size:12px">T<sub>x</sub></span>'],
   ['undo', 'Отменить', '↶'],
@@ -1331,9 +1469,10 @@ async function openWikiEditor(id) {
           </select>
           ${WIKI_TOOLS.map(([cmd, title, icon]) => `<button type="button" class="tb-btn" title="${title}" onmousedown="event.preventDefault()" onclick="wikiCmd('${cmd}')">${icon}</button>`).join('')}
         </div>
+        <input type="file" id="wImgFile" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden onchange="wikiImgFilePicked(this)">
         <iframe id="wFrame" class="wiki-frame" title="Редактор статьи"></iframe>
         <textarea class="editor-body" id="wHtml" spellcheck="false" style="display:none"></textarea>
-        <div class="tb-hint" style="margin-top:8px;white-space:normal">Заголовки «Заголовок раздела» автоматически попадают в оглавление справа на странице статьи.</div>
+        <div class="tb-hint" style="margin-top:8px;white-space:normal">Введите <span class="kbd">/</span> в пустой строке — меню блоков (таблица, картинка, раскрывашка…). Быстрый ввод: <span class="kbd">#</span> заголовок, <span class="kbd">##</span> подзаголовок, <span class="kbd">-</span> список, <span class="kbd">1.</span> нумерация, <span class="kbd">&gt;</span> цитата — и пробел. Картинки можно перетащить в текст или вставить из буфера; клик по картинке — размер, выравнивание, подпись. В таблице <span class="kbd">Tab</span> — следующая ячейка. «Заголовки раздела» попадают в оглавление статьи.</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
         <div class="editor-card">
@@ -1382,10 +1521,11 @@ async function openWikiEditor(id) {
 
 function wikiInitFrame(html, css) {
   const f = document.getElementById('wFrame');
+  wikiFig = null; wikiSlash = null; wikiSavedRange = null;
   f.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>${wikiEditorCss}</style><style id="customCss"></style>
-    <style>body{padding:22px 26px;min-height:100%}#ed{outline:none;max-width:none;padding-bottom:40px}#ed:empty::before,#ed > p:only-child:empty::before{content:'Начните писать статью…';color:var(--text3)}</style>
+    <style>${WIKI_EDITOR_CSS}</style>
     </head><body><article id="ed" contenteditable="true"></article></body></html>`;
   f.onload = () => {
     const ed = wikiEd();
@@ -1393,15 +1533,9 @@ function wikiInitFrame(html, css) {
     wikiApplyCss(css);
     const d = wikiDoc();
     d.execCommand('defaultParagraphSeparator', false, 'p');
-    ed.addEventListener('input', () => { unsaved = true; });
     d.addEventListener('keydown', hotkeys);
     d.addEventListener('selectionchange', wikiSyncBlockSelect);
-    // Вставка из Word/Google Docs приносит свои шрифты и цвета — берём только текст.
-    ed.addEventListener('paste', (e) => {
-      e.preventDefault();
-      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-      d.execCommand('insertText', false, text);
-    });
+    wikiBindEditor();
   };
 }
 
@@ -1426,9 +1560,11 @@ function wikiCmd(cmd, value) {
   const d = wikiDoc();
   wikiEd().focus();
   const wrap = (tag, cls) => {
-    const sel = d.getSelection();
-    const text = sel && sel.toString() ? esc(sel.toString()) : (tag === 'pre' ? 'код' : 'Текст');
-    d.execCommand('insertHTML', false, `<${tag}${cls ? ` class="${cls}"` : ''}>${text}</${tag}><p><br></p>`);
+    const r = wikiSelRange();
+    const picked = r && !r.collapsed ? r.toString() : '';
+    if (picked) r.deleteContents();
+    const el = wikiInsertBlock(`<${tag}${cls ? ` class="${cls}"` : ''}>${picked ? esc(picked) : (tag === 'pre' ? 'код' : 'Текст')}</${tag}>`);
+    wikiCaret(el, !picked);
   };
   switch (cmd) {
     case 'block': d.execCommand('formatBlock', false, value); break;
@@ -1450,14 +1586,496 @@ function wikiCmd(cmd, value) {
       else d.execCommand('insertHTML', false, `<a href="${esc(url)}">${esc(url)}</a>`);
       break;
     }
-    case 'image': {
+    case 'image': wikiPickImage(); break;
+    case 'imageurl': {
+      const range = wikiSelRange() && wikiSelRange().cloneRange();
       const url = prompt('Ссылка на картинку (https://…)', 'https://');
-      if (!url) return;
-      d.execCommand('insertHTML', false, `<img src="${esc(url)}" alt="">`);
+      if (!url || !/^(https?:\/\/|\/)\S+$/.test(url.trim())) return;
+      wikiSavedRange = range;
+      wikiInsertImage(url.trim());
+      break;
+    }
+    case 'toggle': {
+      const el = wikiInsertBlock(`<details class="toggle" open><summary>Заголовок</summary><p>${WIKI_TOGGLE_HINT}</p></details>`);
+      wikiCaret(el.querySelector('summary'), true);
+      break;
+    }
+    case 'table': {
+      const row = tag => `<tr>${`<${tag}><br></${tag}>`.repeat(3)}</tr>`;
+      const el = wikiInsertBlock(`<table><thead>${row('th')}</thead><tbody>${row('td')}${row('td')}</tbody></table>`);
+      wikiCaret(el.querySelector('th'));
       break;
     }
   }
+  wikiFixNesting();
   wikiSyncBlockSelect();
+  wikiPaintOverlays();
+}
+
+/* ── Блоки «как в Notion»: меню «/», картинки, таблицы, раскрывашки ── */
+const WIKI_SLASH = [
+  ['p', 'Текст', 'Обычный абзац', '¶', 'text'],
+  ['h2', 'Заголовок раздела', 'Попадает в оглавление', 'H2', 'heading'],
+  ['h3', 'Подзаголовок', 'Заголовок поменьше', 'H3', 'heading'],
+  ['ul', 'Маркированный список', 'Пункты с точками', '•', 'list bullet'],
+  ['ol', 'Нумерованный список', 'Пункты 1, 2, 3', '1.', 'list number'],
+  ['quote', 'Цитата', 'Выделенный абзац', '“', 'quote'],
+  ['callout', 'Заметка', 'Жёлтая плашка с «!»', '!', 'callout note'],
+  ['toggle', 'Раскрывающийся блок', 'Заголовок, по клику — текст', '▸', 'toggle details'],
+  ['table', 'Таблица', '3 × 3 с шапкой', '▦', 'table'],
+  ['image', 'Картинка', 'Загрузить с компьютера', '▣', 'image img photo'],
+  ['imageurl', 'Картинка по ссылке', 'Вставить https://…', '↗', 'image url link'],
+  ['code', 'Код', 'Моноширинный блок', '</>', 'code'],
+  ['hr', 'Разделитель', 'Горизонтальная линия', '—', 'divider hr'],
+];
+// Быстрый ввод в начале пустого абзаца: «## » → подзаголовок и т. п.
+const WIKI_MD = { '#': ['block', 'h2'], '##': ['block', 'h3'], '-': ['ul'], '*': ['ul'], '1.': ['ol'], '>': ['quote'] };
+
+const WIKI_TOGGLE_HINT = 'Текст, который откроется по клику';
+let wikiSavedRange = null;  // позиция курсора до открытия диалога выбора файла
+let wikiFig = null;         // выбранная картинка
+let wikiSlash = null;       // {block, items, idx} — открытое меню «/»
+
+function wikiSelRange() {
+  const d = wikiDoc(), sel = d && d.getSelection();
+  if (!sel || !sel.rangeCount) return null;
+  const r = sel.getRangeAt(0);
+  return wikiEd().contains(r.startContainer) ? r : null;
+}
+function wikiElOf(node) { return node && (node.nodeType === 1 ? node : node.parentNode); }
+function wikiTopBlock(node) {
+  const ed = wikiEd();
+  while (node && node.parentNode !== ed) node = node.parentNode;
+  return node && node.nodeType === 1 ? node : null;
+}
+function wikiCaret(el, selectAll) {
+  const d = wikiDoc(), r = d.createRange();
+  r.selectNodeContents(el);
+  if (!selectAll) r.collapse(!el.textContent);
+  const sel = d.getSelection();
+  sel.removeAllRanges(); sel.addRange(r);
+}
+function wikiEmptyP(el) { return el && el.tagName === 'P' && !el.textContent.trim() && !el.querySelector('img'); }
+
+/* Вставляет блок на место пустого абзаца с курсором или после текущего блока. */
+function wikiInsertBlock(html) {
+  const d = wikiDoc(), ed = wikiEd();
+  const tpl = d.createElement('template');
+  tpl.innerHTML = html.trim();
+  const nodes = [...tpl.content.childNodes];
+  const r = wikiSavedRange || wikiSelRange();
+  wikiSavedRange = null;
+  const top = r && wikiTopBlock(r.startContainer);
+  if (wikiEmptyP(top)) top.replaceWith(...nodes);
+  else if (top) top.after(...nodes);
+  else ed.append(...nodes);
+  const last = nodes[nodes.length - 1];
+  if (!last.nextElementSibling) {
+    const p = d.createElement('p'); p.innerHTML = '<br>'; last.after(p);
+  }
+  unsaved = true;
+  return nodes[0];
+}
+
+function wikiInsertImage(src) {
+  const fig = wikiInsertBlock(`<figure class="wimg" data-align="center"><img src="${esc(src)}" alt=""></figure>`);
+  const img = fig.querySelector('img');
+  img.addEventListener('load', () => {
+    if (!fig.style.width) {
+      const w = Math.round(img.naturalWidth / wikiEd().clientWidth * 100);
+      fig.style.width = Math.max(20, Math.min(100, w)) + '%';
+    }
+    wikiSelectFigure(fig);
+  }, { once: true });
+  wikiCaret(fig.nextElementSibling);
+}
+
+async function wikiUploadFiles(files) {
+  const images = [...files].filter(f => /^image\//.test(f.type));
+  for (const f of images) {
+    try {
+      toast('Загружаю картинку…');
+      const up = await uploadImage(f);
+      wikiInsertImage(up.url);
+    } catch (e) { toast(e.message, true); }
+  }
+  return images.length > 0;
+}
+function wikiPickImage() {
+  wikiSavedRange = wikiSelRange() && wikiSelRange().cloneRange();
+  document.getElementById('wImgFile').click();
+}
+async function wikiImgFilePicked(input) {
+  await wikiUploadFiles(input.files);
+  input.value = '';
+}
+
+/* Картинка: выбор, размер, выравнивание, подпись */
+function wikiSelectFigure(fig) {
+  if (wikiFig && wikiFig !== fig) wikiFig.classList.remove('w-sel');
+  wikiFig = fig;
+  if (fig) fig.classList.add('w-sel');
+  wikiPaintOverlays();
+}
+function wikiImgAction(act, value) {
+  const fig = wikiFig;
+  if (!fig) return;
+  if (act === 'width') fig.style.width = value + '%';
+  else if (act === 'align') fig.dataset.align = value;
+  else if (act === 'caption') {
+    let cap = fig.querySelector('figcaption');
+    if (cap) cap.remove();
+    else { cap = wikiDoc().createElement('figcaption'); cap.textContent = 'Подпись'; fig.appendChild(cap); wikiSelectFigure(null); wikiCaret(cap, true); }
+  } else if (act === 'alt') {
+    const img = fig.querySelector('img');
+    const alt = prompt('Описание картинки (для поисковиков и незрячих читателей)', img.alt || '');
+    if (alt !== null) img.alt = alt.trim();
+  } else if (act === 'del') {
+    const next = fig.nextElementSibling;
+    fig.remove();
+    wikiSelectFigure(null);
+    if (next) wikiCaret(next);
+  }
+  unsaved = true;
+  wikiPaintOverlays();
+}
+function wikiResizeStart(e) {
+  const fig = wikiFig;
+  if (!fig) return;
+  e.preventDefault();
+  const d = wikiDoc(), edW = wikiEd().clientWidth;
+  const startX = e.clientX, startW = fig.getBoundingClientRect().width;
+  const factor = fig.dataset.align === 'right' ? -1 : (fig.dataset.align === 'left' ? 1 : 2);
+  const move = (ev) => {
+    const w = (startW + (ev.clientX - startX) * factor) / edW * 100;
+    fig.style.width = Math.round(Math.max(10, Math.min(100, w))) + '%';
+    wikiPaintOverlays();
+  };
+  const up = () => { d.removeEventListener('mousemove', move); d.removeEventListener('mouseup', up); unsaved = true; };
+  d.addEventListener('mousemove', move);
+  d.addEventListener('mouseup', up);
+}
+
+/* Таблицы */
+function wikiCell() {
+  const r = wikiSelRange(), el = r && wikiElOf(r.startContainer);
+  return el && el.closest ? el.closest('td, th') : null;
+}
+function wikiNewCell(tag) { const c = wikiDoc().createElement(tag); c.innerHTML = '<br>'; return c; }
+function wikiRetag(cell, tag) {
+  const n = wikiDoc().createElement(tag);
+  while (cell.firstChild) n.appendChild(cell.firstChild);
+  cell.replaceWith(n);
+  return n;
+}
+function wikiTableOp(op) {
+  const cell = wikiCell();
+  if (!cell) return;
+  const table = cell.closest('table'), row = cell.parentElement, idx = cell.cellIndex;
+  const inHead = row.parentElement.tagName === 'THEAD';
+  let focus = null;
+  if (op === 'row') {
+    const tr = wikiDoc().createElement('tr');
+    [...row.cells].forEach(c => tr.appendChild(wikiNewCell(inHead ? 'td' : c.tagName.toLowerCase())));
+    if (inHead) {
+      let body = table.tBodies[0];
+      if (!body) { body = wikiDoc().createElement('tbody'); table.appendChild(body); }
+      body.prepend(tr);
+    } else row.after(tr);
+    focus = tr.cells[Math.min(idx, tr.cells.length - 1)];
+  } else if (op === 'col') {
+    [...table.rows].forEach(tr => {
+      const ref = tr.cells[idx];
+      const tag = ref ? ref.tagName.toLowerCase() : (tr.parentElement.tagName === 'THEAD' ? 'th' : 'td');
+      const c = wikiNewCell(tag);
+      if (ref) ref.after(c); else tr.appendChild(c);
+      if (tr === row) focus = c;
+    });
+  } else if (op === 'delrow') {
+    if (table.rows.length <= 1) return wikiTableOp('deltable');
+    const sib = row.nextElementSibling || row.previousElementSibling;
+    const section = row.parentElement;
+    row.remove();
+    if (!section.rows.length) section.remove();
+    focus = sib ? sib.cells[Math.min(idx, sib.cells.length - 1)] : table.rows[0].cells[0];
+  } else if (op === 'delcol') {
+    if (row.cells.length <= 1) return wikiTableOp('deltable');
+    [...table.rows].forEach(tr => { if (tr.cells[idx]) tr.cells[idx].remove(); });
+    focus = row.cells[Math.min(idx, row.cells.length - 1)];
+  } else if (op === 'head') {
+    if (table.tHead) {
+      let body = table.tBodies[0];
+      if (!body) { body = wikiDoc().createElement('tbody'); table.appendChild(body); }
+      [...table.tHead.rows].reverse().forEach(tr => {
+        [...tr.cells].forEach(c => wikiRetag(c, 'td'));
+        body.prepend(tr);
+      });
+      table.tHead.remove();
+    } else {
+      const first = table.rows[0];
+      const head = wikiDoc().createElement('thead');
+      table.prepend(head);
+      [...first.cells].forEach(c => wikiRetag(c, 'th'));
+      head.appendChild(first);
+    }
+    focus = table.rows[row.rowIndex >= 0 ? row.rowIndex : 0].cells[idx];
+  } else if (op === 'deltable') {
+    const next = table.nextElementSibling;
+    table.remove();
+    if (next) wikiCaret(next);
+  }
+  if (focus) wikiCaret(focus);
+  unsaved = true;
+  wikiPaintOverlays();
+}
+function wikiTableTab(back) {
+  const cell = wikiCell();
+  if (!cell) return false;
+  const table = cell.closest('table');
+  const cells = [...table.querySelectorAll('th, td')];
+  const i = cells.indexOf(cell) + (back ? -1 : 1);
+  if (i < 0) return true;
+  if (i >= cells.length) { wikiCaret(cells[cells.length - 1]); wikiTableOp('row'); return true; }
+  wikiCaret(cells[i], true);
+  return true;
+}
+
+/* Меню «/» */
+function wikiSlashUpdate() {
+  const r = wikiSelRange();
+  const top = r && r.collapsed && wikiTopBlock(r.startContainer);
+  const m = top && top.tagName === 'P' && top.textContent.match(/^\/([\p{L}\d]*)$/u);
+  if (!m) { wikiSlashClose(); return; }
+  const q = m[1].toLowerCase();
+  const items = WIKI_SLASH.filter(([cmd, label, , , kw]) => !q || label.toLowerCase().includes(q) || kw.includes(q) || cmd.includes(q));
+  if (!items.length) { wikiSlashClose(); return; }
+  wikiSlash = { block: top, items, idx: wikiSlash && wikiSlash.block === top ? Math.min(wikiSlash.idx, items.length - 1) : 0 };
+  wikiPaintSlash();
+}
+function wikiPaintSlash() {
+  const d = wikiDoc(), box = d.getElementById('wSlash');
+  if (!wikiSlash) { box.hidden = true; return; }
+  box.innerHTML = wikiSlash.items.map(([cmd, label, sub, ic], i) => `
+    <div class="it${i === wikiSlash.idx ? ' on' : ''}" data-cmd="${cmd}">
+      <span class="ic">${esc(ic)}</span><span><span class="t">${esc(label)}</span><span class="s">${esc(sub)}</span></span>
+    </div>`).join('');
+  const rect = wikiSlash.block.getBoundingClientRect();
+  const win = d.defaultView;
+  box.hidden = false;
+  box.style.left = (rect.left + win.scrollX) + 'px';
+  const below = rect.bottom + win.scrollY + 6;
+  box.style.top = (rect.bottom + box.offsetHeight > win.innerHeight && rect.top > box.offsetHeight
+    ? rect.top + win.scrollY - box.offsetHeight - 6 : below) + 'px';
+  const on = box.querySelector('.it.on');
+  if (on) on.scrollIntoView({ block: 'nearest' });
+}
+function wikiSlashClose() {
+  if (!wikiSlash) return;
+  wikiSlash = null;
+  wikiPaintSlash();
+}
+function wikiSlashChoose(cmd) {
+  const block = wikiSlash && wikiSlash.block;
+  wikiSlashClose();
+  if (!block) return;
+  block.innerHTML = '<br>';
+  wikiCaret(block);
+  if (['p', 'h2', 'h3'].includes(cmd)) wikiCmd('block', cmd);
+  else wikiCmd(cmd);
+}
+
+/* Плавающие панели картинки и таблицы — живут в iframe вне #ed и не сохраняются. */
+function wikiPaintOverlays() {
+  const d = wikiDoc();
+  if (!d || !d.getElementById('wImgBar')) return;
+  const win = d.defaultView, ed = wikiEd();
+  const imgBar = d.getElementById('wImgBar'), handle = d.getElementById('wImgHandle'), tblBar = d.getElementById('wTblBar');
+  if (wikiFig && !ed.contains(wikiFig)) wikiFig = null;
+  imgBar.hidden = handle.hidden = !wikiFig;
+  if (wikiFig) {
+    const img = wikiFig.querySelector('img');
+    const r = (img || wikiFig).getBoundingClientRect();
+    imgBar.style.left = Math.max(4, r.left + win.scrollX) + 'px';
+    imgBar.style.top = (r.top - imgBar.offsetHeight - 8 >= 0 ? r.top - imgBar.offsetHeight - 8 : r.bottom + 8) + win.scrollY + 'px';
+    const right = wikiFig.dataset.align === 'right';
+    handle.style.left = ((right ? r.left : r.right) + win.scrollX - 6) + 'px';
+    handle.style.top = (r.top + win.scrollY + r.height / 2 - 20) + 'px';
+    const w = parseInt(wikiFig.style.width, 10);
+    imgBar.querySelectorAll('[data-w]').forEach(b => b.classList.toggle('on', +b.dataset.w === w));
+    imgBar.querySelectorAll('[data-a]').forEach(b => b.classList.toggle('on', b.dataset.a === (wikiFig.dataset.align || 'center')));
+    imgBar.querySelector('[data-act=caption]').classList.toggle('on', !!wikiFig.querySelector('figcaption'));
+  }
+  const cell = !wikiFig && wikiCell();
+  tblBar.hidden = !cell;
+  if (cell) {
+    const r = cell.closest('table').getBoundingClientRect();
+    tblBar.style.left = (r.left + win.scrollX) + 'px';
+    tblBar.style.top = (r.top - tblBar.offsetHeight - 8 >= 0 ? r.top - tblBar.offsetHeight - 8 : r.bottom + 8) + win.scrollY + 'px';
+    tblBar.querySelector('[data-t=head]').classList.toggle('on', !!cell.closest('table').tHead);
+  }
+  // Подсказка «/» в пустом абзаце с курсором
+  ed.querySelectorAll('.w-ph').forEach(p => p.classList.remove('w-ph'));
+  const r = wikiSelRange(), top = r && r.collapsed && wikiTopBlock(r.startContainer);
+  if (wikiEmptyP(top) && ed.children.length > 1) top.classList.add('w-ph');
+}
+
+const WIKI_OVERLAYS = `
+  <div id="wImgBar" class="w-bar" hidden>
+    <button data-w="25">25%</button><button data-w="50">50%</button><button data-w="75">75%</button><button data-w="100">100%</button>
+    <span class="w-sep"></span>
+    <button data-a="left" title="Прижать влево">Слева</button><button data-a="center" title="По центру">Центр</button><button data-a="right" title="Прижать вправо">Справа</button>
+    <span class="w-sep"></span>
+    <button data-act="caption">Подпись</button><button data-act="alt" title="Описание картинки">Alt</button><button data-act="del" class="w-danger">Удалить</button>
+  </div>
+  <div id="wImgHandle" class="w-handle" title="Потяните, чтобы изменить размер" hidden></div>
+  <div id="wTblBar" class="w-bar" hidden>
+    <button data-t="row">+ Строка</button><button data-t="col">+ Столбец</button>
+    <span class="w-sep"></span>
+    <button data-t="delrow">− Строка</button><button data-t="delcol">− Столбец</button>
+    <span class="w-sep"></span>
+    <button data-t="head">Шапка</button><button data-t="deltable" class="w-danger">Удалить таблицу</button>
+  </div>
+  <div id="wSlash" class="w-slash" hidden></div>`;
+
+const WIKI_EDITOR_CSS = `
+  body{padding:22px 26px;min-height:100%;position:relative}
+  #ed{outline:none;max-width:none;padding-bottom:40px}
+  #ed:empty::before,#ed > p:only-child:empty::before{content:'Начните писать статью… Введите «/», чтобы вставить блок';color:var(--text3)}
+  #ed p.w-ph{position:relative}
+  #ed p.w-ph::before{content:'Введите «/» для выбора блока';position:absolute;color:var(--text3);pointer-events:none}
+  #ed img{cursor:pointer}
+  #ed figure.wimg.w-sel img{outline:2px solid #FFB800;outline-offset:3px}
+  #ed details.toggle > summary{cursor:text}
+  #ed td,#ed th{min-width:48px}
+  .w-bar{position:absolute;z-index:20;display:flex;gap:2px;align-items:center;background:#17120c;border:1px solid rgba(255,184,0,.25);border-radius:10px;padding:4px;box-shadow:0 12px 32px rgba(0,0,0,.55);font:500 12px Inter,sans-serif;white-space:nowrap}
+  .w-bar[hidden],.w-handle[hidden],.w-slash[hidden]{display:none}
+  .w-bar button{background:none;border:0;color:#E8DCC4;padding:5px 8px;border-radius:7px;cursor:pointer;font:inherit}
+  .w-bar button:hover{background:rgba(255,184,0,.12);color:#FFB800}
+  .w-bar button.on{background:rgba(255,184,0,.18);color:#FFB800}
+  .w-bar .w-danger{color:#F87171}
+  .w-sep{width:1px;height:18px;background:rgba(255,255,255,.12);margin:0 3px}
+  .w-handle{position:absolute;z-index:20;width:12px;height:40px;border-radius:6px;background:#FFB800;border:2px solid #0a0806;cursor:ew-resize;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+  .w-slash{position:absolute;z-index:30;width:290px;max-height:330px;overflow:auto;background:#15110c;border:1px solid rgba(255,184,0,.22);border-radius:12px;padding:6px;box-shadow:0 18px 40px rgba(0,0,0,.6);font-family:Inter,sans-serif}
+  .w-slash .it{display:flex;gap:10px;align-items:center;padding:7px 9px;border-radius:8px;cursor:pointer}
+  .w-slash .it.on{background:rgba(255,184,0,.12)}
+  .w-slash .ic{width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;font:600 12px 'Space Grotesk',sans-serif;color:#FFB800;flex-shrink:0}
+  .w-slash .t{display:block;font-size:13px;font-weight:500;color:#F0E6D2}
+  .w-slash .s{display:block;font-size:11.5px;color:#7E705B}`;
+
+function wikiBindEditor() {
+  const d = wikiDoc(), ed = wikiEd();
+  d.body.insertAdjacentHTML('beforeend', WIKI_OVERLAYS);
+  ed.querySelectorAll('details').forEach(x => { x.open = true; });
+
+  const bar = (id, fn) => d.getElementById(id).addEventListener('mousedown', (e) => {
+    const b = e.target.closest('button');
+    e.preventDefault();
+    if (b) fn(b);
+  });
+  bar('wImgBar', b => b.dataset.w ? wikiImgAction('width', b.dataset.w)
+    : b.dataset.a ? wikiImgAction('align', b.dataset.a) : wikiImgAction(b.dataset.act));
+  bar('wTblBar', b => wikiTableOp(b.dataset.t));
+  d.getElementById('wImgHandle').addEventListener('mousedown', wikiResizeStart);
+  d.getElementById('wSlash').addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const it = e.target.closest('.it');
+    if (it) wikiSlashChoose(it.dataset.cmd);
+  });
+
+  d.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.w-bar, .w-handle, .w-slash')) return;
+    wikiSlashClose();
+    const img = e.target.closest('#ed img');
+    if (!img) { if (wikiFig) wikiSelectFigure(null); return; }
+    e.preventDefault();
+    let fig = img.closest('figure');
+    if (!fig) {  // картинка из старой статьи — оборачиваем, чтобы появились размер и подпись
+      fig = d.createElement('figure');
+      fig.className = 'wimg'; fig.dataset.align = 'center';
+      const p = img.parentElement;
+      if (p.tagName === 'P' && p.parentNode === wikiEd() && !p.textContent.trim() && p.querySelectorAll('img').length === 1) p.replaceWith(fig);
+      else img.replaceWith(fig);
+      fig.appendChild(img);
+      unsaved = true;
+    }
+    wikiSelectFigure(fig);
+  });
+  // В редакторе раскрывашки всегда открыты: клик по заголовку не должен их сворачивать.
+  d.addEventListener('click', (e) => { if (e.target.closest('#ed summary')) e.preventDefault(); });
+
+  ed.addEventListener('input', () => { unsaved = true; wikiFixNesting(); wikiSlashUpdate(); wikiPaintOverlays(); });
+  ed.addEventListener('keydown', (e) => {
+    if (wikiSlash) {
+      const n = wikiSlash.items.length;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        wikiSlash.idx = (wikiSlash.idx + (e.key === 'ArrowDown' ? 1 : n - 1)) % n;
+        wikiPaintSlash(); return;
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); wikiSlashChoose(wikiSlash.items[wikiSlash.idx][0]); return; }
+      if (e.key === 'Escape') { e.preventDefault(); wikiSlashClose(); return; }
+    }
+    if (wikiFig && (e.key === 'Backspace' || e.key === 'Delete')) { e.preventDefault(); wikiImgAction('del'); return; }
+    if (wikiFig && e.key !== 'Shift') wikiSelectFigure(null);
+    if (e.key === 'Tab' && wikiTableTab(e.shiftKey)) { e.preventDefault(); return; }
+    const r = wikiSelRange();
+    const summary = r && wikiElOf(r.startContainer).closest('summary');
+    if (summary && e.key === ' ') { e.preventDefault(); d.execCommand('insertText', false, ' '); return; }
+    if (summary && e.key === 'Enter') {
+      e.preventDefault();
+      let body = summary.nextElementSibling;
+      if (!body) { body = d.createElement('p'); body.innerHTML = '<br>'; summary.after(body); }
+      wikiCaret(body, body.textContent === WIKI_TOGGLE_HINT); return;
+    }
+    if (e.key === ' ' && r && r.collapsed) {
+      const top = wikiTopBlock(r.startContainer);
+      const md = top && top.tagName === 'P' && WIKI_MD[top.textContent];
+      if (md) {
+        const before = d.createRange();
+        before.setStart(top, 0); before.setEnd(r.startContainer, r.startOffset);
+        if (before.toString() === top.textContent) {
+          e.preventDefault();
+          top.innerHTML = '<br>';
+          wikiCaret(top);
+          wikiCmd(...md);
+        }
+      }
+    }
+  });
+  d.addEventListener('selectionchange', wikiPaintOverlays);
+  d.defaultView.addEventListener('resize', wikiPaintOverlays);
+
+  // Вставка: картинки из буфера загружаем, текст — без чужого оформления из Word/Google Docs.
+  ed.addEventListener('paste', async (e) => {
+    const cd = e.clipboardData || window.clipboardData;
+    e.preventDefault();
+    if (cd.files && cd.files.length) {
+      wikiSavedRange = wikiSelRange() && wikiSelRange().cloneRange();
+      if (await wikiUploadFiles(cd.files)) return;
+    }
+    d.execCommand('insertText', false, cd.getData('text/plain'));
+  });
+  d.addEventListener('dragover', (e) => {
+    if ([...(e.dataTransfer.types || [])].includes('Files')) e.preventDefault();
+  });
+  d.addEventListener('drop', (e) => {
+    if (!e.dataTransfer.files.length) return;
+    e.preventDefault();
+    const at = d.caretRangeFromPoint ? d.caretRangeFromPoint(e.clientX, e.clientY) : null;
+    wikiSavedRange = at && ed.contains(at.startContainer) ? at : null;
+    wikiUploadFiles(e.dataTransfer.files);
+  });
+}
+
+/* HTML статьи без служебных пометок редактора. */
+function wikiCleanHtml(ed) {
+  const out = ed.cloneNode(true);
+  out.querySelectorAll('.w-sel, .w-ph').forEach(el => {
+    el.classList.remove('w-sel', 'w-ph');
+    if (!el.classList.length) el.removeAttribute('class');
+  });
+  out.querySelectorAll('details[open]').forEach(el => el.removeAttribute('open'));
+  return out.innerHTML.trim();
 }
 
 function wikiSetMode(mode) {
@@ -1465,10 +2083,13 @@ function wikiSetMode(mode) {
   const frame = document.getElementById('wFrame');
   const ta = document.getElementById('wHtml');
   if (mode === 'html') {
-    ta.value = wikiEd().innerHTML;
+    wikiSlashClose();
+    wikiSelectFigure(null);
+    ta.value = wikiCleanHtml(wikiEd());
     frame.style.display = 'none'; ta.style.display = '';
   } else {
     wikiEd().innerHTML = ta.value;
+    wikiEd().querySelectorAll('details').forEach(x => { x.open = true; });
     ta.style.display = 'none'; frame.style.display = '';
   }
   wikiMode = mode;
@@ -1483,14 +2104,13 @@ function wikiSlugify(s) {
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
 }
 
-/* Браузерный contenteditable иногда кладёт список/плашку внутрь <p> и
-   оставляет пустые абзацы в конце — чистим перед сохранением. */
-function wikiNormalize(ed) {
+const WIKI_NEST_SEL = ':scope > p > :is(ul, ol, div, pre, blockquote, h2, h3, table, hr, figure, details, p)';
+function wikiUnnest(ed) {
   ed.querySelectorAll(':scope > p').forEach(p => {
-    if (!p.querySelector(':scope > ul, :scope > ol, :scope > div, :scope > pre, :scope > blockquote, :scope > h2, :scope > h3, :scope > table, :scope > hr')) return;
+    if (!p.querySelector(WIKI_NEST_SEL.replace(':scope > p > ', ':scope > '))) return;
     let buf = null;
     [...p.childNodes].forEach(n => {
-      if (n.nodeType === 1 && /^(UL|OL|DIV|PRE|BLOCKQUOTE|H2|H3|TABLE|HR)$/.test(n.tagName)) {
+      if (n.nodeType === 1 && /^(UL|OL|DIV|PRE|BLOCKQUOTE|H2|H3|TABLE|HR|FIGURE|DETAILS|P)$/.test(n.tagName)) {
         p.before(n); buf = null;
       } else {
         if (!buf) { buf = ed.ownerDocument.createElement('p'); p.before(buf); }
@@ -1499,6 +2119,26 @@ function wikiNormalize(ed) {
     });
     p.remove();
   });
+}
+/* Chrome при вставке списка/плашки иногда кладёт блок внутрь <p> — сразу
+   достаём его наружу, сохраняя курсор. */
+function wikiFixNesting() {
+  const ed = wikiEd();
+  if (!ed.querySelector(WIKI_NEST_SEL)) return;
+  const r = wikiSelRange();
+  const at = r && [r.startContainer, r.startOffset];
+  wikiUnnest(ed);
+  if (at && ed.contains(at[0])) {
+    const nr = wikiDoc().createRange();
+    nr.setStart(at[0], Math.min(at[1], at[0].nodeType === 3 ? at[0].length : at[0].childNodes.length));
+    const sel = wikiDoc().getSelection();
+    sel.removeAllRanges(); sel.addRange(nr);
+  }
+}
+
+/* Перед сохранением: блоки не внутри <p> и без пустых абзацев в конце. */
+function wikiNormalize(ed) {
+  wikiUnnest(ed);
   ed.querySelectorAll(':scope > p').forEach(p => { if (!p.textContent.trim() && !p.querySelector('img')) p.remove(); });
 }
 
@@ -1513,7 +2153,7 @@ function wikiContentHtml() {
     while (used.has(id)) id = `${base}-${n++}`;
     used.add(id); h.id = id;
   });
-  return ed.innerHTML.trim();
+  return wikiCleanHtml(ed);
 }
 
 function wikiPayload() {
@@ -1786,6 +2426,8 @@ function botRenderPanel() {
 function botRenderSystemPanel(p, node) {
   const keyed = node.buttons.filter(b => b.text);
   const texts = node.texts;
+  botImages = {};
+  texts.forEach(tx => { if (tx.image_allowed) botImages[tx.key] = tx.image || ''; });
   if (!botFocusKey && texts.length) botFocusKey = texts[0].key;
   p.innerHTML = `
     <div class="editor-card">
@@ -1819,10 +2461,27 @@ function botTextField(tx) {
         ${tx.placeholders.map(ph => `<span class="ph-chip" title="Подставится автоматически" onmousedown="event.preventDefault()" onclick="botInsert('${tx.key}','{${ph}}')">{${ph}}</span>`).join('')}
       </div>` : ''}
       ${tx.hint && !tx.key.startsWith('instr.') ? `<div class="bfield-hint" style="margin:-2px 0 6px">${esc(tx.hint)}</div>` : ''}
+      ${tx.image_allowed ? `<div id="bimgwrap-${tx.key}">${imagePickerHtml('bimg:' + tx.key, botImages[tx.key], 'Картинка над сообщением — загрузите или вставьте ссылку')}</div>` : ''}
       <textarea class="ipt tfield-input" id="tf-${tx.key}" rows="${isMsg ? Math.min(12, Math.max(3, tx.value.split('\n').length + 1)) : 1}" data-default="${esc(tx.default)}"
         onfocus="botFocusKey='${tx.key}';botUpdatePreview()" oninput="botFieldChanged('${tx.key}')">${esc(tx.value)}</textarea>
     </div>`;
 }
+
+let botImages = {};  // ключ текста → "media:12" | "https://…" | "" (текущее в панели)
+IMAGE_SLOTS.bimg = (slot, ref) => {
+  const key = slot.slice(5);
+  botImages[key] = ref;
+  const wrap = document.getElementById('bimgwrap-' + key);
+  if (wrap) wrap.innerHTML = imagePickerHtml(slot, ref, 'Картинка над сообщением — загрузите или вставьте ссылку');
+  botFocusKey = key;
+  botUpdatePreview();
+};
+IMAGE_SLOTS.cbimg = (slot, ref) => {
+  botSyncDraft();
+  botDraft.image = ref;
+  document.getElementById('cbImgWrap').innerHTML = imagePickerHtml('cbimg', ref, 'Картинка над текстом блока');
+  botUpdatePreview();
+};
 
 function botButtonField(tx) {
   return `
@@ -1906,9 +2565,13 @@ async function botSaveSystem() {
     const key = el.id.slice(3);
     if (!el.checked !== botFindText(key).hidden) hidden[key] = !el.checked;
   });
-  if (!Object.keys(values).length && !Object.keys(hidden).length) { toast('Изменений нет'); return; }
+  const images = {};
+  Object.entries(botImages).forEach(([key, ref]) => {
+    if ((ref || '') !== (botFindText(key).image || '')) images[key] = ref || '';
+  });
+  if (!Object.keys(values).length && !Object.keys(hidden).length && !Object.keys(images).length) { toast('Изменений нет'); return; }
   try {
-    await api('PUT', '/web/bot/texts', { values, hidden });
+    await api('PUT', '/web/bot/texts', { values, hidden, images });
     unsaved = false;
     toast('Сохранено: бот уже говорит по-новому');
     await renderBot();
@@ -1971,7 +2634,7 @@ function botUpdatePreview() {
   if (!box) return;
   if (botSel === 'new' || (botSel && botSel.startsWith('c'))) {
     const buttons = botReadDraftButtons().map(b => (b.label || '…') + (b.type === 'url' ? ' ↗' : ''));
-    box.innerHTML = botTgBubble(document.getElementById('cbText').value, buttons);
+    box.innerHTML = botTgBubble(document.getElementById('cbText').value, buttons, botDraft && botDraft.image);
     return;
   }
   const node = botNodeById(botSel);
@@ -1983,7 +2646,7 @@ function botUpdatePreview() {
   }
   let buttons = BOT_PREVIEW_BUTTONS[botFocusKey] || [];
   if (botFocusKey && botFocusKey.startsWith('instr.') && botFocusKey !== 'instr.menu') buttons = ['btn.instr_back'];
-  let html = botTgBubble(text, buttons.map(botLabel));
+  let html = botTgBubble(text, buttons.map(botLabel), botImages[botFocusKey]);
   if (botSel === 'main_menu' || botFocusKey === 'start.welcome_new' || botFocusKey === 'start.welcome_back') {
     const menu = botSchema.screens.find(s => s.id === 'main_menu');
     html += `<div class="tg-reply">${menu.buttons.filter(b => b.text).map(b => {
@@ -1996,8 +2659,14 @@ function botUpdatePreview() {
   box.innerHTML = html;
 }
 
-function botTgBubble(text, buttons) {
-  return `<div class="tg-chat"><div class="tg-bubble">${text.trim() ? botTgHtml(botFill(text)) : '<span style="color:#7E705B">Пустое сообщение</span>'}</div>
+function botTgBubble(text, buttons, image) {
+  const img = imageRefUrl(image || '');
+  const long = text.length > 1024;
+  const body = text.trim() ? botTgHtml(botFill(text)) : '<span style="color:#7E705B">Пустое сообщение</span>';
+  const bubble = img && !long
+    ? `<div class="tg-bubble tg-photo"><img src="${esc(img)}" alt=""><div>${body}</div></div>`
+    : `${img ? `<div class="tg-bubble tg-photo" style="margin-bottom:4px"><img src="${esc(img)}" alt=""></div>` : ''}<div class="tg-bubble">${body}</div>`;
+  return `<div class="tg-chat">${bubble}${img && long ? '<div style="font-size:11px;color:#7E705B;margin-top:4px">Текст длиннее 1024 символов — картинка придёт отдельным сообщением сверху.</div>' : ''}
     ${buttons.length ? `<div class="tg-kb">${buttons.map(b => `<div>${esc(b)}</div>`).join('')}</div>` : ''}</div>`;
 }
 
@@ -2005,7 +2674,7 @@ function botTgBubble(text, buttons) {
 function botNewBlock() {
   if (!confirmLeave()) return;
   botSel = 'new';
-  botDraft = { title: '', text: '', buttons: [], show_in_menu: false, menu_label: '', command: '' };
+  botDraft = { title: '', text: '', image: '', buttons: [], show_in_menu: false, menu_label: '', command: '' };
   document.querySelectorAll('.fnode').forEach(el => el.classList.remove('sel'));
   botDrawEdges();
   botRenderPanel();
@@ -2025,6 +2694,8 @@ function botRenderCustomPanel(p) {
       </div>
       <label class="editor-label">Название (видно только в админке)</label>
       <input class="ipt" id="cbTitle" value="${esc(b.title)}" placeholder="Например: Акции" style="width:100%;margin-bottom:14px">
+      <label class="editor-label">Картинка сверху</label>
+      <div id="cbImgWrap" style="margin-bottom:14px">${imagePickerHtml('cbimg', b.image || '', 'Картинка над текстом блока')}</div>
       <label class="editor-label">Текст сообщения</label>
       <div class="tfield-tools">
         <button type="button" class="tb-btn" title="Жирный" onmousedown="event.preventDefault()" onclick="botWrapCb('b')"><b>B</b></button>
@@ -2270,24 +2941,90 @@ async function renderProfile() {
   try {
     const me = await api('GET', '/web/me');
     myProfile = me;
-    const rankLabel = me.rank === 'admin' ? 'Admin' : 'Работник';
+    const name = me.display_name || me.username;
+    const labels = me.section_labels || {};
+    const sections = me.rank === 'admin' ? Object.keys(labels) : me.sections;
     c.innerHTML = `
-      <div class="profile-grid" style="display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;align-items:start">
-        <div class="editor-card">
-          <div class="dcard-title" style="margin-bottom:18px">Ваш аккаунт</div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="color:#8A7A60;font-size:13px">Логин</span><span class="mono" style="color:#EBE0CC">${esc(me.username)}</span></div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="color:#8A7A60;font-size:13px">Ранг</span><span class="chip ${me.rank === 'admin' ? 'green' : 'grey'}">${rankLabel}</span></div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="color:#8A7A60;font-size:13px">Пригласил</span><span class="mono" style="color:#EBE0CC">${me.invited_by ? esc(me.invited_by) : '— (мастер-ключ)'}</span></div>
-          <div style="display:flex;justify-content:space-between"><span style="color:#8A7A60;font-size:13px">В системе с</span><span class="mono" style="color:#EBE0CC">${fmtDate(me.created_at)}</span></div>
+      <div class="prof-hero">
+        <div class="prof-avatar">${esc(name.slice(0, 2).toUpperCase())}</div>
+        <div style="min-width:0;flex:1">
+          <div class="prof-name">${esc(name)}</div>
+          <div class="prof-sub"><span class="mono">@${esc(me.username)}</span> · в команде с ${fmtDate(me.created_at)}${me.invited_by ? ` · пригласил ${esc(me.invited_by)}` : ''}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+            <span class="chip ${me.rank === 'admin' ? 'gold' : 'grey'}">${me.rank === 'admin' ? 'Главный администратор' : 'Сотрудник'}</span>
+            ${me.rank !== 'admin' ? `<span class="chip ${me.role_name ? 'green' : 'red'}">${me.role_name ? 'Роль: ' + esc(me.role_name) : 'Роль не выдана'}</span>` : ''}
+          </div>
         </div>
-        <div class="editor-card">
-          <div class="dcard-title" style="margin-bottom:14px">Приглашения</div>
+        <div class="prof-stats">
+          <div><div class="prof-stat-val">${me.sessions.length}</div><div class="prof-stat-lbl">активных сеансов</div></div>
+          <div><div class="prof-stat-val">${me.last_login_at ? fmtDate(me.last_login_at) : '—'}</div><div class="prof-stat-lbl">последний вход</div></div>
+        </div>
+      </div>
+
+      <div class="profile-grid" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start;margin-top:12px">
+        <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div class="editor-card">
+            <div class="dcard-title" style="margin-bottom:14px">Как вас показывать</div>
+            <label class="editor-label">Имя в админке</label>
+            <div style="display:flex;gap:8px">
+              <input class="ipt" id="pfName" value="${esc(me.display_name)}" maxlength="64" placeholder="${esc(me.username)}" style="flex:1;min-width:0">
+              <div class="primary-btn" onclick="saveProfileName()">Сохранить</div>
+            </div>
+            <div style="font-size:11.5px;color:#7E705B;margin-top:6px">Видно коллегам в разделе «Команда». Логин для входа не меняется.</div>
+          </div>
+          <div class="editor-card">
+            <div class="dcard-title" style="margin-bottom:6px">Доступ</div>
+            <div style="font-size:12.5px;color:#8A7A60;margin-bottom:12px">${me.rank === 'admin' ? 'У главного администратора открыты все разделы и управление командой.' : me.role_name ? 'Разделы, которые открывает ваша роль. Главная и профиль доступны всегда.' : 'Администратор ещё не выдал вам роль — пока доступны только главная и профиль.'}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span class="chip grey">Дашборд</span><span class="chip grey">Профиль</span>
+              ${sections.map(s => `<span class="chip gold">${esc(labels[s] || s)}</span>`).join('')}
+              ${me.rank === 'admin' ? '<span class="chip gold">Команда</span>' : ''}
+            </div>
+          </div>
           ${me.rank === 'admin' ? `
-            <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">Дайте этот ключ новому сотруднику — при первом входе (вкладка «Первый вход») он создаст свой логин и пароль рангом «Работник» (без права приглашать).</div>
+          <div class="editor-card">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div class="dcard-title" style="flex:1">Приглашения</div>
+              <div class="ghost-btn" onclick="goto('staff')">Команда →</div>
+            </div>
+            <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">Дайте ключ новому сотруднику: на экране входа он откроет «Первый вход» и создаст логин и пароль. Потом выдайте ему роль в разделе «Команда».</div>
             ${me.invite_key ? copyField(me.invite_key, '#FFB800') : '<div class="mono" style="color:#8A7A60">—</div>'}
-          ` : `
-            <div style="font-size:13px;color:#8A7A60">Ранг «Работник» не может приглашать новых сотрудников — эта возможность только у ранга Admin.</div>
-          `}
+            ${me.team ? `<div class="prof-team">
+              <div><b>${me.team.total}</b><span>в команде</span></div>
+              <div><b>${me.team.active}</b><span>активны</span></div>
+              <div><b style="color:${me.team.without_role ? '#F87171' : '#EBE0CC'}">${me.team.without_role}</b><span>без роли</span></div>
+            </div>` : ''}
+          </div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div class="editor-card">
+            <div class="dcard-title" style="margin-bottom:14px">Сменить пароль</div>
+            <input class="ipt" type="password" id="pfOld" placeholder="Текущий пароль" autocomplete="current-password" style="width:100%;margin-bottom:8px">
+            <input class="ipt" type="password" id="pfNew" placeholder="Новый пароль (от 8 символов)" autocomplete="new-password" style="width:100%;margin-bottom:8px">
+            <input class="ipt" type="password" id="pfNew2" placeholder="Повторите новый пароль" autocomplete="new-password" style="width:100%;margin-bottom:12px">
+            <div class="primary-btn" style="display:inline-block" onclick="changeMyPassword()">Сменить пароль</div>
+            <div style="font-size:11.5px;color:#7E705B;margin-top:8px">После смены все остальные сеансы завершатся.</div>
+          </div>
+          <div class="editor-card">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+              <div class="dcard-title" style="flex:1">Активные сеансы</div>
+              ${me.sessions.length > 1 ? '<div class="act-btn danger" onclick="logoutOtherSessions()">Завершить другие</div>' : ''}
+            </div>
+            ${me.sessions.map(s => `
+              <div class="sess-row">
+                <span class="sess-dot ${s.current ? 'on' : ''}"></span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;color:#EBE0CC">${s.current ? 'Этот браузер' : 'Другое устройство'}</div>
+                  <div class="mono" style="font-size:11px;color:#7E705B">вход ${fmtDateTime(s.created_at)} · до ${fmtDate(s.expires_at)}</div>
+                </div>
+              </div>`).join('') || '<div style="font-size:13px;color:#7E705B">Нет сеансов</div>'}
+          </div>
+          <div class="editor-card">
+            <div class="dcard-title" style="margin-bottom:12px">Горячие клавиши</div>
+            <div class="kbd-row"><span class="kbd">/</span><span>Поиск</span></div>
+            <div class="kbd-row"><span class="kbd">Ctrl</span>+<span class="kbd">S</span><span>Сохранить в редакторе</span></div>
+            <div class="kbd-row"><span class="kbd">Esc</span><span>Закрыть карточку пользователя</span></div>
+          </div>
         </div>
       </div>
     `;
@@ -2296,83 +3033,418 @@ async function renderProfile() {
   }
 }
 
-/* Тот же набор ключей — в landing/index.html (BANNER_ICONS), см. AD_BANNER_ICONS в bot/api.py */
-const BANNER_ICONS = {
-  sparkle: 'M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z',
-  star: 'M12 2L14.64 8.36L21.51 8.91L16.28 13.39L17.88 20.09L12 16.5L6.12 20.09L7.72 13.39L2.49 8.91L9.36 8.36Z',
-  fire: 'M12 2c1 3-3 4-3 8a3 3 0 006 0c0-2-1-2-1-4 2 1 3 3 3 6a5 5 0 01-10 0c0-5 3-6 5-10z',
-  gift: 'M4 11h16v10H4zM3 8h18v3H3zM11 8h2v13h-2zM8.5 4a2 2 0 100 4h2v-2a2 2 0 00-2-2zm7 0a2 2 0 010 4h-2v-2a2 2 0 012-2z',
-  percent: 'M6 6a2.5 2.5 0 100 5 2.5 2.5 0 000-5zm12 7a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM17.5 5.5l-11 13 1.5 1.5 11-13z',
-  bell: 'M12 2a1 1 0 011 1v1.06a8 8 0 016 7.74v3l1.6 2.4a1 1 0 01-.83 1.55H5.23a1 1 0 01-.83-1.55L6 14.8v-3a8 8 0 016-7.74V3a1 1 0 011-1zM9.5 20a2.5 2.5 0 005 0h-5z',
-  rocket: 'M12 2c3 2.5 4 6.5 4 9.5 0 2-.7 3.8-1.8 5.1l.3 4.4-2.5-2-2.5 2 .3-4.4C8.7 15.3 8 13.5 8 11.5 8 8.5 9 4.5 12 2zm0 6a2 2 0 100 4 2 2 0 000-4zM6.5 15l-2 5 4-3zM17.5 15l2 5-4-3z',
-  heart: 'M12 21s-7-4.6-9.3-9.1C1.4 9 2.6 5.8 5.6 5c2-.5 3.8.3 4.9 1.9C11.6 5.3 13.4 4.5 15.4 5c3 .8 4.2 4 3 6.9C16 16.4 12 21 12 21z',
-  zap: 'M13 2L3 14h6l-1 8 11-13h-6z',
-  clock: 'M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v5.5l4 2.3-1 1.7-5-3V7z',
-};
-let selectedBannerIcon = 'sparkle';
-
-function bannerIconPickerHtml(selected) {
-  return Object.keys(BANNER_ICONS).map(key => `
-    <div class="banner-icon-opt ${key === selected ? 'sel' : ''}" data-icon="${key}" onclick="pickBannerIcon('${key}')" title="${key}">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="${BANNER_ICONS[key]}"></path></svg>
-    </div>
-  `).join('');
+async function saveProfileName() {
+  try {
+    await api('PUT', '/web/me', { display_name: document.getElementById('pfName').value });
+    toast('Имя сохранено');
+    await loadMe();
+    renderProfile();
+  } catch (e) { toast(e.message, true); }
 }
 
-function pickBannerIcon(key) {
-  selectedBannerIcon = key;
-  document.querySelectorAll('.banner-icon-opt').forEach(el => el.classList.toggle('sel', el.dataset.icon === key));
+async function changeMyPassword() {
+  const oldP = document.getElementById('pfOld').value;
+  const n1 = document.getElementById('pfNew').value, n2 = document.getElementById('pfNew2').value;
+  if (n1 !== n2) { toast('Новые пароли не совпадают', true); return; }
+  try {
+    const r = await api('POST', '/web/me/password', { old: oldP, new: n1 });
+    toast(r.ended_sessions ? `Пароль изменён, завершено сеансов: ${r.ended_sessions}` : 'Пароль изменён');
+    renderProfile();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function logoutOtherSessions() {
+  if (!confirm('Завершить все сеансы, кроме этого браузера?')) return;
+  try {
+    const r = await api('POST', '/web/me/sessions/logout-others');
+    toast(`Завершено сеансов: ${r.ended_sessions}`);
+    renderProfile();
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   КОМАНДА — сотрудники и роли (только главный администратор)
+═══════════════════════════════════════════════════════════ */
+let staffData = null;
+let roleEditing = null;  // null | 'new' | id роли
+
+async function renderStaff() {
+  const c = document.getElementById('content');
+  try {
+    staffData = await api('GET', '/web/staff');
+  } catch (e) {
+    c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
+    return;
+  }
+  const { staff, roles, sections } = staffData;
+  const roleOptions = (sel) => `<option value="">— без роли —</option>` + roles.map(r => `<option value="${r.id}" ${sel === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('');
+  c.innerHTML = `
+    <div class="filters">
+      <span style="font-size:13px;color:#8A7A60">Сотрудник видит только разделы своей роли; главная и профиль доступны всем. Новому сотруднику дайте ключ-приглашение из «Профиля», а после его первого входа выдайте роль здесь.</span>
+    </div>
+    <div class="editor-card" style="padding:0;overflow:hidden;margin-bottom:12px">
+      <div class="tbl-scroll"><table class="staff-table">
+        <thead><tr><th>Сотрудник</th><th>Роль</th><th>Последний вход</th><th>Сеансы</th><th>Доступ</th><th></th></tr></thead>
+        <tbody>
+        ${staff.map(a => `
+          <tr class="${a.is_active ? '' : 'off'}">
+            <td>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="sb-avatar">${esc((a.display_name || a.username).slice(0, 2).toUpperCase())}</span>
+                <div style="min-width:0">
+                  <div style="font-weight:600;color:#EBE0CC">${esc(a.display_name || a.username)}</div>
+                  <div class="mono" style="font-size:11px;color:#7E705B">@${esc(a.username)}</div>
+                </div>
+              </div>
+            </td>
+            <td>${a.rank === 'admin'
+              ? '<span class="chip gold">Главный администратор</span>'
+              : `<select class="ipt" style="padding:7px 10px" onchange="staffSetRole(${a.id}, this.value)">${roleOptions(a.role_id)}</select>`}</td>
+            <td class="mono" style="font-size:12px;color:#8A7A60">${a.last_login_at ? fmtDateTime(a.last_login_at) : '—'}</td>
+            <td class="mono" style="font-size:12px;color:#8A7A60">${a.sessions}</td>
+            <td>${a.rank === 'admin' ? '' : `
+              <div class="toggle-track" style="cursor:pointer;background:${a.is_active ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'}" title="${a.is_active ? 'Отключить доступ' : 'Включить доступ'}" onclick="staffToggle(${a.id}, ${!a.is_active})">
+                <div class="toggle-knob" style="background:${a.is_active ? '#FFB800' : '#5A5040'};margin-left:${a.is_active ? 'auto' : '0'}"></div>
+              </div>`}</td>
+            <td>${a.rank === 'admin' ? '' : `<div class="act-btn danger" onclick="staffDelete(${a.id}, '${esc(a.username)}')">Удалить</div>`}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
+      <div class="dcard-title" style="flex:1">Роли</div>
+      <div class="primary-btn" onclick="roleEdit('new')">+ Новая роль</div>
+    </div>
+    <div class="role-grid">
+      ${roleEditing === 'new' ? roleEditorHtml(null, sections) : ''}
+      ${roles.map(r => roleEditing === r.id ? roleEditorHtml(r, sections) : `
+        <div class="editor-card role-card">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <div class="dcard-title" style="flex:1">${esc(r.name)}</div>
+            <span class="chip grey">${r.members} чел.</span>
+          </div>
+          ${r.description ? `<div style="font-size:12.5px;color:#8A7A60;margin-bottom:10px">${esc(r.description)}</div>` : ''}
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">
+            ${r.sections.length ? r.sections.map(s => `<span class="chip gold">${esc(sections[s] || s)}</span>`).join('') : '<span style="font-size:12px;color:#7E705B">Только главная и профиль</span>'}
+          </div>
+          <div style="display:flex;gap:8px">
+            <div class="act-btn gold" onclick="roleEdit(${r.id})">Изменить</div>
+            <div class="act-btn danger" onclick="roleDelete(${r.id}, ${r.members})">Удалить</div>
+          </div>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+function roleEditorHtml(role, sections) {
+  const sel = new Set(role ? role.sections : []);
+  return `
+    <div class="editor-card role-card editing">
+      <label class="editor-label">Название</label>
+      <input class="ipt" id="roleName" value="${esc(role ? role.name : '')}" maxlength="64" placeholder="Например: Писатель блога" style="width:100%;margin-bottom:10px">
+      <label class="editor-label">Описание</label>
+      <input class="ipt" id="roleDesc" value="${esc(role ? role.description : '')}" maxlength="200" placeholder="Коротко, чем занимается" style="width:100%;margin-bottom:12px">
+      <label class="editor-label">Разделы</label>
+      <div class="role-sections">
+        ${Object.entries(sections).map(([k, label]) => `
+          <label class="cb-check"><input type="checkbox" value="${k}" ${sel.has(k) ? 'checked' : ''}> ${esc(label)}</label>`).join('')}
+      </div>
+      <div style="font-size:11.5px;color:#7E705B;margin:8px 0 12px">Главная и профиль доступны любой роли. «Аккаунты» открывают выдачу дней, бан и рассылку.</div>
+      <div style="display:flex;gap:8px">
+        <div class="primary-btn" onclick="roleSave(${role ? role.id : 'null'})">${role ? 'Сохранить' : 'Создать роль'}</div>
+        <div class="ghost-btn" onclick="roleEditing=null;renderStaff()">Отмена</div>
+      </div>
+    </div>`;
+}
+
+function roleEdit(id) { roleEditing = id; renderStaff(); }
+
+async function roleSave(id) {
+  const body = {
+    name: document.getElementById('roleName').value,
+    description: document.getElementById('roleDesc').value,
+    sections: [...document.querySelectorAll('.role-sections input:checked')].map(i => i.value),
+  };
+  try {
+    if (id) await api('PUT', `/web/staff/roles/${id}`, body);
+    else await api('POST', '/web/staff/roles', body);
+    roleEditing = null;
+    toast('Роль сохранена');
+    renderStaff();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function roleDelete(id, members) {
+  if (!confirm(members ? `Роль у ${members} чел. Они останутся без роли (только главная и профиль). Удалить?` : 'Удалить роль?')) return;
+  try { await api('DELETE', `/web/staff/roles/${id}`); toast('Роль удалена'); renderStaff(); }
+  catch (e) { toast(e.message, true); }
+}
+
+async function staffSetRole(id, roleId) {
+  try { await api('PUT', `/web/staff/${id}`, { role_id: roleId ? Number(roleId) : null }); toast('Роль выдана'); renderStaff(); }
+  catch (e) { toast(e.message, true); renderStaff(); }
+}
+
+async function staffToggle(id, active) {
+  if (!active && !confirm('Отключить доступ? Сотрудника сразу выкинет из админки, войти он не сможет, пока вы не включите доступ обратно.')) return;
+  try { await api('PUT', `/web/staff/${id}`, { is_active: active }); toast(active ? 'Доступ включён' : 'Доступ отключён'); renderStaff(); }
+  catch (e) { toast(e.message, true); }
+}
+
+async function staffDelete(id, username) {
+  if (!confirm(`Удалить сотрудника @${username}? Восстановить аккаунт будет нельзя — только пригласить заново.`)) return;
+  try { await api('DELETE', `/web/staff/${id}`); toast('Сотрудник удалён'); renderStaff(); }
+  catch (e) { toast(e.message, true); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   БАННЕР — полоса над шапкой главной страницы.
+   Иконки и оформления приходят с сервера (bot/utils/banner.py) —
+   те же, что рисует сайт, своей копии здесь нет.
+═══════════════════════════════════════════════════════════ */
+let bn = null;       // черновик баннера
+let bnMeta = null;   // {icons, styles}
+
+const BANNER_TEMPLATES = [
+  { icon: 'percent', style: 'sale', text: 'Скидка 20% на все тарифы — только до конца недели', link_url: '/tariffs', link_label: 'Выбрать тариф', show_countdown: true },
+  { icon: 'gift', style: 'gold', text: 'Подарите VPN близким — оплатите подписку и отправьте ссылку', link_url: '/account', link_label: 'Подарить' },
+  { icon: 'users', style: 'green', text: 'Приглашайте друзей: +30 дней за каждых двух оплативших', link_url: '/account', link_label: 'Пригласить' },
+  { icon: 'rocket', style: 'blue', text: 'Новые серверы в Европе — ещё быстрее и стабильнее', link_url: '/tariffs', link_label: 'Подробнее' },
+  { icon: 'bell', style: 'dark', text: 'Плановые работы на серверах сегодня с 03:00 до 04:00 МСК', link_url: '', link_label: '' },
+];
+const BANNER_STATUS = {
+  live: ['green', 'Показывается на сайте'],
+  off: ['grey', 'Выключен'],
+  empty: ['red', 'Нет текста — не показывается'],
+  scheduled: ['gold', 'Запланирован'],
+  ended: ['grey', 'Срок показа закончился'],
+};
+
+function bnIconSvg(path, size) {
+  return `<svg viewBox="0 0 24 24" width="${size || 16}" height="${size || 16}" fill="currentColor"><path fill-rule="evenodd" d="${path}"></path></svg>`;
+}
+/* datetime-local ↔ ISO (UTC). В поле — местное время браузера. */
+function bnLocalInput(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+function bnStatus() {
+  if (!bn.enabled) return 'off';
+  if (!bn.text.trim()) return 'empty';
+  const now = Date.now();
+  if (bn.starts_at && now < new Date(bn.starts_at).getTime()) return 'scheduled';
+  if (bn.ends_at && now >= new Date(bn.ends_at).getTime()) return 'ended';
+  return 'live';
+}
+function bnCountdown() {
+  const left = Math.floor((new Date(bn.ends_at).getTime() - Date.now()) / 1000);
+  if (left <= 0) return '00:00:00';
+  const pad = n => String(n).padStart(2, '0');
+  const d = Math.floor(left / 86400);
+  return (d ? d + ' д ' : '') + pad(Math.floor(left % 86400 / 3600)) + ':' + pad(Math.floor(left % 3600 / 60)) + ':' + pad(left % 60);
+}
+function bnStripHtml(narrow) {
+  const st = bnMeta.styles[bn.style] || bnMeta.styles.gold;
+  const vars = `--b-bg:${st.bg};--b-border:${st.border};--b-text:${st.text};--b-accent:${st.accent}`;
+  const icon = bn.icon_url ? `<img src="${esc(bn.icon_url)}" alt="">` : bnIconSvg(bnMeta.icons[bn.icon].path);
+  return `
+    <div class="bn-strip${narrow ? ' narrow' : ''}" style="${vars}">
+      <div class="bn-strip-inner">
+        <span class="bn-strip-icon">${icon}</span>
+        <span>${esc(bn.text) || '<span style="opacity:.5">Текст баннера</span>'}</span>
+        ${bn.show_countdown && bn.ends_at ? `<span class="bn-strip-timer" data-bn-timer>${bnCountdown()}</span>` : ''}
+        ${bn.link_url ? `<a>${esc(bn.link_label || 'Подробнее')} →</a>` : ''}
+      </div>
+      ${bn.dismissible ? '<span class="bn-strip-close">×</span>' : ''}
+    </div>`;
+}
+function bnSwitch(field, hint) {
+  const on = !!bn[field];
+  return `<div class="toggle-track" onclick="bnSet('${field}', ${!on})" style="cursor:pointer;background:${on ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'}"${hint ? ` title="${esc(hint)}"` : ''}>
+    <div class="toggle-knob" style="background:${on ? '#FFB800' : '#7E705B'};margin-left:${on ? 'auto' : '0'}"></div></div>`;
 }
 
 async function renderAdBanner() {
   const c = document.getElementById('content');
   try {
     const b = await api('GET', '/web/ad-banner');
-    selectedBannerIcon = b.icon || 'sparkle';
-    c.innerHTML = `
-      <div class="editor-card" style="max-width:560px">
-        <div class="dcard-title" style="margin-bottom:6px">Баннер на верхней полосе главной</div>
-        <div style="font-size:13px;color:#8A7A60;margin-bottom:18px">Показывается на / (главной), пока включён и есть текст. Например: «Скидка 20% на VPN до конца августа».</div>
+    bnMeta = { icons: b.icons, styles: b.styles };
+    bn = {
+      enabled: b.enabled, text: b.text || '', link_url: b.link_url || '', link_label: b.link_label || '',
+      icon: b.icon in b.icons ? b.icon : 'sparkle', icon_media_id: b.icon_media_id, icon_url: b.icon_url,
+      style: b.style, starts_at: b.starts_at, ends_at: b.ends_at,
+      show_countdown: b.show_countdown, dismissible: b.dismissible,
+      views: b.views, clicks: b.clicks,
+    };
+  } catch (e) {
+    c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
+    return;
+  }
+  bnRender();
+}
 
-        <label class="login-label">Текст</label>
-        <input class="login-input" type="text" id="abText" maxlength="300" value="${esc(b.text || '')}" placeholder="Скидка 20% на VPN до конца августа">
+function bnRender() {
+  const c = document.getElementById('content');
+  const [chipCls, chipText] = BANNER_STATUS[bnStatus()];
+  const ctr = bn.views ? (bn.clicks / bn.views * 100).toFixed(1) + '%' : '—';
+  c.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+      <span class="chip ${chipCls}" id="bnChip">${chipText}</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:13px;color:#C9BBA0">Показывать на сайте</span>${bnSwitch('enabled')}
+      </div>
+      <div style="flex:1"></div>
+      <a class="ghost-btn" href="/" target="_blank" rel="noopener" style="text-decoration:none">Открыть сайт ↗</a>
+      <div class="primary-btn" data-save title="Ctrl+S" onclick="saveAdBanner()">Сохранить</div>
+    </div>
 
-        <label class="login-label">Ссылка (необязательно)</label>
-        <input class="login-input" type="text" id="abLinkUrl" value="${esc(b.link_url || '')}" placeholder="/tariffs">
+    <div class="editor-card" style="margin-bottom:12px">
+      <div class="dcard-title" style="margin-bottom:12px">Так увидят посетители</div>
+      <div class="bn-preview-wrap">
+        <div class="bn-frame"><div class="bn-frame-bar"><i></i><i></i><i></i><span>starvpn / главная</span></div><div id="bnPrev">${bnStripHtml(false)}</div><div class="bn-frame-page"></div></div>
+        <div class="bn-phone"><div id="bnPrevM">${bnStripHtml(true)}</div><div class="bn-frame-page"></div></div>
+      </div>
+    </div>
 
-        <label class="login-label">Текст ссылки</label>
-        <input class="login-input" type="text" id="abLinkLabel" value="${esc(b.link_label || '')}" placeholder="Подробнее">
+    <div class="stat-grid" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+      <div class="stat-card"><div class="stat-label">Показы</div><div class="stat-val">${bn.views.toLocaleString('ru-RU')}</div></div>
+      <div class="stat-card"><div class="stat-label">Клики по ссылке</div><div class="stat-val">${bn.clicks.toLocaleString('ru-RU')}</div></div>
+      <div class="stat-card"><div class="stat-label">CTR</div><div class="stat-val">${ctr}</div></div>
+      <div class="stat-card" style="justify-content:space-between">
+        <div class="stat-label">Статистика</div>
+        <div style="font-size:12px;color:#7E705B">Без IP и cookie — просто счётчики.</div>
+        <div class="ghost-btn" style="align-self:flex-start;padding:6px 11px;font-size:12px" onclick="resetBannerStats()">Сбросить</div>
+      </div>
+    </div>
 
-        <label class="login-label">Иконка</label>
-        <div class="banner-icon-grid">${bannerIconPickerHtml(selectedBannerIcon)}</div>
+    <div class="bn-grid">
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div class="editor-card">
+          <div class="dcard-title" style="margin-bottom:14px">Содержание</div>
+          <div style="display:flex;align-items:baseline;gap:8px"><label class="editor-label" style="flex:1">Текст</label><span class="mono" id="bnCount" style="font-size:11px;color:#7E705B">${bn.text.length}/300</span></div>
+          <textarea class="ipt" id="bnText" rows="2" maxlength="300" placeholder="Скидка 20% на VPN до конца августа" oninput="bnInput('text', this.value)" style="width:100%;margin-bottom:10px">${esc(bn.text)}</textarea>
+          <div style="font-size:11.5px;color:#7E705B;margin-bottom:6px">Быстрые шаблоны:</div>
+          <div class="bn-templates">
+            ${BANNER_TEMPLATES.map((t, i) => `<div class="bn-tpl" onclick="bnApplyTemplate(${i})">${bnIconSvg(bnMeta.icons[t.icon].path, 13)}<span>${esc(t.text)}</span></div>`).join('')}
+          </div>
+          <div class="bn-two" style="margin-top:14px">
+            <div><label class="editor-label">Ссылка</label><input class="ipt" id="bnLinkUrl" value="${esc(bn.link_url)}" placeholder="/tariffs или https://…" oninput="bnInput('link_url', this.value)" style="width:100%"></div>
+            <div><label class="editor-label">Текст ссылки</label><input class="ipt" id="bnLinkLabel" maxlength="100" value="${esc(bn.link_label)}" placeholder="Подробнее" oninput="bnInput('link_label', this.value)" style="width:100%"></div>
+          </div>
+          <div style="font-size:11.5px;color:#7E705B;margin-top:6px">Страница сайта (/tariffs, /wiki/…) или внешняя ссылка https:// — внешние открываются в новой вкладке.</div>
+        </div>
 
-        <div class="provider-row" style="margin:14px 0">
-          <div style="flex:1;font-size:14px;font-weight:600;color:#EBE0CC">Показывать на сайте</div>
-          <div class="toggle-track" id="abToggle" data-on="${b.enabled ? '1' : '0'}"
-               style="background:${b.enabled ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'};cursor:pointer"
-               onclick="this.dataset.on = this.dataset.on === '1' ? '0' : '1'; this.style.background = this.dataset.on === '1' ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'; this.querySelector('.toggle-knob').style.marginLeft = this.dataset.on === '1' ? 'auto' : '0'; this.querySelector('.toggle-knob').style.background = this.dataset.on === '1' ? '#FFB800' : '#7E705B';">
-            <div class="toggle-knob" style="background:${b.enabled ? '#FFB800' : '#7E705B'};margin-left:${b.enabled ? 'auto' : '0'}"></div>
+        <div class="editor-card">
+          <div class="dcard-title" style="margin-bottom:4px">Иконка</div>
+          <div style="font-size:12px;color:#8A7A60;margin-bottom:12px">Цвет иконки берётся из оформления.</div>
+          <div class="banner-icon-grid">
+            ${Object.entries(bnMeta.icons).map(([key, ic]) => `
+              <div class="banner-icon-opt ${!bn.icon_url && key === bn.icon ? 'sel' : ''}" onclick="bnPickIcon('${key}')" title="${esc(ic.label)}">${bnIconSvg(ic.path, 18)}</div>`).join('')}
+          </div>
+          <div style="margin-top:12px">${imagePickerHtml('bnicon', bn.icon_media_id ? 'media:' + bn.icon_media_id : '', 'Своя иконка: PNG, WebP или GIF, лучше квадратная — заменит иконку из набора', true)}</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div class="editor-card">
+          <div class="dcard-title" style="margin-bottom:12px">Оформление</div>
+          <div class="bn-styles">
+            ${Object.entries(bnMeta.styles).map(([key, st]) => `
+              <div class="bn-style ${key === bn.style ? 'sel' : ''}" onclick="bnSet('style', '${key}')">
+                <div class="bn-style-sw" style="background:${st.bg};border-color:${st.border};color:${st.accent}"><span style="background:${st.accent}"></span><em style="background:${st.text}"></em></div>
+                <div class="bn-style-lbl">${esc(st.label)}</div>
+              </div>`).join('')}
           </div>
         </div>
 
-        <button class="login-btn" style="margin-top:4px" data-save title="Ctrl+S" onclick="saveAdBanner()">Сохранить</button>
+        <div class="editor-card">
+          <div class="dcard-title" style="margin-bottom:4px">Расписание</div>
+          <div style="font-size:12px;color:#8A7A60;margin-bottom:12px">Пусто — показывать всегда, пока баннер включён. Время — ваше местное.</div>
+          <div class="bn-two">
+            <div><label class="editor-label">Начать показ</label><input class="ipt" type="datetime-local" value="${bnLocalInput(bn.starts_at)}" onchange="bnSetDate('starts_at', this.value)" style="width:100%"></div>
+            <div><label class="editor-label">Закончить</label><input class="ipt" type="datetime-local" value="${bnLocalInput(bn.ends_at)}" onchange="bnSetDate('ends_at', this.value)" style="width:100%"></div>
+          </div>
+          <div class="provider-row" style="margin-top:12px;${bn.ends_at ? '' : 'opacity:.45;pointer-events:none'}">
+            <div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:#EBE0CC">Таймер обратного отсчёта</div><div style="font-size:11.5px;color:#7E705B">${bn.ends_at ? '«До конца акции» прямо в баннере' : 'Укажите окончание показа'}</div></div>
+            ${bnSwitch('show_countdown')}
+          </div>
+        </div>
+
+        <div class="editor-card">
+          <div class="dcard-title" style="margin-bottom:12px">Поведение</div>
+          <div class="provider-row">
+            <div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:#EBE0CC">Крестик «закрыть»</div><div style="font-size:11.5px;color:#7E705B">Закрытый баннер не показывается посетителю, пока вы его не измените и не сохраните.</div></div>
+            ${bnSwitch('dismissible')}
+          </div>
+        </div>
       </div>
-    `;
-  } catch (e) {
-    c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
-  }
+    </div>
+  `;
 }
 
+/* Перерисовать только превью и статус — без потери фокуса в полях ввода. */
+function bnRefreshPreview() {
+  document.getElementById('bnPrev').innerHTML = bnStripHtml(false);
+  document.getElementById('bnPrevM').innerHTML = bnStripHtml(true);
+  const [cls, text] = BANNER_STATUS[bnStatus()];
+  const chip = document.getElementById('bnChip');
+  chip.className = 'chip ' + cls; chip.textContent = text;
+}
+function bnInput(field, value) {
+  bn[field] = value;
+  if (field === 'text') document.getElementById('bnCount').textContent = value.length + '/300';
+  bnRefreshPreview();
+}
+function bnSet(field, value) { bn[field] = value; unsaved = true; bnRender(); }
+function bnSetDate(field, value) {
+  bn[field] = value ? new Date(value).toISOString() : null;
+  if (!bn.ends_at) bn.show_countdown = false;
+  unsaved = true;
+  bnRender();
+}
+function bnPickIcon(key) { bn.icon = key; bn.icon_media_id = null; bn.icon_url = null; unsaved = true; bnRender(); }
+function bnApplyTemplate(i) {
+  const t = BANNER_TEMPLATES[i];
+  Object.assign(bn, { icon: t.icon, icon_media_id: null, icon_url: null, style: t.style, text: t.text, link_url: t.link_url, link_label: t.link_label });
+  if (t.show_countdown && !bn.ends_at) {
+    const end = new Date(); end.setDate(end.getDate() + 7); end.setHours(23, 59, 0, 0);
+    bn.ends_at = end.toISOString();
+  }
+  bn.show_countdown = !!(t.show_countdown && bn.ends_at);
+  unsaved = true;
+  bnRender();
+}
+IMAGE_SLOTS.bnicon = (slot, ref) => {
+  const id = ref.startsWith('media:') ? parseInt(ref.slice(6), 10) : null;
+  bn.icon_media_id = id;
+  bn.icon_url = id ? '/media/' + id : null;
+  bnRender();
+};
+setInterval(() => {
+  const el = document.querySelectorAll('[data-bn-timer]');
+  if (el.length && bn && bn.ends_at) el.forEach(t => { t.textContent = bnCountdown(); });
+}, 1000);
+
 async function saveAdBanner() {
-  const text = document.getElementById('abText').value.trim();
-  const link_url = document.getElementById('abLinkUrl').value.trim();
-  const link_label = document.getElementById('abLinkLabel').value.trim();
-  const enabled = document.getElementById('abToggle').dataset.on === '1';
+  if (bn.enabled && !bn.text.trim()) { toast('Добавьте текст — пустой баннер не показывается', true); return; }
   try {
-    await api('POST', '/web/ad-banner', { text, link_url, link_label, enabled, icon: selectedBannerIcon });
+    const r = await api('POST', '/web/ad-banner', {
+      enabled: bn.enabled, text: bn.text.trim(), link_url: bn.link_url.trim(), link_label: bn.link_label.trim(),
+      icon: bn.icon, icon_media_id: bn.icon_media_id, style: bn.style,
+      starts_at: bn.starts_at, ends_at: bn.ends_at, show_countdown: bn.show_countdown, dismissible: bn.dismissible,
+    });
     unsaved = false;
-    toast('Баннер сохранён');
+    toast(r.status === 'live' ? 'Сохранено — баннер уже на сайте' : 'Сохранено');
+    bnRefreshPreview();
   } catch (e) { toast(e.message, true); }
+}
+
+async function resetBannerStats() {
+  if (!confirm('Обнулить показы и клики?')) return;
+  try { await api('POST', '/web/ad-banner/reset-stats'); bn.views = 0; bn.clicks = 0; bnRender(); toast('Статистика обнулена'); }
+  catch (e) { toast(e.message, true); }
 }
 
 async function togglePaymentProvider(provider) {
@@ -2402,18 +3474,19 @@ async function loadMe() {
   try {
     myProfile = await api('GET', '/web/me');
     document.getElementById('sbAvatar').textContent = myProfile.username.slice(0, 2).toUpperCase();
-    document.getElementById('sbFootName').textContent = myProfile.username;
-    document.getElementById('sbFootRole').textContent = myProfile.rank === 'admin' ? 'admin' : 'работник';
+    document.getElementById('sbAvatar').textContent = (myProfile.display_name || myProfile.username).slice(0, 2).toUpperCase();
+    document.getElementById('sbFootName').textContent = myProfile.display_name || myProfile.username;
+    document.getElementById('sbFootRole').textContent = myProfile.rank === 'admin' ? 'главный админ' : (myProfile.role_name || 'без роли');
   } catch (e) { /* ignore — сессия могла истечь, api() сам разлогинит */ }
 }
 
-function showApp() {
+async function showApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'grid';
+  await loadMe();  // права сотрудника нужны до отрисовки меню
   renderSidebar();
   checkMarzban();
   loadCounts();
-  loadMe();
   goto('dash');
 }
 </script>

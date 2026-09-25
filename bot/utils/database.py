@@ -21,6 +21,8 @@ import bot.models.admin_account # noqa: F401
 import bot.models.admin_session # noqa: F401
 import bot.models.ad_banner     # noqa: F401
 import bot.models.bot_content   # noqa: F401
+import bot.models.media_file    # noqa: F401
+import bot.models.admin_role    # noqa: F401
 
 engine = create_async_engine(
     settings.sqlalchemy_database_url,

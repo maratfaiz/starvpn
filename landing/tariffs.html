@@ -35,63 +35,6 @@ input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:4px;ba
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;background:var(--gold);border:3px solid var(--bg);box-shadow:0 2px 10px rgba(255,184,0,.5);margin-top:-9px;cursor:pointer}
 input[type=range]::-moz-range-track{height:6px;border-radius:4px;background:rgba(255,255,255,.1)}
 input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:var(--gold);border:3px solid var(--bg);cursor:pointer}
-
-#nav{position:sticky;top:0;z-index:100;padding:0 24px;background:rgba(6,6,6,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
-.nav-inner{max-width:var(--max);margin:0 auto;display:flex;align-items:center;height:64px;gap:22px}
-.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
-.nav-logo img{width:30px;height:30px;border-radius:8px;object-fit:cover}
-.nav-logo-text{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
-.nav-links{display:flex;gap:6px;flex:1;flex-wrap:wrap}
-.nav-links a{font-size:13.5px;font-weight:500;color:var(--text2);text-decoration:none;transition:color .2s;padding:9px 12px;border-radius:9px}
-.nav-links a:hover{color:var(--gold);background:rgba(255,255,255,.04)}
-.nav-links a.active{color:var(--gold)}
-.nav-login{font-size:13.5px;font-weight:500;color:var(--text);white-space:nowrap;padding:9px 14px;border:1px solid rgba(255,255,255,.18);border-radius:10px;text-decoration:none;transition:color .2s,border-color .2s;flex-shrink:0}
-.nav-login:hover{color:var(--gold);border-color:var(--gold-border)}
-
-.account-btn{display:none;position:relative;flex-shrink:0}
-.nav-right{display:flex;align-items:center;gap:10px;flex-shrink:0;order:2}
-.account-btn.show{display:block}
-.account-pill{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;padding:7px 14px 7px 7px;border:1px solid rgba(255,255,255,.14);border-radius:100px;text-decoration:none;transition:border-color .2s}
-.account-pill:hover{border-color:rgba(255,184,0,.4)}
-.account-avatar{width:26px;height:26px;border-radius:50%;background:rgba(255,184,0,.15);border:1px solid rgba(255,184,0,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.account-avatar svg{width:13px;height:13px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.account-dropdown{position:absolute;top:100%;right:0;padding-top:8px;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility .15s}
-.account-dropdown.open{opacity:1;visibility:visible;transform:translateY(0)}
-.account-dropdown-inner{background:#0D0C0A;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:8px;min-width:200px;box-shadow:0 20px 44px rgba(0,0,0,.5)}
-.dropdown-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;font-size:13.5px;color:var(--text);text-decoration:none;background:none;border:none;width:100%;text-align:left;cursor:pointer}
-.dropdown-item:hover{background:rgba(255,255,255,.05)}
-.dropdown-item svg{width:16px;height:16px;flex-shrink:0;stroke:var(--text2);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.dropdown-divider{height:1px;background:rgba(255,255,255,.08);margin:6px 4px}
-.dropdown-item.danger{color:#F87171}
-.dropdown-item.danger svg{stroke:#F87171}
-.dropdown-item.danger:hover{background:rgba(248,113,113,.1)}
-.nav-cta{background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;padding:10px 18px;border-radius:11px;text-decoration:none;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;transition:background .2s,transform .15s}
-.nav-cta:hover{background:var(--gold2);color:#000;transform:translateY(-1px)}
-.nav-hamburger{display:none;flex-direction:column;justify-content:center;gap:4px;width:34px;height:34px;background:transparent;border:1px solid rgba(255,255,255,.14);border-radius:9px;flex-shrink:0;cursor:pointer}
-.nav-hamburger span{display:block;width:16px;height:1.5px;background:var(--gold);margin:0 auto}
-.nav-menu{display:contents}
-@media(max-width:768px){.nav-hamburger{display:flex}.nav-right{margin-left:auto}#account-email{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nav-menu{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:#0a0a0a;border-bottom:1px solid var(--gold-border);padding:10px 20px 18px;box-shadow:0 20px 40px rgba(0,0,0,.5)}.nav-menu.open{display:flex}.nav-links{display:flex;flex-direction:column;gap:2px}.nav-links a{padding:12px 4px}.nav-actions{display:flex;gap:10px;margin-top:12px}.nav-cta{padding:9px 16px;font-size:13px}}
-@media(min-width:769px){.nav-actions{display:contents}.nav-login{order:2}.nav-cta{order:3}}
-
-.start-modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(6,6,6,.72);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
-.start-modal-overlay.open{display:flex}
-.start-modal{max-width:640px;width:100%;background:#0B0A09;border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:clamp(24px,4vw,40px);position:relative}
-.start-modal-close{position:absolute;top:18px;right:18px;width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text2);font-size:18px;line-height:1;cursor:pointer}
-.start-modal-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
-.start-modal h3{font-family:'Space Grotesk',sans-serif;font-size:clamp(22px,3vw,28px);font-weight:700;line-height:1.15;margin-bottom:10px}
-.start-modal p{color:var(--text2);margin-bottom:26px}
-.start-modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-.start-modal-opt{display:block;border-radius:18px;padding:22px;text-decoration:none;transition:border-color .2s}
-.start-modal-opt.opt-site{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1)}
-.start-modal-opt.opt-site:hover{border-color:var(--gold-border)}
-.start-modal-opt.opt-tg{background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.3)}
-.start-modal-opt.opt-tg:hover{border-color:rgba(255,184,0,.5)}
-.opt-tag{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
-.opt-tag.tag-site{color:var(--text2)}
-.opt-tag.tag-tg{color:var(--gold)}
-.opt-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
-.opt-text{font-size:13.5px;color:var(--text2);line-height:1.5}
-
 .wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}
 section{padding:0 0 clamp(48px,6vw,72px);position:relative;z-index:2}
 
@@ -186,68 +129,7 @@ footer{border-top:1px solid rgba(255,255,255,.07);padding:0}
 
 <canvas id="bg-canvas"></canvas>
 
-<nav id="nav">
-  <div class="nav-inner">
-    <a class="nav-logo" href="/">
-      <span class="nav-logo-text">STAR VPN</span>
-    </a>
-    <div class="nav-right">
-      <div class="account-btn" id="account-btn">
-      <a class="account-pill" href="/account" id="account-toggle">
-        <span class="account-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6"/></svg></span><span id="account-email"></span>
-      </a>
-      <div class="account-dropdown" id="account-dropdown">
-        <div class="account-dropdown-inner">
-          <a class="dropdown-item" href="/account"><svg viewBox="0 0 24 24"><path d="M4 11.5L12 5l8 6.5V20a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1z"/></svg>Подписка</a>
-          <a class="dropdown-item" href="/account"><svg viewBox="0 0 24 24"><path d="M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1M17 7h4v8h-4"/></svg>Устройства</a>
-          <a class="dropdown-item" href="/account"><svg viewBox="0 0 24 24"><path d="M6 14a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 7.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 21a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8.2 10.3l7.6-3.6M8.2 13.7l7.6 3.6"/></svg>Приглашения</a>
-          <a class="dropdown-item" href="/account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6"/></svg>Профиль</a>
-          <div class="dropdown-divider"></div>
-          <button class="dropdown-item danger" id="account-logout"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Выйти</button>
-        </div>
-      </div>
-    </div>
-      <button class="nav-hamburger" id="navHamburger" aria-label="Меню" type="button" onclick="document.getElementById('navMenu').classList.toggle('open')">
-      <span></span><span></span><span></span>
-    </button>
-    </div>
-        <div class="nav-menu" id="navMenu">
-      <div class="nav-links">
-      <a href="/#how">Преимущества</a>
-      <a href="/#compare">Сравнение</a>
-      <a href="/#apps">Устройства</a>
-      <a href="/#faq">Вопросы</a>
-      <a href="/tariffs" class="active">Тарифы</a>
-      <a href="/wiki">Wiki</a>
-    </div>
-      <div class="nav-actions">
-    <a class="nav-login" id="nav-login" href="/login">Войти в кабинет</a>
-        <a class="nav-cta" id="nav-start-btn" href="https://t.me/starisvpnbot">2 дня бесплатно</a>
-      </div>
-    </div>
-  </div>
-</nav>
-
-<div class="start-modal-overlay" id="start-modal">
-  <div class="start-modal" onclick="event.stopPropagation()">
-    <button class="start-modal-close" id="start-modal-close" aria-label="Закрыть">×</button>
-    <div class="start-modal-label">С чего начать</div>
-    <h3>Как вам удобнее подключиться?</h3>
-    <p>Два равноценных пути к одному и тому же ключу — выберите свой.</p>
-    <div class="start-modal-grid">
-      <a class="start-modal-opt opt-site" href="/login" data-channel="site">
-        <div class="opt-tag tag-site">Личный кабинет</div>
-        <div class="opt-title">Через сайт</div>
-        <div class="opt-text">Вход по email и паролю. Работает, даже если Telegram недоступен.</div>
-      </a>
-      <a class="start-modal-opt opt-tg" href="https://t.me/starisvpnbot" data-channel="telegram">
-        <div class="opt-tag tag-tg">Telegram</div>
-        <div class="opt-title">Через бота</div>
-        <div class="opt-text">@starisvpnbot — подписка, продление и поддержка в одном чате.</div>
-      </a>
-    </div>
-  </div>
-</div>
+<!--SITE_NAV-->
 
 <div class="hero">
   <div class="wrap" style="padding:0">
@@ -451,33 +333,6 @@ footer{border-top:1px solid rgba(255,255,255,.07);padding:0}
   draw();
 })();
 
-/* ═══ Start modal ═════════════════════════════════════════════ */
-(function(){
-  const overlay = document.getElementById('start-modal');
-  const closeBtn = document.getElementById('start-modal-close');
-  const navBtn = document.getElementById('nav-start-btn');
-  function openModal(){ overlay.classList.add('open'); }
-  function closeModal(){ overlay.classList.remove('open'); }
-  navBtn.addEventListener('click', e => {
-    e.preventDefault();
-    fetch('/api/me', { credentials: 'include' })
-      .then(r => { if (r.ok) { window.location.href = '/account'; } else { openModal(); } })
-      .catch(() => openModal());
-  });
-  overlay.addEventListener('click', closeModal);
-  closeBtn.addEventListener('click', closeModal);
-  document.querySelectorAll('.start-modal-opt').forEach(opt => {
-    opt.addEventListener('click', e => {
-      if (opt.dataset.channel === 'site') {
-        e.preventDefault();
-        fetch('/api/me', { credentials: 'include' })
-          .then(r => { window.location.href = r.ok ? '/account' : '/login'; })
-          .catch(() => { window.location.href = '/login'; });
-      }
-    });
-  });
-})();
-
 /* ═══ Custom days slider + fixed plan tiles (shared state) ══════ */
 function rateFor(days){
   if(days >= 180) return 5;
@@ -525,37 +380,5 @@ function toggleFaq(btn){
 }
 </script>
 
-<script>
-/* ═══ Аккаунт в шапке (если вошёл) ══════════════════════════════ */
-(function(){
-  const navLogin = document.getElementById('nav-login');
-  const accountBtn = document.getElementById('account-btn');
-  const accountToggle = document.getElementById('account-toggle');
-  const accountDropdown = document.getElementById('account-dropdown');
-  const accountEmail = document.getElementById('account-email');
-  if (!navLogin || !accountBtn) return;
-
-  fetch('/api/me', { credentials: 'include' })
-    .then(r => r.ok ? r.json() : Promise.reject())
-    .then(me => {
-      navLogin.style.display = 'none';
-      accountBtn.classList.add('show');
-      accountEmail.textContent = me.email || me.username || 'Аккаунт';
-    })
-    .catch(() => {});
-
-  accountToggle.addEventListener('click', (e) => {
-    e.preventDefault();
-    accountDropdown.classList.toggle('open');
-  });
-  document.addEventListener('click', (e) => {
-    if (!accountBtn.contains(e.target)) accountDropdown.classList.remove('open');
-  });
-  document.getElementById('account-logout').addEventListener('click', async () => {
-    await fetch('/api/account/logout', { method: 'POST' });
-    window.location.href = '/';
-  });
-})();
-</script>
 </body>
 </html>

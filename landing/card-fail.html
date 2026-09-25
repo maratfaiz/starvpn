@@ -27,11 +27,6 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-s
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
 #bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
-
-#nav{position:sticky;top:0;z-index:100;padding:0 24px;background:rgba(6,6,6,0.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
-.nav-inner{max-width:var(--max);margin:0 auto;display:flex;align-items:center;height:64px}
-.nav-logo{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;letter-spacing:.05em;color:var(--gold)}
-
 main{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;padding:48px 24px;text-align:center}
 .wrap{max-width:480px;width:100%}
 .status-icon{width:64px;height:64px;margin:0 auto 24px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1.5px solid rgba(248,113,113,.35);background:rgba(248,113,113,.08)}
@@ -64,11 +59,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
 
 <canvas id="bg-canvas"></canvas>
 
-<nav id="nav">
-  <div class="nav-inner">
-    <a class="nav-logo" href="/">STAR VPN</a>
-  </div>
-</nav>
+<!--SITE_NAV-->
 
 <main>
   <div class="wrap" id="box">
