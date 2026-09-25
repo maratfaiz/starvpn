@@ -483,7 +483,7 @@ async def account_login(request: Request):
 
     async with AsyncSessionLocal() as session:
         user = (await session.execute(_select(User).where(User.email == email))).scalar_one_or_none()
-        if not user or not user.password_hash or not verify_password(password, user.password_hash):
+        if not user or not user.password_hash or not await verify_password(password, user.password_hash):
             raise HTTPException(401, "Неверный email или пароль")
         if not user.email_verified:
             raise HTTPException(403, "email_not_verified")
@@ -1444,10 +1444,17 @@ async def invoice_gift(request: Request, x_telegram_init_data: str | None = Head
     if recipient.telegram_id == tg_id:
         raise HTTPException(400, "Нельзя подарить подписку самому себе.")
 
-    # Сохраняем личное сообщение (используем тот же _pending_messages из gift.py)
+    # Сохраняем (или очищаем) личное сообщение — используем тот же
+    # _pending_messages из gift.py. Всегда пишем ключ явно, а не только когда
+    # сообщение непустое, иначе повторный подарок этому же получателю без
+    # сообщения подхватит старое, оставшееся от прошлого инвойса (см. тот же
+    # фикс в bot/handlers/gift.py::_send_gift_invoice).
+    from bot.handlers.gift import _pending_messages
+    pending_key = f"{tg_id}:{recipient.telegram_id}"
     if personal_message:
-        from bot.handlers.gift import _pending_messages
-        _pending_messages[f"{tg_id}:{recipient.telegram_id}"] = personal_message
+        _pending_messages[pending_key] = personal_message
+    else:
+        _pending_messages.pop(pending_key, None)
 
     payload = f"gift:{plan_key}:{recipient.telegram_id}:{anon}"
     uname = f"@{recipient.username}" if recipient.username else str(recipient.telegram_id)
@@ -1500,10 +1507,14 @@ async def create_gift_crypto_invoice(
     if recipient.telegram_id == tg_id:
         raise HTTPException(400, "Нельзя подарить самому себе.")
 
-    # Сохраняем личное сообщение
+    # Сохраняем (или очищаем) личное сообщение — см. фикс выше в
+    # /api/invoice/gift для того же issue.
+    from bot.handlers.gift import _pending_messages
+    pending_key = f"{tg_id}:{recipient.telegram_id}"
     if personal_message:
-        from bot.handlers.gift import _pending_messages
-        _pending_messages[f"{tg_id}:{recipient.telegram_id}"] = personal_message
+        _pending_messages[pending_key] = personal_message
+    else:
+        _pending_messages.pop(pending_key, None)
 
     uname = f"@{recipient.username}" if recipient.username else str(recipient.telegram_id)
     payload_str = f"gift:{plan_key}:{recipient.telegram_id}:{anon}:{tg_id}"
@@ -1629,7 +1640,11 @@ async def gift_invoice(request: Request, x_telegram_init_data: str | None = Head
             raise HTTPException(503, "Оплата картой временно недоступна")
 
         payment = Payment(
-            order_id="", telegram_id=recipient_tg_id, amount=float(plan["rub"]),
+            # Placeholder must be unique (order_id has a UNIQUE constraint) —
+            # a shared "" would raise IntegrityError if two card checkouts
+            # (site or gift) flush concurrently, before either gets a real id.
+            order_id=f"card_pending_{secrets.token_hex(16)}",
+            telegram_id=recipient_tg_id, amount=float(plan["rub"]),
             status="pending", payment_method="card", days=plan["days"],
             is_gift=True, gift_sender_id=tg_id, gift_anon=anon, gift_message=message,
             gift_link_code=gift_link_code,
@@ -1993,7 +2008,8 @@ async def create_card_invoice(
         if not await is_provider_enabled(session, "card"):
             raise HTTPException(status_code=503, detail="Оплата картой временно недоступна")
         payment = Payment(
-            order_id="",
+            # See the gift-invoice card path above for why this can't be "".
+            order_id=f"card_pending_{secrets.token_hex(16)}",
             telegram_id=tg_id,
             amount=float(rub),
             status="pending",

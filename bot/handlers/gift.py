@@ -76,10 +76,21 @@ async def _stars_enabled() -> bool:
         return await is_provider_enabled(session, "stars")
 
 
+async def _payment_toggles() -> tuple[bool, bool]:
+    """(stars_on, crypto_on) за один поход в БД — там, где нужны оба флага
+    сразу, вместо двух отдельных _stars_enabled()/_crypto_enabled(), каждый
+    из которых открывал бы свою собственную сессию."""
+    from bot.utils.settings_store import is_provider_enabled
+    async with AsyncSessionLocal() as session:
+        return (
+            await is_provider_enabled(session, "stars"),
+            await is_provider_enabled(session, "crypto"),
+        )
+
+
 @router.message(F.text == "🎁 Подарить VPN")
 async def gift_start(message: Message) -> None:
-    crypto_on = await _crypto_enabled()
-    stars_on = await _stars_enabled()
+    stars_on, crypto_on = await _payment_toggles()
     if not stars_on and not crypto_on:
         await message.answer(
             "🎁 Подарки сейчас временно недоступны — оба способа оплаты подарков "
@@ -122,8 +133,7 @@ async def gift_choose_plan(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(GiftForm.pay_method)
 
     plan = PLANS[plan_key]
-    crypto_on = await _crypto_enabled()
-    stars_on = await _stars_enabled()
+    stars_on, crypto_on = await _payment_toggles()
     crypto = CRYPTO_PLANS.get(plan_key, {})
     price_parts = []
     if stars_on:
@@ -371,8 +381,16 @@ async def _send_gift_invoice(
 
     else:
         # ── Stars-подарок ────────────────────────────────────────────────────
+        # Всегда явно записываем (или очищаем) ключ, а не только когда
+        # сообщение непустое — иначе при повторном подарке этому же
+        # получателю, где пользователь на этот раз нажал "Пропустить",
+        # handle_gift_payment() подхватил бы старое сообщение, оставшееся
+        # от прошлого (возможно так и не оплаченного) инвойса.
+        pending_key = f"{sender_id}:{recipient_id}"
         if personal_message:
-            _pending_messages[f"{sender_id}:{recipient_id}"] = personal_message
+            _pending_messages[pending_key] = personal_message
+        else:
+            _pending_messages.pop(pending_key, None)
 
         payload = f"gift:{plan_key}:{recipient_id}:{anon}"
         msg_label = (
