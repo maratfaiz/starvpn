@@ -83,10 +83,15 @@ def _mz_username_for_type(
     username: str | None,
     existing: list[str],
 ) -> str:
-    """Генерирует Marzban username: {type}_tg_{ident}[2..9]."""
+    """Генерирует Marzban username: {type}_tg_{ident}[2..9].
+
+    Marzban принимает имена не длиннее 32 символов — длинный @username
+    обрезается, иначе создание устройства падало для таких пользователей.
+    """
     ident = username.lower() if username else (
         f"web{-telegram_id}" if telegram_id < 0 else str(telegram_id)
     )
+    ident = ident[:32 - len(f"{type_key}9_tg_") - 2]
     base = f"{type_key}_tg_{ident}"
     if base not in existing:
         return base
@@ -327,26 +332,18 @@ async def dev_add_type(callback: CallbackQuery, session: AsyncSession) -> None:
 
     link: str | None = None
     try:
-        mz = await marzban.create_user(
-            telegram_id=tg_id,
-            days=days_left,
-            note=f"device|type:{type_key}|slot:{slot}|tg:{tg_id}",
-            ip_limit=1,
-            username=mz_username,
+        mz = await marzban.provision_user(
+            mz_username, tg_id, days_left,
+            note=f"device|type:{type_key}|slot:{slot}|tg:{tg_id}", ip_limit=1,
         )
         link = set_vless_remark(marzban.extract_vless_link(mz), type_key)
     except Exception as e:
-        logger.warning("create_user failed (%s), trying get_or_create: %s", mz_username, e)
-        try:
-            mz = await marzban.get_or_create_user(mz_username, tg_id, days_left)
-            link = set_vless_remark(marzban.extract_vless_link(mz), type_key)
-        except Exception as e2:
-            logger.error("get_or_create_user also failed for %s: %s", mz_username, e2)
-            await callback.message.answer(
-                "❌ Не удалось создать VPN-конфигурацию. Попробуй ещё раз или напиши в поддержку."
-            )
-            await show_devices_screen(callback, session)
-            return
+        logger.error("provision_user failed for %s: %s", mz_username, e)
+        await callback.message.answer(
+            "❌ Не удалось создать VPN-конфигурацию. Попробуй ещё раз или напиши в поддержку."
+        )
+        await show_devices_screen(callback, session)
+        return
 
     dev = Device(
         telegram_id=tg_id,

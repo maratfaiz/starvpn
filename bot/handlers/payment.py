@@ -35,7 +35,6 @@ from bot.models.device import Device
 from bot.models.payment import Payment
 from bot.models.user import User
 from bot.utils.marzban import marzban
-from bot.utils.qr import make_qr_photo
 from bot.utils.bot_texts import MenuText, t
 from bot.handlers.gift import handle_gift_payment
 
@@ -119,16 +118,19 @@ async def _grant_subscription(user: User, days: int, session: AsyncSession) -> N
     )
     dev_list = list(devices_result.scalars().all())
 
+    # Продление заодно включает устройства, выключенные по истечении подписки
+    # (кроме забаненных — их доступ включает только разбан).
+    activate = not user.is_banned
     if dev_list:
         for dev in dev_list:
             try:
-                await marzban.extend_user(dev.marzban_username, days)
+                await marzban.extend_user(dev.marzban_username, days, activate=activate)
             except Exception as e:
                 logger.warning("Marzban extend device %s failed: %s", dev.marzban_username, e)
     elif user.marzban_username:
         # Старый формат (без устройств) — продлеваем основной аккаунт
         try:
-            await marzban.extend_user(user.marzban_username, days)
+            await marzban.extend_user(user.marzban_username, days, activate=activate)
         except Exception as e:
             logger.error("Marzban extend failed for %s: %s", user.marzban_username, e)
         # Создаём запись в devices для миграции
@@ -453,9 +455,10 @@ async def activate_trial(callback: CallbackQuery, session: AsyncSession) -> None
 
     await callback.message.answer(t("trial.creating"))
 
+    # Дни добавляются к текущему сроку (раньше — «сейчас + 2 дня», что
+    # затирало оплаченную подписку) и включают уже созданные устройства.
     user.trial_used = True
-    user.subscription_expires_at = datetime.utcnow() + timedelta(days=settings.trial_days)
-    await session.commit()
+    await _grant_subscription(user, settings.trial_days, session)
     await session.refresh(user)
 
     from bot.handlers.start import main_keyboard

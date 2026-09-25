@@ -1424,8 +1424,8 @@ async function loadReferral() {
         ${ref.referrals.map(r2 => `
           <div class="ref-list-item">
             <div>
-              <div style="font-size:14px;color:var(--text)">${r2.name}</div>
-              <div class="mono" style="font-size:11.5px;color:var(--text2);margin-top:2px">${r2.date}</div>
+              <div style="font-size:14px;color:var(--text)">${escHtml(r2.name)}</div>
+              <div class="mono" style="font-size:11.5px;color:var(--text2);margin-top:2px">${escHtml(r2.date)}</div>
             </div>
             <span class="ref-status ${r2.paid ? 'paid' : 'unpaid'}">${r2.paid ? 'Оплатил' : 'Ещё нет'}</span>
           </div>

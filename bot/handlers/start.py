@@ -7,6 +7,7 @@
   • Всегда: 🎧 Поддержка | 👥 Партнёрка | 📚 Инструкции
 """
 
+import html
 import logging
 from datetime import datetime
 
@@ -94,7 +95,7 @@ async def _notify_admin_new_user(bot, user: User) -> None:
         await bot.send_message(
             settings.telegram_admin_id,
             f"👤 <b>Новый пользователь!</b>\n"
-            f"Имя: {user.full_name}\n"
+            f"Имя: {html.escape(user.full_name or '')}\n"
             f"Username: {uname}\n"
             f"ID: <code>{user.telegram_id}</code>",
             parse_mode="HTML",
@@ -125,14 +126,11 @@ async def cmd_start(
 
         if command.args and command.args.startswith("ref") and command.args[3:].isdigit():
             referrer_id = int(command.args[3:])
-            if referrer_id != tg_id:
+            # referral_count — число ОПЛАТИВШИХ друзей (его увеличивает только
+            # _credit_referral при первой оплате). Раньше он рос уже здесь, на
+            # /start, и бонус «за 2 оплативших» выдавался за одного.
+            if referrer_id != tg_id and await session.get(User, referrer_id):
                 user.referrer_id = referrer_id
-                ref_result = await session.execute(
-                    select(User).where(User.telegram_id == referrer_id)
-                )
-                referrer: User | None = ref_result.scalar_one_or_none()
-                if referrer:
-                    referrer.referral_count = (referrer.referral_count or 0) + 1
 
         session.add(user)
         await session.commit()

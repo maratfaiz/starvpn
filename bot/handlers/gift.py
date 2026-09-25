@@ -12,8 +12,8 @@
   7. После оплаты → подписка активируется получателю, оба получают уведомления
 """
 
+import html
 import logging
-from datetime import datetime, timedelta
 
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
@@ -25,16 +25,15 @@ from aiogram.types import (
     Message,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import func, select
 
-from bot.models.device import Device
+from bot.config import settings
 from bot.models.gift_notification import GiftNotification
 from bot.models.payment import Payment
 from bot.models.user import User
 from bot.states.payment_states import GiftForm
 from bot.utils.cryptopay import cryptopay, CRYPTO_PLANS
 from bot.utils.database import AsyncSessionLocal
-from bot.utils.marzban import marzban
 from bot.utils.bot_texts import MenuText
 
 router = Router()
@@ -193,15 +192,15 @@ async def gift_enter_recipient(message: Message, state: FSMContext, session: Asy
         )
     else:
         result = await session.execute(
-            select(User).where(User.username == arg.lstrip("@"))
+            select(User).where(func.lower(User.username) == arg.lstrip("@").lower()).limit(1)
         )
     recipient: User | None = result.scalar_one_or_none()
 
     if not recipient:
         await message.answer(
-            f"❌ Пользователь <b>{arg}</b> не найден.\n\n"
+            f"❌ Пользователь <b>{html.escape(arg)}</b> не найден.\n\n"
             "Возможно, он ещё не запустил бота — попроси его написать "
-            "<b>/start</b> в @starisvpnbot, затем попробуй снова.\n\n"
+            f"<b>/start</b> в @{settings.bot_username}, затем попробуй снова.\n\n"
             "Или введи другой @username / ID:",
             parse_mode="HTML",
             reply_markup=_cancel_kb(),
@@ -377,7 +376,7 @@ async def _send_gift_invoice(
 
         payload = f"gift:{plan_key}:{recipient_id}:{anon}"
         msg_label = (
-            f"\n✍️ Сообщение: <i>{personal_message[:50]}{'...' if len(personal_message) > 50 else ''}</i>"
+            f"\n✍️ Сообщение: <i>{html.escape(personal_message[:50])}{'...' if len(personal_message) > 50 else ''}</i>"
             if personal_message else ""
         )
 
@@ -445,36 +444,11 @@ async def handle_gift_payment(
         await message.answer("❌ Получатель не найден. Обратись в поддержку.")
         return
 
-    # Активируем подписку получателю
-    if recipient.marzban_username:
-        try:
-            await marzban.extend_user(recipient.marzban_username, plan["days"])
-        except Exception as e:
-            logger.error("Marzban extend failed for gift recipient %s: %s", recipient_id, e)
-    else:
-        try:
-            mz = await marzban.create_user(
-                recipient_id, plan["days"],
-                note=f"gift|from:{sender_id}|tg:{recipient_id}",
-            )
-            recipient.marzban_username = mz["username"]
-            dev = Device(
-                telegram_id=recipient_id,
-                slot=1,
-                name="ios",
-                marzban_username=mz["username"],
-            )
-            session.add(dev)
-        except Exception as e:
-            logger.error("Marzban create failed for gift recipient %s: %s", recipient_id, e)
-
-    now = datetime.utcnow()
-    base = (
-        recipient.subscription_expires_at
-        if recipient.subscription_expires_at and recipient.subscription_expires_at > now
-        else now
-    )
-    recipient.subscription_expires_at = base + timedelta(days=plan["days"])
+    # Активируем подписку получателю — та же логика, что при обычной оплате:
+    # продлеваются и включаются все его устройства. Раньше продлевался только
+    # старый «основной» аккаунт, а без него создавалось лишнее устройство.
+    from bot.handlers.payment import _grant_subscription
+    await _grant_subscription(recipient, plan["days"], session)
 
     sender_name = "Аноним 🕵️" if anon else (
         f"@{message.from_user.username}" if message.from_user.username
@@ -499,11 +473,11 @@ async def handle_gift_payment(
         parse_mode="HTML",
     )
 
-    personal_block = f"\n\n💬 <i>«{personal_message}»</i>" if personal_message else ""
+    personal_block = f"\n\n💬 <i>«{html.escape(personal_message)}»</i>" if personal_message else ""
 
     notif_text = (
         f"🎁 <b>Тебе подарили подписку STAR VPN!</b>\n\n"
-        f"От: <b>{sender_name}</b>\n"
+        f"От: <b>{html.escape(sender_name)}</b>\n"
         f"📦 Тариф: <b>{plan['label']} ({plan['days']} дней)</b>\n"
         f"⏳ Действует до: <b>{exp_str}</b>"
         f"{personal_block}\n\n"

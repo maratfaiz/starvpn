@@ -556,7 +556,7 @@ async function api(method, path, body) {
   return r.status === 204 ? null : r.json();
 }
 
-function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function fmtDate(iso) { if (!iso) return '—'; return new Date(iso).toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit',year:'2-digit'}); }
 function fmtDateTime(iso) { if (!iso) return '—'; return new Date(iso).toLocaleString('ru-RU', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
 function copyText(text) {
