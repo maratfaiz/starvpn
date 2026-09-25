@@ -260,12 +260,22 @@ export async function sendBroadcast(text) {
   return { success: true, sent_to: r.sent };
 }
 
+// Quote a CSV field if it contains a comma, quote, or newline — user-entered
+// values like `name` (a Telegram full_name) can contain any of these and
+// would otherwise silently shift every later column on that row.
+function csvCell(v) {
+  const s = String(v ?? "");
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
 // No bulk-export endpoint exists — page through /api/admin/users ourselves.
+// The iteration cap is just a safety net against a runaway loop; at 200/page
+// it covers 200,000 users, far past any realistic user count.
 export async function exportUsersCSV() {
   const limit = 200;
   let offset = 0;
   let all = [];
-  for (let i = 0; i < 25; i++) {
+  for (let i = 0; i < 1000; i++) {
     const { users, total } = await getAdminUsers({ cursor: offset, limit });
     all = all.concat(users);
     offset += users.length;
@@ -273,7 +283,9 @@ export async function exportUsersCSV() {
   }
   const header = "tg_id,name,username,subscription_active,expires_at,extra_days_granted,banned,joined_at";
   const rows = all.map((u) =>
-    [u.tg_id, u.name, u.username || "", u.subscription_active, u.expires_at || "", u.extra_days_granted, u.banned, u.joined_at || ""].join(",")
+    [u.tg_id, u.name, u.username || "", u.subscription_active, u.expires_at || "", u.extra_days_granted, u.banned, u.joined_at || ""]
+      .map(csvCell)
+      .join(",")
   );
   return [header, ...rows].join("\n");
 }

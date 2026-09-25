@@ -1174,6 +1174,7 @@ async def admin_list_users(
                 "days_left": max(0, (u.subscription_expires_at - now).days) if u.subscription_expires_at and u.subscription_expires_at > now else 0,
                 "total_stars_paid": int(u.total_stars_paid or 0),
                 "referral_count": int(u.referral_count or 0),
+                "extra_days_granted": int(u.extra_days_granted or 0),
                 "trial_used": bool(u.trial_used),
                 "created_at": u.created_at.isoformat() if u.created_at else None,
             }

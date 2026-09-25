@@ -52,8 +52,18 @@ function haptic(type = "impact") {
   }
 }
 
+// bot/api.py sends naive datetimes (datetime.utcnow().isoformat(), no "Z" /
+// offset) that are always UTC. `new Date(...)` treats a date-time string
+// with no offset as browser-LOCAL time, which would silently skew every
+// computation below by the viewer's UTC offset — so parse it as UTC ourselves.
+function parseUtc(isoString) {
+  if (!isoString) return null;
+  const hasOffset = /Z$|[+-]\d\d:\d\d$/.test(isoString);
+  return new Date(hasOffset ? isoString : `${isoString}Z`);
+}
+
 function meToSubscription(me) {
-  const exp = me.subscription_expires_at ? new Date(me.subscription_expires_at) : null;
+  const exp = parseUtc(me.subscription_expires_at);
   const daysLeft = exp ? Math.max(0, Math.floor((exp.getTime() - Date.now()) / 86400000)) : 0;
   return {
     active: me.subscription_active,
@@ -78,6 +88,7 @@ export default function App() {
   const [tgUser, setTgUser] = useState(null);
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [server, setServer] = useState(null);
   const [devices, setDevices] = useState([]);
@@ -115,12 +126,31 @@ export default function App() {
       setTgUser(tg.initDataUnsafe?.user || null);
     }
 
-    loadAll().then(() => {
-      setLoading(false);
-      api.checkGiftNotification().then(setPendingGift);
-    });
+    setLoadError(false);
+    loadAll()
+      .then(() => {
+        setLoading(false);
+        api.checkGiftNotification().then(setPendingGift).catch(() => {});
+      })
+      .catch(() => {
+        // Network/auth failure on first load — stop spinning and let the
+        // person retry instead of staring at "Загрузка" forever.
+        setLoading(false);
+        setLoadError(true);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [telegramOk]);
+
+  const retryLoad = () => {
+    setLoading(true);
+    setLoadError(false);
+    loadAll()
+      .then(() => setLoading(false))
+      .catch(() => {
+        setLoading(false);
+        setLoadError(true);
+      });
+  };
 
   // navigation
   const [activeTab, setActiveTab] = useState("home");
@@ -429,6 +459,24 @@ export default function App() {
           if (action === "trial") activateTrial();
         }}
       />
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="relative flex items-center justify-center min-h-screen bg-app-bg overflow-hidden">
+        <Starfield shootingStars />
+        <div className="relative z-[1] flex flex-col items-center gap-4 px-8 text-center">
+          <span className="font-display font-extrabold text-xl text-ink">Не удалось загрузить данные</span>
+          <span className="text-ink/45 text-sm">Проверь соединение и попробуй ещё раз</span>
+          <button
+            onClick={retryLoad}
+            className="mt-2 border-none px-5 py-3 rounded-2xl bg-gradient-to-br from-gold to-gold-dark font-display font-bold text-sm text-[#1A1408]"
+          >
+            Повторить
+          </button>
+        </div>
+      </div>
     );
   }
 
