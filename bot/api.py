@@ -522,12 +522,25 @@ _TG_OAUTH_COOKIE = "tg_oauth_pkce"
 _TG_OAUTH_COOKIE_PATH = "/api/telegram-oauth"
 
 
+def _tg_login_fail(code: str):
+    """Любая ошибка входа через Telegram — редирект обратно на /login с кодом
+    причины, а не голая страница ошибки (503/500 в браузере пользователя)."""
+    from bot.utils.telegram_oauth import site_origin
+
+    resp = RedirectResponse(f"{site_origin()}/login?tg_error={code}", status_code=302)
+    resp.delete_cookie(_TG_OAUTH_COOKIE, path=_TG_OAUTH_COOKIE_PATH)
+    return resp
+
+
 @app.get("/api/telegram-oauth/start", include_in_schema=False)
 async def telegram_oauth_start():
-    from bot.utils.telegram_oauth import build_authorize_url, generate_pkce_pair
+    from bot.utils.telegram_oauth import (
+        build_authorize_url, generate_pkce_pair, is_configured, record_error,
+    )
 
-    if not settings.telegram_oauth_client_id or not settings.telegram_oauth_client_secret:
-        return HTMLResponse("Вход через Telegram временно недоступен", status_code=503)
+    if not is_configured():
+        record_error("not_configured", "Не заданы TELEGRAM_OAUTH_CLIENT_ID / TELEGRAM_OAUTH_CLIENT_SECRET в .env")
+        return _tg_login_fail("not_configured")
 
     state = secrets.token_urlsafe(24)
     verifier, challenge = generate_pkce_pair()
@@ -542,43 +555,60 @@ async def telegram_oauth_start():
 
 @app.get("/api/telegram-oauth/callback", include_in_schema=False)
 async def telegram_oauth_callback(
-    request: Request, code: str | None = None, state: str | None = None, error: str | None = None
+    request: Request, code: str | None = None, state: str | None = None,
+    error: str | None = None, error_description: str | None = None,
 ):
-    from bot.utils.telegram_oauth import exchange_code, verify_id_token
+    from bot.utils.telegram_oauth import (
+        TelegramLoginError, exchange_code, record_error, site_origin,
+        telegram_id_from_claims, verify_id_token,
+    )
     from bot.utils.webauth import (
         SESSION_COOKIE_NAME, SESSION_TTL, create_web_session, get_or_create_user_by_telegram_id,
     )
 
-    def _fail():
-        resp = RedirectResponse(f"{settings.site_url}/login?tg_error=1", status_code=302)
-        resp.delete_cookie(_TG_OAUTH_COOKIE, path=_TG_OAUTH_COOKIE_PATH)
-        return resp
-
-    if error or not code or not state:
-        return _fail()
+    if error:
+        # access_denied — пользователь сам нажал «Отмена» в Telegram.
+        record_error("denied" if error == "access_denied" else "provider",
+                     f"{error}: {error_description or ''}")
+        return _tg_login_fail("denied" if error == "access_denied" else "provider")
+    if not code or not state:
+        record_error("provider", "Callback без code/state")
+        return _tg_login_fail("provider")
 
     saved_state, _, verifier = (request.cookies.get(_TG_OAUTH_COOKIE) or "").partition(".")
     if not verifier or not hmac.compare_digest(saved_state, state):
-        return _fail()
+        # Чаще всего — вход начат на другом домене (www/без www) или прошло >10 мин.
+        record_error("state", "Нет cookie tg_oauth_pkce или state не совпал")
+        return _tg_login_fail("state")
 
     try:
         tokens = await exchange_code(code, verifier)
-        claims = verify_id_token(tokens["id_token"])
-        tg_id = int(claims.get("id") or claims["sub"])
+        claims = await verify_id_token(tokens["id_token"])
+        tg_id = telegram_id_from_claims(claims)
+    except TelegramLoginError as e:
+        record_error(e.code, e.detail)
+        return _tg_login_fail(e.code)
     except Exception as e:
-        logger.warning("Ошибка входа через Telegram OAuth: %s", e)
-        return _fail()
+        record_error("token", f"{type(e).__name__}: {e}")
+        return _tg_login_fail("token")
 
     username = claims.get("preferred_username")
     full_name = claims.get("name") or " ".join(
         filter(None, [claims.get("given_name"), claims.get("family_name")])
     ) or None
 
-    async with AsyncSessionLocal() as session:
-        user = await get_or_create_user_by_telegram_id(tg_id, username, full_name, session)
-        session_token = await create_web_session(user, session)
+    try:
+        async with AsyncSessionLocal() as session:
+            user = await get_or_create_user_by_telegram_id(
+                tg_id, (username or None) and username[:64], full_name and full_name[:256], session,
+            )
+            session_token = await create_web_session(user, session)
+    except Exception as e:
+        logger.exception("Telegram OAuth: ошибка при создании сессии")
+        record_error("server", f"{type(e).__name__}: {e}")
+        return _tg_login_fail("server")
 
-    resp = RedirectResponse(f"{settings.site_url}/account", status_code=302)
+    resp = RedirectResponse(f"{site_origin()}/account", status_code=302)
     resp.delete_cookie(_TG_OAUTH_COOKIE, path=_TG_OAUTH_COOKIE_PATH)
     resp.set_cookie(
         SESSION_COOKIE_NAME, session_token,
@@ -2915,10 +2945,19 @@ async def web_settings_overview(authorization: str | None = Header(default=None)
             "stars": plan["stars"], "rub": float(card.get("rub", 0)),
         })
 
+    from bot.utils import telegram_oauth
+
     async with AsyncSessionLocal() as session:
         toggles = await get_all_provider_states(session)
 
     return {
+        "telegram_login": {
+            "configured": telegram_oauth.is_configured(),
+            "client_id": telegram_oauth.client_id(),
+            "origin": telegram_oauth.site_origin(),
+            "redirect_uri": telegram_oauth.redirect_uri(),
+            "last_error": telegram_oauth.last_error,
+        },
         "tariffs": tariffs,
         "providers": {
             "stars": {"configured": True, "enabled": toggles["stars"]},

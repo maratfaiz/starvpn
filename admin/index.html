@@ -1301,6 +1301,7 @@ async function renderSettings() {
             <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="color:#8A7A60;font-size:13px">Устройств на аккаунт</span><span class="mono" style="color:#FFB800">${s.limits.max_devices}</span></div>
             <div style="display:flex;justify-content:space-between"><span style="color:#8A7A60;font-size:13px">Пробный период</span><span class="mono" style="color:#FFB800">${s.limits.trial_days} дня</span></div>
           </div>
+          ${telegramLoginCard(s.telegram_login)}
           <div class="editor-card">
             <div class="dcard-title" style="margin-bottom:14px">Доступ к админке</div>
             <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">У каждого сотрудника свой логин и пароль. Мастер-ключ ниже — из ADMIN_WEB_KEY в .env, нужен только для регистрации самого первого аккаунта (ранга admin). Дальше приглашения — через личный ключ в разделе «Профиль».</div>
@@ -1321,6 +1322,39 @@ async function renderSettings() {
   } catch (e) {
     c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
   }
+}
+
+const TG_LOGIN_HINTS = {
+  not_configured: 'В .env не заданы TELEGRAM_OAUTH_CLIENT_ID / TELEGRAM_OAUTH_CLIENT_SECRET.',
+  token: 'Telegram не выдал токен: чаще всего неверный Client Secret или Redirect URI не зарегистрирован в BotFather.',
+  aud: 'TELEGRAM_OAUTH_CLIENT_ID не совпадает с ботом, в котором включён Web Login (это числовой ID бота — часть токена до двоеточия).',
+  state: 'Вход начат на другом домене (www / без www) или прошло больше 10 минут. SITE_URL должен совпадать с адресом, по которому открывают сайт.',
+  provider: 'Telegram вернул ошибку — проверьте Allowed URLs в BotFather.',
+  denied: 'Пользователь отменил вход в Telegram — это не ошибка настройки.',
+  claims: 'В ответе Telegram нет Telegram ID пользователя.',
+  server: 'Ошибка на нашей стороне при создании сессии — см. лог бота.',
+};
+
+function telegramLoginCard(t) {
+  if (!t) return '';
+  const err = t.last_error;
+  return `
+    <div class="editor-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div class="dcard-title" style="flex:1">Вход через Telegram на сайте</div>
+        <span class="chip ${t.configured ? 'green' : 'grey'}">${t.configured ? 'Настроено' : 'Не настроено'}</span>
+      </div>
+      <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">@BotFather → ваш бот → Bot Settings → Web Login. В «Allowed URLs» добавьте оба адреса:</div>
+      <div class="mono" style="background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:10px 12px;font-size:12px;color:#EBE0CC;word-break:break-all;margin-bottom:6px">${esc(t.origin)}</div>
+      <div class="mono" style="background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:10px 12px;font-size:12px;color:#EBE0CC;word-break:break-all;margin-bottom:10px">${esc(t.redirect_uri)}</div>
+      <div style="font-size:12.5px;color:#8A7A60">Client ID из .env: <span class="mono" style="color:#EBE0CC">${esc(t.client_id || '—')}</span></div>
+      ${err ? `
+        <div style="margin-top:12px;border:1px solid rgba(255,90,90,.25);background:rgba(255,90,90,.06);border-radius:10px;padding:10px 12px">
+          <div style="font-size:12px;color:#FF8A80;margin-bottom:4px">Последняя ошибка · ${fmtDateTime(err.at + 'Z')}</div>
+          <div style="font-size:13px;color:#EBE0CC;margin-bottom:4px">${esc(TG_LOGIN_HINTS[err.code] || err.code)}</div>
+          <div class="mono" style="font-size:11.5px;color:#8A7A60;word-break:break-all">${esc(err.detail)}</div>
+        </div>` : ''}
+    </div>`;
 }
 
 async function renderProfile() {
