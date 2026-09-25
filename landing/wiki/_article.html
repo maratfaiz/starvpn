@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Zero Logs — Wiki STAR VPN</title>
-<meta name="description" content="Что именно не записывается в STAR VPN: разбор параметров логирования Xray и почему отсутствие логов проверяемо.">
+<title>__WIKI_TITLE__ — Wiki STAR VPN</title>
+<meta name="description" content="__WIKI_DESCRIPTION__">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -29,7 +29,6 @@ a:hover{color:var(--gold2)}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,184,0,.2);border-radius:2px}
-code{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--gold);background:rgba(255,184,0,.08);padding:2px 6px;border-radius:5px}
 
 #nav{position:sticky;top:0;z-index:100;padding:0 20px;background:rgba(6,6,6,.92);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border-bottom:1px solid rgba(255,255,255,.07)}
 .nav-inner{max-width:var(--navmax);margin:0 auto;display:flex;align-items:center;height:66px;gap:26px}
@@ -76,7 +75,6 @@ code{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--gold);bac
 .start-modal p{color:var(--text2);margin-bottom:26px}
 .start-modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
 .start-modal-opt{display:block;border-radius:18px;padding:22px;text-decoration:none;transition:border-color .2s}
-.start-modal-opt.opt-site{background:#0D0C0A;border:1px solid rgba(255,255,255,.1)}
 .start-modal-opt.opt-site:hover{border-color:var(--gold-border)}
 .start-modal-opt.opt-tg{background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.3)}
 .start-modal-opt.opt-tg:hover{border-color:rgba(255,184,0,.5)}
@@ -98,48 +96,14 @@ code{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--gold);bac
 .side-item:hover{color:var(--gold)}
 .side-item.current{border-color:rgba(255,184,0,.3);color:var(--gold);background:rgba(255,184,0,.07)}
 
-article{min-width:0;max-width:72ch;padding-bottom:60px}
 .crumbs{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--text3);margin-bottom:20px;flex-wrap:wrap}
 .crumbs a{color:var(--text2)}
 article h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(30px,4.4vw,50px);font-weight:700;line-height:1.08;letter-spacing:-.02em;margin-bottom:18px}
-.lede{font-size:18px;color:var(--text2);margin-bottom:22px}
-.doc-meta-row{display:flex;gap:16px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text3);padding-bottom:28px;margin-bottom:36px;border-bottom:1px solid rgba(255,255,255,.08)}
-article h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(23px,3vw,32px);font-weight:700;line-height:1.2;margin:40px 0 16px;scroll-margin-top:88px}
-article h2:first-of-type{margin-top:0}
-article p{margin-bottom:18px}
 
-.code-block{background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:22px 24px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:2;color:var(--text2);overflow-x:auto;margin-bottom:24px}
-.code-block .punct{color:var(--text3)}
-.code-block .key{color:var(--text)}
-.code-block .val{color:var(--gold)}
 
-.flow{display:flex;flex-direction:column;gap:1px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.08);border-radius:18px;overflow:hidden;margin-bottom:28px}
-.flow-row{background:#080807;padding:20px 24px}
-.flow-key{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--gold);margin-bottom:6px}
-.flow-text{font-size:14.5px;line-height:1.65;color:var(--text2)}
 
-.kept-grid{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:28px}
-@media(min-width:720px){.kept-grid{grid-template-columns:1fr 1fr}}
-.kept-card{background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:24px}
-.kept-card.not-kept{background:rgba(255,184,0,.05);border-color:rgba(255,184,0,.2)}
-.kept-title{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text2);margin-bottom:16px}
-.kept-card.not-kept .kept-title{color:var(--gold)}
-.kept-items{display:flex;flex-direction:column;gap:11px}
-.kept-item{display:flex;gap:10px;font-size:14px;color:var(--text);align-items:flex-start}
-.kept-item::before{content:'·';color:var(--text2);flex-shrink:0}
-.kept-card.not-kept .kept-item::before{color:var(--gold)}
 
-.notice{display:flex;gap:16px;align-items:flex-start;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:16px;padding:20px 22px;margin:30px 0}
-.notice-icon{width:32px;height:32px;border-radius:10px;background:rgba(255,184,0,.12);border:1px solid rgba(255,184,0,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.notice-icon svg{width:16px;height:16px;stroke:var(--gold);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.notice-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
-.notice-text{font-size:14.5px;line-height:1.7;color:var(--text)}
 
-.next-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:40px}
-.next-card{display:block;background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px 22px;text-decoration:none;transition:border-color .2s}
-.next-card:hover{border-color:rgba(255,184,0,.35)}
-.next-kicker{font-size:11px;font-family:'Space Grotesk',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
-.next-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:var(--text)}
 
 .toc{display:none;position:sticky;top:88px;padding-bottom:24px}
 @media(min-width:1240px){.toc{display:block}}
@@ -152,6 +116,26 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
 .footer-inner{max-width:var(--navmax);margin:0 auto;padding:36px 20px;display:flex;gap:22px;flex-wrap:wrap;justify-content:space-between;font-size:12.5px;color:var(--text3)}
 .footer-inner a{color:var(--text2)}
 .footer-links{display:flex;gap:20px;flex-wrap:wrap}
+
+
+/* ── Элементы визуального редактора статей (админка → Wiki) ── */
+.doc-meta-row{display:flex;gap:16px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text3);padding-bottom:28px;margin-bottom:36px;border-bottom:1px solid rgba(255,255,255,.08)}
+article h3{font-family:'Space Grotesk',sans-serif;font-size:clamp(19px,2.2vw,23px);font-weight:600;line-height:1.3;margin:28px 0 12px}
+article ul,article ol{margin:0 0 18px;padding-left:24px}
+article li{margin-bottom:8px}
+article li::marker{color:var(--gold)}
+article blockquote{border-left:3px solid var(--gold);background:rgba(255,184,0,.05);border-radius:0 12px 12px 0;padding:14px 20px;margin:0 0 20px;color:var(--text)}
+article img{max-width:100%;height:auto;border-radius:14px;margin:6px 0 20px;display:block}
+article hr{border:none;border-top:1px solid rgba(255,255,255,.08);margin:32px 0}
+article pre{background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:18px 20px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.8;color:var(--text2);overflow-x:auto;margin-bottom:22px;white-space:pre-wrap}
+article pre code{background:none;padding:0;color:inherit}
+article table{width:100%;border-collapse:collapse;margin-bottom:22px;font-size:14.5px}
+article th,article td{border:1px solid rgba(255,255,255,.08);padding:10px 14px;text-align:left;vertical-align:top}
+article th{color:var(--text);font-weight:600;background:rgba(255,255,255,.03)}
+.callout{display:flex;gap:14px;align-items:flex-start;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:16px;padding:18px 22px;margin:0 0 24px;color:var(--text);font-size:14.5px;line-height:1.7}
+.callout::before{content:"!";flex-shrink:0;width:24px;height:24px;border-radius:8px;background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.side-empty{font-size:13px;color:var(--text3);padding:8px 12px}
+/*__WIKI_CUSTOM_CSS__*/
 </style>
 </head>
 <body>
@@ -221,123 +205,17 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
 
 <div class="layout">
   <aside class="side-nav">
-    <div class="side-group">
-      <div class="side-group-title">Технологии</div>
-      <div class="side-items">
-        <a class="side-item" href="/wiki/vless-reality">VLESS + Reality</a>
-        <a class="side-item current" href="/wiki/zero-logs">Zero Logs</a>
-      </div>
-    </div>
-    <div class="side-group">
-      <div class="side-group-title">Подключение</div>
-      <div class="side-items">
-        <a class="side-item" href="/wiki/install-ios">iOS — Happ, Streisand</a>
-        <a class="side-item" href="/wiki/install-android">Android — v2rayNG, Hiddify</a>
-        <a class="side-item" href="/wiki/install-windows">Windows — v2rayN</a>
-        <a class="side-item" href="/wiki/install-macos">macOS — V2Box</a>
-      </div>
-    </div>
-    <div class="side-group">
-      <div class="side-group-title">Оплата и аккаунт</div>
-      <div class="side-items">
-        <a class="side-item" href="/wiki/payment">Способы оплаты</a>
-        <a class="side-item" href="/wiki/referrals">Реферальная программа</a>
-        <a class="side-item" href="/wiki/trial">Пробный период</a>
-        <a class="side-item" href="/get-vpn">Покупка без Telegram</a>
-      </div>
-    </div>
-    <div class="side-group">
-      <div class="side-group-title">Помощь</div>
-      <div class="side-items">
-        <a class="side-item" href="/wiki/faq">FAQ</a>
-        <a class="side-item" href="/wiki/troubleshooting">Устранение неполадок</a>
-      </div>
-    </div>
+__WIKI_SIDENAV__
   </aside>
 
   <article>
-    <div class="crumbs"><a href="/wiki">Wiki</a><span>/</span><span>Технологии</span><span>/</span><span style="color:var(--text2)">Zero Logs</span></div>
-    <h1>Zero Logs: что именно не пишется и почему это проверяемо</h1>
-    <p class="lede">«Мы не храним логи» пишут все. Разница в том, подкреплено ли это конкретными строчками конфигурации — или только текстом на сайте.</p>
-    <div class="doc-meta-row"><span>8 мин чтения</span><span>·</span><span>Приватность</span><span>·</span><span>обновлено 08.2026</span></div>
-
-    <h2 id="what">Какие логи вообще бывают у VPN</h2>
-    <p>Когда речь заходит о логах, обычно смешивают три разные вещи. Первая — логи соединений: кто, когда, с какого адреса подключился и к какому ресурсу обращался. Именно они интересны при любом запросе со стороны и именно они опаснее всего для пользователя. Вторая — технические логи ошибок: сбои, разрывы, проблемы с сертификатами. Третья — биллинг: сам факт, что аккаунт существует и у него есть оплаченный период.</p>
-    <p>Первые две категории в STAR VPN отключены на уровне ядра. Третья существует — иначе подписка не работала бы, — но она не содержит истории вашего трафика: только срок действия, лимит устройств и баланс.</p>
-
-    <h2 id="config">Три строчки в конфиге Xray</h2>
-    <p>За логирование в Xray отвечает секция <code>log</code>. У неё три значимых параметра, и все три у нас выставлены в <code>none</code>.</p>
-    <div class="code-block">
-      <div class="punct">{</div>
-      <div>&nbsp;&nbsp;<span class="key">"log"</span>: {</div>
-      <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"access"</span>: <span class="val">"none"</span>,</div>
-      <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"error"</span>: <span class="val">"none"</span>,</div>
-      <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"loglevel"</span>: <span class="val">"none"</span></div>
-      <div>&nbsp;&nbsp;}</div>
-      <div class="punct">}</div>
-    </div>
-    <div class="flow">
-      <div class="flow-row"><div class="flow-key">"access": "none"</div><div class="flow-text">Журнал соединений. Именно сюда попадали бы записи вида «пользователь X в такое-то время обратился к такому-то адресу». Отключён — записи не формируются.</div></div>
-      <div class="flow-row"><div class="flow-key">"error": "none"</div><div class="flow-text">Журнал ошибок. Полезен при отладке, но вместе с ошибками в него попадают адреса и параметры соединений. Тоже отключён.</div></div>
-      <div class="flow-row"><div class="flow-key">"loglevel": "none"</div><div class="flow-text">Общий уровень логирования ядра. Значение none означает, что Xray не выводит вообще ничего, включая отладочные сообщения.</div></div>
-    </div>
-    <p>Важная деталь: это не «мы пишем, но потом удаляем» и не «храним 24 часа». Записи не создаются вообще — файлов, которые можно было бы забрать, скопировать или потерять вместе с сервером, физически не существует.</p>
-
-    <h2 id="stored">Что всё-таки хранится</h2>
-    <p>Честный ответ важнее красивого. Вот полный список того, что существует на нашей стороне, и того, чего нет.</p>
-    <div class="kept-grid">
-      <div class="kept-card">
-        <div class="kept-title">Хранится</div>
-        <div class="kept-items">
-          <div class="kept-item">Факт существования аккаунта и его идентификатор</div>
-          <div class="kept-item">Оплаченный период и дата окончания</div>
-          <div class="kept-item">Количество подключённых устройств (до 3)</div>
-        </div>
-      </div>
-      <div class="kept-card not-kept">
-        <div class="kept-title">Не существует</div>
-        <div class="kept-items">
-          <div class="kept-item">История подключений: когда и откуда вы заходили</div>
-          <div class="kept-item">Список сайтов и адресов, к которым обращались</div>
-          <div class="kept-item">IP-адреса подключений в журнале Xray</div>
-          <div class="kept-item">Объём и время трафика по сессиям</div>
-          <div class="kept-item">Файлы access.log и error.log — их просто нет</div>
-        </div>
-      </div>
-    </div>
-
-    <h2 id="verify">Почему это проверяемо</h2>
-    <p>Отсутствие логов — редкий случай, когда заявление можно косвенно проверить, не имея доступа к серверу. Xray — открытый проект: поведение параметров <code>access</code>, <code>error</code> и <code>loglevel</code> описано в документации и видно в исходниках. Значение <code>none</code> означает буквально «не выводить ничего» — тут нет пространства для трактовок.</p>
-    <p>Второй способ убедиться — поднять такую же конфигурацию у себя. Xray и панель Marzban ставятся на любой VPS за вечер, и вы своими глазами увидите, что при этих параметрах файлы логов остаются пустыми.</p>
-    <p>Мы сознательно не обещаем «полной анонимности»: ваш провайдер видит, что вы подключаетесь к некоторому адресу, а сайты, куда вы заходите, по-прежнему узнают вас по аккаунтам и кукам. Zero Logs решает другую задачу — на нашей стороне не накапливается то, что можно было бы у нас потребовать.</p>
-
-    <div class="notice">
-      <span class="notice-icon"><svg viewBox="0 0 24 24"><path d="M12 8v5M12 16.5h.01M12 3.6l8.5 15a1 1 0 01-.9 1.4H4.4a1 1 0 01-.9-1.4z"/></svg></span>
-      <div>
-        <div class="notice-label">Коротко</div>
-        <div class="notice-text">Access- и error-логи выключены, loglevel — none. Истории подключений не существует. Остаётся только служебная информация о подписке: срок, устройства, баланс.</div>
-      </div>
-    </div>
-
-    <div class="next-grid">
-      <a class="next-card" href="/wiki/vless-reality">
-        <div class="next-kicker">Технологии</div>
-        <div class="next-title">Как Reality обходит DPI</div>
-      </a>
-      <a class="next-card" href="/privacy">
-        <div class="next-kicker">Правовое</div>
-        <div class="next-title">Политика конфиденциальности</div>
-      </a>
-    </div>
+__WIKI_ARTICLE__
   </article>
 
-  <aside class="toc">
+  <aside class="toc"__WIKI_TOC_HIDDEN__>
     <div class="toc-label">На этой странице</div>
     <div class="toc-items">
-      <a href="#what">Какие логи бывают</a>
-      <a href="#config">Три строчки в конфиге</a>
-      <a href="#stored">Что всё-таки хранится</a>
-      <a href="#verify">Почему это проверяемо</a>
+__WIKI_TOC__
     </div>
   </aside>
 </div>
@@ -441,6 +319,86 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
     await fetch('/api/account/logout', { method: 'POST' });
     window.location.href = '/';
   });
+})();
+</script>
+<script>
+/* ═══ Виджеты статей — работают в любой статье, где есть нужная разметка ═══ */
+/* Аккордеоны FAQ и «Неполадок» */
+[['.faq-btn', '.faq-item', '.faq-sign'], ['.case-btn', '.case-item', '.case-sign']].forEach(([btnSel, itemSel, signSel]) => {
+  document.querySelectorAll(btnSel).forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest(itemSel);
+      item.classList.toggle('open');
+      const sign = btn.querySelector(signSel);
+      if (sign) sign.textContent = item.classList.contains('open') ? '−' : '+';
+    });
+  });
+});
+
+/* Поиск по FAQ */
+(function(){
+  const input = document.getElementById('faq-search');
+  if (!input) return;
+  const items = Array.from(document.querySelectorAll('.faq-item'));
+  const groups = Array.from(document.querySelectorAll('[data-group]'));
+  const empty = document.getElementById('empty-note');
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    let visible = 0;
+    items.forEach(item => {
+      const match = !q || item.textContent.toLowerCase().includes(q);
+      item.style.display = match ? '' : 'none';
+      item.classList.toggle('open', match && !!q);
+      const sign = item.querySelector('.faq-sign');
+      if (sign) sign.textContent = item.classList.contains('open') ? '−' : '+';
+      if (match) visible++;
+    });
+    groups.forEach(g => {
+      const shown = g.querySelectorAll('.faq-item:not([style*="display: none"])');
+      g.style.display = shown.length ? '' : 'none';
+    });
+    if (empty) empty.classList.toggle('show', visible === 0);
+  });
+})();
+
+/* Вкладки клиентов в инструкциях по подключению */
+document.querySelectorAll('.client-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.client-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.client-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    const panel = document.querySelector(`.client-panel[data-panel="${tab.dataset.client}"]`);
+    if (panel) panel.classList.add('active');
+  });
+});
+
+/* Выбор источника подписки (сайт / Telegram) */
+(function(){
+  const titleEl = document.getElementById('source-hint-title');
+  const textEl = document.getElementById('source-hint-text');
+  if (!titleEl || !textEl) return;
+  const hints = {
+    site: { title: 'Вы выбрали сайт', text: 'Ссылку подписки покажет страница оплаты. Сохраните её: аккаунта на сайте нет, и повторно выдать ключ можно только через поддержку.' },
+    telegram: { title: 'Вы выбрали Telegram', text: 'Ссылка всегда доступна в боте по кнопке «Моя подписка» — её можно скопировать заново в любой момент.' },
+    null: { title: 'Что выбрать', text: 'Если Telegram открывается — берите ссылку в боте: там продление, статус и поддержка. Если нет — покупайте ключ на сайте.' },
+  };
+  let channel = null;
+  try { const saved = localStorage.getItem('star_vpn_channel'); if (saved === 'site' || saved === 'telegram') channel = saved; } catch(e){}
+  function apply(){
+    document.querySelectorAll('.source-card').forEach(card => card.classList.toggle('active', card.dataset.source === channel));
+    const h = hints[channel] || hints.null;
+    titleEl.textContent = h.title;
+    textEl.textContent = h.text;
+  }
+  document.querySelectorAll('.source-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.source-cta')) return;
+      channel = card.dataset.source;
+      try { localStorage.setItem('star_vpn_channel', channel); } catch(e){}
+      apply();
+    });
+  });
+  apply();
 })();
 </script>
 </body>

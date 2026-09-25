@@ -1,137 +1,167 @@
-"""Рендер CRUD wiki-статей (созданных из админ-панели) — та же визуальная
-тема, что и у статичных статей в landing/wiki/, но собирается из БД."""
+"""Сборка страниц /wiki из БД (WikiArticle) по шаблонам landing/wiki/.
+
+- landing/wiki/_article.html — шаблон статьи (шапка, боковое меню, оглавление,
+  подвал и JS-виджеты: аккордеоны, вкладки, поиск по FAQ).
+- landing/wiki/index.html — главная Wiki, карточки статей подставляются
+  на место маркера __WIKI_GROUPS__.
+"""
 
 import html
+import json
+import logging
 import re
+from datetime import datetime
+from pathlib import Path
 
-_LINK_RE = re.compile(r'\[([^\]]+)\]\((https?://[^\s)]+)\)')
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from bot.models.app_setting import AppSetting
+from bot.models.wiki_article import WikiArticle
+
+logger = logging.getLogger(__name__)
+
+_WIKI_DIR = Path(__file__).resolve().parent.parent.parent / "landing" / "wiki"
+_SEED_FILE = Path(__file__).resolve().parent.parent / "data" / "wiki_seed.json"
+_SEEDED_KEY = "wiki_seeded"
+
+_LINK_RE = re.compile(r'\[([^\]]+)\]\(((?:https?://|/)[^\s)]+)\)')
 _BOLD_RE = re.compile(r'\*\*(.+?)\*\*')
-_ITALIC_RE = re.compile(r'(?<!\*)\*([^*\n]+?)\*(?!\*)')
+_H2_RE = re.compile(r'<h2\b[^>]*\bid="([^"]+)"[^>]*>(.*?)</h2>', re.DOTALL)
+_TAG_RE = re.compile(r'<[^>]+>')
 
 
-def _inline_markdown(escaped_text: str) -> str:
-    """Применяет **bold**, *italic*, [text](url) к уже HTML-экранированному тексту."""
-    text = _LINK_RE.sub(
-        lambda m: f'<a href="{m.group(2)}" target="_blank" rel="noopener">{m.group(1)}</a>',
-        escaped_text,
-    )
-    text = _BOLD_RE.sub(lambda m: f'<strong>{m.group(1)}</strong>', text)
-    text = _ITALIC_RE.sub(lambda m: f'<em>{m.group(1)}</em>', text)
-    return text
+def _inline_markdown(text: str) -> str:
+    """Экранирует текст и применяет [текст](url) и **жирный** — для lede."""
+    escaped = html.escape(text)
+    escaped = _LINK_RE.sub(lambda m: f'<a href="{m.group(2)}">{m.group(1)}</a>', escaped)
+    return _BOLD_RE.sub(lambda m: f'<strong>{m.group(1)}</strong>', escaped)
 
 
-def _render_body(body: str) -> str:
-    """Абзацы разделяются пустой строкой. Блок, где каждая строка начинается
-    с "- " или "* ", рендерится как маркированный список. Внутри поддерживается
-    базовый markdown: **bold**, *italic*, [text](url)."""
+def _plain(text: str) -> str:
+    """Lede без разметки — для meta description и поиска."""
+    text = _LINK_RE.sub(lambda m: m.group(1), text)
+    return text.replace("**", "")
+
+
+def _read_minutes(content_html: str) -> int:
+    words = len(html.unescape(_TAG_RE.sub(" ", content_html)).split())
+    return max(1, round(words / 180))
+
+
+def _nav_title(a: WikiArticle) -> str:
+    return a.short_title or a.title
+
+
+def group_by_section(articles: list[WikiArticle]) -> list[tuple[str, list[WikiArticle]]]:
+    """Разделы в порядке их первой статьи; статьи — по sort_order."""
+    groups: dict[str, list[WikiArticle]] = {}
+    for a in sorted(articles, key=lambda x: (x.sort_order, x.id or 0)):
+        groups.setdefault(a.section, []).append(a)
+    return list(groups.items())
+
+
+def _side_nav(groups: list[tuple[str, list[WikiArticle]]], current_slug: str) -> str:
+    if not groups:
+        return '    <div class="side-empty">Статей пока нет</div>'
     parts = []
-    for block in body.split("\n\n"):
-        lines = [ln.strip() for ln in block.split("\n") if ln.strip()]
-        if not lines:
+    for section, items in groups:
+        links = "\n".join(
+            f'        <a class="side-item{" current" if a.slug == current_slug else ""}" '
+            f'href="/wiki/{html.escape(a.slug)}">{html.escape(_nav_title(a))}</a>'
+            for a in items
+        )
+        parts.append(
+            '    <div class="side-group">\n'
+            f'      <div class="side-group-title">{html.escape(section)}</div>\n'
+            f'      <div class="side-items">\n{links}\n      </div>\n'
+            '    </div>'
+        )
+    return "\n".join(parts)
+
+
+def render_wiki_article_page(article: WikiArticle, published: list[WikiArticle]) -> str:
+    """published — все опубликованные статьи (для бокового меню)."""
+    tpl = (_WIKI_DIR / "_article.html").read_text(encoding="utf-8")
+    updated = (article.updated_at or datetime.utcnow()).strftime("%m.%Y")
+    title = html.escape(article.title)
+    head = (
+        f'    <div class="crumbs"><a href="/wiki">Wiki</a><span>/</span>'
+        f'<span>{html.escape(article.section)}</span><span>/</span>'
+        f'<span style="color:var(--text2)">{html.escape(_nav_title(article))}</span></div>\n'
+        f'    <h1>{title}</h1>\n'
+        + (f'    <p class="lede">{_inline_markdown(article.lede)}</p>\n' if article.lede else "")
+        + f'    <div class="doc-meta-row"><span>{_read_minutes(article.content_html)} мин чтения</span>'
+        f'<span>·</span><span>{html.escape(article.section)}</span><span>·</span>'
+        f'<span>обновлено {updated}</span></div>\n\n'
+    )
+    toc = [(hid, html.unescape(_TAG_RE.sub("", label)).strip())
+           for hid, label in _H2_RE.findall(article.content_html)]
+    toc_html = "\n".join(
+        f'      <a href="#{html.escape(hid)}">{html.escape(label)}</a>' for hid, label in toc
+    )
+    groups = group_by_section(published)
+
+    # Порядок замен важен: пользовательский контент подставляется последним,
+    # чтобы текст статьи, случайно содержащий маркер, ничего не сломал.
+    page = (
+        tpl.replace("__WIKI_TITLE__", title)
+        .replace("__WIKI_DESCRIPTION__", html.escape(_plain(article.lede)))
+        .replace("__WIKI_TOC_HIDDEN__", "" if toc else ' style="visibility:hidden"')
+        .replace("__WIKI_SIDENAV__", _side_nav(groups, article.slug))
+        .replace("__WIKI_TOC__", toc_html)
+    )
+    # </style> внутри CSS закрыл бы тег раньше времени.
+    page = page.replace("/*__WIKI_CUSTOM_CSS__*/", article.custom_css.replace("</", "<\\/"))
+    return page.replace("__WIKI_ARTICLE__", head + article.content_html)
+
+
+def render_wiki_index_page(published: list[WikiArticle]) -> str:
+    tpl = (_WIKI_DIR / "index.html").read_text(encoding="utf-8")
+    parts = []
+    for i, (section, items) in enumerate(group_by_section(published)):
+        cards = "\n".join(
+            f'      <a class="article-card" href="/wiki/{html.escape(a.slug)}" '
+            f'data-kw="{html.escape(a.keywords)}">\n'
+            f'        <span class="article-title">{html.escape(_nav_title(a))}</span>\n'
+            f'        <span class="article-text">{html.escape(_plain(a.lede))}</span>\n'
+            f'        <span class="article-meta">{_read_minutes(a.content_html)} мин · '
+            f'{html.escape(section.lower())}</span>\n'
+            '      </a>'
+            for a in items
+        )
+        style = "" if i == 0 else ' style="margin-top:48px"'
+        parts.append(
+            f'  <div data-group{style}>\n'
+            f'    <div class="group-head"><h2>{html.escape(section)}</h2><div class="group-rule"></div>'
+            f'<span class="group-count" data-count></span></div>\n'
+            f'    <div class="article-grid">\n{cards}\n    </div>\n'
+            '  </div>'
+        )
+    return tpl.replace("__WIKI_GROUPS__", "\n\n".join(parts))
+
+
+async def seed_wiki_articles(session: AsyncSession) -> None:
+    """Один раз заливает базовые статьи из bot/data/wiki_seed.json.
+
+    Флаг wiki_seeded в app_settings ставится после первой заливки, поэтому
+    статьи, удалённые в админке, при следующем рестарте не вернутся.
+    Статьи, чей slug уже занят, пропускаются.
+    """
+    flag = (await session.execute(
+        select(AppSetting).where(AppSetting.key == _SEEDED_KEY)
+    )).scalar_one_or_none()
+    if flag:
+        return
+
+    seed = json.loads(_SEED_FILE.read_text(encoding="utf-8"))
+    existing = set((await session.execute(select(WikiArticle.slug))).scalars().all())
+    added = 0
+    for item in seed:
+        if item["slug"] in existing:
             continue
-        if all(ln.startswith("- ") or ln.startswith("* ") for ln in lines):
-            items = "".join(
-                f"<li>{_inline_markdown(html.escape(ln[2:].strip()))}</li>" for ln in lines
-            )
-            parts.append(f"<ul>{items}</ul>")
-        else:
-            escaped = html.escape(block.strip()).replace("\n", "<br>")
-            parts.append(f"<p>{_inline_markdown(escaped)}</p>")
-    return "".join(parts)
-
-
-def render_wiki_article_page(*, slug: str, title: str, lede: str, body: str, section: str) -> str:
-    safe_title = html.escape(title)
-    safe_lede = html.escape(lede)
-    safe_section = html.escape(section)
-    paragraphs = _render_body(body)
-
-    return f"""<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{safe_title} — STAR VPN Wiki</title>
-<meta name="description" content="{safe_lede}">
-<link rel="icon" href="/logo.png" type="image/png">
-<link rel="apple-touch-icon" href="/logo.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-*{{box-sizing:border-box;margin:0;padding:0}}
-html{{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}}
-:root{{
-  --gold:#FFB800;--gold2:#FFD84D;
-  --gold-border:rgba(255,184,0,0.18);--gold-dim:rgba(255,184,0,0.08);
-  --bg:#060606;--bg2:rgba(255,255,255,0.025);
-  --text:#EBE0CC;--text2:#8A7A60;--text3:#3A3028;--max:900px;
-}}
-body{{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.75;overflow-x:hidden}}
-#nav{{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;background:rgba(6,6,6,.85);backdrop-filter:blur(28px);border-bottom:1px solid var(--gold-border)}}
-.nav-inner{{max-width:var(--max);margin:0 auto;display:flex;align-items:center;height:64px;gap:32px}}
-.nav-logo{{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}}
-.nav-logo img{{width:30px;height:30px;border-radius:8px}}
-.nav-logo-text{{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--gold)}}
-.nav-links{{display:flex;gap:26px;flex:1}}
-.nav-links a{{font-size:13px;font-weight:500;color:var(--text2);text-decoration:none}}
-.nav-links a:hover,.nav-links a.active{{color:var(--gold)}}
-@media(max-width:768px){{.nav-links{{display:none}}}}
-.wrap{{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}}
-.back-nav{{padding-top:118px}}
-.back-link{{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);text-decoration:none}}
-.back-link:hover{{color:var(--gold)}}
-.doc-hero{{padding:28px 0 40px}}
-.doc-badge{{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--gold-border);border-radius:100px;padding:6px 20px;margin-bottom:24px;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);background:var(--gold-dim)}}
-.doc-title{{font-family:'Space Grotesk',sans-serif;font-size:clamp(30px,6vw,48px);font-weight:700;line-height:1.1;margin-bottom:14px}}
-.doc-lede{{font-size:16px;color:var(--text2);max-width:60ch}}
-.doc-body{{padding:24px 0 96px;font-size:15.5px;color:var(--text2);line-height:1.9}}
-.doc-body p{{margin-bottom:16px}}
-.doc-body strong{{color:var(--text);font-weight:600}}
-.doc-body em{{color:var(--text);font-style:italic}}
-.doc-body a{{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-border)}}
-.doc-body a:hover{{border-color:var(--gold)}}
-.doc-body ul{{margin:0 0 16px;padding-left:22px}}
-.doc-body li{{margin-bottom:8px}}
-footer{{border-top:1px solid var(--gold-border);padding:52px 24px 40px;text-align:center}}
-.footer-links{{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}}
-.footer-links a{{font-size:13px;color:var(--text3);text-decoration:none}}
-.footer-links a:hover{{color:var(--gold)}}
-.footer-copy{{font-size:12px;color:var(--text3)}}
-</style>
-</head>
-<body>
-<nav id="nav">
-  <div class="nav-inner">
-    <a class="nav-logo" href="/"><span class="nav-logo-text">STAR VPN</span></a>
-    <div class="nav-links">
-      <a href="/tariffs">Тарифы</a>
-      <a href="/connect">Подключение</a>
-      <a href="/wiki" class="active">Wiki</a>
-      <a href="/login">Войти</a>
-    </div>
-  </div>
-</nav>
-<main>
-<div class="wrap">
-  <div class="back-nav">
-    <a href="/wiki" class="back-link">← Назад в Wiki</a>
-  </div>
-  <div class="doc-hero">
-    <div class="doc-badge">Wiki · {safe_section}</div>
-    <h1 class="doc-title">{safe_title}</h1>
-    <p class="doc-lede">{safe_lede}</p>
-  </div>
-  <div class="doc-body">{paragraphs}</div>
-</div>
-</main>
-<footer>
-  <div class="footer-links">
-    <a href="/tariffs">Тарифы</a><a href="/wiki">Wiki</a><a href="/connect">Подключение</a>
-    <a href="/privacy">Конфиденциальность</a><a href="/terms">Условия</a>
-    <a href="https://t.me/hashprojects">Поддержка</a>
-  </div>
-  <div class="footer-copy">© 2026 STAR VPN · VLESS Reality · Zero Logs</div>
-</footer>
-</body>
-</html>"""
+        session.add(WikiArticle(**item, is_published=True))
+        added += 1
+    session.add(AppSetting(key=_SEEDED_KEY, value="1"))
+    await session.commit()
+    logger.info("Wiki: залито базовых статей: %d", added)

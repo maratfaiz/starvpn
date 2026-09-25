@@ -50,6 +50,11 @@ class Settings(BaseSettings):
     # Admin web panel
     admin_web_key: str = Field("", env="ADMIN_WEB_KEY")  # long random secret for web dashboard
 
+    # Старые ссылки подписки без подписи (/sub/{username}) — выключены: по ним
+    # можно было забрать чужой ключ. Включить временно, если нужно, чтобы
+    # старые подписки в Happ продолжали обновляться до перевыдачи ссылок.
+    sub_allow_unsigned: bool = Field(False, env="SUB_ALLOW_UNSIGNED")
+
     # SMTP — отправка писем с кодом подтверждения для веб-аккаунта (/login)
     smtp_host: str = Field("", env="SMTP_HOST")
     smtp_port: int = Field(587, env="SMTP_PORT")

@@ -83,8 +83,13 @@ class MarzbanClient:
             resp.raise_for_status()
             return resp.json()
 
-    async def extend_user(self, marzban_username: str, days: int) -> dict:
-        """Продлить истечение у существующего пользователя."""
+    async def extend_user(self, marzban_username: str, days: int, activate: bool = True) -> dict:
+        """Продлить истечение у существующего пользователя.
+
+        activate=True заодно включает его: по истечении подписки планировщик
+        переводит устройства в status=disabled, и простое продление expire
+        оставляло их выключенными — человек платил, а VPN не работал.
+        """
         async with self._http() as client:
             resp = await client.get(
                 f"{self._base_url}/api/user/{marzban_username}",
@@ -97,10 +102,13 @@ class MarzbanClient:
         base_ts = max(current.get("expire") or now_ts, now_ts)
         new_expire = base_ts + days * 86400
 
+        body: dict = {"expire": new_expire}
+        if activate:
+            body["status"] = "active"
         async with self._http() as client:
             resp = await client.put(
                 f"{self._base_url}/api/user/{marzban_username}",
-                json={"expire": new_expire},
+                json=body,
                 headers=await self._headers(),
             )
             resp.raise_for_status()
@@ -128,6 +136,31 @@ class MarzbanClient:
                     username=marzban_username,
                 )
             raise
+
+    async def provision_user(
+        self, marzban_username: str, telegram_id: int, days: int, note: str = "", ip_limit: int = 0,
+    ) -> dict:
+        """Создать пользователя, а если он уже есть (устройство удалили и
+        добавили снова — имя то же) — включить его и выставить срок.
+        Раньше в этом случае возвращался старый выключенный пользователь,
+        и выданный ключ не работал."""
+        try:
+            return await self.create_user(
+                telegram_id=telegram_id, days=days, note=note, ip_limit=ip_limit,
+                username=marzban_username,
+            )
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code != 409:
+                raise
+        expire_ts = int((datetime.utcnow() + timedelta(days=max(days, 1))).timestamp())
+        async with self._http() as client:
+            resp = await client.put(
+                f"{self._base_url}/api/user/{marzban_username}",
+                json={"expire": expire_ts, "status": "active"},
+                headers=await self._headers(),
+            )
+            resp.raise_for_status()
+            return resp.json()
 
     async def disable_user(self, marzban_username: str) -> dict:
         """Отключить пользователя (status = disabled)."""

@@ -10,8 +10,8 @@ import hashlib
 import hmac
 import json
 import logging
-import os
 import secrets
+import time
 import urllib.parse
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -32,6 +32,7 @@ from bot.models.payment import Payment
 from bot.models.user import User
 from bot.utils.database import AsyncSessionLocal
 from bot.utils.marzban import marzban
+from bot.utils.vpn_access import set_vpn_enabled
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +55,9 @@ _NOT_FOUND_HTML = _LANDING_DIR / "404.html"
 
 
 def _serve_html(path: Path) -> HTMLResponse:
+    from bot.utils.branding import brand_html
     if path.exists():
-        return HTMLResponse(content=path.read_text(encoding="utf-8"))
+        return HTMLResponse(content=brand_html(path.read_text(encoding="utf-8")))
     return HTMLResponse(content="<h1>Not found</h1>", status_code=404)
 
 
@@ -66,7 +68,8 @@ async def _not_found_page_handler(request: Request, exc: StarletteHTTPException)
     предсказуемый JSON-ответ, а не HTML — их 404 не трогаем."""
     if exc.status_code == 404 and not request.url.path.startswith(("/api/", "/web/")):
         if _NOT_FOUND_HTML.exists():
-            return HTMLResponse(content=_NOT_FOUND_HTML.read_text(encoding="utf-8"), status_code=404)
+            from bot.utils.branding import brand_html
+            return HTMLResponse(content=brand_html(_NOT_FOUND_HTML.read_text(encoding="utf-8")), status_code=404)
     return await http_exception_handler(request, exc)
 
 
@@ -137,43 +140,39 @@ async def serve_tariffs():
     return _serve_html(_LANDING_DIR / "tariffs.html")
 
 
-_WIKI_SLUGS = {
-    "vless-reality", "zero-logs", "payment", "trial", "referrals", "troubleshooting", "faq",
-    "install-ios", "install-android", "install-windows", "install-macos",
-}
+async def _published_wiki_articles(session: AsyncSession) -> list:
+    from bot.models.wiki_article import WikiArticle
+    r = await session.execute(select(WikiArticle).where(WikiArticle.is_published.is_(True)))
+    return list(r.scalars().all())
 
 
 @app.get("/wiki", response_class=HTMLResponse, include_in_schema=False)
 @app.get("/wiki.html", response_class=HTMLResponse, include_in_schema=False)
 async def serve_wiki_index():
-    return _serve_html(_LANDING_DIR / "wiki" / "index.html")
+    from bot.utils.wiki_page import render_wiki_index_page
+
+    async with AsyncSessionLocal() as session:
+        published = await _published_wiki_articles(session)
+    from bot.utils.branding import brand_html
+    return HTMLResponse(brand_html(render_wiki_index_page(published)))
 
 
 @app.get("/wiki/{slug}", response_class=HTMLResponse, include_in_schema=False)
 @app.get("/wiki/{slug}.html", response_class=HTMLResponse, include_in_schema=False)
 async def serve_wiki_article(slug: str):
-    slug = slug.removesuffix(".html")
-    if slug in _WIKI_SLUGS:
-        return _serve_html(_LANDING_DIR / "wiki" / f"{slug}.html")
-
-    # Не одна из 7 базовых статей — ищем среди созданных из админ-панели.
-    from bot.models.wiki_article import WikiArticle
     from bot.utils.wiki_page import render_wiki_article_page
 
+    slug = slug.removesuffix(".html")
     async with AsyncSessionLocal() as session:
-        r = await session.execute(
-            select(WikiArticle).where(WikiArticle.slug == slug, WikiArticle.is_published.is_(True))
-        )
-        article: WikiArticle | None = r.scalar_one_or_none()
+        published = await _published_wiki_articles(session)
+        article = next((a for a in published if a.slug == slug), None)
         if not article:
-            return HTMLResponse(content="<h1>Not found</h1>", status_code=404)
+            raise HTTPException(status_code=404)
         article.views = (article.views or 0) + 1
         await session.commit()
 
-    return HTMLResponse(render_wiki_article_page(
-        slug=article.slug, title=article.title, lede=article.lede,
-        body=article.body, section=article.section,
-    ))
+    from bot.utils.branding import brand_html
+    return HTMLResponse(brand_html(render_wiki_article_page(article, published)))
 
 
 # ─── GET /sub/{username} — подписка для VPN-клиентов (Happ, v2rayNG, ...) ────
@@ -187,8 +186,24 @@ async def serve_wiki_article(slug: str):
 # "Подписка закончилась — продли в @бот", а не просто обрыв соединения.
 
 @app.get("/sub/{username}", include_in_schema=False)
-async def serve_subscription(username: str, request: Request):
-    from bot.utils.branding import set_vless_remark, set_vless_remark_text
+async def serve_subscription_unsigned(username: str, request: Request):
+    """Старый формат без подписи — только если явно разрешён в .env."""
+    if not settings.sub_allow_unsigned:
+        raise HTTPException(status_code=404, detail="Not found")
+    return await _serve_subscription(username, request)
+
+
+@app.get("/sub/{username}/{signature}", include_in_schema=False)
+async def serve_subscription(username: str, signature: str, request: Request):
+    from bot.utils.branding import check_sub_signature
+
+    if not check_sub_signature(username, signature):
+        raise HTTPException(status_code=404, detail="Not found")
+    return await _serve_subscription(username, request)
+
+
+async def _serve_subscription(username: str, request: Request):
+    from bot.utils.branding import set_vless_remark, set_vless_remark_text, subscription_url
     from bot.utils.sub_page import is_vpn_client, render_subscription_page
 
     try:
@@ -210,7 +225,7 @@ async def serve_subscription(username: str, request: Request):
     user_agent = request.headers.get("user-agent", "")
     if not is_vpn_client(user_agent):
         days_left = max(0, (expire - int(datetime.utcnow().timestamp())) // 86400) if expire else None
-        sub_url = f"{settings.webapp_url.rstrip('/')}/sub/{username}"
+        sub_url = subscription_url(username)
         html_page = render_subscription_page(
             sub_url=sub_url,
             display_name="STAR VPN",
@@ -309,6 +324,9 @@ async def serve_apple_touch_icon():
 
 # ─── Auth ─────────────────────────────────────────────────────────────────────
 
+_INIT_DATA_MAX_AGE = 24 * 3600  # секунд; Mini App получает свежий initData при каждом открытии
+
+
 def _parse_tg_id(init_data: str) -> int:
     """Верифицирует Telegram initData HMAC и возвращает telegram_id."""
     parsed = dict(urllib.parse.parse_qsl(init_data, keep_blank_values=True))
@@ -321,6 +339,14 @@ def _parse_tg_id(init_data: str) -> int:
 
     if not hmac.compare_digest(expected, received_hash):
         raise HTTPException(status_code=403, detail="Invalid Telegram signature")
+
+    # Без проверки возраста однажды перехваченный initData работал бы вечно.
+    try:
+        auth_date = int(parsed.get("auth_date", "0"))
+    except ValueError:
+        auth_date = 0
+    if time.time() - auth_date > _INIT_DATA_MAX_AGE:
+        raise HTTPException(status_code=401, detail="initData expired — reopen the app")
 
     user_obj = json.loads(parsed.get("user", "{}"))
     tg_id = user_obj.get("id")
@@ -337,7 +363,8 @@ def _tg_id(x_telegram_init_data: str | None) -> int:
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=403, detail=f"Bad initData: {e}")
+        logger.warning("Bad initData: %s", type(e).__name__)
+        raise HTTPException(status_code=403, detail="Bad initData")
 
 
 async def _resolve_tg_id(request: Request, x_telegram_init_data: str | None, session) -> int:
@@ -348,7 +375,7 @@ async def _resolve_tg_id(request: Request, x_telegram_init_data: str | None, ses
     обоих способов подключения.
     """
     if x_telegram_init_data:
-        return _parse_tg_id(x_telegram_init_data)
+        return _tg_id(x_telegram_init_data)
 
     from bot.utils.webauth import get_session_user, SESSION_COOKIE_NAME
     user = await get_session_user(request.cookies.get(SESSION_COOKIE_NAME), session)
@@ -475,16 +502,23 @@ async def account_login(request: Request):
     from bot.utils.webauth import is_valid_email, verify_password, create_web_session, SESSION_COOKIE_NAME, SESSION_TTL
     from sqlalchemy import select as _select
 
+    from bot.utils import rate_limit
+
     body = await request.json()
     email = (body.get("email") or "").strip().lower()
     password = body.get("password") or ""
     if not is_valid_email(email) or not password:
         raise HTTPException(400, "Введите email и пароль")
+    limit_key = f"account:{email}"
+    if rate_limit.is_blocked(limit_key):
+        raise HTTPException(429, "Слишком много попыток входа. Попробуйте через 15 минут.")
 
     async with AsyncSessionLocal() as session:
         user = (await session.execute(_select(User).where(User.email == email))).scalar_one_or_none()
         if not user or not user.password_hash or not verify_password(password, user.password_hash):
+            rate_limit.register_fail(limit_key)
             raise HTTPException(401, "Неверный email или пароль")
+        rate_limit.reset(limit_key)
         if not user.email_verified:
             raise HTTPException(403, "email_not_verified")
 
@@ -522,12 +556,25 @@ _TG_OAUTH_COOKIE = "tg_oauth_pkce"
 _TG_OAUTH_COOKIE_PATH = "/api/telegram-oauth"
 
 
+def _tg_login_fail(code: str):
+    """Любая ошибка входа через Telegram — редирект обратно на /login с кодом
+    причины, а не голая страница ошибки (503/500 в браузере пользователя)."""
+    from bot.utils.telegram_oauth import site_origin
+
+    resp = RedirectResponse(f"{site_origin()}/login?tg_error={code}", status_code=302)
+    resp.delete_cookie(_TG_OAUTH_COOKIE, path=_TG_OAUTH_COOKIE_PATH)
+    return resp
+
+
 @app.get("/api/telegram-oauth/start", include_in_schema=False)
 async def telegram_oauth_start():
-    from bot.utils.telegram_oauth import build_authorize_url, generate_pkce_pair
+    from bot.utils.telegram_oauth import (
+        build_authorize_url, generate_pkce_pair, is_configured, record_error,
+    )
 
-    if not settings.telegram_oauth_client_id or not settings.telegram_oauth_client_secret:
-        return HTMLResponse("Вход через Telegram временно недоступен", status_code=503)
+    if not is_configured():
+        record_error("not_configured", "Не заданы TELEGRAM_OAUTH_CLIENT_ID / TELEGRAM_OAUTH_CLIENT_SECRET в .env")
+        return _tg_login_fail("not_configured")
 
     state = secrets.token_urlsafe(24)
     verifier, challenge = generate_pkce_pair()
@@ -542,43 +589,60 @@ async def telegram_oauth_start():
 
 @app.get("/api/telegram-oauth/callback", include_in_schema=False)
 async def telegram_oauth_callback(
-    request: Request, code: str | None = None, state: str | None = None, error: str | None = None
+    request: Request, code: str | None = None, state: str | None = None,
+    error: str | None = None, error_description: str | None = None,
 ):
-    from bot.utils.telegram_oauth import exchange_code, verify_id_token
+    from bot.utils.telegram_oauth import (
+        TelegramLoginError, exchange_code, record_error, site_origin,
+        telegram_id_from_claims, verify_id_token,
+    )
     from bot.utils.webauth import (
         SESSION_COOKIE_NAME, SESSION_TTL, create_web_session, get_or_create_user_by_telegram_id,
     )
 
-    def _fail():
-        resp = RedirectResponse(f"{settings.site_url}/login?tg_error=1", status_code=302)
-        resp.delete_cookie(_TG_OAUTH_COOKIE, path=_TG_OAUTH_COOKIE_PATH)
-        return resp
-
-    if error or not code or not state:
-        return _fail()
+    if error:
+        # access_denied — пользователь сам нажал «Отмена» в Telegram.
+        record_error("denied" if error == "access_denied" else "provider",
+                     f"{error}: {error_description or ''}")
+        return _tg_login_fail("denied" if error == "access_denied" else "provider")
+    if not code or not state:
+        record_error("provider", "Callback без code/state")
+        return _tg_login_fail("provider")
 
     saved_state, _, verifier = (request.cookies.get(_TG_OAUTH_COOKIE) or "").partition(".")
     if not verifier or not hmac.compare_digest(saved_state, state):
-        return _fail()
+        # Чаще всего — вход начат на другом домене (www/без www) или прошло >10 мин.
+        record_error("state", "Нет cookie tg_oauth_pkce или state не совпал")
+        return _tg_login_fail("state")
 
     try:
         tokens = await exchange_code(code, verifier)
-        claims = verify_id_token(tokens["id_token"])
-        tg_id = int(claims.get("id") or claims["sub"])
+        claims = await verify_id_token(tokens["id_token"])
+        tg_id = telegram_id_from_claims(claims)
+    except TelegramLoginError as e:
+        record_error(e.code, e.detail)
+        return _tg_login_fail(e.code)
     except Exception as e:
-        logger.warning("Ошибка входа через Telegram OAuth: %s", e)
-        return _fail()
+        record_error("token", f"{type(e).__name__}: {e}")
+        return _tg_login_fail("token")
 
     username = claims.get("preferred_username")
     full_name = claims.get("name") or " ".join(
         filter(None, [claims.get("given_name"), claims.get("family_name")])
     ) or None
 
-    async with AsyncSessionLocal() as session:
-        user = await get_or_create_user_by_telegram_id(tg_id, username, full_name, session)
-        session_token = await create_web_session(user, session)
+    try:
+        async with AsyncSessionLocal() as session:
+            user = await get_or_create_user_by_telegram_id(
+                tg_id, (username or None) and username[:64], full_name and full_name[:256], session,
+            )
+            session_token = await create_web_session(user, session)
+    except Exception as e:
+        logger.exception("Telegram OAuth: ошибка при создании сессии")
+        record_error("server", f"{type(e).__name__}: {e}")
+        return _tg_login_fail("server")
 
-    resp = RedirectResponse(f"{settings.site_url}/account", status_code=302)
+    resp = RedirectResponse(f"{site_origin()}/account", status_code=302)
     resp.delete_cookie(_TG_OAUTH_COOKIE, path=_TG_OAUTH_COOKIE_PATH)
     resp.set_cookie(
         SESSION_COOKIE_NAME, session_token,
@@ -664,23 +728,7 @@ def _free_slot(devices: list[Device]) -> int | None:
 DEVICE_TYPES_API = {"ios", "android", "macos", "windows", "linux", "androidtv", "appletv"}
 
 
-def _mz_username_for_type(
-    type_key: str,
-    telegram_id: int,
-    username: str | None,
-    existing: list[str],
-) -> str:
-    ident = username.lower() if username else (
-        f"web{-telegram_id}" if telegram_id < 0 else str(telegram_id)
-    )
-    base = f"{type_key}_tg_{ident}"
-    if base not in existing:
-        return base
-    for i in range(2, 10):
-        candidate = f"{type_key}{i}_tg_{ident}"
-        if candidate not in existing:
-            return candidate
-    return f"{type_key}_tg_{ident}_x"
+from bot.handlers.devices import _mz_username_for_type  # noqa: E402 — одна реализация на бота и API
 
 
 # ─── GET /api/me ──────────────────────────────────────────────────────────────
@@ -817,6 +865,8 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
         user: User | None = r.scalar_one_or_none()
         if not user:
             raise HTTPException(404, "User not found")
+        if user.is_banned:
+            raise HTTPException(403, "Аккаунт заблокирован")
 
         now = datetime.utcnow()
         if not (user.subscription_expires_at and user.subscription_expires_at > now):
@@ -831,24 +881,15 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
         existing_mz = [d.marzban_username for d in devs]
         mz_username = _mz_username_for_type(type_key, tg_id, user.username, existing_mz)
 
-        link = ""
         try:
-            mz_user = await marzban.create_user(
-                telegram_id=tg_id,
-                days=days_left,
-                note=f"device|type:{type_key}|slot:{slot}|tg:{tg_id}|webapp",
-                ip_limit=1,
-                username=mz_username,
+            mz_user = await marzban.provision_user(
+                mz_username, tg_id, days_left,
+                note=f"device|type:{type_key}|slot:{slot}|tg:{tg_id}|webapp", ip_limit=1,
             )
             link = marzban.extract_vless_link(mz_user) or ""
         except Exception as e:
-            logger.warning("create_user failed (%s), trying get_or_create: %s", mz_username, e)
-            try:
-                mz_user = await marzban.get_or_create_user(mz_username, tg_id, days_left)
-                link = marzban.extract_vless_link(mz_user) or ""
-            except Exception as e2:
-                logger.error("get_or_create_user also failed for %s: %s", mz_username, e2)
-                raise HTTPException(500, "VPN server error. Try again later.")
+            logger.error("provision_user failed for %s: %s", mz_username, e)
+            raise HTTPException(502, "VPN server error. Try again later.")
 
         if link:
             if custom_name:
@@ -868,10 +909,8 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
         await session.commit()
         await session.refresh(dev)
 
-    qr_url = (
-        f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(link)}"
-        if link else ""
-    )
+    from bot.utils.qr import qr_data_uri
+    qr_url = qr_data_uri(link)
     from bot.utils.branding import subscription_url
     return {
         "id": dev.id,
@@ -893,9 +932,13 @@ async def get_device_link(device_id: int, request: Request, x_telegram_init_data
         tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         r = await session.execute(select(Device).where(Device.id == device_id))
         dev: Device | None = r.scalar_one_or_none()
+        owner = await session.get(User, tg_id)
 
-    if not dev or dev.telegram_id != tg_id:
+    # Удалённое устройство (is_active=False) — его ключ отключён, не отдаём.
+    if not dev or dev.telegram_id != tg_id or not dev.is_active:
         raise HTTPException(404, "Device not found")
+    if owner and owner.is_banned:
+        raise HTTPException(403, "Аккаунт заблокирован")
 
     try:
         mz_user = await marzban.get_user(dev.marzban_username)
@@ -907,9 +950,11 @@ async def get_device_link(device_id: int, request: Request, x_telegram_init_data
             else:
                 link = _set_vless_remark(link, dev.name)
     except Exception as e:
-        raise HTTPException(500, str(e))
+        logger.warning("get_device_link %s: %s", dev.marzban_username, e)
+        raise HTTPException(502, "VPN-сервер недоступен. Попробуйте позже.")
 
-    qr_url = f"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={urllib.parse.quote(link)}" if link else ""
+    from bot.utils.qr import qr_data_uri
+    qr_url = qr_data_uri(link)
     from bot.utils.branding import subscription_url
     return {
         "link": link, "qr_url": qr_url, "name": dev.name, "custom_name": dev.custom_name,
@@ -1090,7 +1135,7 @@ async def admin_get_user(
         if q.lstrip("-").isdigit():
             r = await session.execute(select(User).where(User.telegram_id == int(q)))
         else:
-            r = await session.execute(select(User).where(User.username == q))
+            r = await session.execute(select(User).where(func.lower(User.username) == q.lower()).limit(1))
         user: User | None = r.scalar_one_or_none()
         if not user:
             raise HTTPException(404, "Пользователь не найден")
@@ -1195,29 +1240,9 @@ async def admin_grant(request: Request, x_telegram_init_data: str | None = Heade
         if not user:
             raise HTTPException(404, "User not found")
 
-        # Продлеваем все активные устройства в Marzban
-        dev_result = await session.execute(
-            select(Device).where(Device.telegram_id == target_id, Device.is_active.is_(True))
-        )
-        devices = list(dev_result.scalars().all())
-        if devices:
-            for dev in devices:
-                try:
-                    await marzban.extend_user(dev.marzban_username, days)
-                    # Включаем аккаунт если был забанен/отключён
-                    await marzban.enable_user(dev.marzban_username)
-                except Exception as e:
-                    logger.warning("admin_grant extend device %s: %s", dev.marzban_username, e)
-        elif user.marzban_username:
-            await marzban.extend_user(user.marzban_username, days)
-        else:
-            mz = await marzban.create_user(target_id, days, note="admin_grant|webapp")
-            user.marzban_username = mz["username"]
-
-        now = datetime.utcnow()
-        base = user.subscription_expires_at if (user.subscription_expires_at and user.subscription_expires_at > now) else now
-        user.subscription_expires_at = base + timedelta(days=days)
-        await session.commit()
+        # Та же логика, что при оплате: все устройства продлеваются и включаются.
+        from bot.handlers.payment import _grant_subscription
+        await _grant_subscription(user, days, session)
 
     await _tg_send(target_id, f"🎁 <b>Администратор выдал подписку на {days} дней!</b>\nОткрой 📱 Моя подписка для подключения.")
     return {"ok": True, "expires_at": user.subscription_expires_at.isoformat()}
@@ -1242,11 +1267,7 @@ async def admin_ban(request: Request, x_telegram_init_data: str | None = Header(
             raise HTTPException(404, "User not found")
         user.is_banned = True
         user.ban_reason = reason
-        if user.marzban_username:
-            try:
-                await marzban.disable_user(user.marzban_username)
-            except Exception:
-                pass
+        await set_vpn_enabled(user, session, False)
         await session.commit()
 
     reason_line = f"\nПричина: {reason}" if reason else ""
@@ -1269,11 +1290,9 @@ async def admin_unban(request: Request, x_telegram_init_data: str | None = Heade
             raise HTTPException(404, "User not found")
         user.is_banned = False
         user.ban_reason = None
-        if user.marzban_username:
-            try:
-                await marzban.enable_user(user.marzban_username)
-            except Exception:
-                pass
+        # Включаем обратно, только если подписка ещё действует.
+        if user.subscription_expires_at and user.subscription_expires_at > datetime.utcnow():
+            await set_vpn_enabled(user, session, True)
         await session.commit()
 
     await _tg_send(target_id, "✅ Ваш аккаунт STAR VPN разблокирован.")
@@ -1430,7 +1449,7 @@ async def invoice_gift(request: Request, x_telegram_init_data: str | None = Head
             )
         else:
             r = await session.execute(
-                select(User).where(User.username == recipient_input.lstrip("@"))
+                select(User).where(func.lower(User.username) == recipient_input.lstrip("@").lower()).limit(1)
             )
         recipient: User | None = r.scalar_one_or_none()
 
@@ -1486,7 +1505,7 @@ async def create_gift_crypto_invoice(
             )
         else:
             r = await session.execute(
-                select(User).where(User.username == recipient_input.lstrip("@"))
+                select(User).where(func.lower(User.username) == recipient_input.lstrip("@").lower()).limit(1)
             )
         recipient: User | None = r.scalar_one_or_none()
 
@@ -1541,7 +1560,7 @@ async def _lookup_gift_recipient(recipient_input: str, session: AsyncSession) ->
     if recipient_input.lstrip("-").isdigit():
         r = await session.execute(select(User).where(User.telegram_id == int(recipient_input)))
     else:
-        r = await session.execute(select(User).where(User.username == recipient_input.lstrip("@")))
+        r = await session.execute(select(User).where(func.lower(User.username) == recipient_input.lstrip("@").lower()).limit(1))
     return r.scalar_one_or_none()
 
 
@@ -1558,7 +1577,7 @@ async def gift_lookup(request: Request, x_telegram_init_data: str | None = Heade
         recipient = await _lookup_gift_recipient(recipient_input, session)
 
     if not recipient or recipient.telegram_id <= 0:
-        raise HTTPException(404, "Получатель не найден. Он должен сначала написать /start боту @starisvpnbot.")
+        raise HTTPException(404, f"Получатель не найден. Он должен сначала написать /start боту @{settings.bot_username}.")
     if recipient.telegram_id == tg_id:
         raise HTTPException(400, "Нельзя подарить подписку самому себе.")
 
@@ -1609,7 +1628,7 @@ async def gift_invoice(request: Request, x_telegram_init_data: str | None = Head
         else:
             recipient = await _lookup_gift_recipient(recipient_input, session)
             if not recipient or recipient.telegram_id <= 0:
-                raise HTTPException(404, "Получатель не найден. Он должен сначала написать /start боту @starisvpnbot.")
+                raise HTTPException(404, f"Получатель не найден. Он должен сначала написать /start боту @{settings.bot_username}.")
             if recipient.telegram_id == tg_id:
                 raise HTTPException(400, "Нельзя подарить подписку самому себе.")
             recipient_tg_id = recipient.telegram_id
@@ -1714,16 +1733,24 @@ async def gift_link_claim(code: str, request: Request, x_telegram_init_data: str
         if payment.gift_sender_id == tg_id:
             raise HTTPException(400, "Нельзя забрать свой же подарок")
 
+        from sqlalchemy import update as _update
         from bot.handlers.payment import _grant_subscription
         from bot.utils.webauth import get_or_create_user_by_telegram_id
+
+        # Сначала атомарно «забираем» подарок, потом выдаём подписку: при двух
+        # одновременных запросах раньше подписку могли получить оба.
+        taken = await session.execute(
+            _update(Payment)
+            .where(Payment.id == payment.id, Payment.gift_claimed.is_(False))
+            .values(gift_claimed=True, telegram_id=tg_id)
+        )
+        await session.commit()
+        if taken.rowcount != 1:
+            raise HTTPException(409, "Этот подарок уже кто-то забрал")
 
         claimant = await get_or_create_user_by_telegram_id(tg_id, None, None, session)
         days = payment.days or 30
         await _grant_subscription(claimant, days, session)
-
-        payment.gift_claimed = True
-        payment.telegram_id = tg_id
-        await session.commit()
 
         plan_label = _GIFT_PLAN_LABELS.get(days, f"{days} дней")
         sender_name = "Аноним"
@@ -1775,11 +1802,14 @@ async def activate_trial_api(request: Request, x_telegram_init_data: str | None 
             raise HTTPException(status_code=404, detail="Пользователь не найден")
         if user.trial_used:
             raise HTTPException(status_code=400, detail="Пробный период уже был активирован")
+        if user.is_banned:
+            raise HTTPException(status_code=403, detail="Аккаунт заблокирован")
 
-        from datetime import timedelta
+        # Дни добавляются к текущему сроку: раньше тут было «сейчас + 2 дня»,
+        # и оплативший подписку, но не бравший пробный, терял оплаченное.
+        from bot.handlers.payment import _grant_subscription
         user.trial_used = True
-        user.subscription_expires_at = datetime.utcnow() + timedelta(days=settings.trial_days)
-        await session.commit()
+        await _grant_subscription(user, settings.trial_days, session)
 
         return {"ok": True, "days": settings.trial_days}
 
@@ -1849,83 +1879,6 @@ async def gift_seen(request: Request, x_telegram_init_data: str | None = Header(
             await session.commit()
 
     return {"ok": True}
-
-
-# ─── GET /api/crypto/plans ───────────────────────────────────────────────────
-
-@app.get("/api/crypto/plans")
-async def get_crypto_plans(x_telegram_init_data: str | None = Header(default=None)):
-    """Тарифы для оплаты криптой (USD). Возвращает [] если CRYPTOPAY_TOKEN не задан или отключено в админке."""
-    _tg_id(x_telegram_init_data)
-    if not settings.cryptopay_token:
-        return []
-    from bot.utils.settings_store import is_provider_enabled
-    async with AsyncSessionLocal() as session:
-        if not await is_provider_enabled(session, "crypto"):
-            return []
-    from bot.utils.cryptopay import CRYPTO_PLANS
-    return [
-        {
-            "key": k,
-            "label": v["label"],
-            "usd": float(v["usd"]),
-            "days": v["days"],
-            "desc": v["desc"],
-        }
-        for k, v in CRYPTO_PLANS.items()
-    ]
-
-
-# ─── POST /api/invoice/crypto ────────────────────────────────────────────────
-
-@app.post("/api/invoice/crypto")
-async def create_crypto_invoice(
-    request: Request,
-    x_telegram_init_data: str | None = Header(default=None),
-):
-    """Создаёт CryptoPay инвойс и возвращает ссылку для оплаты (мини-апп)."""
-    tg_id = _tg_id(x_telegram_init_data)
-    body = await request.json()
-    plan_key = body.get("plan")
-
-    from bot.utils.settings_store import is_provider_enabled
-    async with AsyncSessionLocal() as session:
-        if not await is_provider_enabled(session, "crypto"):
-            raise HTTPException(status_code=503, detail="Оплата криптовалютой временно недоступна")
-
-    from bot.utils.cryptopay import cryptopay, CRYPTO_PLANS
-    plan = CRYPTO_PLANS.get(plan_key)
-    if not plan:
-        raise HTTPException(status_code=400, detail="Неизвестный тариф")
-
-    try:
-        invoice = await cryptopay.create_invoice(
-            usd_amount=plan["usd"],
-            payload=f"{plan_key}:{tg_id}",
-            description=f"STAR VPN — {plan['label']}",
-        )
-    except Exception as e:
-        logger.error("CryptoPay create_invoice error for tg=%s: %s", tg_id, e)
-        raise HTTPException(status_code=502, detail="Ошибка CryptoPay. Попробуйте позже.")
-
-    invoice_id = invoice.get("invoice_id")
-    pay_url = invoice.get("bot_invoice_url") or invoice.get("mini_app_invoice_url", "")
-
-    # Сохраняем pending-платёж
-    async with AsyncSessionLocal() as session:
-        payment = Payment(
-            order_id=f"crypto_{invoice_id}",
-            telegram_id=tg_id,
-            amount=float(plan["usd"]),
-            status="pending",
-            payment_method="crypto",
-            invoice_id=invoice_id,
-            days=plan["days"],
-        )
-        session.add(payment)
-        await session.commit()
-
-    return {"url": pay_url, "invoice_id": invoice_id}
 
 
 # ─── POST /crypto/webhook ────────────────────────────────────────────────────
@@ -2129,13 +2082,17 @@ async def create_crypto_invoice_api(
         if not await is_provider_enabled(session, "crypto"):
             raise HTTPException(status_code=503, detail="Оплата криптовалютой временно недоступна")
 
+        # Из Mini App после оплаты возвращаем в бота, с сайта — в личный
+        # кабинет (у веб-аккаунта может не быть Telegram вовсе).
+        back = {} if x_telegram_init_data else {
+            "paid_btn_name": "callback", "paid_btn_url": f"{settings.site_url}/account",
+        }
         try:
             invoice = await cryptopay.create_invoice(
                 usd_amount=plan["usd"],
                 payload=f"{plan_key}:{tg_id}",
                 description=f"STAR VPN - {plan['label']}",
-                paid_btn_name="callback",
-                paid_btn_url=f"{settings.site_url}/account",
+                **back,
             )
         except Exception as e:
             logger.error("CryptoPay invoice (site) failed for tg=%s: %s", tg_id, e)
@@ -2259,6 +2216,7 @@ async def guest_checkout(request: Request):
 async def guest_order_status(public_id: str):
     """Поллится страницей успеха, пока вебхук не подтвердит оплату."""
     from bot.models.guest_order import GuestOrder
+    from bot.utils.qr import qr_data_uri
 
     async with AsyncSessionLocal() as session:
         result = await session.execute(select(GuestOrder).where(GuestOrder.public_id == public_id))
@@ -2269,10 +2227,7 @@ async def guest_order_status(public_id: str):
         return {
             "status": order.status,
             "link": order.vless_link,
-            "qr_url": (
-                f"https://api.qrserver.com/v1/create-qr-code/?size=240x240&data={urllib.parse.quote(order.vless_link)}"
-                if order.vless_link else None
-            ),
+            "qr_url": qr_data_uri(order.vless_link) or None,
         }
 
 
@@ -2291,19 +2246,12 @@ async def _fulfill_guest_order(order_id: int) -> None:
             return
 
         mz_username = f"web_{order.public_id[:8]}"
-        try:
-            mz_user = await marzban.create_user(
-                telegram_id=0,
-                days=order.days,
-                note=f"guest_order:{order.public_id}",
-                ip_limit=1,
-                username=mz_username,
-            )
-            link = marzban.extract_vless_link(mz_user) or ""
-            link = _set_vless_remark(link)
-        except Exception as e:
-            logger.error("Guest order %s: Marzban create_user failed: %s", order.public_id, e)
-            return
+        # Ошибку Marzban пробрасываем наверх: вебхук ответит не-OK, и
+        # Robokassa повторит запрос (раньше заказ оставался оплаченным без ключа).
+        mz_user = await marzban.provision_user(
+            mz_username, 0, order.days, note=f"guest_order:{order.public_id}", ip_limit=1,
+        )
+        link = _set_vless_remark(marzban.extract_vless_link(mz_user) or "")
 
         order.status = "paid"
         order.marzban_username = mz_username
@@ -2345,11 +2293,12 @@ async def card_webhook(request: Request):
             await _fulfill_guest_order(real_id)
         except Exception as e:
             logger.error("_fulfill_guest_order error: %s", e)
+            return PlainTextResponse("retry", status_code=503)
         return PlainTextResponse(f"OK{inv_id}")
 
     bot = Bot(token=settings.telegram_api_token)
     try:
-        await handle_card_webhook(payment_id=real_id, bot=bot)
+        await handle_card_webhook(payment_id=real_id, bot=bot, out_sum=out_sum)
     except Exception as e:
         logger.error("handle_card_webhook error: %s", e)
     finally:
@@ -2410,6 +2359,9 @@ async def web_register(request: Request):
         raise HTTPException(400, "Введите ключ доступа")
     if not (3 <= len(username) <= 64):
         raise HTTPException(400, "Логин должен быть от 3 до 64 символов")
+    from bot.utils import rate_limit
+    if rate_limit.is_blocked("admin_register"):
+        raise HTTPException(429, "Слишком много попыток. Попробуйте через 15 минут.")
 
     async with AsyncSessionLocal() as session:
         try:
@@ -2418,6 +2370,7 @@ async def web_register(request: Request):
             if str(e) == "username_taken":
                 raise HTTPException(409, "Этот логин уже занят")
             if str(e) == "bad_invite_key":
+                rate_limit.register_fail("admin_register")
                 raise HTTPException(401, "Неверный ключ доступа")
             raise HTTPException(400, "Пароль должен быть от 8 символов")
 
@@ -2428,16 +2381,23 @@ async def web_register(request: Request):
 async def web_login(request: Request):
     from bot.utils import admin_auth
 
+    from bot.utils import rate_limit
+
     body = await request.json()
     username = (body.get("username") or "").strip()
     password = body.get("password") or ""
     if not username or not password:
         raise HTTPException(400, "Введите логин и пароль")
+    limit_key = f"admin:{username.lower()}"
+    if rate_limit.is_blocked(limit_key):
+        raise HTTPException(429, "Слишком много попыток входа. Попробуйте через 15 минут.")
 
     async with AsyncSessionLocal() as session:
         result = await admin_auth.login_admin(username, password, session)
     if not result:
+        rate_limit.register_fail(limit_key)
         raise HTTPException(401, "Неверный логин или пароль")
+    rate_limit.reset(limit_key)
     admin, token = result
     return {"ok": True, "token": token, "rank": admin.rank, "username": admin.username}
 
@@ -2630,17 +2590,8 @@ async def web_user_grant(tg_id: int, request: Request, authorization: str | None
         u = (await session.execute(select(User).where(User.telegram_id == tg_id))).scalar_one_or_none()
         if not u:
             raise HTTPException(404)
-        devs = (await session.execute(select(Device).where(Device.telegram_id == tg_id, Device.is_active.is_(True)))).scalars().all()
-        for d in devs:
-            try:
-                await marzban.extend_user(d.marzban_username, days)
-                await marzban.enable_user(d.marzban_username)
-            except Exception as e:
-                logger.warning("web grant %s: %s", d.marzban_username, e)
-        now = datetime.utcnow()
-        base = u.subscription_expires_at if (u.subscription_expires_at and u.subscription_expires_at > now) else now
-        u.subscription_expires_at = base + timedelta(days=days)
-        await session.commit()
+        from bot.handlers.payment import _grant_subscription
+        await _grant_subscription(u, days, session)
     return {"ok": True}
 
 
@@ -2660,11 +2611,7 @@ async def web_user_ban(tg_id: int, request: Request, authorization: str | None =
             raise HTTPException(404)
         u.is_banned = True
         u.ban_reason = reason
-        if u.marzban_username:
-            try:
-                await marzban.disable_user(u.marzban_username)
-            except Exception:
-                pass
+        await set_vpn_enabled(u, session, False)
         await session.commit()
 
     reason_line = f"\nПричина: {reason}" if reason else ""
@@ -2681,11 +2628,9 @@ async def web_user_unban(tg_id: int, authorization: str | None = Header(default=
             raise HTTPException(404)
         u.is_banned = False
         u.ban_reason = None
-        if u.marzban_username:
-            try:
-                await marzban.enable_user(u.marzban_username)
-            except Exception:
-                pass
+        # Включаем обратно, только если подписка ещё действует.
+        if u.subscription_expires_at and u.subscription_expires_at > datetime.utcnow():
+            await set_vpn_enabled(u, session, True)
         await session.commit()
 
     await _tg_send(tg_id, "✅ Ваш аккаунт STAR VPN разблокирован.")
@@ -2786,24 +2731,62 @@ async def web_referrals(limit: int = 100, authorization: str | None = Header(def
 
 # ─── Wiki CRUD (админка) ───────────────────────────────────────────────────────
 
+_WIKI_TEXT_LIMITS = {
+    "title": 200, "short_title": 120, "lede": 400, "section": 64, "keywords": 300,
+    "content_html": 200_000, "custom_css": 50_000,
+}
+
+
+def _wiki_article_json(a, full: bool = False) -> dict:
+    data = {
+        "id": a.id, "slug": a.slug, "title": a.title, "short_title": a.short_title,
+        "lede": a.lede, "section": a.section, "keywords": a.keywords,
+        "sort_order": a.sort_order, "is_published": a.is_published, "views": a.views,
+        "updated_at": a.updated_at.isoformat() if a.updated_at else None,
+    }
+    if full:
+        data["content_html"] = a.content_html
+        data["custom_css"] = a.custom_css
+    return data
+
+
+def _apply_wiki_fields(a, body: dict) -> None:
+    for field, limit in _WIKI_TEXT_LIMITS.items():
+        if field in body:
+            value = body.get(field) or ""
+            value = value[:limit] if field in ("content_html", "custom_css") else value.strip()[:limit]
+            if field == "title" and not value:
+                continue
+            if field == "section" and not value:
+                value = "О сервисе"
+            setattr(a, field, value)
+    if "sort_order" in body:
+        try:
+            a.sort_order = int(body.get("sort_order") or 0)
+        except (TypeError, ValueError):
+            raise HTTPException(400, "Порядок должен быть числом")
+    if "is_published" in body:
+        a.is_published = bool(body.get("is_published"))
+
+
+@app.get("/web/wiki-editor-css", response_class=PlainTextResponse)
+async def web_wiki_editor_css(authorization: str | None = Header(default=None)):
+    """Стили страницы статьи — чтобы визуальный редактор выглядел как сайт."""
+    _web_auth(authorization)
+    tpl = (_LANDING_DIR / "wiki" / "_article.html").read_text(encoding="utf-8")
+    return tpl.split("<style>", 1)[1].split("/*__WIKI_CUSTOM_CSS__*/", 1)[0]
+
+
 @app.get("/web/wiki")
 async def web_wiki_list(authorization: str | None = Header(default=None)):
     _web_auth(authorization)
     from bot.models.wiki_article import WikiArticle
 
     async with AsyncSessionLocal() as session:
-        rows = (await session.execute(select(WikiArticle).order_by(WikiArticle.updated_at.desc()))).scalars().all()
-    return {
-        "articles": [
-            {
-                "id": a.id, "slug": a.slug, "title": a.title, "lede": a.lede,
-                "section": a.section, "keywords": a.keywords,
-                "is_published": a.is_published, "views": a.views,
-                "updated_at": a.updated_at.isoformat() if a.updated_at else None,
-            }
-            for a in rows
-        ]
-    }
+        rows = (await session.execute(
+            select(WikiArticle).order_by(WikiArticle.sort_order, WikiArticle.id)
+        )).scalars().all()
+    return {"articles": [_wiki_article_json(a) for a in rows]}
 
 
 @app.get("/web/wiki/{article_id}")
@@ -2815,10 +2798,7 @@ async def web_wiki_get(article_id: int, authorization: str | None = Header(defau
         a = (await session.execute(select(WikiArticle).where(WikiArticle.id == article_id))).scalar_one_or_none()
         if not a:
             raise HTTPException(404, "Not found")
-    return {
-        "id": a.id, "slug": a.slug, "title": a.title, "lede": a.lede, "body": a.body,
-        "section": a.section, "keywords": a.keywords, "is_published": a.is_published,
-    }
+    return _wiki_article_json(a, full=True)
 
 
 def _valid_wiki_slug(slug: str) -> bool:
@@ -2833,24 +2813,20 @@ async def web_wiki_create(request: Request, authorization: str | None = Header(d
 
     body = await request.json()
     slug = (body.get("slug") or "").strip().lower()
-    if slug in _WIKI_SLUGS or not _valid_wiki_slug(slug):
-        raise HTTPException(400, "Недопустимый или занятый slug (латиница, цифры, дефис)")
-    title = (body.get("title") or "").strip()[:200]
-    if not title:
+    if not _valid_wiki_slug(slug):
+        raise HTTPException(400, "Адрес статьи: 3–64 символа, латиница, цифры и дефис")
+    if not (body.get("title") or "").strip():
         raise HTTPException(400, "Заголовок обязателен")
 
     async with AsyncSessionLocal() as session:
         exists = (await session.execute(select(WikiArticle).where(WikiArticle.slug == slug))).scalar_one_or_none()
         if exists:
-            raise HTTPException(400, "Статья с таким slug уже существует")
-        a = WikiArticle(
-            slug=slug, title=title,
-            lede=(body.get("lede") or "").strip()[:400],
-            body=(body.get("body") or "").strip()[:20000],
-            section=(body.get("section") or "О сервисе").strip()[:64],
-            keywords=(body.get("keywords") or "").strip()[:300],
-            is_published=bool(body.get("is_published", False)),
-        )
+            raise HTTPException(400, "Статья с таким адресом уже существует")
+        a = WikiArticle(slug=slug, title="")
+        if "sort_order" not in body:
+            last = (await session.execute(select(func.max(WikiArticle.sort_order)))).scalar()
+            a.sort_order = (last or 0) + 10
+        _apply_wiki_fields(a, body)
         session.add(a)
         await session.commit()
         await session.refresh(a)
@@ -2867,20 +2843,55 @@ async def web_wiki_update(article_id: int, request: Request, authorization: str 
         a = (await session.execute(select(WikiArticle).where(WikiArticle.id == article_id))).scalar_one_or_none()
         if not a:
             raise HTTPException(404, "Not found")
-        if "title" in body:
-            a.title = (body.get("title") or "").strip()[:200] or a.title
-        if "lede" in body:
-            a.lede = (body.get("lede") or "").strip()[:400]
-        if "body" in body:
-            a.body = (body.get("body") or "").strip()[:20000]
-        if "section" in body:
-            a.section = (body.get("section") or "О сервисе").strip()[:64]
-        if "keywords" in body:
-            a.keywords = (body.get("keywords") or "").strip()[:300]
-        if "is_published" in body:
-            a.is_published = bool(body.get("is_published"))
+        if "slug" in body:
+            slug = (body.get("slug") or "").strip().lower()
+            if slug != a.slug:
+                if not _valid_wiki_slug(slug):
+                    raise HTTPException(400, "Адрес статьи: 3–64 символа, латиница, цифры и дефис")
+                taken = (await session.execute(
+                    select(WikiArticle.id).where(WikiArticle.slug == slug)
+                )).scalar_one_or_none()
+                if taken:
+                    raise HTTPException(400, "Статья с таким адресом уже существует")
+                a.slug = slug
+        _apply_wiki_fields(a, body)
         await session.commit()
     return {"ok": True}
+
+
+@app.post("/web/wiki/reorder")
+async def web_wiki_reorder(request: Request, authorization: str | None = Header(default=None)):
+    """Тело: {"ids": [id, id, …]} — новый порядок статей сверху вниз."""
+    _web_auth(authorization)
+    from bot.models.wiki_article import WikiArticle
+
+    ids = (await request.json()).get("ids") or []
+    async with AsyncSessionLocal() as session:
+        rows = (await session.execute(select(WikiArticle).where(WikiArticle.id.in_(ids)))).scalars().all()
+        by_id = {a.id: a for a in rows}
+        for pos, article_id in enumerate(ids):
+            if article_id in by_id:
+                by_id[article_id].sort_order = (pos + 1) * 10
+        await session.commit()
+    return {"ok": True}
+
+
+@app.post("/web/wiki/preview", response_class=HTMLResponse)
+async def web_wiki_preview(request: Request, authorization: str | None = Header(default=None)):
+    """Рендер несохранённой статьи из редактора — ровно так, как на сайте."""
+    _web_auth(authorization)
+    from bot.models.wiki_article import WikiArticle
+    from bot.utils.wiki_page import render_wiki_article_page
+
+    body = await request.json()
+    a = WikiArticle(slug=(body.get("slug") or "preview"), title="", updated_at=datetime.utcnow())
+    a.short_title = a.lede = a.keywords = a.content_html = a.custom_css = ""
+    a.section = "О сервисе"
+    a.sort_order = 0
+    _apply_wiki_fields(a, body)
+    async with AsyncSessionLocal() as session:
+        published = [p for p in await _published_wiki_articles(session) if p.slug != a.slug]
+    return HTMLResponse(render_wiki_article_page(a, published + [a]))
 
 
 @app.delete("/web/wiki/{article_id}")
@@ -2894,6 +2905,210 @@ async def web_wiki_delete(article_id: int, authorization: str | None = Header(de
             raise HTTPException(404, "Not found")
         await session.delete(a)
         await session.commit()
+    return {"ok": True}
+
+
+# ─── Редактор бота (админка → Бот) ────────────────────────────────────────────
+
+_BOT_PREVIEW_SAMPLES = {
+    "days_left": "27", "expires": "21.10.2026", "status_icon": "🟢", "plan": "3 месяца",
+    "days": "2", "milestone_size": "2", "bonus_days": "30", "invited": "5", "paying": "3",
+    "days_earned": "30", "next_milestone": "Ещё 1 — и начислим +30 дней автоматически.",
+    "achievements": "🥉 Первые шаги ✅\n🥈 Амбассадор — ещё 2 до +30 дней",
+    "ref_link": "https://t.me/your_bot?start=ref123456", "support_link": "https://t.me/support",
+}
+
+
+@app.get("/web/bot/schema")
+async def web_bot_schema(authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.utils import bot_texts as bt
+
+    ov = bt.overrides()
+
+    def text_entry(key: str) -> dict:
+        kind, default, placeholders, hint = bt.TEXTS[key]
+        return {
+            "key": key, "kind": kind, "default": default, "value": ov.get(key) or default,
+            "overridden": key in ov, "placeholders": list(placeholders), "hint": hint,
+            "hideable": key in bt.HIDEABLE, "hidden": bt.is_hidden(key),
+        }
+
+    screens = []
+    for sc in bt.SCREENS:
+        screens.append({
+            **{k: v for k, v in sc.items() if k not in ("texts", "buttons")},
+            "kind": sc.get("kind", "system"),
+            "texts": [text_entry(k) for k in sc.get("texts", [])],
+            "buttons": [
+                {**b, **({"text": text_entry(b["key"])} if "key" in b else {})}
+                for b in sc.get("buttons", [])
+            ],
+        })
+    return {
+        "screens": screens,
+        "custom": bt.custom_blocks(),
+        "screen_targets": [{"id": k, "title": v[0]} for k, v in bt.SCREEN_TARGETS.items()],
+        "samples": _BOT_PREVIEW_SAMPLES,
+    }
+
+
+@app.put("/web/bot/texts")
+async def web_bot_save_texts(request: Request, authorization: str | None = Header(default=None)):
+    """Тело: {"values": {key: текст | null}, "hidden": {key: bool}}; null — вернуть стандартный."""
+    _web_auth(authorization)
+    from bot.utils import bot_texts as bt
+
+    body = await request.json()
+    values: dict = body.get("values") or {}
+    hidden: dict = body.get("hidden") or {}
+    for key, value in values.items():
+        if key not in bt.TEXTS:
+            raise HTTPException(400, f"Неизвестный текст: {key}")
+        if value is not None:
+            if not isinstance(value, str):
+                raise HTTPException(400, f"{key}: ожидается строка")
+            err = bt.validate_text(key, value)
+            if err:
+                raise HTTPException(400, f"{key}: {err}")
+    for key in hidden:
+        if key not in bt.HIDEABLE:
+            raise HTTPException(400, f"Кнопку {key} скрыть нельзя")
+
+    changed_labels = {k: v for k, v in values.items() if k in bt.REPLY_BUTTONS}
+    if changed_labels:
+        seen: dict[str, str] = {}
+        for key in bt.REPLY_BUTTONS:
+            label = changed_labels[key] if key in changed_labels else bt.t(key)
+            label = label or bt.default(key)
+            if label in seen:
+                raise HTTPException(400, f"Подпись «{label}» уже у другой кнопки меню — сделайте её уникальной")
+            seen[label] = key
+        for b in bt.menu_blocks():
+            if b["menu_label"] in seen:
+                raise HTTPException(400, f"Подпись «{b['menu_label']}» уже у блока «{b['title']}»")
+
+    async with AsyncSessionLocal() as session:
+        await bt.save_texts(session, values, {k: bool(v) for k, v in hidden.items()})
+    return {"ok": True}
+
+
+def _clean_bot_block(body: dict, block_id: int | None) -> dict:
+    from bot.utils import bot_texts as bt
+    import re
+
+    title = (body.get("title") or "").strip()[:100]
+    if not title:
+        raise HTTPException(400, "Укажите название блока")
+    text = body.get("text") or ""
+    if not text.strip():
+        raise HTTPException(400, "Текст сообщения не может быть пустым")
+    err = bt.validate_html(text)
+    if err:
+        raise HTTPException(400, f"Текст: {err}")
+
+    known_blocks = {b["id"] for b in bt.custom_blocks()}
+    buttons = []
+    for i, btn in enumerate(body.get("buttons") or [], start=1):
+        label = (btn.get("label") or "").strip()
+        kind = btn.get("type")
+        target = str(btn.get("target") or "").strip()
+        if not label or len(label) > 64:
+            raise HTTPException(400, f"Кнопка {i}: подпись от 1 до 64 символов")
+        if kind == "url":
+            if not re.fullmatch(r"(https?|tg)://\S+", target):
+                raise HTTPException(400, f"Кнопка «{label}»: ссылка должна начинаться с https:// или tg://")
+        elif kind == "block":
+            if not target.isdigit() or (int(target) not in known_blocks and int(target) != block_id):
+                raise HTTPException(400, f"Кнопка «{label}»: выберите блок, куда она ведёт")
+            target = int(target)
+        elif kind == "screen":
+            if target not in bt.SCREEN_TARGETS:
+                raise HTTPException(400, f"Кнопка «{label}»: выберите экран бота")
+        else:
+            raise HTTPException(400, f"Кнопка «{label}»: неизвестный тип")
+        buttons.append({"label": label, "type": kind, "target": target})
+
+    show_in_menu = bool(body.get("show_in_menu"))
+    menu_label = (body.get("menu_label") or "").strip()[:64]
+    if show_in_menu:
+        if not menu_label:
+            raise HTTPException(400, "Укажите подпись кнопки в главном меню")
+        owner = bt.reply_labels(exclude_block=block_id).get(menu_label)
+        if owner:
+            raise HTTPException(400, f"Подпись «{menu_label}» уже занята: {owner}")
+
+    command = (body.get("command") or "").strip().lstrip("/").lower()
+    if command:
+        if not re.fullmatch(r"[a-z0-9_]{1,32}", command):
+            raise HTTPException(400, "Команда: латиница, цифры и _, до 32 символов")
+        if command in bt.RESERVED_COMMANDS:
+            raise HTTPException(400, f"Команда /{command} уже используется ботом")
+        other = bt.block_by_command(command)
+        if other and other["id"] != block_id:
+            raise HTTPException(400, f"Команда /{command} уже у блока «{other['title']}»")
+
+    return {
+        "title": title, "text": text, "buttons": json.dumps(buttons, ensure_ascii=False),
+        "show_in_menu": show_in_menu, "menu_label": menu_label, "command": command,
+    }
+
+
+@app.post("/web/bot/blocks")
+async def web_bot_block_create(request: Request, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.bot_content import BotBlock
+    from bot.utils import bot_texts as bt
+
+    data = _clean_bot_block(await request.json(), None)
+    async with AsyncSessionLocal() as session:
+        last = (await session.execute(select(func.max(BotBlock.sort_order)))).scalar()
+        block = BotBlock(**data, sort_order=(last or 0) + 10)
+        session.add(block)
+        await session.commit()
+        await session.refresh(block)
+        await bt.load_cache(session)
+    return {"ok": True, "id": block.id}
+
+
+@app.put("/web/bot/blocks/{block_id}")
+async def web_bot_block_update(block_id: int, request: Request, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.bot_content import BotBlock
+    from bot.utils import bot_texts as bt
+
+    data = _clean_bot_block(await request.json(), block_id)
+    async with AsyncSessionLocal() as session:
+        block = await session.get(BotBlock, block_id)
+        if not block:
+            raise HTTPException(404, "Блок не найден")
+        for k, v in data.items():
+            setattr(block, k, v)
+        await session.commit()
+        await bt.load_cache(session)
+    return {"ok": True}
+
+
+@app.delete("/web/bot/blocks/{block_id}")
+async def web_bot_block_delete(block_id: int, authorization: str | None = Header(default=None)):
+    """Удаляет блок и кнопки других блоков, которые вели на него."""
+    _web_auth(authorization)
+    from bot.models.bot_content import BotBlock
+    from bot.utils import bot_texts as bt
+
+    async with AsyncSessionLocal() as session:
+        block = await session.get(BotBlock, block_id)
+        if not block:
+            raise HTTPException(404, "Блок не найден")
+        await session.delete(block)
+        others = (await session.execute(select(BotBlock).where(BotBlock.id != block_id))).scalars().all()
+        for other in others:
+            buttons = json.loads(other.buttons or "[]")
+            kept = [b for b in buttons if not (b.get("type") == "block" and b.get("target") == block_id)]
+            if len(kept) != len(buttons):
+                other.buttons = json.dumps(kept, ensure_ascii=False)
+        await session.commit()
+        await bt.load_cache(session)
     return {"ok": True}
 
 
@@ -2915,10 +3130,19 @@ async def web_settings_overview(authorization: str | None = Header(default=None)
             "stars": plan["stars"], "rub": float(card.get("rub", 0)),
         })
 
+    from bot.utils import telegram_oauth
+
     async with AsyncSessionLocal() as session:
         toggles = await get_all_provider_states(session)
 
     return {
+        "telegram_login": {
+            "configured": telegram_oauth.is_configured(),
+            "client_id": telegram_oauth.client_id(),
+            "origin": telegram_oauth.site_origin(),
+            "redirect_uri": telegram_oauth.redirect_uri(),
+            "last_error": telegram_oauth.last_error,
+        },
         "tariffs": tariffs,
         "providers": {
             "stars": {"configured": True, "enabled": toggles["stars"]},

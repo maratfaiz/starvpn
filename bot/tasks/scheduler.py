@@ -16,6 +16,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from sqlalchemy import select
 
 from bot.models.device import Device
+from bot.models.payment import Payment
 from bot.models.user import User
 from bot.utils.database import AsyncSessionLocal
 from bot.utils.marzban import marzban
@@ -24,9 +25,30 @@ logger = logging.getLogger(__name__)
 
 
 def _renew_kb() -> InlineKeyboardMarkup:
+    # sub:pay_choice, а не сразу Stars: способ оплаты может быть выключен.
     return InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text="🔄 Продлить подписку", callback_data="sub:renew"),
+        InlineKeyboardButton(text="🔄 Продлить подписку", callback_data="sub:pay_choice"),
     ]])
+
+
+def _first_month_stars() -> int:
+    from bot.handlers.payment import PLANS
+    return PLANS["plan_1m"]["stars"]
+
+
+async def _paid_user_ids(ids: list[int]) -> set[int]:
+    """Кто хоть раз платил — любым способом (раньше «платил» определялось по
+    total_stars_paid, и все, кто платил картой/криптой, получали текст для
+    пробного периода)."""
+    if not ids:
+        return set()
+    async with AsyncSessionLocal() as session:
+        rows = await session.execute(
+            select(Payment.telegram_id).where(
+                Payment.telegram_id.in_(ids), Payment.status == "paid", Payment.is_gift.is_(False),
+            ).distinct()
+        )
+        return set(rows.scalars().all())
 
 
 def _buy_kb() -> InlineKeyboardMarkup:
@@ -37,16 +59,20 @@ def _buy_kb() -> InlineKeyboardMarkup:
 
 # ─── Предупреждение за 24 часа ───────────────────────────────────────────────
 
-async def check_expiring_subscriptions(bot: Bot) -> None:
-    """Найти подписки, истекающие через ~24 ч, и отправить предупреждение."""
-    now = datetime.utcnow()
-    window_from = now + timedelta(hours=23)
-    window_to = now + timedelta(hours=25)
+async def check_expiring_subscriptions(bot: Bot, since: datetime, now: datetime) -> None:
+    """Предупредить тех, у кого подписка кончается через 24 ч.
+
+    Окно — (since, now] со сдвигом на 24 ч, где since — время прошлого
+    прогона: каждое истечение попадает ровно в одно окно. Раньше окно было
+    23–25 ч при запуске раз в час, и предупреждение приходило дважды.
+    """
+    window_from = since + timedelta(hours=24)
+    window_to = now + timedelta(hours=24)
 
     async with AsyncSessionLocal() as session:
         result = await session.execute(
             select(User).where(
-                User.subscription_expires_at >= window_from,
+                User.subscription_expires_at > window_from,
                 User.subscription_expires_at <= window_to,
                 User.is_banned.is_(False),
             )
@@ -54,9 +80,10 @@ async def check_expiring_subscriptions(bot: Bot) -> None:
         users = result.scalars().all()
 
     logger.info("Expiry check: %d users expiring in ~24h", len(users))
+    paid = await _paid_user_ids([u.telegram_id for u in users])
 
     for user in users:
-        is_trial = not (user.total_stars_paid and user.total_stars_paid > 0)
+        is_trial = user.telegram_id not in paid
         try:
             if is_trial:
                 await bot.send_message(
@@ -65,7 +92,7 @@ async def check_expiring_subscriptions(bot: Bot) -> None:
                     "Надеемся, вы успели оценить скорость STAR VPN 🚀\n\n"
                     "Чтобы продолжить пользоваться без ограничений — "
                     "оформите полноценную подписку. "
-                    "Первый месяц всего за <b>75 ⭐</b>.",
+                    f"Первый месяц всего за <b>{_first_month_stars()} ⭐</b>.",
                     parse_mode="HTML",
                     reply_markup=_buy_kb(),
                 )
@@ -89,27 +116,23 @@ async def check_expiring_subscriptions(bot: Bot) -> None:
 
 # ─── Деактивация при истечении ───────────────────────────────────────────────
 
-async def deactivate_expired_subscriptions(bot: Bot) -> None:
+async def deactivate_expired_subscriptions(bot: Bot, since: datetime, now: datetime) -> None:
     """
-    Найти подписки, истёкшие в последние 2 часа, деактивировать
-    все их устройства в Marzban и уведомить пользователей.
-
-    Окно 0–2 часа назад: пользователь уже точно просрочен,
-    но мы не трогаем тех, кого обработали давно (> 2 часов).
+    Найти подписки, истёкшие с прошлого прогона (since, now], деактивировать
+    все их устройства в Marzban и уведомить пользователей. Каждое истечение
+    попадает ровно в один прогон (раньше окно 2 ч при запуске раз в час
+    давало двойное уведомление).
     """
-    now = datetime.utcnow()
-    expired_from = now - timedelta(hours=2)
-
     async with AsyncSessionLocal() as session:
-        # Подписки, истёкшие в последние 2 часа
         result = await session.execute(
             select(User).where(
-                User.subscription_expires_at >= expired_from,
+                User.subscription_expires_at > since,
                 User.subscription_expires_at <= now,
                 User.is_banned.is_(False),
             )
         )
         users = result.scalars().all()
+        paid = await _paid_user_ids([u.telegram_id for u in users])
 
         for user in users:
             devs_result = await session.execute(
@@ -141,7 +164,7 @@ async def deactivate_expired_subscriptions(bot: Bot) -> None:
             )
 
             # Уведомить пользователя
-            is_trial = not (user.total_stars_paid and user.total_stars_paid > 0)
+            is_trial = user.telegram_id not in paid
             try:
                 if is_trial:
                     await bot.send_message(
@@ -149,7 +172,7 @@ async def deactivate_expired_subscriptions(bot: Bot) -> None:
                         "🔒 <b>Пробный период закончился</b>\n\n"
                         "Спасибо, что попробовали STAR VPN!\n\n"
                         "Хотите продолжить? Оформите подписку — "
-                        "первый месяц всего за <b>75 ⭐</b>. "
+                        f"первый месяц всего за <b>{_first_month_stars()} ⭐</b>. "
                         "Все устройства уже настроены, просто продлите доступ.",
                         parse_mode="HTML",
                         reply_markup=_buy_kb(),
@@ -179,16 +202,20 @@ async def scheduler_loop(bot: Bot) -> None:
     # Первый запуск через 60 секунд после старта бота
     await asyncio.sleep(60)
 
+    # После рестарта догоняем последний час — как и раньше при окнах от now.
+    last_tick = datetime.utcnow() - timedelta(hours=1)
     while True:
-        logger.info("Scheduler tick at %s UTC", datetime.utcnow().strftime("%H:%M"))
+        now = datetime.utcnow()
+        logger.info("Scheduler tick at %s UTC", now.strftime("%H:%M"))
         try:
-            await check_expiring_subscriptions(bot)
+            await check_expiring_subscriptions(bot, last_tick, now)
         except Exception as e:
             logger.error("check_expiring_subscriptions error: %s", e)
 
         try:
-            await deactivate_expired_subscriptions(bot)
+            await deactivate_expired_subscriptions(bot, last_tick, now)
         except Exception as e:
             logger.error("deactivate_expired_subscriptions error: %s", e)
+        last_tick = now
 
         await asyncio.sleep(3600)  # следующий запуск через 1 час

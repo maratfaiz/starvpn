@@ -12,6 +12,7 @@
   POST /crypto/webhook (api.py) → выдаём подписку → уведомляем
 """
 
+import html
 import logging
 
 from aiogram import Bot, Router, F
@@ -20,8 +21,7 @@ from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update
 
 from bot.models.payment import Payment
 from bot.models.user import User
@@ -153,27 +153,28 @@ async def handle_crypto_webhook(
     Поддерживает обычные платежи и подарки (payload начинается с 'gift:').
     """
     from datetime import datetime
-    from bot.handlers.payment import _grant_subscription
+    from bot.handlers.payment import _credit_referral, _grant_subscription
 
     is_gift = invoice_payload.startswith("gift:")
 
     async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            select(Payment).where(
+        # Атомарно: повторная доставка вебхука не выдаст подписку второй раз.
+        claimed = await session.execute(
+            update(Payment)
+            .where(
                 Payment.invoice_id == invoice_id,
                 Payment.payment_method == "crypto",
                 Payment.status == "pending",
             )
+            .values(status="paid", asset=asset, paid_at=datetime.utcnow())
+            .returning(Payment.id)
         )
-        payment: Payment | None = result.scalar_one_or_none()
-
-        if not payment:
-            logger.warning("Crypto webhook: payment not found for invoice_id=%s", invoice_id)
+        payment_id = claimed.scalar_one_or_none()
+        await session.commit()
+        if payment_id is None:
+            logger.warning("Crypto webhook: no pending payment for invoice_id=%s", invoice_id)
             return
-
-        payment.status = "paid"
-        payment.asset = asset
-        payment.paid_at = datetime.utcnow()
+        payment = await session.get(Payment, payment_id)
         days = payment.days or 30
 
         if is_gift:
@@ -209,7 +210,7 @@ async def handle_crypto_webhook(
                 await bot.send_message(
                     recipient_id,
                     f"🎁 <b>Тебе подарили STAR VPN!</b>\n\n"
-                    f"От: <b>{sender_name}</b>\n"
+                    f"От: <b>{html.escape(sender_name or 'Аноним')}</b>\n"
                     f"📦 Тариф: <b>{plan_label}</b>\n\n"
                     f"VPN активирован 🚀 Перейди в <b>📱 Устройства</b> за ключом.",
                     parse_mode="HTML",
@@ -244,6 +245,7 @@ async def handle_crypto_webhook(
                 return
 
             await _grant_subscription(user, days, session)
+            await _credit_referral(user, session, bot)
 
             plan_label = {30: "1 месяц", 90: "3 месяца", 180: "6 месяцев"}.get(days, f"{days} дней")
             try:
