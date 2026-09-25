@@ -328,10 +328,46 @@ details.editor-card[open] > summary::after{content:' ▾'}
 .tg-bubble a{color:#6AB2F2}
 .tg-bubble code,.tg-bubble pre{font-family:'JetBrains Mono',monospace;font-size:12px;color:#E5A06E}
 .tg-bubble blockquote{border-left:3px solid #6AB2F2;padding-left:8px;margin:2px 0}
+.img-picker{display:flex;gap:12px;align-items:center;background:rgba(0,0,0,.3);border:1px dashed rgba(255,255,255,.14);border-radius:12px;padding:10px;margin-bottom:8px}
+.img-thumb{width:84px;height:56px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-thumb span{font-size:10.5px;color:#7E705B;text-align:center;padding:0 4px}
+.tg-photo{padding:0;overflow:hidden}
+.tg-photo img{display:block;width:100%;max-height:240px;object-fit:cover}
+.tg-photo > div{padding:9px 12px}
 .tg-kb{display:flex;flex-direction:column;gap:4px;margin-top:4px}
 .tg-kb div{background:rgba(40,56,74,.85);color:#FFF;text-align:center;border-radius:8px;padding:8px;font-size:13px;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
 .tg-reply{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-top:10px;background:#17212B;border-radius:10px;padding:6px}
 .tg-reply span{background:#2B5278;color:#fff;text-align:center;border-radius:6px;padding:8px 4px;font-size:12.5px;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
+
+/* ── Профиль и команда ───────────────────────────────────── */
+.prof-hero{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:linear-gradient(135deg,rgba(255,184,0,.1),rgba(255,184,0,.02));border:1px solid rgba(255,184,0,.22);border-radius:18px;padding:22px}
+.prof-avatar{width:64px;height:64px;border-radius:18px;background:rgba(255,184,0,.16);border:1px solid rgba(255,184,0,.4);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:#FFB800;flex-shrink:0}
+.prof-name{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#EBE0CC}
+.prof-sub{font-size:12.5px;color:#8A7A60;margin-top:2px}
+.prof-stats{display:flex;gap:22px}
+.prof-stat-val{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:#EBE0CC}
+.prof-stat-lbl{font-size:11px;color:#8A7A60}
+.prof-team{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.prof-team div{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:10px;text-align:center}
+.prof-team b{display:block;font-family:'Space Grotesk',sans-serif;font-size:18px;color:#EBE0CC}
+.prof-team span{font-size:11px;color:#8A7A60}
+.sess-row{display:flex;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.sess-row:last-child{border-bottom:none}
+.sess-dot{width:8px;height:8px;border-radius:50%;background:#5A5040;flex-shrink:0}
+.sess-dot.on{background:#4ADE80;box-shadow:0 0 0 3px rgba(74,222,128,.15)}
+.kbd-row{display:flex;align-items:center;gap:6px;font-size:13px;color:#8A7A60;margin-bottom:8px}
+.kbd-row span:last-child{margin-left:6px}
+.kbd{font-family:'JetBrains Mono',monospace;font-size:11px;color:#EBE0CC;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-bottom-width:2px;border-radius:6px;padding:2px 7px}
+.staff-table{width:100%;border-collapse:collapse;min-width:720px}
+.staff-table th{text-align:left;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6E6250;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.07)}
+.staff-table td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;vertical-align:middle}
+.staff-table tr:last-child td{border-bottom:none}
+.staff-table tr.off td{opacity:.5}
+.tbl-scroll{overflow-x:auto}
+.role-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.role-card.editing{border-color:rgba(255,184,0,.4)}
+.role-sections{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
 /* ── Settings ────────────────────────────────────────────── */
 .copy-field{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:6px 6px 6px 12px;font-size:12.5px;margin-bottom:8px}
@@ -559,6 +595,54 @@ async function api(method, path, body) {
 function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function fmtDate(iso) { if (!iso) return '—'; return new Date(iso).toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit',year:'2-digit'}); }
 function fmtDateTime(iso) { if (!iso) return '—'; return new Date(iso).toLocaleString('ru-RU', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+/* ── Картинки: загрузка в /web/media и выбор «файл или ссылка» ── */
+async function uploadImage(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  const r = await fetch('/web/media', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || 'Не удалось загрузить картинку');
+  return data;  // {id, ref: "media:12", url: "/media/12"}
+}
+function imageRefUrl(ref) {
+  if (!ref) return '';
+  return ref.startsWith('media:') ? '/media/' + ref.slice(6) : ref;
+}
+/* Виджет картинки. slot — строковый id «тип:ключ», по типу onImageChange находит обработчик. */
+function imagePickerHtml(slot, ref, hint) {
+  const url = imageRefUrl(ref);
+  return `
+    <div class="img-picker">
+      <div class="img-thumb">${url ? `<img src="${esc(url)}" alt="">` : '<span>Нет картинки</span>'}</div>
+      <div style="display:flex;flex-direction:column;gap:6px;min-width:0;flex:1">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <label class="ghost-btn" style="padding:6px 11px;font-size:12px">Загрузить<input type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden onchange="onImagePicked('${slot}', this)"></label>
+          <div class="ghost-btn" style="padding:6px 11px;font-size:12px" onclick="onImageUrl('${slot}')">Ссылка</div>
+          ${url ? `<div class="ghost-btn" style="padding:6px 11px;font-size:12px;color:#F87171" onclick="onImageChange('${slot}', '')">Убрать</div>` : ''}
+        </div>
+        <div style="font-size:11px;color:#7E705B">${hint || 'PNG, JPEG, GIF или WebP до 5 МБ'}</div>
+      </div>
+    </div>`;
+}
+async function onImagePicked(slot, input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  try {
+    const up = await uploadImage(file);
+    onImageChange(slot, up.ref);
+  } catch (e) { toast(e.message, true); }
+}
+function onImageUrl(slot) {
+  const url = prompt('Ссылка на картинку (https://…)', 'https://');
+  if (url && /^https?:\/\/\S+/.test(url.trim())) onImageChange(slot, url.trim());
+}
+const IMAGE_SLOTS = {};  // тип слота → function(slot, ref)
+function onImageChange(slot, ref) {
+  unsaved = true;
+  const handler = IMAGE_SLOTS[slot.split(':')[0]];
+  if (handler) handler(slot, ref);
+}
+
 function copyText(text) {
   const done = () => toast('Скопировано');
   if (navigator.clipboard && window.isSecureContext) {
@@ -597,15 +681,16 @@ const NAV_ICONS = {
   bot: 'M4 5h7v5H4zM13 14h7v5h-7zM7.5 10v4.5a2 2 0 002 2H13M4 14h5M17 5h3M17 10V5',
   settings: 'M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1M15 5v4M9 10v4M17 15v4',
   profile: 'M12 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5',
-  adbanner: 'M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z',
+  banner: 'M4 5h16v9H4zM8 18h8M12 14v4M7.5 9.5h9',
+  staff: 'M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3 2.7-5 6-5s6 2 6 5M16 5.5a3 3 0 010 5.5M21 20c0-2.4-1.5-4.2-3.8-4.8',
 };
 const NAV_GROUPS = [
   { title: 'Обзор', items: [{ id: 'dash', label: 'Дашборд' }] },
   { title: 'VPN', items: [{ id: 'users', label: 'Аккаунты', countKey: 'users' }, { id: 'devices', label: 'Устройства', countKey: 'devices' }, { id: 'servers', label: 'Серверы' }] },
   { title: 'Деньги', items: [{ id: 'payments', label: 'Платежи', countKey: 'payments' }, { id: 'referrals', label: 'Рефералы', countKey: 'referrals' }] },
   { title: 'Поддержка', items: [{ id: 'support', label: 'Обращения', countKey: 'tickets' }] },
-  { title: 'Контент', items: [{ id: 'bot', label: 'Бот' }, { id: 'wiki', label: 'Wiki', countKey: 'wiki' }, { id: 'adbanner', label: 'Реклама' }] },
-  { title: 'Система', items: [{ id: 'settings', label: 'Настройки' }] },
+  { title: 'Контент', items: [{ id: 'bot', label: 'Бот' }, { id: 'wiki', label: 'Wiki', countKey: 'wiki' }, { id: 'banner', label: 'Баннер' }] },
+  { title: 'Система', items: [{ id: 'settings', label: 'Настройки' }, { id: 'staff', label: 'Команда' }] },
   { title: 'Аккаунт', items: [{ id: 'profile', label: 'Профиль' }] },
 ];
 // 3 основных раздела внизу на мобильном + 4-я кнопка "Меню" со всеми остальными (bottom sheet)
@@ -622,13 +707,15 @@ const PAGE_META = {
   wiki: ['Wiki', 'Статьи базы знаний — пишите и редактируйте прямо здесь'],
   settings: ['Настройки', 'Тарифы, лимиты и провайдеры оплаты'],
   profile: ['Профиль', 'Ваш аккаунт и права доступа'],
-  adbanner: ['Реклама', 'Баннер на верхней полосе главной страницы'],
+  banner: ['Баннер', 'Полоса с объявлением над главной страницей сайта'],
+  staff: ['Команда', 'Сотрудники админки и их роли'],
 };
 let navCounts = {};
 
 function renderSidebar() {
   const el = document.getElementById('sbNav');
-  el.innerHTML = NAV_GROUPS.map(g => `
+  const groups = NAV_GROUPS.map(g => ({ ...g, items: g.items.filter(it => navAllowed(it.id)) })).filter(g => g.items.length);
+  el.innerHTML = groups.map(g => `
     <div class="sb-group">
       <div class="sb-group-title">${g.title}</div>
       ${g.items.map(it => `
@@ -641,7 +728,7 @@ function renderSidebar() {
     </div>
   `).join('');
 
-  const allItems = NAV_GROUPS.flatMap(g => g.items);
+  const allItems = groups.flatMap(g => g.items);
   const findItem = id => allItems.find(it => it.id === id);
 
   const bn = document.getElementById('bottomNav');
@@ -660,7 +747,7 @@ function renderSidebar() {
     </div>
   `;
 
-  document.getElementById('bottomSheetContent').innerHTML = NAV_GROUPS.map(g => `
+  document.getElementById('bottomSheetContent').innerHTML = groups.map(g => `
     <div class="sb-group">
       <div class="sb-group-title">${g.title}</div>
       ${g.items.map(it => `
@@ -684,7 +771,7 @@ function closeBottomSheet() {
 }
 
 /* ── Несохранённые правки ─────────────────────────────────
-   Любой ввод в редакторе (Wiki, Бот, Реклама) помечает страницу как
+   Любой ввод в редакторе (Wiki, Бот, Баннер) помечает страницу как
    изменённую; уход с неё спрашивает подтверждение. */
 let unsaved = false;
 function confirmLeave() {
@@ -710,8 +797,14 @@ function hotkeys(e) {
 }
 document.addEventListener('keydown', hotkeys);
 
+function navAllowed(id) {
+  if (id === 'dash' || id === 'profile') return true;
+  return !!(myProfile && myProfile.allowed_sections && myProfile.allowed_sections.includes(id));
+}
+
 function goto(s) {
   if (!confirmLeave()) return;
+  if (!navAllowed(s)) s = 'dash';
   section = s;
   filter = 'all'; query = ''; selectedRow = null; selectedTicket = null;
   document.getElementById('globalQuery').value = '';
@@ -720,7 +813,7 @@ function goto(s) {
   document.getElementById('tbTitle').textContent = title;
   document.getElementById('tbSub').textContent = sub;
   document.getElementById('content').innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
-  const fns = { dash: renderDashboard, users: () => renderTable('users'), devices: () => renderTable('devices'), servers: renderServers, payments: () => renderTable('payments'), referrals: () => renderTable('referrals'), support: renderSupport, wiki: renderWiki, bot: renderBot, settings: renderSettings, profile: renderProfile, adbanner: renderAdBanner };
+  const fns = { dash: renderDashboard, users: () => renderTable('users'), devices: () => renderTable('devices'), servers: renderServers, payments: () => renderTable('payments'), referrals: () => renderTable('referrals'), support: renderSupport, wiki: renderWiki, bot: renderBot, settings: renderSettings, profile: renderProfile, banner: renderAdBanner, staff: renderStaff };
   (fns[s] || (() => {}))();
 }
 
@@ -741,15 +834,20 @@ async function checkMarzban() {
 }
 
 async function loadCounts() {
-  try {
-    const [u, d, p, r, t, w] = await Promise.all([
-      api('GET', '/web/users?limit=1'), api('GET', '/web/devices?limit=1'),
-      api('GET', '/web/payments?limit=1'), api('GET', '/web/referrals'),
-      api('GET', '/web/tickets?status=open'), api('GET', '/web/wiki'),
-    ]);
-    navCounts = { users: u.total, devices: d.total, payments: p.total, referrals: r.referrers_count, tickets: t.tickets.length, wiki: w.articles.length };
-    renderSidebar();
-  } catch (e) { /* ignore */ }
+  // Только разделы, доступные роли сотрудника — остальные ответили бы 403.
+  const sources = {
+    users: ['/web/users?limit=1', d => d.total],
+    devices: ['/web/devices?limit=1', d => d.total],
+    payments: ['/web/payments?limit=1', d => d.total],
+    referrals: ['/web/referrals', d => d.referrers_count],
+    tickets: ['/web/tickets?status=open', d => d.tickets.length, 'support'],
+    wiki: ['/web/wiki', d => d.articles.length],
+  };
+  await Promise.all(Object.entries(sources).map(async ([key, [url, pick, sec]]) => {
+    if (!navAllowed(sec || key)) return;
+    try { navCounts[key] = pick(await api('GET', url)); } catch (e) { /* ignore */ }
+  }));
+  renderSidebar();
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -824,7 +922,11 @@ async function loadActivity() {
   const el = document.getElementById('activityFeed');
   if (!el) return;
   try {
-    const [pays, tickets] = await Promise.all([api('GET', '/web/payments?limit=5'), api('GET', '/web/tickets')]);
+    const empty = key => Promise.resolve({ [key]: [] });
+    const [pays, tickets] = await Promise.all([
+      navAllowed('payments') ? api('GET', '/web/payments?limit=5') : empty('payments'),
+      navAllowed('support') ? api('GET', '/web/tickets') : empty('tickets'),
+    ]);
     const events = [
       ...pays.payments.map(p => ({ text: `Платёж ${p.amount} ₽ от ${p.telegram_id}`, time: p.paid_at, dot: '#4ADE80' })),
       ...tickets.tickets.slice(0, 5).map(t => ({ text: `Тикет «${t.topic_label}» от ${esc(t.user_label)}`, time: t.created_at, dot: '#FFB800' })),
@@ -1786,6 +1888,8 @@ function botRenderPanel() {
 function botRenderSystemPanel(p, node) {
   const keyed = node.buttons.filter(b => b.text);
   const texts = node.texts;
+  botImages = {};
+  texts.forEach(tx => { if (tx.image_allowed) botImages[tx.key] = tx.image || ''; });
   if (!botFocusKey && texts.length) botFocusKey = texts[0].key;
   p.innerHTML = `
     <div class="editor-card">
@@ -1819,10 +1923,27 @@ function botTextField(tx) {
         ${tx.placeholders.map(ph => `<span class="ph-chip" title="Подставится автоматически" onmousedown="event.preventDefault()" onclick="botInsert('${tx.key}','{${ph}}')">{${ph}}</span>`).join('')}
       </div>` : ''}
       ${tx.hint && !tx.key.startsWith('instr.') ? `<div class="bfield-hint" style="margin:-2px 0 6px">${esc(tx.hint)}</div>` : ''}
+      ${tx.image_allowed ? `<div id="bimgwrap-${tx.key}">${imagePickerHtml('bimg:' + tx.key, botImages[tx.key], 'Картинка над сообщением — загрузите или вставьте ссылку')}</div>` : ''}
       <textarea class="ipt tfield-input" id="tf-${tx.key}" rows="${isMsg ? Math.min(12, Math.max(3, tx.value.split('\n').length + 1)) : 1}" data-default="${esc(tx.default)}"
         onfocus="botFocusKey='${tx.key}';botUpdatePreview()" oninput="botFieldChanged('${tx.key}')">${esc(tx.value)}</textarea>
     </div>`;
 }
+
+let botImages = {};  // ключ текста → "media:12" | "https://…" | "" (текущее в панели)
+IMAGE_SLOTS.bimg = (slot, ref) => {
+  const key = slot.slice(5);
+  botImages[key] = ref;
+  const wrap = document.getElementById('bimgwrap-' + key);
+  if (wrap) wrap.innerHTML = imagePickerHtml(slot, ref, 'Картинка над сообщением — загрузите или вставьте ссылку');
+  botFocusKey = key;
+  botUpdatePreview();
+};
+IMAGE_SLOTS.cbimg = (slot, ref) => {
+  botSyncDraft();
+  botDraft.image = ref;
+  document.getElementById('cbImgWrap').innerHTML = imagePickerHtml('cbimg', ref, 'Картинка над текстом блока');
+  botUpdatePreview();
+};
 
 function botButtonField(tx) {
   return `
@@ -1906,9 +2027,13 @@ async function botSaveSystem() {
     const key = el.id.slice(3);
     if (!el.checked !== botFindText(key).hidden) hidden[key] = !el.checked;
   });
-  if (!Object.keys(values).length && !Object.keys(hidden).length) { toast('Изменений нет'); return; }
+  const images = {};
+  Object.entries(botImages).forEach(([key, ref]) => {
+    if ((ref || '') !== (botFindText(key).image || '')) images[key] = ref || '';
+  });
+  if (!Object.keys(values).length && !Object.keys(hidden).length && !Object.keys(images).length) { toast('Изменений нет'); return; }
   try {
-    await api('PUT', '/web/bot/texts', { values, hidden });
+    await api('PUT', '/web/bot/texts', { values, hidden, images });
     unsaved = false;
     toast('Сохранено: бот уже говорит по-новому');
     await renderBot();
@@ -1971,7 +2096,7 @@ function botUpdatePreview() {
   if (!box) return;
   if (botSel === 'new' || (botSel && botSel.startsWith('c'))) {
     const buttons = botReadDraftButtons().map(b => (b.label || '…') + (b.type === 'url' ? ' ↗' : ''));
-    box.innerHTML = botTgBubble(document.getElementById('cbText').value, buttons);
+    box.innerHTML = botTgBubble(document.getElementById('cbText').value, buttons, botDraft && botDraft.image);
     return;
   }
   const node = botNodeById(botSel);
@@ -1983,7 +2108,7 @@ function botUpdatePreview() {
   }
   let buttons = BOT_PREVIEW_BUTTONS[botFocusKey] || [];
   if (botFocusKey && botFocusKey.startsWith('instr.') && botFocusKey !== 'instr.menu') buttons = ['btn.instr_back'];
-  let html = botTgBubble(text, buttons.map(botLabel));
+  let html = botTgBubble(text, buttons.map(botLabel), botImages[botFocusKey]);
   if (botSel === 'main_menu' || botFocusKey === 'start.welcome_new' || botFocusKey === 'start.welcome_back') {
     const menu = botSchema.screens.find(s => s.id === 'main_menu');
     html += `<div class="tg-reply">${menu.buttons.filter(b => b.text).map(b => {
@@ -1996,8 +2121,14 @@ function botUpdatePreview() {
   box.innerHTML = html;
 }
 
-function botTgBubble(text, buttons) {
-  return `<div class="tg-chat"><div class="tg-bubble">${text.trim() ? botTgHtml(botFill(text)) : '<span style="color:#7E705B">Пустое сообщение</span>'}</div>
+function botTgBubble(text, buttons, image) {
+  const img = imageRefUrl(image || '');
+  const long = text.length > 1024;
+  const body = text.trim() ? botTgHtml(botFill(text)) : '<span style="color:#7E705B">Пустое сообщение</span>';
+  const bubble = img && !long
+    ? `<div class="tg-bubble tg-photo"><img src="${esc(img)}" alt=""><div>${body}</div></div>`
+    : `${img ? `<div class="tg-bubble tg-photo" style="margin-bottom:4px"><img src="${esc(img)}" alt=""></div>` : ''}<div class="tg-bubble">${body}</div>`;
+  return `<div class="tg-chat">${bubble}${img && long ? '<div style="font-size:11px;color:#7E705B;margin-top:4px">Текст длиннее 1024 символов — картинка придёт отдельным сообщением сверху.</div>' : ''}
     ${buttons.length ? `<div class="tg-kb">${buttons.map(b => `<div>${esc(b)}</div>`).join('')}</div>` : ''}</div>`;
 }
 
@@ -2005,7 +2136,7 @@ function botTgBubble(text, buttons) {
 function botNewBlock() {
   if (!confirmLeave()) return;
   botSel = 'new';
-  botDraft = { title: '', text: '', buttons: [], show_in_menu: false, menu_label: '', command: '' };
+  botDraft = { title: '', text: '', image: '', buttons: [], show_in_menu: false, menu_label: '', command: '' };
   document.querySelectorAll('.fnode').forEach(el => el.classList.remove('sel'));
   botDrawEdges();
   botRenderPanel();
@@ -2025,6 +2156,8 @@ function botRenderCustomPanel(p) {
       </div>
       <label class="editor-label">Название (видно только в админке)</label>
       <input class="ipt" id="cbTitle" value="${esc(b.title)}" placeholder="Например: Акции" style="width:100%;margin-bottom:14px">
+      <label class="editor-label">Картинка сверху</label>
+      <div id="cbImgWrap" style="margin-bottom:14px">${imagePickerHtml('cbimg', b.image || '', 'Картинка над текстом блока')}</div>
       <label class="editor-label">Текст сообщения</label>
       <div class="tfield-tools">
         <button type="button" class="tb-btn" title="Жирный" onmousedown="event.preventDefault()" onclick="botWrapCb('b')"><b>B</b></button>
@@ -2270,30 +2403,261 @@ async function renderProfile() {
   try {
     const me = await api('GET', '/web/me');
     myProfile = me;
-    const rankLabel = me.rank === 'admin' ? 'Admin' : 'Работник';
+    const name = me.display_name || me.username;
+    const labels = me.section_labels || {};
+    const sections = me.rank === 'admin' ? Object.keys(labels) : me.sections;
     c.innerHTML = `
-      <div class="profile-grid" style="display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:16px;align-items:start">
-        <div class="editor-card">
-          <div class="dcard-title" style="margin-bottom:18px">Ваш аккаунт</div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="color:#8A7A60;font-size:13px">Логин</span><span class="mono" style="color:#EBE0CC">${esc(me.username)}</span></div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="color:#8A7A60;font-size:13px">Ранг</span><span class="chip ${me.rank === 'admin' ? 'green' : 'grey'}">${rankLabel}</span></div>
-          <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="color:#8A7A60;font-size:13px">Пригласил</span><span class="mono" style="color:#EBE0CC">${me.invited_by ? esc(me.invited_by) : '— (мастер-ключ)'}</span></div>
-          <div style="display:flex;justify-content:space-between"><span style="color:#8A7A60;font-size:13px">В системе с</span><span class="mono" style="color:#EBE0CC">${fmtDate(me.created_at)}</span></div>
+      <div class="prof-hero">
+        <div class="prof-avatar">${esc(name.slice(0, 2).toUpperCase())}</div>
+        <div style="min-width:0;flex:1">
+          <div class="prof-name">${esc(name)}</div>
+          <div class="prof-sub"><span class="mono">@${esc(me.username)}</span> · в команде с ${fmtDate(me.created_at)}${me.invited_by ? ` · пригласил ${esc(me.invited_by)}` : ''}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">
+            <span class="chip ${me.rank === 'admin' ? 'gold' : 'grey'}">${me.rank === 'admin' ? 'Главный администратор' : 'Сотрудник'}</span>
+            ${me.rank !== 'admin' ? `<span class="chip ${me.role_name ? 'green' : 'red'}">${me.role_name ? 'Роль: ' + esc(me.role_name) : 'Роль не выдана'}</span>` : ''}
+          </div>
         </div>
-        <div class="editor-card">
-          <div class="dcard-title" style="margin-bottom:14px">Приглашения</div>
+        <div class="prof-stats">
+          <div><div class="prof-stat-val">${me.sessions.length}</div><div class="prof-stat-lbl">активных сеансов</div></div>
+          <div><div class="prof-stat-val">${me.last_login_at ? fmtDate(me.last_login_at) : '—'}</div><div class="prof-stat-lbl">последний вход</div></div>
+        </div>
+      </div>
+
+      <div class="profile-grid" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start;margin-top:12px">
+        <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div class="editor-card">
+            <div class="dcard-title" style="margin-bottom:14px">Как вас показывать</div>
+            <label class="editor-label">Имя в админке</label>
+            <div style="display:flex;gap:8px">
+              <input class="ipt" id="pfName" value="${esc(me.display_name)}" maxlength="64" placeholder="${esc(me.username)}" style="flex:1;min-width:0">
+              <div class="primary-btn" onclick="saveProfileName()">Сохранить</div>
+            </div>
+            <div style="font-size:11.5px;color:#7E705B;margin-top:6px">Видно коллегам в разделе «Команда». Логин для входа не меняется.</div>
+          </div>
+          <div class="editor-card">
+            <div class="dcard-title" style="margin-bottom:6px">Доступ</div>
+            <div style="font-size:12.5px;color:#8A7A60;margin-bottom:12px">${me.rank === 'admin' ? 'У главного администратора открыты все разделы и управление командой.' : me.role_name ? 'Разделы, которые открывает ваша роль. Главная и профиль доступны всегда.' : 'Администратор ещё не выдал вам роль — пока доступны только главная и профиль.'}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span class="chip grey">Дашборд</span><span class="chip grey">Профиль</span>
+              ${sections.map(s => `<span class="chip gold">${esc(labels[s] || s)}</span>`).join('')}
+              ${me.rank === 'admin' ? '<span class="chip gold">Команда</span>' : ''}
+            </div>
+          </div>
           ${me.rank === 'admin' ? `
-            <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">Дайте этот ключ новому сотруднику — при первом входе (вкладка «Первый вход») он создаст свой логин и пароль рангом «Работник» (без права приглашать).</div>
+          <div class="editor-card">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div class="dcard-title" style="flex:1">Приглашения</div>
+              <div class="ghost-btn" onclick="goto('staff')">Команда →</div>
+            </div>
+            <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">Дайте ключ новому сотруднику: на экране входа он откроет «Первый вход» и создаст логин и пароль. Потом выдайте ему роль в разделе «Команда».</div>
             ${me.invite_key ? copyField(me.invite_key, '#FFB800') : '<div class="mono" style="color:#8A7A60">—</div>'}
-          ` : `
-            <div style="font-size:13px;color:#8A7A60">Ранг «Работник» не может приглашать новых сотрудников — эта возможность только у ранга Admin.</div>
-          `}
+            ${me.team ? `<div class="prof-team">
+              <div><b>${me.team.total}</b><span>в команде</span></div>
+              <div><b>${me.team.active}</b><span>активны</span></div>
+              <div><b style="color:${me.team.without_role ? '#F87171' : '#EBE0CC'}">${me.team.without_role}</b><span>без роли</span></div>
+            </div>` : ''}
+          </div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div class="editor-card">
+            <div class="dcard-title" style="margin-bottom:14px">Сменить пароль</div>
+            <input class="ipt" type="password" id="pfOld" placeholder="Текущий пароль" autocomplete="current-password" style="width:100%;margin-bottom:8px">
+            <input class="ipt" type="password" id="pfNew" placeholder="Новый пароль (от 8 символов)" autocomplete="new-password" style="width:100%;margin-bottom:8px">
+            <input class="ipt" type="password" id="pfNew2" placeholder="Повторите новый пароль" autocomplete="new-password" style="width:100%;margin-bottom:12px">
+            <div class="primary-btn" style="display:inline-block" onclick="changeMyPassword()">Сменить пароль</div>
+            <div style="font-size:11.5px;color:#7E705B;margin-top:8px">После смены все остальные сеансы завершатся.</div>
+          </div>
+          <div class="editor-card">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+              <div class="dcard-title" style="flex:1">Активные сеансы</div>
+              ${me.sessions.length > 1 ? '<div class="act-btn danger" onclick="logoutOtherSessions()">Завершить другие</div>' : ''}
+            </div>
+            ${me.sessions.map(s => `
+              <div class="sess-row">
+                <span class="sess-dot ${s.current ? 'on' : ''}"></span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;color:#EBE0CC">${s.current ? 'Этот браузер' : 'Другое устройство'}</div>
+                  <div class="mono" style="font-size:11px;color:#7E705B">вход ${fmtDateTime(s.created_at)} · до ${fmtDate(s.expires_at)}</div>
+                </div>
+              </div>`).join('') || '<div style="font-size:13px;color:#7E705B">Нет сеансов</div>'}
+          </div>
+          <div class="editor-card">
+            <div class="dcard-title" style="margin-bottom:12px">Горячие клавиши</div>
+            <div class="kbd-row"><span class="kbd">/</span><span>Поиск</span></div>
+            <div class="kbd-row"><span class="kbd">Ctrl</span>+<span class="kbd">S</span><span>Сохранить в редакторе</span></div>
+            <div class="kbd-row"><span class="kbd">Esc</span><span>Закрыть карточку пользователя</span></div>
+          </div>
         </div>
       </div>
     `;
   } catch (e) {
     c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
   }
+}
+
+async function saveProfileName() {
+  try {
+    await api('PUT', '/web/me', { display_name: document.getElementById('pfName').value });
+    toast('Имя сохранено');
+    await loadMe();
+    renderProfile();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function changeMyPassword() {
+  const oldP = document.getElementById('pfOld').value;
+  const n1 = document.getElementById('pfNew').value, n2 = document.getElementById('pfNew2').value;
+  if (n1 !== n2) { toast('Новые пароли не совпадают', true); return; }
+  try {
+    const r = await api('POST', '/web/me/password', { old: oldP, new: n1 });
+    toast(r.ended_sessions ? `Пароль изменён, завершено сеансов: ${r.ended_sessions}` : 'Пароль изменён');
+    renderProfile();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function logoutOtherSessions() {
+  if (!confirm('Завершить все сеансы, кроме этого браузера?')) return;
+  try {
+    const r = await api('POST', '/web/me/sessions/logout-others');
+    toast(`Завершено сеансов: ${r.ended_sessions}`);
+    renderProfile();
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   КОМАНДА — сотрудники и роли (только главный администратор)
+═══════════════════════════════════════════════════════════ */
+let staffData = null;
+let roleEditing = null;  // null | 'new' | id роли
+
+async function renderStaff() {
+  const c = document.getElementById('content');
+  try {
+    staffData = await api('GET', '/web/staff');
+  } catch (e) {
+    c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
+    return;
+  }
+  const { staff, roles, sections } = staffData;
+  const roleOptions = (sel) => `<option value="">— без роли —</option>` + roles.map(r => `<option value="${r.id}" ${sel === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('');
+  c.innerHTML = `
+    <div class="filters">
+      <span style="font-size:13px;color:#8A7A60">Сотрудник видит только разделы своей роли; главная и профиль доступны всем. Новому сотруднику дайте ключ-приглашение из «Профиля», а после его первого входа выдайте роль здесь.</span>
+    </div>
+    <div class="editor-card" style="padding:0;overflow:hidden;margin-bottom:12px">
+      <div class="tbl-scroll"><table class="staff-table">
+        <thead><tr><th>Сотрудник</th><th>Роль</th><th>Последний вход</th><th>Сеансы</th><th>Доступ</th><th></th></tr></thead>
+        <tbody>
+        ${staff.map(a => `
+          <tr class="${a.is_active ? '' : 'off'}">
+            <td>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span class="sb-avatar">${esc((a.display_name || a.username).slice(0, 2).toUpperCase())}</span>
+                <div style="min-width:0">
+                  <div style="font-weight:600;color:#EBE0CC">${esc(a.display_name || a.username)}</div>
+                  <div class="mono" style="font-size:11px;color:#7E705B">@${esc(a.username)}</div>
+                </div>
+              </div>
+            </td>
+            <td>${a.rank === 'admin'
+              ? '<span class="chip gold">Главный администратор</span>'
+              : `<select class="ipt" style="padding:7px 10px" onchange="staffSetRole(${a.id}, this.value)">${roleOptions(a.role_id)}</select>`}</td>
+            <td class="mono" style="font-size:12px;color:#8A7A60">${a.last_login_at ? fmtDateTime(a.last_login_at) : '—'}</td>
+            <td class="mono" style="font-size:12px;color:#8A7A60">${a.sessions}</td>
+            <td>${a.rank === 'admin' ? '' : `
+              <div class="toggle-track" style="cursor:pointer;background:${a.is_active ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'}" title="${a.is_active ? 'Отключить доступ' : 'Включить доступ'}" onclick="staffToggle(${a.id}, ${!a.is_active})">
+                <div class="toggle-knob" style="background:${a.is_active ? '#FFB800' : '#5A5040'};margin-left:${a.is_active ? 'auto' : '0'}"></div>
+              </div>`}</td>
+            <td>${a.rank === 'admin' ? '' : `<div class="act-btn danger" onclick="staffDelete(${a.id}, '${esc(a.username)}')">Удалить</div>`}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
+      <div class="dcard-title" style="flex:1">Роли</div>
+      <div class="primary-btn" onclick="roleEdit('new')">+ Новая роль</div>
+    </div>
+    <div class="role-grid">
+      ${roleEditing === 'new' ? roleEditorHtml(null, sections) : ''}
+      ${roles.map(r => roleEditing === r.id ? roleEditorHtml(r, sections) : `
+        <div class="editor-card role-card">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <div class="dcard-title" style="flex:1">${esc(r.name)}</div>
+            <span class="chip grey">${r.members} чел.</span>
+          </div>
+          ${r.description ? `<div style="font-size:12.5px;color:#8A7A60;margin-bottom:10px">${esc(r.description)}</div>` : ''}
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px">
+            ${r.sections.length ? r.sections.map(s => `<span class="chip gold">${esc(sections[s] || s)}</span>`).join('') : '<span style="font-size:12px;color:#7E705B">Только главная и профиль</span>'}
+          </div>
+          <div style="display:flex;gap:8px">
+            <div class="act-btn gold" onclick="roleEdit(${r.id})">Изменить</div>
+            <div class="act-btn danger" onclick="roleDelete(${r.id}, ${r.members})">Удалить</div>
+          </div>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+function roleEditorHtml(role, sections) {
+  const sel = new Set(role ? role.sections : []);
+  return `
+    <div class="editor-card role-card editing">
+      <label class="editor-label">Название</label>
+      <input class="ipt" id="roleName" value="${esc(role ? role.name : '')}" maxlength="64" placeholder="Например: Писатель блога" style="width:100%;margin-bottom:10px">
+      <label class="editor-label">Описание</label>
+      <input class="ipt" id="roleDesc" value="${esc(role ? role.description : '')}" maxlength="200" placeholder="Коротко, чем занимается" style="width:100%;margin-bottom:12px">
+      <label class="editor-label">Разделы</label>
+      <div class="role-sections">
+        ${Object.entries(sections).map(([k, label]) => `
+          <label class="cb-check"><input type="checkbox" value="${k}" ${sel.has(k) ? 'checked' : ''}> ${esc(label)}</label>`).join('')}
+      </div>
+      <div style="font-size:11.5px;color:#7E705B;margin:8px 0 12px">Главная и профиль доступны любой роли. «Аккаунты» открывают выдачу дней, бан и рассылку.</div>
+      <div style="display:flex;gap:8px">
+        <div class="primary-btn" onclick="roleSave(${role ? role.id : 'null'})">${role ? 'Сохранить' : 'Создать роль'}</div>
+        <div class="ghost-btn" onclick="roleEditing=null;renderStaff()">Отмена</div>
+      </div>
+    </div>`;
+}
+
+function roleEdit(id) { roleEditing = id; renderStaff(); }
+
+async function roleSave(id) {
+  const body = {
+    name: document.getElementById('roleName').value,
+    description: document.getElementById('roleDesc').value,
+    sections: [...document.querySelectorAll('.role-sections input:checked')].map(i => i.value),
+  };
+  try {
+    if (id) await api('PUT', `/web/staff/roles/${id}`, body);
+    else await api('POST', '/web/staff/roles', body);
+    roleEditing = null;
+    toast('Роль сохранена');
+    renderStaff();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function roleDelete(id, members) {
+  if (!confirm(members ? `Роль у ${members} чел. Они останутся без роли (только главная и профиль). Удалить?` : 'Удалить роль?')) return;
+  try { await api('DELETE', `/web/staff/roles/${id}`); toast('Роль удалена'); renderStaff(); }
+  catch (e) { toast(e.message, true); }
+}
+
+async function staffSetRole(id, roleId) {
+  try { await api('PUT', `/web/staff/${id}`, { role_id: roleId ? Number(roleId) : null }); toast('Роль выдана'); renderStaff(); }
+  catch (e) { toast(e.message, true); renderStaff(); }
+}
+
+async function staffToggle(id, active) {
+  if (!active && !confirm('Отключить доступ? Сотрудника сразу выкинет из админки, войти он не сможет, пока вы не включите доступ обратно.')) return;
+  try { await api('PUT', `/web/staff/${id}`, { is_active: active }); toast(active ? 'Доступ включён' : 'Доступ отключён'); renderStaff(); }
+  catch (e) { toast(e.message, true); }
+}
+
+async function staffDelete(id, username) {
+  if (!confirm(`Удалить сотрудника @${username}? Восстановить аккаунт будет нельзя — только пригласить заново.`)) return;
+  try { await api('DELETE', `/web/staff/${id}`); toast('Сотрудник удалён'); renderStaff(); }
+  catch (e) { toast(e.message, true); }
 }
 
 /* Тот же набор ключей — в landing/index.html (BANNER_ICONS), см. AD_BANNER_ICONS в bot/api.py */
@@ -2402,18 +2766,19 @@ async function loadMe() {
   try {
     myProfile = await api('GET', '/web/me');
     document.getElementById('sbAvatar').textContent = myProfile.username.slice(0, 2).toUpperCase();
-    document.getElementById('sbFootName').textContent = myProfile.username;
-    document.getElementById('sbFootRole').textContent = myProfile.rank === 'admin' ? 'admin' : 'работник';
+    document.getElementById('sbAvatar').textContent = (myProfile.display_name || myProfile.username).slice(0, 2).toUpperCase();
+    document.getElementById('sbFootName').textContent = myProfile.display_name || myProfile.username;
+    document.getElementById('sbFootRole').textContent = myProfile.rank === 'admin' ? 'главный админ' : (myProfile.role_name || 'без роли');
   } catch (e) { /* ignore — сессия могла истечь, api() сам разлогинит */ }
 }
 
-function showApp() {
+async function showApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'grid';
+  await loadMe();  // права сотрудника нужны до отрисовки меню
   renderSidebar();
   checkMarzban();
   loadCounts();
-  loadMe();
   goto('dash');
 }
 </script>

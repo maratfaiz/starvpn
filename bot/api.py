@@ -21,7 +21,7 @@ from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -2330,16 +2330,21 @@ async def card_fail():
 #  WEB ADMIN DASHBOARD — отдельная авторизация (не Telegram initData)
 # ═══════════════════════════════════════════════════════════════════
 
-def _web_auth(authorization: str | None):
+def _web_auth(authorization: str | None, *sections: str):
     """Проверяет bearer-сессию админ-панели. Возвращает AdminIdentity —
     вызывающему коду не обязательно использовать возврат (большинство
     эндпоинтов просто гейтят доступ), но эндпоинты, которым нужен ранг
     вызывающего (например, приглашение), могут его забрать."""
     from bot.utils import admin_auth
     try:
-        return admin_auth.check_session(authorization)
+        identity = admin_auth.check_session(authorization)
     except PermissionError:
         raise HTTPException(status_code=401, detail="Unauthorized")
+    # sections — разделы, любой из которых открывает эндпоинт (роли сотрудников,
+    # см. SECTIONS в bot/utils/admin_auth.py). Без sections — любой вошедший.
+    if sections and not admin_auth.can(identity, *sections):
+        raise HTTPException(status_code=403, detail="Нет доступа к этому разделу")
+    return identity
 
 
 @app.post("/web/register")
@@ -2393,7 +2398,10 @@ async def web_login(request: Request):
         raise HTTPException(429, "Слишком много попыток входа. Попробуйте через 15 минут.")
 
     async with AsyncSessionLocal() as session:
-        result = await admin_auth.login_admin(username, password, session)
+        try:
+            result = await admin_auth.login_admin(username, password, session)
+        except ValueError:
+            raise HTTPException(403, "Аккаунт отключён администратором")
     if not result:
         rate_limit.register_fail(limit_key)
         raise HTTPException(401, "Неверный логин или пароль")
@@ -2410,36 +2418,297 @@ async def web_logout(authorization: str | None = Header(default=None)):
     return {"ok": True}
 
 
+def _staff_json(a, roles: dict, sessions_count: int | None = None) -> dict:
+    from bot.utils import admin_auth
+    role = roles.get(a.role_id)
+    data = {
+        "id": a.id, "username": a.username, "display_name": a.display_name or "",
+        "rank": a.rank, "is_active": bool(a.is_active),
+        "role_id": a.role_id, "role_name": role.name if role else None,
+        "sections": sorted(admin_auth.SECTIONS) if a.rank == "admin"
+        else (admin_auth.parse_sections(role.sections) if role else []),
+        "created_at": a.created_at.isoformat() if a.created_at else None,
+        "last_login_at": a.last_login_at.isoformat() if a.last_login_at else None,
+    }
+    if sessions_count is not None:
+        data["sessions"] = sessions_count
+    return data
+
+
 @app.get("/web/me")
 async def web_me(authorization: str | None = Header(default=None)):
     from bot.models.admin_account import AdminAccount as _AdminAccount
+    from bot.models.admin_role import AdminRole
+    from bot.utils import admin_auth
     identity = _web_auth(authorization)
 
     async with AsyncSessionLocal() as session:
-        admin = (await session.execute(
-            select(_AdminAccount).where(_AdminAccount.id == identity.admin_id)
-        )).scalar_one_or_none()
+        admin = await session.get(_AdminAccount, identity.admin_id)
         if not admin:
             raise HTTPException(404, "Not found")
-        inviter_username = None
-        if admin.invited_by_id:
-            inviter = (await session.execute(
-                select(_AdminAccount).where(_AdminAccount.id == admin.invited_by_id)
-            )).scalar_one_or_none()
-            inviter_username = inviter.username if inviter else None
+        inviter = await session.get(_AdminAccount, admin.invited_by_id) if admin.invited_by_id else None
+        roles = {r.id: r for r in (await session.execute(select(AdminRole))).scalars().all()}
+        sessions = await admin_auth.list_sessions(admin.id, session)
+        team = None
+        if admin.rank == "admin":
+            staff = (await session.execute(select(_AdminAccount))).scalars().all()
+            team = {
+                "total": len(staff),
+                "active": sum(1 for a in staff if a.is_active),
+                "without_role": sum(1 for a in staff if a.rank == "worker" and not a.role_id),
+            }
 
+    current = admin_auth.token_hash_of(authorization)
     return {
-        "username": admin.username,
-        "rank": admin.rank,
+        **_staff_json(admin, roles),
         "invite_key": admin.invite_key,
-        "invited_by": inviter_username,
-        "created_at": admin.created_at.isoformat(),
+        "invited_by": inviter.username if inviter else None,
+        "allowed_sections": sorted(admin_auth.allowed_sections(identity)),
+        "section_labels": admin_auth.SECTIONS,
+        "sessions": [
+            {
+                "id": s.id, "current": s.token_hash == current,
+                "created_at": s.created_at.isoformat() if s.created_at else None,
+                "expires_at": s.expires_at.isoformat(),
+            }
+            for s in sessions
+        ],
+        "team": team,
     }
+
+
+@app.put("/web/me")
+async def web_me_update(request: Request, authorization: str | None = Header(default=None)):
+    from bot.models.admin_account import AdminAccount as _AdminAccount
+    identity = _web_auth(authorization)
+    body = await request.json()
+    async with AsyncSessionLocal() as session:
+        admin = await session.get(_AdminAccount, identity.admin_id)
+        admin.display_name = (body.get("display_name") or "").strip()[:64]
+        await session.commit()
+    return {"ok": True}
+
+
+@app.post("/web/me/password")
+async def web_me_password(request: Request, authorization: str | None = Header(default=None)):
+    from bot.models.admin_account import AdminAccount as _AdminAccount
+    from bot.utils import admin_auth
+    identity = _web_auth(authorization)
+    body = await request.json()
+    async with AsyncSessionLocal() as session:
+        admin = await session.get(_AdminAccount, identity.admin_id)
+        try:
+            await admin_auth.change_password(admin, body.get("old") or "", body.get("new") or "", session)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+        # Смена пароля завершает все остальные сессии — на случай утечки.
+        ended = await admin_auth.revoke_sessions(admin.id, session, keep_hash=admin_auth.token_hash_of(authorization))
+    return {"ok": True, "ended_sessions": ended}
+
+
+@app.post("/web/me/sessions/logout-others")
+async def web_me_logout_others(authorization: str | None = Header(default=None)):
+    from bot.utils import admin_auth
+    identity = _web_auth(authorization)
+    async with AsyncSessionLocal() as session:
+        ended = await admin_auth.revoke_sessions(
+            identity.admin_id, session, keep_hash=admin_auth.token_hash_of(authorization),
+        )
+    return {"ok": True, "ended_sessions": ended}
+
+
+# ─── Команда: сотрудники и роли (только ранг admin) ──────────────────────────
+
+@app.get("/web/staff")
+async def web_staff_list(authorization: str | None = Header(default=None)):
+    from bot.models.admin_account import AdminAccount as _AdminAccount
+    from bot.models.admin_role import AdminRole
+    from bot.models.admin_session import AdminSession
+    from bot.utils import admin_auth
+    _web_auth(authorization, "staff")
+    async with AsyncSessionLocal() as session:
+        roles = {r.id: r for r in (await session.execute(select(AdminRole).order_by(AdminRole.id))).scalars().all()}
+        staff = (await session.execute(select(_AdminAccount).order_by(_AdminAccount.id))).scalars().all()
+        counts = dict((await session.execute(
+            select(AdminSession.admin_id, func.count(AdminSession.id))
+            .where(AdminSession.expires_at > datetime.utcnow())
+            .group_by(AdminSession.admin_id)
+        )).all())
+    return {
+        "staff": [_staff_json(a, roles, counts.get(a.id, 0)) for a in staff],
+        "roles": [
+            {
+                "id": r.id, "name": r.name, "description": r.description,
+                "sections": admin_auth.parse_sections(r.sections),
+                "members": sum(1 for a in staff if a.role_id == r.id),
+            }
+            for r in roles.values()
+        ],
+        "sections": admin_auth.SECTIONS,
+    }
+
+
+@app.put("/web/staff/{admin_id}")
+async def web_staff_update(admin_id: int, request: Request, authorization: str | None = Header(default=None)):
+    """Тело: {"role_id": id | null, "is_active": bool} — любые из полей."""
+    from bot.models.admin_account import AdminAccount as _AdminAccount
+    from bot.models.admin_role import AdminRole
+    from bot.utils import admin_auth
+    identity = _web_auth(authorization, "staff")
+    body = await request.json()
+    async with AsyncSessionLocal() as session:
+        target = await session.get(_AdminAccount, admin_id)
+        if not target:
+            raise HTTPException(404, "Сотрудник не найден")
+        if target.id == identity.admin_id:
+            raise HTTPException(400, "Свой аккаунт так изменить нельзя")
+        if target.rank == "admin":
+            raise HTTPException(400, "Главному администратору роль не нужна — у него доступ ко всему")
+        if "role_id" in body:
+            role_id = body.get("role_id")
+            if role_id is not None and not await session.get(AdminRole, int(role_id)):
+                raise HTTPException(400, "Роль не найдена")
+            target.role_id = int(role_id) if role_id is not None else None
+        if "is_active" in body:
+            target.is_active = bool(body.get("is_active"))
+        await session.commit()
+        if not target.is_active:
+            await admin_auth.revoke_sessions(target.id, session)
+        await admin_auth.refresh_access_cache(session)
+    return {"ok": True}
+
+
+@app.delete("/web/staff/{admin_id}")
+async def web_staff_delete(admin_id: int, authorization: str | None = Header(default=None)):
+    from bot.models.admin_account import AdminAccount as _AdminAccount
+    from bot.utils import admin_auth
+    identity = _web_auth(authorization, "staff")
+    async with AsyncSessionLocal() as session:
+        target = await session.get(_AdminAccount, admin_id)
+        if not target:
+            raise HTTPException(404, "Сотрудник не найден")
+        if target.id == identity.admin_id or target.rank == "admin":
+            raise HTTPException(400, "Администратора удалить нельзя")
+        await admin_auth.revoke_sessions(target.id, session)
+        # Кого он пригласил — остаются, просто без «пригласившего».
+        await session.execute(
+            update(_AdminAccount).where(_AdminAccount.invited_by_id == target.id).values(invited_by_id=None)
+        )
+        await session.delete(target)
+        await session.commit()
+        await admin_auth.refresh_access_cache(session)
+    return {"ok": True}
+
+
+def _clean_role(body: dict) -> tuple[str, str, str]:
+    from bot.utils import admin_auth
+    name = (body.get("name") or "").strip()[:64]
+    if not name:
+        raise HTTPException(400, "Укажите название роли")
+    description = (body.get("description") or "").strip()[:200]
+    sections = [s for s in (body.get("sections") or []) if s in admin_auth.SECTIONS]
+    return name, description, ",".join(sections)
+
+
+@app.post("/web/staff/roles")
+async def web_role_create(request: Request, authorization: str | None = Header(default=None)):
+    from bot.models.admin_role import AdminRole
+    from bot.utils import admin_auth
+    _web_auth(authorization, "staff")
+    name, description, sections = _clean_role(await request.json())
+    async with AsyncSessionLocal() as session:
+        if (await session.execute(select(AdminRole).where(AdminRole.name == name))).scalar_one_or_none():
+            raise HTTPException(400, "Роль с таким названием уже есть")
+        role = AdminRole(name=name, description=description, sections=sections)
+        session.add(role)
+        await session.commit()
+        await session.refresh(role)
+        await admin_auth.refresh_access_cache(session)
+    return {"ok": True, "id": role.id}
+
+
+@app.put("/web/staff/roles/{role_id}")
+async def web_role_update(role_id: int, request: Request, authorization: str | None = Header(default=None)):
+    from bot.models.admin_role import AdminRole
+    from bot.utils import admin_auth
+    _web_auth(authorization, "staff")
+    name, description, sections = _clean_role(await request.json())
+    async with AsyncSessionLocal() as session:
+        role = await session.get(AdminRole, role_id)
+        if not role:
+            raise HTTPException(404, "Роль не найдена")
+        clash = (await session.execute(
+            select(AdminRole).where(AdminRole.name == name, AdminRole.id != role_id)
+        )).scalar_one_or_none()
+        if clash:
+            raise HTTPException(400, "Роль с таким названием уже есть")
+        role.name, role.description, role.sections = name, description, sections
+        await session.commit()
+        await admin_auth.refresh_access_cache(session)
+    return {"ok": True}
+
+
+@app.delete("/web/staff/roles/{role_id}")
+async def web_role_delete(role_id: int, authorization: str | None = Header(default=None)):
+    """Сотрудники с этой ролью остаются без роли (видят главную и профиль)."""
+    from bot.models.admin_account import AdminAccount as _AdminAccount
+    from bot.models.admin_role import AdminRole
+    from bot.utils import admin_auth
+    _web_auth(authorization, "staff")
+    async with AsyncSessionLocal() as session:
+        role = await session.get(AdminRole, role_id)
+        if not role:
+            raise HTTPException(404, "Роль не найдена")
+        await session.execute(
+            update(_AdminAccount).where(_AdminAccount.role_id == role_id).values(role_id=None)
+        )
+        await session.delete(role)
+        await session.commit()
+        await admin_auth.refresh_access_cache(session)
+    return {"ok": True}
+
+
+# ─── Картинки (загрузка из админки, раздача по /media/{id}) ─────────────────
+
+@app.post("/web/media")
+async def web_media_upload(request: Request, authorization: str | None = Header(default=None)):
+    """multipart/form-data, поле file. Доступно разделам, где есть картинки."""
+    from bot.utils.media import MAX_BYTES, media_url, save_image
+    identity = _web_auth(authorization, "wiki", "bot", "banner")
+    form = await request.form()
+    upload = form.get("file")
+    if upload is None or not hasattr(upload, "read"):
+        raise HTTPException(400, "Не передан файл")
+    data = await upload.read(MAX_BYTES + 1)
+    async with AsyncSessionLocal() as session:
+        try:
+            media = await save_image(data, getattr(upload, "filename", "") or "", identity.username, session)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+    return {"ok": True, "id": media.id, "ref": f"media:{media.id}", "url": media_url(media.id)}
+
+
+@app.get("/media/{media_id}", include_in_schema=False)
+async def serve_media(media_id: int):
+    from fastapi.responses import Response
+    from bot.models.media_file import MediaFile
+    async with AsyncSessionLocal() as session:
+        media = await session.get(MediaFile, media_id)
+    if not media:
+        raise HTTPException(404)
+    return Response(
+        content=media.data, media_type=media.content_type,
+        headers={
+            # id никогда не переиспользуется — файл можно кэшировать навсегда.
+            "Cache-Control": "public, max-age=31536000, immutable",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @app.get("/web/stats")
 async def web_stats(authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "dash")
     async with AsyncSessionLocal() as session:
         now = datetime.utcnow()
         total = (await session.execute(select(func.count(User.telegram_id)))).scalar_one()
@@ -2482,7 +2751,7 @@ async def web_users(
     status: str = "", sort: str = "created_at",
     authorization: str | None = Header(default=None),
 ):
-    _web_auth(authorization)
+    _web_auth(authorization, "users")
     now = datetime.utcnow()
     async with AsyncSessionLocal() as session:
         query = select(User)
@@ -2520,7 +2789,7 @@ async def web_users(
 
 @app.get("/web/user/{tg_id}")
 async def web_user_detail(tg_id: int, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "users")
     now = datetime.utcnow()
     async with AsyncSessionLocal() as session:
         u = (await session.execute(select(User).where(User.telegram_id == tg_id))).scalar_one_or_none()
@@ -2581,7 +2850,7 @@ async def web_user_detail(tg_id: int, authorization: str | None = Header(default
 
 @app.post("/web/user/{tg_id}/grant")
 async def web_user_grant(tg_id: int, request: Request, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "users")
     body = await request.json()
     days = int(body.get("days", 0))
     if days <= 0:
@@ -2597,7 +2866,7 @@ async def web_user_grant(tg_id: int, request: Request, authorization: str | None
 
 @app.post("/web/user/{tg_id}/ban")
 async def web_user_ban(tg_id: int, request: Request, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "users")
     body = {}
     try:
         body = await request.json()
@@ -2621,7 +2890,7 @@ async def web_user_ban(tg_id: int, request: Request, authorization: str | None =
 
 @app.post("/web/user/{tg_id}/unban")
 async def web_user_unban(tg_id: int, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "users")
     async with AsyncSessionLocal() as session:
         u = (await session.execute(select(User).where(User.telegram_id == tg_id))).scalar_one_or_none()
         if not u:
@@ -2639,7 +2908,7 @@ async def web_user_unban(tg_id: int, authorization: str | None = Header(default=
 
 @app.post("/web/user/{tg_id}/message")
 async def web_user_message(tg_id: int, request: Request, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "users")
     body = await request.json()
     text = body.get("text", "").strip()
     if not text:
@@ -2650,7 +2919,7 @@ async def web_user_message(tg_id: int, request: Request, authorization: str | No
 
 @app.get("/web/payments")
 async def web_payments(limit: int = 50, offset: int = 0, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "payments")
     async with AsyncSessionLocal() as session:
         pays = (await session.execute(
             select(Payment).where(Payment.status == "paid").order_by(Payment.paid_at.desc()).limit(limit).offset(offset)
@@ -2668,7 +2937,7 @@ async def web_payments(limit: int = 50, offset: int = 0, authorization: str | No
 
 @app.get("/web/devices")
 async def web_devices(limit: int = 100, offset: int = 0, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "devices")
     async with AsyncSessionLocal() as session:
         query = (
             select(Device, User)
@@ -2701,7 +2970,7 @@ async def web_devices(limit: int = 100, offset: int = 0, authorization: str | No
 
 @app.get("/web/referrals")
 async def web_referrals(limit: int = 100, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "referrals")
     async with AsyncSessionLocal() as session:
         rows = (await session.execute(
             select(User)
@@ -2772,14 +3041,14 @@ def _apply_wiki_fields(a, body: dict) -> None:
 @app.get("/web/wiki-editor-css", response_class=PlainTextResponse)
 async def web_wiki_editor_css(authorization: str | None = Header(default=None)):
     """Стили страницы статьи — чтобы визуальный редактор выглядел как сайт."""
-    _web_auth(authorization)
+    _web_auth(authorization, "wiki")
     tpl = (_LANDING_DIR / "wiki" / "_article.html").read_text(encoding="utf-8")
     return tpl.split("<style>", 1)[1].split("/*__WIKI_CUSTOM_CSS__*/", 1)[0]
 
 
 @app.get("/web/wiki")
 async def web_wiki_list(authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "wiki")
     from bot.models.wiki_article import WikiArticle
 
     async with AsyncSessionLocal() as session:
@@ -2791,7 +3060,7 @@ async def web_wiki_list(authorization: str | None = Header(default=None)):
 
 @app.get("/web/wiki/{article_id}")
 async def web_wiki_get(article_id: int, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "wiki")
     from bot.models.wiki_article import WikiArticle
 
     async with AsyncSessionLocal() as session:
@@ -2808,7 +3077,7 @@ def _valid_wiki_slug(slug: str) -> bool:
 
 @app.post("/web/wiki")
 async def web_wiki_create(request: Request, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "wiki")
     from bot.models.wiki_article import WikiArticle
 
     body = await request.json()
@@ -2835,7 +3104,7 @@ async def web_wiki_create(request: Request, authorization: str | None = Header(d
 
 @app.put("/web/wiki/{article_id}")
 async def web_wiki_update(article_id: int, request: Request, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "wiki")
     from bot.models.wiki_article import WikiArticle
 
     body = await request.json()
@@ -2862,7 +3131,7 @@ async def web_wiki_update(article_id: int, request: Request, authorization: str 
 @app.post("/web/wiki/reorder")
 async def web_wiki_reorder(request: Request, authorization: str | None = Header(default=None)):
     """Тело: {"ids": [id, id, …]} — новый порядок статей сверху вниз."""
-    _web_auth(authorization)
+    _web_auth(authorization, "wiki")
     from bot.models.wiki_article import WikiArticle
 
     ids = (await request.json()).get("ids") or []
@@ -2879,7 +3148,7 @@ async def web_wiki_reorder(request: Request, authorization: str | None = Header(
 @app.post("/web/wiki/preview", response_class=HTMLResponse)
 async def web_wiki_preview(request: Request, authorization: str | None = Header(default=None)):
     """Рендер несохранённой статьи из редактора — ровно так, как на сайте."""
-    _web_auth(authorization)
+    _web_auth(authorization, "wiki")
     from bot.models.wiki_article import WikiArticle
     from bot.utils.wiki_page import render_wiki_article_page
 
@@ -2896,7 +3165,7 @@ async def web_wiki_preview(request: Request, authorization: str | None = Header(
 
 @app.delete("/web/wiki/{article_id}")
 async def web_wiki_delete(article_id: int, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "wiki")
     from bot.models.wiki_article import WikiArticle
 
     async with AsyncSessionLocal() as session:
@@ -2921,7 +3190,7 @@ _BOT_PREVIEW_SAMPLES = {
 
 @app.get("/web/bot/schema")
 async def web_bot_schema(authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "bot")
     from bot.utils import bot_texts as bt
 
     ov = bt.overrides()
@@ -2932,6 +3201,7 @@ async def web_bot_schema(authorization: str | None = Header(default=None)):
             "key": key, "kind": kind, "default": default, "value": ov.get(key) or default,
             "overridden": key in ov, "placeholders": list(placeholders), "hint": hint,
             "hideable": key in bt.HIDEABLE, "hidden": bt.is_hidden(key),
+            "image_allowed": key in bt.IMAGE_KEYS, "image": bt.image_for(key),
         }
 
     screens = []
@@ -2956,12 +3226,19 @@ async def web_bot_schema(authorization: str | None = Header(default=None)):
 @app.put("/web/bot/texts")
 async def web_bot_save_texts(request: Request, authorization: str | None = Header(default=None)):
     """Тело: {"values": {key: текст | null}, "hidden": {key: bool}}; null — вернуть стандартный."""
-    _web_auth(authorization)
+    _web_auth(authorization, "bot")
     from bot.utils import bot_texts as bt
 
     body = await request.json()
     values: dict = body.get("values") or {}
     hidden: dict = body.get("hidden") or {}
+    images: dict = body.get("images") or {}
+    for key, ref in images.items():
+        if key not in bt.IMAGE_KEYS:
+            raise HTTPException(400, f"К тексту {key} нельзя добавить картинку")
+        err = bt.validate_image_ref(ref or "")
+        if err:
+            raise HTTPException(400, err)
     for key, value in values.items():
         if key not in bt.TEXTS:
             raise HTTPException(400, f"Неизвестный текст: {key}")
@@ -2989,7 +3266,10 @@ async def web_bot_save_texts(request: Request, authorization: str | None = Heade
                 raise HTTPException(400, f"Подпись «{b['menu_label']}» уже у блока «{b['title']}»")
 
     async with AsyncSessionLocal() as session:
-        await bt.save_texts(session, values, {k: bool(v) for k, v in hidden.items()})
+        await bt.save_texts(
+            session, values, {k: bool(v) for k, v in hidden.items()},
+            {k: (v or "") for k, v in images.items()},
+        )
     return {"ok": True}
 
 
@@ -3048,15 +3328,20 @@ def _clean_bot_block(body: dict, block_id: int | None) -> dict:
         if other and other["id"] != block_id:
             raise HTTPException(400, f"Команда /{command} уже у блока «{other['title']}»")
 
+    image = (body.get("image") or "").strip()
+    err = bt.validate_image_ref(image)
+    if err:
+        raise HTTPException(400, err)
+
     return {
-        "title": title, "text": text, "buttons": json.dumps(buttons, ensure_ascii=False),
+        "title": title, "text": text, "image": image, "buttons": json.dumps(buttons, ensure_ascii=False),
         "show_in_menu": show_in_menu, "menu_label": menu_label, "command": command,
     }
 
 
 @app.post("/web/bot/blocks")
 async def web_bot_block_create(request: Request, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "bot")
     from bot.models.bot_content import BotBlock
     from bot.utils import bot_texts as bt
 
@@ -3073,7 +3358,7 @@ async def web_bot_block_create(request: Request, authorization: str | None = Hea
 
 @app.put("/web/bot/blocks/{block_id}")
 async def web_bot_block_update(block_id: int, request: Request, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "bot")
     from bot.models.bot_content import BotBlock
     from bot.utils import bot_texts as bt
 
@@ -3092,7 +3377,7 @@ async def web_bot_block_update(block_id: int, request: Request, authorization: s
 @app.delete("/web/bot/blocks/{block_id}")
 async def web_bot_block_delete(block_id: int, authorization: str | None = Header(default=None)):
     """Удаляет блок и кнопки других блоков, которые вели на него."""
-    _web_auth(authorization)
+    _web_auth(authorization, "bot")
     from bot.models.bot_content import BotBlock
     from bot.utils import bot_texts as bt
 
@@ -3116,7 +3401,7 @@ async def web_bot_block_delete(block_id: int, authorization: str | None = Header
 
 @app.get("/web/settings/overview")
 async def web_settings_overview(authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "settings")
     from bot.handlers.payment import PLANS
     from bot.utils.robokassa import robokassa, CARD_PLANS
     from bot.models.device import MAX_DEVICES
@@ -3160,7 +3445,7 @@ async def web_settings_overview(authorization: str | None = Header(default=None)
 @app.post("/web/settings/payment-toggle")
 async def web_settings_payment_toggle(request: Request, authorization: str | None = Header(default=None)):
     """Включить/выключить способ оплаты (card/crypto/stars)."""
-    _web_auth(authorization)
+    _web_auth(authorization, "settings")
     from bot.utils.settings_store import set_provider_enabled, PROVIDER_KEYS
 
     body = await request.json()
@@ -3215,7 +3500,7 @@ async def get_ad_banner_public():
 
 @app.get("/web/ad-banner")
 async def get_ad_banner_admin(authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "banner")
     async with AsyncSessionLocal() as session:
         banner = await _get_ad_banner(session)
     return {
@@ -3229,7 +3514,7 @@ async def get_ad_banner_admin(authorization: str | None = Header(default=None)):
 
 @app.post("/web/ad-banner")
 async def set_ad_banner(request: Request, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "banner")
     body = await request.json()
     text = (body.get("text") or "").strip()
     link_url = (body.get("link_url") or "").strip() or None
@@ -3256,7 +3541,7 @@ async def set_ad_banner(request: Request, authorization: str | None = Header(def
 
 @app.post("/web/broadcast")
 async def web_broadcast(request: Request, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "users")
     body = await request.json()
     text = body.get("text", "").strip()
     if not text:
@@ -3291,7 +3576,7 @@ TICKET_TOPIC_LABELS = {
 
 @app.get("/web/tickets")
 async def web_tickets(status: str = "", authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "support")
     from bot.models.support_ticket import SupportTicket
 
     async with AsyncSessionLocal() as session:
@@ -3328,7 +3613,7 @@ async def web_tickets(status: str = "", authorization: str | None = Header(defau
 
 @app.post("/web/tickets/{ticket_id}/reply")
 async def web_ticket_reply(ticket_id: int, request: Request, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "support")
     from bot.models.support_ticket import SupportTicket
 
     body = await request.json()
@@ -3379,7 +3664,7 @@ async def web_marzban_ping(authorization: str | None = Header(default=None)):
 
 @app.get("/web/marzban/users")
 async def web_marzban_users(authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "servers")
     try:
         users = await marzban.get_all_users()
         return users
@@ -3395,24 +3680,24 @@ async def web_marzban_users(authorization: str | None = Header(default=None)):
 
 @app.post("/web/marzban/users/{username}/enable")
 async def web_marzban_enable(username: str, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "servers")
     return await marzban.enable_user(username)
 
 
 @app.post("/web/marzban/users/{username}/disable")
 async def web_marzban_disable(username: str, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "servers")
     return await marzban.disable_user(username)
 
 
 @app.post("/web/marzban/users/{username}/extend")
 async def web_marzban_extend(username: str, request: Request, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "servers")
     body = await request.json()
     return await marzban.extend_user(username, int(body.get("days", 30)))
 
 
 @app.delete("/web/marzban/users/{username}")
 async def web_marzban_delete(username: str, authorization: str | None = Header(default=None)):
-    _web_auth(authorization)
+    _web_auth(authorization, "servers")
     return await marzban.delete_user(username)

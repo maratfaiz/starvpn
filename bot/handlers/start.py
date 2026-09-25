@@ -28,7 +28,8 @@ from sqlalchemy import select
 from bot.config import settings
 from bot.models.user import User
 from bot.utils import bot_texts
-from bot.utils.bot_texts import MenuText, t
+from bot.utils.bot_media import send_screen
+from bot.utils.bot_texts import MenuText, image_for, t
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -142,16 +143,16 @@ async def cmd_start(
 
     if has_sub:
         days_left = (user.subscription_expires_at - now).days
-        greeting = t("start.welcome_back", days_left=days_left)
+        greeting_key = "start.welcome_back"
+        greeting = t(greeting_key, days_left=days_left)
     else:
-        greeting = t("start.welcome_new")
+        greeting_key = "start.welcome_new"
+        greeting = t(greeting_key)
         if not user.trial_used:
             greeting += "\n\n" + t("start.trial_hint")
 
-    await message.answer(
-        greeting,
-        parse_mode="HTML",
-        reply_markup=main_keyboard(user),
+    await send_screen(
+        message, greeting, image=image_for(greeting_key), reply_markup=main_keyboard(user),
     )
 
     await message.answer(
@@ -166,10 +167,8 @@ def support_text() -> str:
 
 @router.message(MenuText("btn.support"))
 async def support_handler(message: Message) -> None:
-    await message.answer(
-        support_text(),
-        parse_mode="HTML",
-        disable_web_page_preview=True,
+    await send_screen(
+        message, support_text(), image=image_for("support.text"), disable_web_page_preview=True,
     )
 
 
@@ -200,8 +199,8 @@ async def back_to_main(callback: CallbackQuery, session: AsyncSession) -> None:
     except Exception:
         pass
     if user:
-        await callback.message.answer(
-            t("menu.title"),
+        await send_screen(
+            callback.message, t("menu.title"), image=image_for("menu.title"),
             reply_markup=main_keyboard(user),
         )
     await callback.answer()
