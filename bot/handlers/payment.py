@@ -36,7 +36,7 @@ from bot.models.payment import Payment
 from bot.models.user import User
 from bot.utils.marzban import marzban
 from bot.utils.qr import make_qr_photo
-from bot.handlers.gift import handle_gift_payment
+from bot.handlers.gift import handle_gift_payment, _instructions_kb  # noqa: F401 (реэкспорт для devices.py)
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -77,11 +77,8 @@ INSTRUCTIONS_TEXT = {
 }
 
 
-def _instructions_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text="📚 Инструкции", callback_data="instr:pick"),
-    ]])
-
+# _instructions_kb теперь общий — импортируется из gift.py выше, чтобы не
+# дублировать одну и ту же клавиатуру в обоих модулях.
 
 # Обработчики instr:* живут только в instructions.py — дубликаты удалены
 

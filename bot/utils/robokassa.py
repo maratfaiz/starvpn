@@ -11,6 +11,7 @@ ResultURL (server-to-server webhook).
 """
 
 import hashlib
+import hmac
 import logging
 import urllib.parse
 from decimal import Decimal
@@ -112,7 +113,9 @@ class Robokassa:
         if not self._password2:
             return False
         expected = hashlib.md5(f"{out_sum}:{inv_id}:{self._password2}".encode()).hexdigest()
-        return expected.lower() == signature.lower()
+        # compare_digest — как в cryptopay.check_signature, не сравниваем
+        # подписи через "==" (не constant-time).
+        return hmac.compare_digest(expected.lower(), signature.lower())
 
 
 # Глобальный синглтон — используется в handlers и api.py

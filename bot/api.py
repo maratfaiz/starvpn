@@ -483,7 +483,7 @@ async def account_login(request: Request):
 
     async with AsyncSessionLocal() as session:
         user = (await session.execute(_select(User).where(User.email == email))).scalar_one_or_none()
-        if not user or not user.password_hash or not verify_password(password, user.password_hash):
+        if not user or not user.password_hash or not await verify_password(password, user.password_hash):
             raise HTTPException(401, "Неверный email или пароль")
         if not user.email_verified:
             raise HTTPException(403, "email_not_verified")
@@ -1055,6 +1055,9 @@ async def admin_stats(x_telegram_init_data: str | None = Header(default=None)):
         pays_count = (await session.execute(
             select(func.count(Payment.id)).where(Payment.status == "paid")
         )).scalar_one()
+        referral_days_sum = (await session.execute(
+            select(func.sum(User.extra_days_granted))
+        )).scalar_one()
 
     # Онлайн из Marzban
     online_count = 0
@@ -1073,6 +1076,7 @@ async def admin_stats(x_telegram_init_data: str | None = Header(default=None)):
         "online_now": online_count,
         "total_stars": int(stars_sum or 0),
         "total_payments": pays_count,
+        "referral_days_total": int(referral_days_sum or 0),
     }
 
 
@@ -1170,6 +1174,7 @@ async def admin_list_users(
                 "days_left": max(0, (u.subscription_expires_at - now).days) if u.subscription_expires_at and u.subscription_expires_at > now else 0,
                 "total_stars_paid": int(u.total_stars_paid or 0),
                 "referral_count": int(u.referral_count or 0),
+                "extra_days_granted": int(u.extra_days_granted or 0),
                 "trial_used": bool(u.trial_used),
                 "created_at": u.created_at.isoformat() if u.created_at else None,
             }
@@ -1439,10 +1444,17 @@ async def invoice_gift(request: Request, x_telegram_init_data: str | None = Head
     if recipient.telegram_id == tg_id:
         raise HTTPException(400, "Нельзя подарить подписку самому себе.")
 
-    # Сохраняем личное сообщение (используем тот же _pending_messages из gift.py)
+    # Сохраняем (или очищаем) личное сообщение — используем тот же
+    # _pending_messages из gift.py. Всегда пишем ключ явно, а не только когда
+    # сообщение непустое, иначе повторный подарок этому же получателю без
+    # сообщения подхватит старое, оставшееся от прошлого инвойса (см. тот же
+    # фикс в bot/handlers/gift.py::_send_gift_invoice).
+    from bot.handlers.gift import _pending_messages
+    pending_key = f"{tg_id}:{recipient.telegram_id}"
     if personal_message:
-        from bot.handlers.gift import _pending_messages
-        _pending_messages[f"{tg_id}:{recipient.telegram_id}"] = personal_message
+        _pending_messages[pending_key] = personal_message
+    else:
+        _pending_messages.pop(pending_key, None)
 
     payload = f"gift:{plan_key}:{recipient.telegram_id}:{anon}"
     uname = f"@{recipient.username}" if recipient.username else str(recipient.telegram_id)
@@ -1495,10 +1507,14 @@ async def create_gift_crypto_invoice(
     if recipient.telegram_id == tg_id:
         raise HTTPException(400, "Нельзя подарить самому себе.")
 
-    # Сохраняем личное сообщение
+    # Сохраняем (или очищаем) личное сообщение — см. фикс выше в
+    # /api/invoice/gift для того же issue.
+    from bot.handlers.gift import _pending_messages
+    pending_key = f"{tg_id}:{recipient.telegram_id}"
     if personal_message:
-        from bot.handlers.gift import _pending_messages
-        _pending_messages[f"{tg_id}:{recipient.telegram_id}"] = personal_message
+        _pending_messages[pending_key] = personal_message
+    else:
+        _pending_messages.pop(pending_key, None)
 
     uname = f"@{recipient.username}" if recipient.username else str(recipient.telegram_id)
     payload_str = f"gift:{plan_key}:{recipient.telegram_id}:{anon}:{tg_id}"
@@ -1624,7 +1640,11 @@ async def gift_invoice(request: Request, x_telegram_init_data: str | None = Head
             raise HTTPException(503, "Оплата картой временно недоступна")
 
         payment = Payment(
-            order_id="", telegram_id=recipient_tg_id, amount=float(plan["rub"]),
+            # Placeholder must be unique (order_id has a UNIQUE constraint) —
+            # a shared "" would raise IntegrityError if two card checkouts
+            # (site or gift) flush concurrently, before either gets a real id.
+            order_id=f"card_pending_{secrets.token_hex(16)}",
+            telegram_id=recipient_tg_id, amount=float(plan["rub"]),
             status="pending", payment_method="card", days=plan["days"],
             is_gift=True, gift_sender_id=tg_id, gift_anon=anon, gift_message=message,
             gift_link_code=gift_link_code,
@@ -1851,81 +1871,13 @@ async def gift_seen(request: Request, x_telegram_init_data: str | None = Header(
     return {"ok": True}
 
 
-# ─── GET /api/crypto/plans ───────────────────────────────────────────────────
-
-@app.get("/api/crypto/plans")
-async def get_crypto_plans(x_telegram_init_data: str | None = Header(default=None)):
-    """Тарифы для оплаты криптой (USD). Возвращает [] если CRYPTOPAY_TOKEN не задан или отключено в админке."""
-    _tg_id(x_telegram_init_data)
-    if not settings.cryptopay_token:
-        return []
-    from bot.utils.settings_store import is_provider_enabled
-    async with AsyncSessionLocal() as session:
-        if not await is_provider_enabled(session, "crypto"):
-            return []
-    from bot.utils.cryptopay import CRYPTO_PLANS
-    return [
-        {
-            "key": k,
-            "label": v["label"],
-            "usd": float(v["usd"]),
-            "days": v["days"],
-            "desc": v["desc"],
-        }
-        for k, v in CRYPTO_PLANS.items()
-    ]
-
-
-# ─── POST /api/invoice/crypto ────────────────────────────────────────────────
-
-@app.post("/api/invoice/crypto")
-async def create_crypto_invoice(
-    request: Request,
-    x_telegram_init_data: str | None = Header(default=None),
-):
-    """Создаёт CryptoPay инвойс и возвращает ссылку для оплаты (мини-апп)."""
-    tg_id = _tg_id(x_telegram_init_data)
-    body = await request.json()
-    plan_key = body.get("plan")
-
-    from bot.utils.settings_store import is_provider_enabled
-    async with AsyncSessionLocal() as session:
-        if not await is_provider_enabled(session, "crypto"):
-            raise HTTPException(status_code=503, detail="Оплата криптовалютой временно недоступна")
-
-    from bot.utils.cryptopay import cryptopay, CRYPTO_PLANS
-    plan = CRYPTO_PLANS.get(plan_key)
-    if not plan:
-        raise HTTPException(status_code=400, detail="Неизвестный тариф")
-
-    try:
-        invoice = await cryptopay.create_invoice(
-            usd_amount=plan["usd"],
-            payload=f"{plan_key}:{tg_id}",
-            description=f"STAR VPN — {plan['label']}",
-        )
-    except Exception as e:
-        logger.error("CryptoPay create_invoice error for tg=%s: %s", tg_id, e)
-        raise HTTPException(status_code=502, detail="Ошибка CryptoPay. Попробуйте позже.")
-
-    invoice_id = invoice.get("invoice_id")
-    pay_url = invoice.get("bot_invoice_url") or invoice.get("mini_app_invoice_url", "")
-
-    # Сохраняем pending-платёж
-    async with AsyncSessionLocal() as session:
-        payment = Payment(
-            order_id=f"crypto_{invoice_id}",
-            telegram_id=tg_id,
-            amount=float(plan["usd"]),
-            status="pending",
-            payment_method="crypto",
-            invoice_id=invoice_id,
-            days=plan["days"],
-        )
-        session.add(payment)
-        await session.commit()
-
-    return {"url": pay_url, "invoice_id": invoice_id}
+# GET /api/crypto/plans and POST /api/invoice/crypto used to be defined here
+# a second time (a leftover from an earlier Mini-App-only pass) with the same
+# paths as the "site" versions further down — Starlette matches routes in
+# registration order, so this earlier pair silently shadowed the later ones,
+# which are the only ones that support cookie-session auth (_resolve_tg_id).
+# That made the website's own crypto checkout 401 in practice. Removed;
+# see the "(сайт/личный кабинет)" versions below, which now serve both.
 
 
 # ─── POST /crypto/webhook ────────────────────────────────────────────────────
@@ -2056,7 +2008,8 @@ async def create_card_invoice(
         if not await is_provider_enabled(session, "card"):
             raise HTTPException(status_code=503, detail="Оплата картой временно недоступна")
         payment = Payment(
-            order_id="",
+            # See the gift-invoice card path above for why this can't be "".
+            order_id=f"card_pending_{secrets.token_hex(16)}",
             telegram_id=tg_id,
             amount=float(rub),
             status="pending",

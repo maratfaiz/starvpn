@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import * as api from "../data/mockApi.js";
+import * as api from "../data/api.js";
 import BottomSheet from "../components/BottomSheet.jsx";
 
 const STRIP_ITEMS = [
@@ -76,31 +76,51 @@ export default function AdminScreen({ showToast }) {
   });
 
   const openUser = async (tgId) => {
-    const u = await api.getAdminUser(tgId);
-    setSelectedUser(u);
+    try {
+      const u = await api.getAdminUser(tgId);
+      setSelectedUser(u);
+    } catch (e) {
+      showToast("❌ " + e.message);
+    }
   };
 
   const refreshSelectedUser = async () => {
     if (!selectedUser) return;
-    const u = await api.getAdminUser(selectedUser.tg_id);
-    setSelectedUser(u);
-    setUsers((prev) => prev.map((x) => (x.tg_id === u.tg_id ? u : x)));
+    try {
+      const u = await api.getAdminUser(selectedUser.tg_id);
+      setSelectedUser(u);
+      setUsers((prev) => prev.map((x) => (x.tg_id === u.tg_id ? u : x)));
+    } catch (e) {
+      showToast("❌ " + e.message);
+    }
   };
 
   const grantDays = async () => {
-    await api.adminGrantDays(selectedUser.tg_id, 30);
-    showToast("✅ Выдано 30 дней");
-    refreshSelectedUser();
+    try {
+      await api.adminGrantDays(selectedUser.tg_id, 30);
+      showToast("✅ Выдано 30 дней");
+      refreshSelectedUser();
+    } catch (e) {
+      showToast("❌ " + e.message);
+    }
   };
   const banUser = async () => {
-    await api.adminBanUser(selectedUser.tg_id);
-    showToast("🚫 Пользователь забанен");
-    refreshSelectedUser();
+    try {
+      await api.adminBanUser(selectedUser.tg_id);
+      showToast("🚫 Пользователь забанен");
+      refreshSelectedUser();
+    } catch (e) {
+      showToast("❌ " + e.message);
+    }
   };
   const unbanUser = async () => {
-    await api.adminUnbanUser(selectedUser.tg_id);
-    showToast("✅ Разбанен");
-    refreshSelectedUser();
+    try {
+      await api.adminUnbanUser(selectedUser.tg_id);
+      showToast("✅ Разбанен");
+      refreshSelectedUser();
+    } catch (e) {
+      showToast("❌ " + e.message);
+    }
   };
   const messageUser = async () => {
     const text = window.prompt("Сообщение пользователю:");
@@ -126,24 +146,33 @@ export default function AdminScreen({ showToast }) {
     }
   };
 
-  const exportCSV = () => {
-    const csv = api.exportUsersCSV();
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "star_vpn_users.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast("📊 CSV выгружен");
+  const exportCSV = async () => {
+    showToast("Готовим CSV…");
+    try {
+      const csv = await api.exportUsersCSV();
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "star_vpn_users.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("📊 CSV выгружен");
+    } catch (e) {
+      showToast("❌ " + e.message);
+    }
   };
 
   const banById = async () => {
     const id = window.prompt("Telegram ID для бана:");
     if (!id) return;
-    await api.adminBanUser(Number(id));
-    showToast("🚫 Забанен ID " + id);
-    loadUsers(true);
+    try {
+      await api.adminBanUser(Number(id));
+      showToast("🚫 Забанен ID " + id);
+      loadUsers(true);
+    } catch (e) {
+      showToast("❌ " + e.message);
+    }
   };
 
   return (

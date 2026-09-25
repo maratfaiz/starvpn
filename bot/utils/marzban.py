@@ -93,8 +93,16 @@ class MarzbanClient:
             resp.raise_for_status()
             current = resp.json()
 
+        current_expire = current.get("expire")
+        if current_expire == 0:
+            # 0 в Marzban значит "без срока" (безлимитный аккаунт, например
+            # выставленный админом вручную) — `0 or now_ts` считал бы это
+            # отсутствием значения и молча превращал безлимит в обычную
+            # подписку на `days` дней. Не трогаем такой аккаунт.
+            return current
+
         now_ts = int(datetime.utcnow().timestamp())
-        base_ts = max(current.get("expire") or now_ts, now_ts)
+        base_ts = max(current_expire or now_ts, now_ts)
         new_expire = base_ts + days * 86400
 
         async with self._http() as client:

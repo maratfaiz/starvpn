@@ -31,7 +31,7 @@ from bot.models.device import Device, MAX_DEVICES
 from bot.models.user import User
 from bot.utils.marzban import marzban
 from bot.utils.qr import make_qr_photo
-from bot.utils.branding import set_vless_remark, subscription_url
+from bot.utils.branding import set_vless_remark, set_vless_remark_text, subscription_url
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -75,6 +75,15 @@ def _type_label(name: str) -> str:
     """Отображаемое название по ключу типа или legacy-названию."""
     dt = DEVICE_TYPES.get(name)
     return dt["label"] if dt else name
+
+
+def _display_label(dev: Device) -> str:
+    """Имя устройства для показа пользователю: custom_name, если задано
+    (например, переименовано на сайте — PATCH /api/devices/{id}), иначе
+    название по типу платформы, как раньше. Раньше бот везде использовал
+    только _type_label(dev.name), поэтому переименование на сайте не было
+    видно в Telegram."""
+    return dev.custom_name or _type_label(dev.name)
 
 
 def _mz_username_for_type(
@@ -127,7 +136,7 @@ def _list_kb(devices: list[Device], has_sub: bool) -> InlineKeyboardMarkup:
     rows = []
     for dev in devices:
         icon = _type_icon(dev.name)
-        label = _type_label(dev.name)
+        label = _display_label(dev)
         rows.append([InlineKeyboardButton(
             text=f"{icon} {label}",
             callback_data=f"dev:info:{dev.id}",
@@ -223,7 +232,7 @@ async def show_devices_screen(
 
     if devices:
         lines = [
-            f"{_type_icon(d.name)} {_type_label(d.name)}"
+            f"{_type_icon(d.name)} {_display_label(d)}"
             for d in devices
         ]
         devices_text = "\n".join(lines)
@@ -291,7 +300,17 @@ async def dev_add_type(callback: CallbackQuery, session: AsyncSession) -> None:
         return
 
     tg_id = callback.from_user.id
-    result = await session.execute(select(User).where(User.telegram_id == tg_id))
+    # SELECT ... FOR UPDATE: без этого два быстрых нажатия "Добавить
+    # устройство" подряд (двойной тап) могли пройти проверку
+    # len(devices) >= MAX_DEVICES одновременно, каждое на своих ещё не
+    # закоммиченных данных, и создать 4-е (5-е, ...) устройство сверх
+    # лимита — уникального ограничения на (telegram_id, slot) в БД нет.
+    # Блокировка строки user сериализует такие параллельные запросы одного
+    # и того же пользователя: второй дождётся commit первого и увидит уже
+    # актуальный список устройств.
+    result = await session.execute(
+        select(User).where(User.telegram_id == tg_id).with_for_update()
+    )
     user = result.scalar_one_or_none()
     if not user:
         await callback.answer()
@@ -390,7 +409,7 @@ async def dev_info(callback: CallbackQuery, session: AsyncSession) -> None:
     await callback.answer("⏳")
 
     icon = _type_icon(dev.name)
-    label = _type_label(dev.name)
+    label = _display_label(dev)
     now_ts = int(datetime.utcnow().timestamp())
     added = dev.created_at.strftime("%d.%m.%Y") if dev.created_at else "—"
 
@@ -456,7 +475,14 @@ async def dev_show_link(callback: CallbackQuery, session: AsyncSession) -> None:
 
     try:
         mz = await marzban.get_or_create_user(dev.marzban_username, dev.telegram_id, days_left)
-        link = set_vless_remark(marzban.extract_vless_link(mz), dev.name)
+        raw_link = marzban.extract_vless_link(mz)
+        if dev.custom_name:
+            # Как в bot/api.py (GET /api/devices/{id}/link) — если устройство
+            # переименовано (на сайте или где угодно), remark в клиенте
+            # (Happ/v2rayNG) должен показывать это имя, а не общий тип.
+            link = set_vless_remark_text(raw_link, dev.custom_name)
+        else:
+            link = set_vless_remark(raw_link, dev.name)
     except Exception as e:
         logger.error("dev:link failed for %s: %s", dev.marzban_username, e)
         await callback.message.answer(
@@ -471,7 +497,7 @@ async def dev_show_link(callback: CallbackQuery, session: AsyncSession) -> None:
     from bot.handlers.payment import _instructions_kb
 
     icon = _type_icon(dev.name)
-    label = _type_label(dev.name)
+    label = _display_label(dev)
     qr = make_qr_photo(link, f"dev_{dev.id}.png")
     await callback.message.answer_photo(
         qr,
@@ -499,7 +525,7 @@ async def dev_show_sublink(callback: CallbackQuery, session: AsyncSession) -> No
 
     await callback.answer()
     icon = _type_icon(dev.name)
-    label = _type_label(dev.name)
+    label = _display_label(dev)
     await callback.message.answer(
         f"🔗 <b>Ссылка-подписка — {icon} {label}</b>\n\n"
         f"<code>{subscription_url(dev.marzban_username)}</code>\n\n"
@@ -523,7 +549,7 @@ async def dev_delete_confirm(callback: CallbackQuery, session: AsyncSession) -> 
         return
 
     icon = _type_icon(dev.name)
-    label = _type_label(dev.name)
+    label = _display_label(dev)
     await callback.message.edit_text(
         f"🗑 Удалить <b>{icon} {label}</b>?\n\n"
         "VPN-доступ с этого устройства будет отключён.",
@@ -547,7 +573,7 @@ async def dev_delete_ok(callback: CallbackQuery, session: AsyncSession) -> None:
         return
 
     icon = _type_icon(dev.name)
-    label = _type_label(dev.name)
+    label = _display_label(dev)
 
     dev.is_active = False
     try:

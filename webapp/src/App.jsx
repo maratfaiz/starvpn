@@ -22,19 +22,18 @@ import DeviceLinkSheet from "./sheets/DeviceLinkSheet.jsx";
 import SubscriptionLinkSheet from "./sheets/SubscriptionLinkSheet.jsx";
 import InstructionsSheet from "./sheets/InstructionsSheet.jsx";
 
-import * as api from "./data/mockApi.js";
+import * as api from "./data/api.js";
 import {
-  server,
-  speedValue,
-  referral,
-  daysHistoryInitial,
   account,
   settingsRows,
   notificationTogglesInitial,
   languageOptions,
-  renewPlans,
   giftDayOptions,
-} from "./data/mockData.js";
+} from "./data/staticData.js";
+
+// Gift days are limited to the Stars plans bot/api.py actually has
+// (_PLANS_API: plan_1m/plan_3m/plan_6m = 30/90/180 days).
+const GIFT_PLAN_BY_DAYS = { 30: "plan_1m", 90: "plan_3m", 180: "plan_6m" };
 
 // Vite sets import.meta.env.DEV=true only for `npm run dev` / local preview —
 // lets us exercise the app outside Telegram while still gating production
@@ -53,15 +52,33 @@ function haptic(type = "impact") {
   }
 }
 
+// bot/api.py sends naive datetimes (datetime.utcnow().isoformat(), no "Z" /
+// offset) that are always UTC. `new Date(...)` treats a date-time string
+// with no offset as browser-LOCAL time, which would silently skew every
+// computation below by the viewer's UTC offset — so parse it as UTC ourselves.
+function parseUtc(isoString) {
+  if (!isoString) return null;
+  const hasOffset = /Z$|[+-]\d\d:\d\d$/.test(isoString);
+  return new Date(hasOffset ? isoString : `${isoString}Z`);
+}
+
 function meToSubscription(me) {
+  const exp = parseUtc(me.subscription_expires_at);
+  const daysLeft = exp ? Math.max(0, Math.floor((exp.getTime() - Date.now()) / 86400000)) : 0;
   return {
     active: me.subscription_active,
     trialUsed: me.trial_used,
-    planName: me.plan_name,
-    daysLeft: me.days_left,
-    totalDays: me.total_days,
-    expiryDate: new Date(me.expires_at).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }),
+    daysLeft,
+    expiryDate: exp ? exp.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }) : "",
     connectionLabel: "Подключено",
+  };
+}
+
+function meToServer(me) {
+  return {
+    flag: me.server_flag,
+    name: me.server_city,
+    protocol: me.server_protocol,
   };
 }
 
@@ -71,18 +88,33 @@ export default function App() {
   const [tgUser, setTgUser] = useState(null);
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [subscription, setSubscription] = useState(null);
+  const [server, setServer] = useState(null);
   const [devices, setDevices] = useState([]);
   const [maxDevices, setMaxDevices] = useState(3);
   const [isAdmin, setIsAdmin] = useState(false);
   const [pendingGift, setPendingGift] = useState(null);
+  const [referral, setReferral] = useState(null);
+  const [renewPlans, setRenewPlans] = useState([]);
+  const [profile, setProfile] = useState({ full_name: "", username: "" });
 
   const loadAll = async () => {
-    const [me, devs, admin] = await Promise.all([api.getMe(), api.getDevices(), api.adminCheck()]);
+    const [me, devs, admin, ref, plans] = await Promise.all([
+      api.getMe(),
+      api.getDevices(),
+      api.adminCheck(),
+      api.getReferral(),
+      api.getRenewPlans(),
+    ]);
     setSubscription(meToSubscription(me));
+    setServer(meToServer(me));
     setMaxDevices(me.max_devices);
     setDevices(devs);
     setIsAdmin(admin.is_admin);
+    setReferral(ref);
+    setRenewPlans(plans);
+    setProfile({ full_name: me.full_name, username: me.username });
   };
 
   useEffect(() => {
@@ -94,18 +126,37 @@ export default function App() {
       setTgUser(tg.initDataUnsafe?.user || null);
     }
 
-    loadAll().then(() => {
-      setLoading(false);
-      api.checkGiftNotification().then(setPendingGift);
-    });
+    setLoadError(false);
+    loadAll()
+      .then(() => {
+        setLoading(false);
+        api.checkGiftNotification().then(setPendingGift).catch(() => {});
+      })
+      .catch(() => {
+        // Network/auth failure on first load — stop spinning and let the
+        // person retry instead of staring at "Загрузка" forever.
+        setLoading(false);
+        setLoadError(true);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [telegramOk]);
+
+  const retryLoad = () => {
+    setLoading(true);
+    setLoadError(false);
+    loadAll()
+      .then(() => setLoading(false))
+      .catch(() => {
+        setLoading(false);
+        setLoadError(true);
+      });
+  };
 
   // navigation
   const [activeTab, setActiveTab] = useState("home");
 
-  // mutable app state (mock, no backend yet)
-  const [daysHistory, setDaysHistory] = useState(daysHistoryInitial);
+  // auto-server toggle is a client-only preference for now — there's only
+  // one real server (Amsterdam), nothing backend-side reads this yet.
   const [autoServer, setAutoServer] = useState(true);
   const [trialActivating, setTrialActivating] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -128,14 +179,16 @@ export default function App() {
   const [giftOpen, setGiftOpen] = useState(false);
   const [giftStep, setGiftStep] = useState("form");
   const [giftUsername, setGiftUsername] = useState("");
-  const [giftDays, setGiftDays] = useState(7);
+  const [giftDays, setGiftDays] = useState(30);
   const [giftComment, setGiftComment] = useState("");
+  const [giftSubmitting, setGiftSubmitting] = useState(false);
 
   // renew sheet
   const [renewOpen, setRenewOpen] = useState(false);
   const [renewStep, setRenewStep] = useState("form");
-  const [renewPlanId, setRenewPlanId] = useState(2);
+  const [renewPlanId, setRenewPlanId] = useState("plan_3m");
   const [renewMethod, setRenewMethod] = useState("stars");
+  const [renewSubmitting, setRenewSubmitting] = useState(false);
   const [customDays, setCustomDays] = useState(14);
   const [lastAddedDays, setLastAddedDays] = useState(0);
   const [justRenewed, setJustRenewed] = useState(false);
@@ -180,14 +233,32 @@ export default function App() {
   const closeGift = () => {
     setGiftOpen(false);
     setGiftUsername("");
-    setGiftDays(7);
+    setGiftDays(30);
     setGiftComment("");
     setGiftStep("form");
   };
-  const submitGift = () => {
+  const submitGift = async () => {
     if (!giftUsername.trim()) return;
-    haptic("notification");
-    setGiftStep("success");
+    const planKey = GIFT_PLAN_BY_DAYS[giftDays];
+    setGiftSubmitting(true);
+    try {
+      const { url } = await api.createGiftInvoice({
+        planKey,
+        recipient: giftUsername.trim(),
+        message: giftComment.trim(),
+      });
+      const status = await api.openTelegramInvoice(url);
+      if (status === "paid") {
+        haptic("notification");
+        setGiftStep("success");
+      } else if (status !== "pending") {
+        showToast("Оплата отменена");
+      }
+    } catch (e) {
+      showToast("❌ " + e.message);
+    } finally {
+      setGiftSubmitting(false);
+    }
   };
 
   const openRenew = () => {
@@ -203,41 +274,46 @@ export default function App() {
       setInstructionsOpen(true);
     }
   };
-  const submitRenew = () => {
-    const basePlan = renewPlans[0];
-    const pricePerDay = basePlan.price / basePlan.days;
-    const rubPerDay = basePlan.rub / basePlan.days;
-    const plan =
-      renewPlanId === "custom"
-        ? { label: `${customDays} дней`, days: customDays, price: Math.max(1, Math.round(customDays * pricePerDay)), rub: Math.max(1, Math.round(customDays * rubPerDay)) }
-        : renewPlans.find((p) => p.id === renewPlanId) || basePlan;
-
-    haptic("notification");
-
-    if (renewMethod === "card") {
-      // Real endpoint: POST /api/invoice/card -> tg.openLink(Robokassa url);
-      // confirmation arrives later via the /card/webhook ResultURL, so we
-      // don't touch the subscription state here — only the invoice was created.
-      setRenewOpen(false);
-      showToast("💳 Счёт создан — оплати картой на защищённой странице");
+  const submitRenew = async () => {
+    const isCustom = renewPlanId === "custom";
+    if (isCustom && renewMethod === "stars") {
+      showToast("Свой срок доступен только при оплате картой");
       return;
     }
 
-    // Stars: tg.openInvoice resolves synchronously with a paid/failed status
-    // in the real app, so we can apply the days right away.
-    setSubscription((s) => ({
-      ...s,
-      active: true,
-      daysLeft: s.daysLeft + plan.days,
-      totalDays: s.totalDays + plan.days,
-    }));
-    setDaysHistory((h) => [
-      { id: Date.now(), label: `Продление: ${plan.label}`, date: "только что", days: plan.days, type: "purchase" },
-      ...h,
-    ]);
-    setLastAddedDays(plan.days);
-    setRenewStep("success");
-    setJustRenewed(true);
+    const plan = isCustom ? null : renewPlans.find((p) => p.id === renewPlanId);
+    setRenewSubmitting(true);
+    try {
+      const { url } = await api.createRenewInvoice({
+        planKey: isCustom ? null : renewPlanId,
+        method: renewMethod,
+        days: isCustom ? customDays : undefined,
+      });
+
+      if (renewMethod === "card") {
+        // Hosted Robokassa page — confirmation arrives later via the
+        // /card/webhook ResultURL, so we can't apply days right away.
+        api.openExternalPayment(url);
+        setRenewOpen(false);
+        showToast("💳 Счёт создан — оплати картой на защищённой странице");
+        return;
+      }
+
+      haptic("notification");
+      const status = await api.openTelegramInvoice(url);
+      if (status === "paid") {
+        await loadAll();
+        setLastAddedDays(plan.days);
+        setRenewStep("success");
+        setJustRenewed(true);
+      } else if (status !== "pending") {
+        showToast("Оплата отменена");
+      }
+    } catch (e) {
+      showToast("❌ " + e.message);
+    } finally {
+      setRenewSubmitting(false);
+    }
   };
 
   const activateTrial = async () => {
@@ -308,15 +384,17 @@ export default function App() {
   };
 
   const copyReferralCode = () => {
+    if (!referral) return;
     haptic("light");
-    navigator.clipboard?.writeText(referral.code).catch(() => {});
+    navigator.clipboard?.writeText(referral.link).catch(() => {});
     setCodeCopied(true);
     setTimeout(() => setCodeCopied(false), 1800);
   };
 
   const shareReferralLink = () => {
+    if (!referral) return;
     haptic("light");
-    const link = `https://t.me/starisvpnbot?start=${referral.code}`;
+    const link = referral.link;
     const tg = window.Telegram?.WebApp;
     if (tg?.openTelegramLink) {
       tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}`);
@@ -350,15 +428,22 @@ export default function App() {
   };
 
   const closeGiftReceived = async () => {
+    // The days were already granted server-side when the gift's payment
+    // webhook fired — this just marks the notification as read.
     if (pendingGift) {
       await api.acceptGift(pendingGift.id);
-      setSubscription((s) => ({ ...s, daysLeft: s.daysLeft + pendingGift.days, totalDays: s.totalDays + pendingGift.days }));
     }
     setPendingGift(null);
   };
 
   const selectedDevice = devices.find((d) => d.id === deviceSheetId) || null;
   const totalTrafficGb = devices.reduce((sum, d) => sum + (d.traffic_gb || 0), 0);
+
+  const displayName = tgUser
+    ? `${tgUser.first_name}${tgUser.last_name ? " " + tgUser.last_name : ""}`
+    : profile.full_name || "STAR VPN";
+  const displayUsername = tgUser?.username ? `@${tgUser.username}` : profile.username ? `@${profile.username}` : "";
+  const initials = displayName.trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase() || "SV";
 
   if (!telegramOk) {
     return <TelegramGate />;
@@ -374,6 +459,24 @@ export default function App() {
           if (action === "trial") activateTrial();
         }}
       />
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="relative flex items-center justify-center min-h-screen bg-app-bg overflow-hidden">
+        <Starfield shootingStars />
+        <div className="relative z-[1] flex flex-col items-center gap-4 px-8 text-center">
+          <span className="font-display font-extrabold text-xl text-ink">Не удалось загрузить данные</span>
+          <span className="text-ink/45 text-sm">Проверь соединение и попробуй ещё раз</span>
+          <button
+            onClick={retryLoad}
+            className="mt-2 border-none px-5 py-3 rounded-2xl bg-gradient-to-br from-gold to-gold-dark font-display font-bold text-sm text-[#1A1408]"
+          >
+            Повторить
+          </button>
+        </div>
+      </div>
     );
   }
 
@@ -403,7 +506,6 @@ export default function App() {
             <HomeScreen
               subscription={subscription}
               server={server}
-              speedValue={speedValue}
               trafficUsedTotal={totalTrafficGb.toFixed(1)}
               autoServer={autoServer}
               onToggleAutoServer={toggleAutoServer}
@@ -425,7 +527,6 @@ export default function App() {
           {activeTab === "referral" && (
             <ReferralsScreen
               referral={referral}
-              daysHistory={daysHistory}
               copied={codeCopied}
               onCopyCode={copyReferralCode}
               onShare={shareReferralLink}
@@ -433,7 +534,7 @@ export default function App() {
           )}
           {activeTab === "account" && (
             <AccountScreen
-              account={{ ...account, name: tgUser ? `${tgUser.first_name}${tgUser.last_name ? " " + tgUser.last_name : ""}` : account.name }}
+              account={{ ...account, name: displayName, username: displayUsername, initials }}
               subscription={subscription}
               settingsRows={settingsRows}
               onOpenSetting={openSetting}
@@ -473,6 +574,7 @@ export default function App() {
         onDaysSelect={setGiftDays}
         onCommentChange={setGiftComment}
         onSubmit={submitGift}
+        submitting={giftSubmitting}
       />
 
       <RenewSheet
@@ -487,6 +589,7 @@ export default function App() {
         customDays={customDays}
         onCustomDaysChange={setCustomDays}
         onSubmit={submitRenew}
+        submitting={renewSubmitting}
         lastAddedDays={lastAddedDays}
       />
 
