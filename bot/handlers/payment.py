@@ -36,6 +36,7 @@ from bot.models.payment import Payment
 from bot.models.user import User
 from bot.utils.marzban import marzban
 from bot.utils.qr import make_qr_photo
+from bot.utils.bot_texts import MenuText, t
 from bot.handlers.gift import handle_gift_payment
 
 router = Router()
@@ -79,7 +80,7 @@ INSTRUCTIONS_TEXT = {
 
 def _instructions_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[[
-        InlineKeyboardButton(text="📚 Инструкции", callback_data="instr:pick"),
+        InlineKeyboardButton(text=t("btn.instructions"), callback_data="instr:pick"),
     ]])
 
 
@@ -241,7 +242,7 @@ def _plans_keyboard() -> InlineKeyboardMarkup:
         for key, plan in PLANS.items()
     ]
     buttons.append([InlineKeyboardButton(
-        text="🎁 Подарить подписку другу",
+        text=t("btn.gift_friend"),
         callback_data="gift:start",
     )])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
@@ -252,7 +253,7 @@ async def _stars_enabled(session: AsyncSession) -> bool:
     return await is_provider_enabled(session, "stars")
 
 
-@router.message(F.text == "⚡️ Подключить VPN")
+@router.message(MenuText("btn.connect"))
 async def show_plans(message: Message, session: AsyncSession) -> None:
     if not await _stars_enabled(session):
         from bot.handlers.profile import _pay_choice_kb, pay_choice_text
@@ -261,9 +262,7 @@ async def show_plans(message: Message, session: AsyncSession) -> None:
         )
         return
     await message.answer(
-        "⚡️ <b>Выберите тарифный план</b>\n\n"
-        "Чем больше срок — тем выгоднее цена за месяц.\n"
-        "Оплата в Telegram Stars ⭐ — мгновенно, без банков.",
+        t("plans.text"),
         parse_mode="HTML",
         reply_markup=_plans_keyboard(),
     )
@@ -280,9 +279,7 @@ async def show_plans_inline(callback: CallbackQuery, session: AsyncSession) -> N
         await callback.answer()
         return
     await callback.message.answer(
-        "⚡️ <b>Выберите тарифный план</b>\n\n"
-        "Чем больше срок — тем выгоднее цена за месяц.\n"
-        "Оплата в Telegram Stars ⭐ — мгновенно, без банков.",
+        t("plans.text"),
         parse_mode="HTML",
         reply_markup=_plans_keyboard(),
     )
@@ -405,11 +402,7 @@ async def on_stars_payment(message: Message, session: AsyncSession) -> None:
     exp_str = exp.strftime("%d.%m.%Y") if exp else "—"
 
     await message.answer(
-        f"🎉 <b>Спасибо за покупку!</b>\n\n"
-        f"📦 Тариф: <b>{plan['label']}</b>\n"
-        f"⏳ Подписка действует до: <b>{exp_str}</b>\n\n"
-        f"Теперь перейди в <b>📱 Моя подписка → Устройства → ➕ Добавить устройство</b> "
-        f"и выбери тип своего устройства, чтобы получить ключ.",
+        t("paid.text", plan=plan["label"], expires=exp_str),
         parse_mode="HTML",
         reply_markup=main_keyboard(user),
     )
@@ -419,7 +412,7 @@ async def on_stars_payment(message: Message, session: AsyncSession) -> None:
 # 🎁 Пробный период
 # ---------------------------------------------------------------------------
 
-@router.message(F.text == "🎁 Пробный период")
+@router.message(MenuText("btn.trial"))
 async def trial_menu(message: Message, session: AsyncSession) -> None:
     tg_id = message.from_user.id
     result = await session.execute(select(User).where(User.telegram_id == tg_id))
@@ -431,20 +424,16 @@ async def trial_menu(message: Message, session: AsyncSession) -> None:
 
     if user.trial_used:
         await message.answer(
-            "⚠️ <b>Тест уже был активирован</b>\n\n"
-            "Пробный период можно использовать только один раз.\n"
-            "Нажми <b>⚡️ Подключить VPN</b>, чтобы оформить подписку.",
+            t("trial.used"),
             parse_mode="HTML",
         )
         return
 
     await message.answer(
-        "🎁 <b>Тестовый доступ</b>\n\n"
-        "Мы дарим тебе <b>2 дня полного безлимита</b>, "
-        "чтобы ты проверил скорость лично.",
+        t("trial.offer"),
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 Активировать тест", callback_data="activate_trial")]
+            [InlineKeyboardButton(text=t("btn.activate_trial"), callback_data="activate_trial")]
         ]),
     )
 
@@ -462,7 +451,7 @@ async def activate_trial(callback: CallbackQuery, session: AsyncSession) -> None
         await callback.answer("Тест уже был активирован.", show_alert=True)
         return
 
-    await callback.message.answer("⏳ Создаю твой VPN-аккаунт...")
+    await callback.message.answer(t("trial.creating"))
 
     user.trial_used = True
     user.subscription_expires_at = datetime.utcnow() + timedelta(days=settings.trial_days)
@@ -471,9 +460,7 @@ async def activate_trial(callback: CallbackQuery, session: AsyncSession) -> None
 
     from bot.handlers.start import main_keyboard
     await callback.message.answer(
-        f"✅ <b>Пробный период на {settings.trial_days} дня активирован!</b>\n\n"
-        f"Теперь перейди в <b>📱 Моя подписка → Устройства → ➕ Добавить устройство</b> "
-        f"и выбери тип своего устройства, чтобы получить ключ.",
+        t("trial.activated", days=settings.trial_days),
         parse_mode="HTML",
         reply_markup=main_keyboard(user),
     )

@@ -35,6 +35,7 @@ from bot.states.payment_states import GiftForm
 from bot.utils.cryptopay import cryptopay, CRYPTO_PLANS
 from bot.utils.database import AsyncSessionLocal
 from bot.utils.marzban import marzban
+from bot.utils.bot_texts import MenuText
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -76,7 +77,7 @@ async def _stars_enabled() -> bool:
         return await is_provider_enabled(session, "stars")
 
 
-@router.message(F.text == "🎁 Подарить VPN")
+@router.message(MenuText("btn.gift"))
 async def gift_start(message: Message) -> None:
     crypto_on = await _crypto_enabled()
     stars_on = await _stars_enabled()

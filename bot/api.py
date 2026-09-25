@@ -2987,6 +2987,210 @@ async def web_wiki_delete(article_id: int, authorization: str | None = Header(de
     return {"ok": True}
 
 
+# ─── Редактор бота (админка → Бот) ────────────────────────────────────────────
+
+_BOT_PREVIEW_SAMPLES = {
+    "days_left": "27", "expires": "21.10.2026", "status_icon": "🟢", "plan": "3 месяца",
+    "days": "2", "milestone_size": "2", "bonus_days": "30", "invited": "5", "paying": "3",
+    "days_earned": "30", "next_milestone": "Ещё 1 — и начислим +30 дней автоматически.",
+    "achievements": "🥉 Первые шаги ✅\n🥈 Амбассадор — ещё 2 до +30 дней",
+    "ref_link": "https://t.me/your_bot?start=ref123456", "support_link": "https://t.me/support",
+}
+
+
+@app.get("/web/bot/schema")
+async def web_bot_schema(authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.utils import bot_texts as bt
+
+    ov = bt.overrides()
+
+    def text_entry(key: str) -> dict:
+        kind, default, placeholders, hint = bt.TEXTS[key]
+        return {
+            "key": key, "kind": kind, "default": default, "value": ov.get(key) or default,
+            "overridden": key in ov, "placeholders": list(placeholders), "hint": hint,
+            "hideable": key in bt.HIDEABLE, "hidden": bt.is_hidden(key),
+        }
+
+    screens = []
+    for sc in bt.SCREENS:
+        screens.append({
+            **{k: v for k, v in sc.items() if k not in ("texts", "buttons")},
+            "kind": sc.get("kind", "system"),
+            "texts": [text_entry(k) for k in sc.get("texts", [])],
+            "buttons": [
+                {**b, **({"text": text_entry(b["key"])} if "key" in b else {})}
+                for b in sc.get("buttons", [])
+            ],
+        })
+    return {
+        "screens": screens,
+        "custom": bt.custom_blocks(),
+        "screen_targets": [{"id": k, "title": v[0]} for k, v in bt.SCREEN_TARGETS.items()],
+        "samples": _BOT_PREVIEW_SAMPLES,
+    }
+
+
+@app.put("/web/bot/texts")
+async def web_bot_save_texts(request: Request, authorization: str | None = Header(default=None)):
+    """Тело: {"values": {key: текст | null}, "hidden": {key: bool}}; null — вернуть стандартный."""
+    _web_auth(authorization)
+    from bot.utils import bot_texts as bt
+
+    body = await request.json()
+    values: dict = body.get("values") or {}
+    hidden: dict = body.get("hidden") or {}
+    for key, value in values.items():
+        if key not in bt.TEXTS:
+            raise HTTPException(400, f"Неизвестный текст: {key}")
+        if value is not None:
+            if not isinstance(value, str):
+                raise HTTPException(400, f"{key}: ожидается строка")
+            err = bt.validate_text(key, value)
+            if err:
+                raise HTTPException(400, f"{key}: {err}")
+    for key in hidden:
+        if key not in bt.HIDEABLE:
+            raise HTTPException(400, f"Кнопку {key} скрыть нельзя")
+
+    changed_labels = {k: v for k, v in values.items() if k in bt.REPLY_BUTTONS}
+    if changed_labels:
+        seen: dict[str, str] = {}
+        for key in bt.REPLY_BUTTONS:
+            label = changed_labels[key] if key in changed_labels else bt.t(key)
+            label = label or bt.default(key)
+            if label in seen:
+                raise HTTPException(400, f"Подпись «{label}» уже у другой кнопки меню — сделайте её уникальной")
+            seen[label] = key
+        for b in bt.menu_blocks():
+            if b["menu_label"] in seen:
+                raise HTTPException(400, f"Подпись «{b['menu_label']}» уже у блока «{b['title']}»")
+
+    async with AsyncSessionLocal() as session:
+        await bt.save_texts(session, values, {k: bool(v) for k, v in hidden.items()})
+    return {"ok": True}
+
+
+def _clean_bot_block(body: dict, block_id: int | None) -> dict:
+    from bot.utils import bot_texts as bt
+    import re
+
+    title = (body.get("title") or "").strip()[:100]
+    if not title:
+        raise HTTPException(400, "Укажите название блока")
+    text = body.get("text") or ""
+    if not text.strip():
+        raise HTTPException(400, "Текст сообщения не может быть пустым")
+    err = bt.validate_html(text)
+    if err:
+        raise HTTPException(400, f"Текст: {err}")
+
+    known_blocks = {b["id"] for b in bt.custom_blocks()}
+    buttons = []
+    for i, btn in enumerate(body.get("buttons") or [], start=1):
+        label = (btn.get("label") or "").strip()
+        kind = btn.get("type")
+        target = str(btn.get("target") or "").strip()
+        if not label or len(label) > 64:
+            raise HTTPException(400, f"Кнопка {i}: подпись от 1 до 64 символов")
+        if kind == "url":
+            if not re.fullmatch(r"(https?|tg)://\S+", target):
+                raise HTTPException(400, f"Кнопка «{label}»: ссылка должна начинаться с https:// или tg://")
+        elif kind == "block":
+            if not target.isdigit() or (int(target) not in known_blocks and int(target) != block_id):
+                raise HTTPException(400, f"Кнопка «{label}»: выберите блок, куда она ведёт")
+            target = int(target)
+        elif kind == "screen":
+            if target not in bt.SCREEN_TARGETS:
+                raise HTTPException(400, f"Кнопка «{label}»: выберите экран бота")
+        else:
+            raise HTTPException(400, f"Кнопка «{label}»: неизвестный тип")
+        buttons.append({"label": label, "type": kind, "target": target})
+
+    show_in_menu = bool(body.get("show_in_menu"))
+    menu_label = (body.get("menu_label") or "").strip()[:64]
+    if show_in_menu:
+        if not menu_label:
+            raise HTTPException(400, "Укажите подпись кнопки в главном меню")
+        owner = bt.reply_labels(exclude_block=block_id).get(menu_label)
+        if owner:
+            raise HTTPException(400, f"Подпись «{menu_label}» уже занята: {owner}")
+
+    command = (body.get("command") or "").strip().lstrip("/").lower()
+    if command:
+        if not re.fullmatch(r"[a-z0-9_]{1,32}", command):
+            raise HTTPException(400, "Команда: латиница, цифры и _, до 32 символов")
+        if command in bt.RESERVED_COMMANDS:
+            raise HTTPException(400, f"Команда /{command} уже используется ботом")
+        other = bt.block_by_command(command)
+        if other and other["id"] != block_id:
+            raise HTTPException(400, f"Команда /{command} уже у блока «{other['title']}»")
+
+    return {
+        "title": title, "text": text, "buttons": json.dumps(buttons, ensure_ascii=False),
+        "show_in_menu": show_in_menu, "menu_label": menu_label, "command": command,
+    }
+
+
+@app.post("/web/bot/blocks")
+async def web_bot_block_create(request: Request, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.bot_content import BotBlock
+    from bot.utils import bot_texts as bt
+
+    data = _clean_bot_block(await request.json(), None)
+    async with AsyncSessionLocal() as session:
+        last = (await session.execute(select(func.max(BotBlock.sort_order)))).scalar()
+        block = BotBlock(**data, sort_order=(last or 0) + 10)
+        session.add(block)
+        await session.commit()
+        await session.refresh(block)
+        await bt.load_cache(session)
+    return {"ok": True, "id": block.id}
+
+
+@app.put("/web/bot/blocks/{block_id}")
+async def web_bot_block_update(block_id: int, request: Request, authorization: str | None = Header(default=None)):
+    _web_auth(authorization)
+    from bot.models.bot_content import BotBlock
+    from bot.utils import bot_texts as bt
+
+    data = _clean_bot_block(await request.json(), block_id)
+    async with AsyncSessionLocal() as session:
+        block = await session.get(BotBlock, block_id)
+        if not block:
+            raise HTTPException(404, "Блок не найден")
+        for k, v in data.items():
+            setattr(block, k, v)
+        await session.commit()
+        await bt.load_cache(session)
+    return {"ok": True}
+
+
+@app.delete("/web/bot/blocks/{block_id}")
+async def web_bot_block_delete(block_id: int, authorization: str | None = Header(default=None)):
+    """Удаляет блок и кнопки других блоков, которые вели на него."""
+    _web_auth(authorization)
+    from bot.models.bot_content import BotBlock
+    from bot.utils import bot_texts as bt
+
+    async with AsyncSessionLocal() as session:
+        block = await session.get(BotBlock, block_id)
+        if not block:
+            raise HTTPException(404, "Блок не найден")
+        await session.delete(block)
+        others = (await session.execute(select(BotBlock).where(BotBlock.id != block_id))).scalars().all()
+        for other in others:
+            buttons = json.loads(other.buttons or "[]")
+            kept = [b for b in buttons if not (b.get("type") == "block" and b.get("target") == block_id)]
+            if len(kept) != len(buttons):
+                other.buttons = json.dumps(kept, ensure_ascii=False)
+        await session.commit()
+        await bt.load_cache(session)
+    return {"ok": True}
+
+
 # ─── Настройки (обзор — тарифы/лимиты/провайдеры сейчас read-only) ────────────
 
 @app.get("/web/settings/overview")
