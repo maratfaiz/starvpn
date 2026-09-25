@@ -135,6 +135,20 @@ article th{color:var(--text);font-weight:600;background:rgba(255,255,255,.03)}
 .callout{display:flex;gap:14px;align-items:flex-start;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:16px;padding:18px 22px;margin:0 0 24px;color:var(--text);font-size:14.5px;line-height:1.7}
 .callout::before{content:"!";flex-shrink:0;width:24px;height:24px;border-radius:8px;background:var(--gold);color:#000;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;margin-top:2px}
 .side-empty{font-size:13px;color:var(--text3);padding:8px 12px}
+figure.wimg{margin:6px auto 24px;max-width:100%}
+figure.wimg[data-align=left]{margin-left:0}
+figure.wimg[data-align=right]{margin-right:0}
+figure.wimg img{width:100%;margin:0}
+figure.wimg figcaption{font-size:13px;line-height:1.5;color:var(--text3);text-align:center;margin-top:10px}
+details.toggle{border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.02);margin:0 0 18px;padding:0 20px}
+details.toggle>summary{list-style:none;cursor:pointer;position:relative;padding:14px 0 14px 24px;font-weight:500;color:var(--text)}
+details.toggle>summary::-webkit-details-marker{display:none}
+details.toggle>summary::before{content:"";position:absolute;left:2px;top:50%;width:7px;height:7px;border-right:2px solid var(--gold);border-bottom:2px solid var(--gold);transform:translateY(-70%) rotate(-45deg);transition:transform .2s}
+details.toggle[open]>summary::before{transform:translateY(-60%) rotate(45deg)}
+details.toggle>:not(summary){margin-left:24px}
+details.toggle>:last-child:not(summary){margin-bottom:16px}
+article td>:last-child,article th>:last-child{margin-bottom:0}
+@media(max-width:640px){.layout figure.wimg{width:100%!important}article table{display:block;overflow-x:auto}}
 /*__WIKI_CUSTOM_CSS__*/
 </style>
 </head>

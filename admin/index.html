@@ -1383,8 +1383,10 @@ const WIKI_TOOLS = [
   ['ol', 'Нумерованный список', '<span style="font-size:11px;font-weight:700">1.</span>'],
   ['quote', 'Цитата', '<span style="font-size:17px;line-height:1">“</span>'],
   ['callout', 'Заметка (жёлтая плашка)', '<span style="font-weight:700">!</span>'],
+  ['toggle', 'Раскрывающийся блок', '<span style="font-size:11px">▸</span>'],
+  ['table', 'Таблица', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="10" y1="4" x2="10" y2="20"/></svg>'],
   ['code', 'Код', '<span class="mono" style="font-size:11px">&lt;/&gt;</span>'],
-  ['image', 'Картинка по ссылке', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-9 9"/></svg>'],
+  ['image', 'Картинка: загрузить (можно перетащить или вставить Ctrl+V)', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-9 9"/></svg>'],
   ['hr', 'Разделитель', '—'],
   ['clear', 'Убрать оформление', '<span style="font-size:12px">T<sub>x</sub></span>'],
   ['undo', 'Отменить', '↶'],
@@ -1433,9 +1435,10 @@ async function openWikiEditor(id) {
           </select>
           ${WIKI_TOOLS.map(([cmd, title, icon]) => `<button type="button" class="tb-btn" title="${title}" onmousedown="event.preventDefault()" onclick="wikiCmd('${cmd}')">${icon}</button>`).join('')}
         </div>
+        <input type="file" id="wImgFile" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden onchange="wikiImgFilePicked(this)">
         <iframe id="wFrame" class="wiki-frame" title="Редактор статьи"></iframe>
         <textarea class="editor-body" id="wHtml" spellcheck="false" style="display:none"></textarea>
-        <div class="tb-hint" style="margin-top:8px;white-space:normal">Заголовки «Заголовок раздела» автоматически попадают в оглавление справа на странице статьи.</div>
+        <div class="tb-hint" style="margin-top:8px;white-space:normal">Введите <span class="kbd">/</span> в пустой строке — меню блоков (таблица, картинка, раскрывашка…). Быстрый ввод: <span class="kbd">#</span> заголовок, <span class="kbd">##</span> подзаголовок, <span class="kbd">-</span> список, <span class="kbd">1.</span> нумерация, <span class="kbd">&gt;</span> цитата — и пробел. Картинки можно перетащить в текст или вставить из буфера; клик по картинке — размер, выравнивание, подпись. В таблице <span class="kbd">Tab</span> — следующая ячейка. «Заголовки раздела» попадают в оглавление статьи.</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
         <div class="editor-card">
@@ -1484,10 +1487,11 @@ async function openWikiEditor(id) {
 
 function wikiInitFrame(html, css) {
   const f = document.getElementById('wFrame');
+  wikiFig = null; wikiSlash = null; wikiSavedRange = null;
   f.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>${wikiEditorCss}</style><style id="customCss"></style>
-    <style>body{padding:22px 26px;min-height:100%}#ed{outline:none;max-width:none;padding-bottom:40px}#ed:empty::before,#ed > p:only-child:empty::before{content:'Начните писать статью…';color:var(--text3)}</style>
+    <style>${WIKI_EDITOR_CSS}</style>
     </head><body><article id="ed" contenteditable="true"></article></body></html>`;
   f.onload = () => {
     const ed = wikiEd();
@@ -1495,15 +1499,9 @@ function wikiInitFrame(html, css) {
     wikiApplyCss(css);
     const d = wikiDoc();
     d.execCommand('defaultParagraphSeparator', false, 'p');
-    ed.addEventListener('input', () => { unsaved = true; });
     d.addEventListener('keydown', hotkeys);
     d.addEventListener('selectionchange', wikiSyncBlockSelect);
-    // Вставка из Word/Google Docs приносит свои шрифты и цвета — берём только текст.
-    ed.addEventListener('paste', (e) => {
-      e.preventDefault();
-      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-      d.execCommand('insertText', false, text);
-    });
+    wikiBindEditor();
   };
 }
 
@@ -1528,9 +1526,11 @@ function wikiCmd(cmd, value) {
   const d = wikiDoc();
   wikiEd().focus();
   const wrap = (tag, cls) => {
-    const sel = d.getSelection();
-    const text = sel && sel.toString() ? esc(sel.toString()) : (tag === 'pre' ? 'код' : 'Текст');
-    d.execCommand('insertHTML', false, `<${tag}${cls ? ` class="${cls}"` : ''}>${text}</${tag}><p><br></p>`);
+    const r = wikiSelRange();
+    const picked = r && !r.collapsed ? r.toString() : '';
+    if (picked) r.deleteContents();
+    const el = wikiInsertBlock(`<${tag}${cls ? ` class="${cls}"` : ''}>${picked ? esc(picked) : (tag === 'pre' ? 'код' : 'Текст')}</${tag}>`);
+    wikiCaret(el, !picked);
   };
   switch (cmd) {
     case 'block': d.execCommand('formatBlock', false, value); break;
@@ -1552,14 +1552,496 @@ function wikiCmd(cmd, value) {
       else d.execCommand('insertHTML', false, `<a href="${esc(url)}">${esc(url)}</a>`);
       break;
     }
-    case 'image': {
+    case 'image': wikiPickImage(); break;
+    case 'imageurl': {
+      const range = wikiSelRange() && wikiSelRange().cloneRange();
       const url = prompt('Ссылка на картинку (https://…)', 'https://');
-      if (!url) return;
-      d.execCommand('insertHTML', false, `<img src="${esc(url)}" alt="">`);
+      if (!url || !/^(https?:\/\/|\/)\S+$/.test(url.trim())) return;
+      wikiSavedRange = range;
+      wikiInsertImage(url.trim());
+      break;
+    }
+    case 'toggle': {
+      const el = wikiInsertBlock(`<details class="toggle" open><summary>Заголовок</summary><p>${WIKI_TOGGLE_HINT}</p></details>`);
+      wikiCaret(el.querySelector('summary'), true);
+      break;
+    }
+    case 'table': {
+      const row = tag => `<tr>${`<${tag}><br></${tag}>`.repeat(3)}</tr>`;
+      const el = wikiInsertBlock(`<table><thead>${row('th')}</thead><tbody>${row('td')}${row('td')}</tbody></table>`);
+      wikiCaret(el.querySelector('th'));
       break;
     }
   }
+  wikiFixNesting();
   wikiSyncBlockSelect();
+  wikiPaintOverlays();
+}
+
+/* ── Блоки «как в Notion»: меню «/», картинки, таблицы, раскрывашки ── */
+const WIKI_SLASH = [
+  ['p', 'Текст', 'Обычный абзац', '¶', 'text'],
+  ['h2', 'Заголовок раздела', 'Попадает в оглавление', 'H2', 'heading'],
+  ['h3', 'Подзаголовок', 'Заголовок поменьше', 'H3', 'heading'],
+  ['ul', 'Маркированный список', 'Пункты с точками', '•', 'list bullet'],
+  ['ol', 'Нумерованный список', 'Пункты 1, 2, 3', '1.', 'list number'],
+  ['quote', 'Цитата', 'Выделенный абзац', '“', 'quote'],
+  ['callout', 'Заметка', 'Жёлтая плашка с «!»', '!', 'callout note'],
+  ['toggle', 'Раскрывающийся блок', 'Заголовок, по клику — текст', '▸', 'toggle details'],
+  ['table', 'Таблица', '3 × 3 с шапкой', '▦', 'table'],
+  ['image', 'Картинка', 'Загрузить с компьютера', '▣', 'image img photo'],
+  ['imageurl', 'Картинка по ссылке', 'Вставить https://…', '↗', 'image url link'],
+  ['code', 'Код', 'Моноширинный блок', '</>', 'code'],
+  ['hr', 'Разделитель', 'Горизонтальная линия', '—', 'divider hr'],
+];
+// Быстрый ввод в начале пустого абзаца: «## » → подзаголовок и т. п.
+const WIKI_MD = { '#': ['block', 'h2'], '##': ['block', 'h3'], '-': ['ul'], '*': ['ul'], '1.': ['ol'], '>': ['quote'] };
+
+const WIKI_TOGGLE_HINT = 'Текст, который откроется по клику';
+let wikiSavedRange = null;  // позиция курсора до открытия диалога выбора файла
+let wikiFig = null;         // выбранная картинка
+let wikiSlash = null;       // {block, items, idx} — открытое меню «/»
+
+function wikiSelRange() {
+  const d = wikiDoc(), sel = d && d.getSelection();
+  if (!sel || !sel.rangeCount) return null;
+  const r = sel.getRangeAt(0);
+  return wikiEd().contains(r.startContainer) ? r : null;
+}
+function wikiElOf(node) { return node && (node.nodeType === 1 ? node : node.parentNode); }
+function wikiTopBlock(node) {
+  const ed = wikiEd();
+  while (node && node.parentNode !== ed) node = node.parentNode;
+  return node && node.nodeType === 1 ? node : null;
+}
+function wikiCaret(el, selectAll) {
+  const d = wikiDoc(), r = d.createRange();
+  r.selectNodeContents(el);
+  if (!selectAll) r.collapse(!el.textContent);
+  const sel = d.getSelection();
+  sel.removeAllRanges(); sel.addRange(r);
+}
+function wikiEmptyP(el) { return el && el.tagName === 'P' && !el.textContent.trim() && !el.querySelector('img'); }
+
+/* Вставляет блок на место пустого абзаца с курсором или после текущего блока. */
+function wikiInsertBlock(html) {
+  const d = wikiDoc(), ed = wikiEd();
+  const tpl = d.createElement('template');
+  tpl.innerHTML = html.trim();
+  const nodes = [...tpl.content.childNodes];
+  const r = wikiSavedRange || wikiSelRange();
+  wikiSavedRange = null;
+  const top = r && wikiTopBlock(r.startContainer);
+  if (wikiEmptyP(top)) top.replaceWith(...nodes);
+  else if (top) top.after(...nodes);
+  else ed.append(...nodes);
+  const last = nodes[nodes.length - 1];
+  if (!last.nextElementSibling) {
+    const p = d.createElement('p'); p.innerHTML = '<br>'; last.after(p);
+  }
+  unsaved = true;
+  return nodes[0];
+}
+
+function wikiInsertImage(src) {
+  const fig = wikiInsertBlock(`<figure class="wimg" data-align="center"><img src="${esc(src)}" alt=""></figure>`);
+  const img = fig.querySelector('img');
+  img.addEventListener('load', () => {
+    if (!fig.style.width) {
+      const w = Math.round(img.naturalWidth / wikiEd().clientWidth * 100);
+      fig.style.width = Math.max(20, Math.min(100, w)) + '%';
+    }
+    wikiSelectFigure(fig);
+  }, { once: true });
+  wikiCaret(fig.nextElementSibling);
+}
+
+async function wikiUploadFiles(files) {
+  const images = [...files].filter(f => /^image\//.test(f.type));
+  for (const f of images) {
+    try {
+      toast('Загружаю картинку…');
+      const up = await uploadImage(f);
+      wikiInsertImage(up.url);
+    } catch (e) { toast(e.message, true); }
+  }
+  return images.length > 0;
+}
+function wikiPickImage() {
+  wikiSavedRange = wikiSelRange() && wikiSelRange().cloneRange();
+  document.getElementById('wImgFile').click();
+}
+async function wikiImgFilePicked(input) {
+  await wikiUploadFiles(input.files);
+  input.value = '';
+}
+
+/* Картинка: выбор, размер, выравнивание, подпись */
+function wikiSelectFigure(fig) {
+  if (wikiFig && wikiFig !== fig) wikiFig.classList.remove('w-sel');
+  wikiFig = fig;
+  if (fig) fig.classList.add('w-sel');
+  wikiPaintOverlays();
+}
+function wikiImgAction(act, value) {
+  const fig = wikiFig;
+  if (!fig) return;
+  if (act === 'width') fig.style.width = value + '%';
+  else if (act === 'align') fig.dataset.align = value;
+  else if (act === 'caption') {
+    let cap = fig.querySelector('figcaption');
+    if (cap) cap.remove();
+    else { cap = wikiDoc().createElement('figcaption'); cap.textContent = 'Подпись'; fig.appendChild(cap); wikiSelectFigure(null); wikiCaret(cap, true); }
+  } else if (act === 'alt') {
+    const img = fig.querySelector('img');
+    const alt = prompt('Описание картинки (для поисковиков и незрячих читателей)', img.alt || '');
+    if (alt !== null) img.alt = alt.trim();
+  } else if (act === 'del') {
+    const next = fig.nextElementSibling;
+    fig.remove();
+    wikiSelectFigure(null);
+    if (next) wikiCaret(next);
+  }
+  unsaved = true;
+  wikiPaintOverlays();
+}
+function wikiResizeStart(e) {
+  const fig = wikiFig;
+  if (!fig) return;
+  e.preventDefault();
+  const d = wikiDoc(), edW = wikiEd().clientWidth;
+  const startX = e.clientX, startW = fig.getBoundingClientRect().width;
+  const factor = fig.dataset.align === 'right' ? -1 : (fig.dataset.align === 'left' ? 1 : 2);
+  const move = (ev) => {
+    const w = (startW + (ev.clientX - startX) * factor) / edW * 100;
+    fig.style.width = Math.round(Math.max(10, Math.min(100, w))) + '%';
+    wikiPaintOverlays();
+  };
+  const up = () => { d.removeEventListener('mousemove', move); d.removeEventListener('mouseup', up); unsaved = true; };
+  d.addEventListener('mousemove', move);
+  d.addEventListener('mouseup', up);
+}
+
+/* Таблицы */
+function wikiCell() {
+  const r = wikiSelRange(), el = r && wikiElOf(r.startContainer);
+  return el && el.closest ? el.closest('td, th') : null;
+}
+function wikiNewCell(tag) { const c = wikiDoc().createElement(tag); c.innerHTML = '<br>'; return c; }
+function wikiRetag(cell, tag) {
+  const n = wikiDoc().createElement(tag);
+  while (cell.firstChild) n.appendChild(cell.firstChild);
+  cell.replaceWith(n);
+  return n;
+}
+function wikiTableOp(op) {
+  const cell = wikiCell();
+  if (!cell) return;
+  const table = cell.closest('table'), row = cell.parentElement, idx = cell.cellIndex;
+  const inHead = row.parentElement.tagName === 'THEAD';
+  let focus = null;
+  if (op === 'row') {
+    const tr = wikiDoc().createElement('tr');
+    [...row.cells].forEach(c => tr.appendChild(wikiNewCell(inHead ? 'td' : c.tagName.toLowerCase())));
+    if (inHead) {
+      let body = table.tBodies[0];
+      if (!body) { body = wikiDoc().createElement('tbody'); table.appendChild(body); }
+      body.prepend(tr);
+    } else row.after(tr);
+    focus = tr.cells[Math.min(idx, tr.cells.length - 1)];
+  } else if (op === 'col') {
+    [...table.rows].forEach(tr => {
+      const ref = tr.cells[idx];
+      const tag = ref ? ref.tagName.toLowerCase() : (tr.parentElement.tagName === 'THEAD' ? 'th' : 'td');
+      const c = wikiNewCell(tag);
+      if (ref) ref.after(c); else tr.appendChild(c);
+      if (tr === row) focus = c;
+    });
+  } else if (op === 'delrow') {
+    if (table.rows.length <= 1) return wikiTableOp('deltable');
+    const sib = row.nextElementSibling || row.previousElementSibling;
+    const section = row.parentElement;
+    row.remove();
+    if (!section.rows.length) section.remove();
+    focus = sib ? sib.cells[Math.min(idx, sib.cells.length - 1)] : table.rows[0].cells[0];
+  } else if (op === 'delcol') {
+    if (row.cells.length <= 1) return wikiTableOp('deltable');
+    [...table.rows].forEach(tr => { if (tr.cells[idx]) tr.cells[idx].remove(); });
+    focus = row.cells[Math.min(idx, row.cells.length - 1)];
+  } else if (op === 'head') {
+    if (table.tHead) {
+      let body = table.tBodies[0];
+      if (!body) { body = wikiDoc().createElement('tbody'); table.appendChild(body); }
+      [...table.tHead.rows].reverse().forEach(tr => {
+        [...tr.cells].forEach(c => wikiRetag(c, 'td'));
+        body.prepend(tr);
+      });
+      table.tHead.remove();
+    } else {
+      const first = table.rows[0];
+      const head = wikiDoc().createElement('thead');
+      table.prepend(head);
+      [...first.cells].forEach(c => wikiRetag(c, 'th'));
+      head.appendChild(first);
+    }
+    focus = table.rows[row.rowIndex >= 0 ? row.rowIndex : 0].cells[idx];
+  } else if (op === 'deltable') {
+    const next = table.nextElementSibling;
+    table.remove();
+    if (next) wikiCaret(next);
+  }
+  if (focus) wikiCaret(focus);
+  unsaved = true;
+  wikiPaintOverlays();
+}
+function wikiTableTab(back) {
+  const cell = wikiCell();
+  if (!cell) return false;
+  const table = cell.closest('table');
+  const cells = [...table.querySelectorAll('th, td')];
+  const i = cells.indexOf(cell) + (back ? -1 : 1);
+  if (i < 0) return true;
+  if (i >= cells.length) { wikiCaret(cells[cells.length - 1]); wikiTableOp('row'); return true; }
+  wikiCaret(cells[i], true);
+  return true;
+}
+
+/* Меню «/» */
+function wikiSlashUpdate() {
+  const r = wikiSelRange();
+  const top = r && r.collapsed && wikiTopBlock(r.startContainer);
+  const m = top && top.tagName === 'P' && top.textContent.match(/^\/([\p{L}\d]*)$/u);
+  if (!m) { wikiSlashClose(); return; }
+  const q = m[1].toLowerCase();
+  const items = WIKI_SLASH.filter(([cmd, label, , , kw]) => !q || label.toLowerCase().includes(q) || kw.includes(q) || cmd.includes(q));
+  if (!items.length) { wikiSlashClose(); return; }
+  wikiSlash = { block: top, items, idx: wikiSlash && wikiSlash.block === top ? Math.min(wikiSlash.idx, items.length - 1) : 0 };
+  wikiPaintSlash();
+}
+function wikiPaintSlash() {
+  const d = wikiDoc(), box = d.getElementById('wSlash');
+  if (!wikiSlash) { box.hidden = true; return; }
+  box.innerHTML = wikiSlash.items.map(([cmd, label, sub, ic], i) => `
+    <div class="it${i === wikiSlash.idx ? ' on' : ''}" data-cmd="${cmd}">
+      <span class="ic">${esc(ic)}</span><span><span class="t">${esc(label)}</span><span class="s">${esc(sub)}</span></span>
+    </div>`).join('');
+  const rect = wikiSlash.block.getBoundingClientRect();
+  const win = d.defaultView;
+  box.hidden = false;
+  box.style.left = (rect.left + win.scrollX) + 'px';
+  const below = rect.bottom + win.scrollY + 6;
+  box.style.top = (rect.bottom + box.offsetHeight > win.innerHeight && rect.top > box.offsetHeight
+    ? rect.top + win.scrollY - box.offsetHeight - 6 : below) + 'px';
+  const on = box.querySelector('.it.on');
+  if (on) on.scrollIntoView({ block: 'nearest' });
+}
+function wikiSlashClose() {
+  if (!wikiSlash) return;
+  wikiSlash = null;
+  wikiPaintSlash();
+}
+function wikiSlashChoose(cmd) {
+  const block = wikiSlash && wikiSlash.block;
+  wikiSlashClose();
+  if (!block) return;
+  block.innerHTML = '<br>';
+  wikiCaret(block);
+  if (['p', 'h2', 'h3'].includes(cmd)) wikiCmd('block', cmd);
+  else wikiCmd(cmd);
+}
+
+/* Плавающие панели картинки и таблицы — живут в iframe вне #ed и не сохраняются. */
+function wikiPaintOverlays() {
+  const d = wikiDoc();
+  if (!d || !d.getElementById('wImgBar')) return;
+  const win = d.defaultView, ed = wikiEd();
+  const imgBar = d.getElementById('wImgBar'), handle = d.getElementById('wImgHandle'), tblBar = d.getElementById('wTblBar');
+  if (wikiFig && !ed.contains(wikiFig)) wikiFig = null;
+  imgBar.hidden = handle.hidden = !wikiFig;
+  if (wikiFig) {
+    const img = wikiFig.querySelector('img');
+    const r = (img || wikiFig).getBoundingClientRect();
+    imgBar.style.left = Math.max(4, r.left + win.scrollX) + 'px';
+    imgBar.style.top = (r.top - imgBar.offsetHeight - 8 >= 0 ? r.top - imgBar.offsetHeight - 8 : r.bottom + 8) + win.scrollY + 'px';
+    const right = wikiFig.dataset.align === 'right';
+    handle.style.left = ((right ? r.left : r.right) + win.scrollX - 6) + 'px';
+    handle.style.top = (r.top + win.scrollY + r.height / 2 - 20) + 'px';
+    const w = parseInt(wikiFig.style.width, 10);
+    imgBar.querySelectorAll('[data-w]').forEach(b => b.classList.toggle('on', +b.dataset.w === w));
+    imgBar.querySelectorAll('[data-a]').forEach(b => b.classList.toggle('on', b.dataset.a === (wikiFig.dataset.align || 'center')));
+    imgBar.querySelector('[data-act=caption]').classList.toggle('on', !!wikiFig.querySelector('figcaption'));
+  }
+  const cell = !wikiFig && wikiCell();
+  tblBar.hidden = !cell;
+  if (cell) {
+    const r = cell.closest('table').getBoundingClientRect();
+    tblBar.style.left = (r.left + win.scrollX) + 'px';
+    tblBar.style.top = (r.top - tblBar.offsetHeight - 8 >= 0 ? r.top - tblBar.offsetHeight - 8 : r.bottom + 8) + win.scrollY + 'px';
+    tblBar.querySelector('[data-t=head]').classList.toggle('on', !!cell.closest('table').tHead);
+  }
+  // Подсказка «/» в пустом абзаце с курсором
+  ed.querySelectorAll('.w-ph').forEach(p => p.classList.remove('w-ph'));
+  const r = wikiSelRange(), top = r && r.collapsed && wikiTopBlock(r.startContainer);
+  if (wikiEmptyP(top) && ed.children.length > 1) top.classList.add('w-ph');
+}
+
+const WIKI_OVERLAYS = `
+  <div id="wImgBar" class="w-bar" hidden>
+    <button data-w="25">25%</button><button data-w="50">50%</button><button data-w="75">75%</button><button data-w="100">100%</button>
+    <span class="w-sep"></span>
+    <button data-a="left" title="Прижать влево">Слева</button><button data-a="center" title="По центру">Центр</button><button data-a="right" title="Прижать вправо">Справа</button>
+    <span class="w-sep"></span>
+    <button data-act="caption">Подпись</button><button data-act="alt" title="Описание картинки">Alt</button><button data-act="del" class="w-danger">Удалить</button>
+  </div>
+  <div id="wImgHandle" class="w-handle" title="Потяните, чтобы изменить размер" hidden></div>
+  <div id="wTblBar" class="w-bar" hidden>
+    <button data-t="row">+ Строка</button><button data-t="col">+ Столбец</button>
+    <span class="w-sep"></span>
+    <button data-t="delrow">− Строка</button><button data-t="delcol">− Столбец</button>
+    <span class="w-sep"></span>
+    <button data-t="head">Шапка</button><button data-t="deltable" class="w-danger">Удалить таблицу</button>
+  </div>
+  <div id="wSlash" class="w-slash" hidden></div>`;
+
+const WIKI_EDITOR_CSS = `
+  body{padding:22px 26px;min-height:100%;position:relative}
+  #ed{outline:none;max-width:none;padding-bottom:40px}
+  #ed:empty::before,#ed > p:only-child:empty::before{content:'Начните писать статью… Введите «/», чтобы вставить блок';color:var(--text3)}
+  #ed p.w-ph{position:relative}
+  #ed p.w-ph::before{content:'Введите «/» для выбора блока';position:absolute;color:var(--text3);pointer-events:none}
+  #ed img{cursor:pointer}
+  #ed figure.wimg.w-sel img{outline:2px solid #FFB800;outline-offset:3px}
+  #ed details.toggle > summary{cursor:text}
+  #ed td,#ed th{min-width:48px}
+  .w-bar{position:absolute;z-index:20;display:flex;gap:2px;align-items:center;background:#17120c;border:1px solid rgba(255,184,0,.25);border-radius:10px;padding:4px;box-shadow:0 12px 32px rgba(0,0,0,.55);font:500 12px Inter,sans-serif;white-space:nowrap}
+  .w-bar[hidden],.w-handle[hidden],.w-slash[hidden]{display:none}
+  .w-bar button{background:none;border:0;color:#E8DCC4;padding:5px 8px;border-radius:7px;cursor:pointer;font:inherit}
+  .w-bar button:hover{background:rgba(255,184,0,.12);color:#FFB800}
+  .w-bar button.on{background:rgba(255,184,0,.18);color:#FFB800}
+  .w-bar .w-danger{color:#F87171}
+  .w-sep{width:1px;height:18px;background:rgba(255,255,255,.12);margin:0 3px}
+  .w-handle{position:absolute;z-index:20;width:12px;height:40px;border-radius:6px;background:#FFB800;border:2px solid #0a0806;cursor:ew-resize;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+  .w-slash{position:absolute;z-index:30;width:290px;max-height:330px;overflow:auto;background:#15110c;border:1px solid rgba(255,184,0,.22);border-radius:12px;padding:6px;box-shadow:0 18px 40px rgba(0,0,0,.6);font-family:Inter,sans-serif}
+  .w-slash .it{display:flex;gap:10px;align-items:center;padding:7px 9px;border-radius:8px;cursor:pointer}
+  .w-slash .it.on{background:rgba(255,184,0,.12)}
+  .w-slash .ic{width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;font:600 12px 'Space Grotesk',sans-serif;color:#FFB800;flex-shrink:0}
+  .w-slash .t{display:block;font-size:13px;font-weight:500;color:#F0E6D2}
+  .w-slash .s{display:block;font-size:11.5px;color:#7E705B}`;
+
+function wikiBindEditor() {
+  const d = wikiDoc(), ed = wikiEd();
+  d.body.insertAdjacentHTML('beforeend', WIKI_OVERLAYS);
+  ed.querySelectorAll('details').forEach(x => { x.open = true; });
+
+  const bar = (id, fn) => d.getElementById(id).addEventListener('mousedown', (e) => {
+    const b = e.target.closest('button');
+    e.preventDefault();
+    if (b) fn(b);
+  });
+  bar('wImgBar', b => b.dataset.w ? wikiImgAction('width', b.dataset.w)
+    : b.dataset.a ? wikiImgAction('align', b.dataset.a) : wikiImgAction(b.dataset.act));
+  bar('wTblBar', b => wikiTableOp(b.dataset.t));
+  d.getElementById('wImgHandle').addEventListener('mousedown', wikiResizeStart);
+  d.getElementById('wSlash').addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    const it = e.target.closest('.it');
+    if (it) wikiSlashChoose(it.dataset.cmd);
+  });
+
+  d.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.w-bar, .w-handle, .w-slash')) return;
+    wikiSlashClose();
+    const img = e.target.closest('#ed img');
+    if (!img) { if (wikiFig) wikiSelectFigure(null); return; }
+    e.preventDefault();
+    let fig = img.closest('figure');
+    if (!fig) {  // картинка из старой статьи — оборачиваем, чтобы появились размер и подпись
+      fig = d.createElement('figure');
+      fig.className = 'wimg'; fig.dataset.align = 'center';
+      const p = img.parentElement;
+      if (p.tagName === 'P' && p.parentNode === wikiEd() && !p.textContent.trim() && p.querySelectorAll('img').length === 1) p.replaceWith(fig);
+      else img.replaceWith(fig);
+      fig.appendChild(img);
+      unsaved = true;
+    }
+    wikiSelectFigure(fig);
+  });
+  // В редакторе раскрывашки всегда открыты: клик по заголовку не должен их сворачивать.
+  d.addEventListener('click', (e) => { if (e.target.closest('#ed summary')) e.preventDefault(); });
+
+  ed.addEventListener('input', () => { unsaved = true; wikiFixNesting(); wikiSlashUpdate(); wikiPaintOverlays(); });
+  ed.addEventListener('keydown', (e) => {
+    if (wikiSlash) {
+      const n = wikiSlash.items.length;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        wikiSlash.idx = (wikiSlash.idx + (e.key === 'ArrowDown' ? 1 : n - 1)) % n;
+        wikiPaintSlash(); return;
+      }
+      if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); wikiSlashChoose(wikiSlash.items[wikiSlash.idx][0]); return; }
+      if (e.key === 'Escape') { e.preventDefault(); wikiSlashClose(); return; }
+    }
+    if (wikiFig && (e.key === 'Backspace' || e.key === 'Delete')) { e.preventDefault(); wikiImgAction('del'); return; }
+    if (wikiFig && e.key !== 'Shift') wikiSelectFigure(null);
+    if (e.key === 'Tab' && wikiTableTab(e.shiftKey)) { e.preventDefault(); return; }
+    const r = wikiSelRange();
+    const summary = r && wikiElOf(r.startContainer).closest('summary');
+    if (summary && e.key === ' ') { e.preventDefault(); d.execCommand('insertText', false, ' '); return; }
+    if (summary && e.key === 'Enter') {
+      e.preventDefault();
+      let body = summary.nextElementSibling;
+      if (!body) { body = d.createElement('p'); body.innerHTML = '<br>'; summary.after(body); }
+      wikiCaret(body, body.textContent === WIKI_TOGGLE_HINT); return;
+    }
+    if (e.key === ' ' && r && r.collapsed) {
+      const top = wikiTopBlock(r.startContainer);
+      const md = top && top.tagName === 'P' && WIKI_MD[top.textContent];
+      if (md) {
+        const before = d.createRange();
+        before.setStart(top, 0); before.setEnd(r.startContainer, r.startOffset);
+        if (before.toString() === top.textContent) {
+          e.preventDefault();
+          top.innerHTML = '<br>';
+          wikiCaret(top);
+          wikiCmd(...md);
+        }
+      }
+    }
+  });
+  d.addEventListener('selectionchange', wikiPaintOverlays);
+  d.defaultView.addEventListener('resize', wikiPaintOverlays);
+
+  // Вставка: картинки из буфера загружаем, текст — без чужого оформления из Word/Google Docs.
+  ed.addEventListener('paste', async (e) => {
+    const cd = e.clipboardData || window.clipboardData;
+    e.preventDefault();
+    if (cd.files && cd.files.length) {
+      wikiSavedRange = wikiSelRange() && wikiSelRange().cloneRange();
+      if (await wikiUploadFiles(cd.files)) return;
+    }
+    d.execCommand('insertText', false, cd.getData('text/plain'));
+  });
+  d.addEventListener('dragover', (e) => {
+    if ([...(e.dataTransfer.types || [])].includes('Files')) e.preventDefault();
+  });
+  d.addEventListener('drop', (e) => {
+    if (!e.dataTransfer.files.length) return;
+    e.preventDefault();
+    const at = d.caretRangeFromPoint ? d.caretRangeFromPoint(e.clientX, e.clientY) : null;
+    wikiSavedRange = at && ed.contains(at.startContainer) ? at : null;
+    wikiUploadFiles(e.dataTransfer.files);
+  });
+}
+
+/* HTML статьи без служебных пометок редактора. */
+function wikiCleanHtml(ed) {
+  const out = ed.cloneNode(true);
+  out.querySelectorAll('.w-sel, .w-ph').forEach(el => {
+    el.classList.remove('w-sel', 'w-ph');
+    if (!el.classList.length) el.removeAttribute('class');
+  });
+  out.querySelectorAll('details[open]').forEach(el => el.removeAttribute('open'));
+  return out.innerHTML.trim();
 }
 
 function wikiSetMode(mode) {
@@ -1567,10 +2049,13 @@ function wikiSetMode(mode) {
   const frame = document.getElementById('wFrame');
   const ta = document.getElementById('wHtml');
   if (mode === 'html') {
-    ta.value = wikiEd().innerHTML;
+    wikiSlashClose();
+    wikiSelectFigure(null);
+    ta.value = wikiCleanHtml(wikiEd());
     frame.style.display = 'none'; ta.style.display = '';
   } else {
     wikiEd().innerHTML = ta.value;
+    wikiEd().querySelectorAll('details').forEach(x => { x.open = true; });
     ta.style.display = 'none'; frame.style.display = '';
   }
   wikiMode = mode;
@@ -1585,14 +2070,13 @@ function wikiSlugify(s) {
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
 }
 
-/* Браузерный contenteditable иногда кладёт список/плашку внутрь <p> и
-   оставляет пустые абзацы в конце — чистим перед сохранением. */
-function wikiNormalize(ed) {
+const WIKI_NEST_SEL = ':scope > p > :is(ul, ol, div, pre, blockquote, h2, h3, table, hr, figure, details, p)';
+function wikiUnnest(ed) {
   ed.querySelectorAll(':scope > p').forEach(p => {
-    if (!p.querySelector(':scope > ul, :scope > ol, :scope > div, :scope > pre, :scope > blockquote, :scope > h2, :scope > h3, :scope > table, :scope > hr')) return;
+    if (!p.querySelector(WIKI_NEST_SEL.replace(':scope > p > ', ':scope > '))) return;
     let buf = null;
     [...p.childNodes].forEach(n => {
-      if (n.nodeType === 1 && /^(UL|OL|DIV|PRE|BLOCKQUOTE|H2|H3|TABLE|HR)$/.test(n.tagName)) {
+      if (n.nodeType === 1 && /^(UL|OL|DIV|PRE|BLOCKQUOTE|H2|H3|TABLE|HR|FIGURE|DETAILS|P)$/.test(n.tagName)) {
         p.before(n); buf = null;
       } else {
         if (!buf) { buf = ed.ownerDocument.createElement('p'); p.before(buf); }
@@ -1601,6 +2085,26 @@ function wikiNormalize(ed) {
     });
     p.remove();
   });
+}
+/* Chrome при вставке списка/плашки иногда кладёт блок внутрь <p> — сразу
+   достаём его наружу, сохраняя курсор. */
+function wikiFixNesting() {
+  const ed = wikiEd();
+  if (!ed.querySelector(WIKI_NEST_SEL)) return;
+  const r = wikiSelRange();
+  const at = r && [r.startContainer, r.startOffset];
+  wikiUnnest(ed);
+  if (at && ed.contains(at[0])) {
+    const nr = wikiDoc().createRange();
+    nr.setStart(at[0], Math.min(at[1], at[0].nodeType === 3 ? at[0].length : at[0].childNodes.length));
+    const sel = wikiDoc().getSelection();
+    sel.removeAllRanges(); sel.addRange(nr);
+  }
+}
+
+/* Перед сохранением: блоки не внутри <p> и без пустых абзацев в конце. */
+function wikiNormalize(ed) {
+  wikiUnnest(ed);
   ed.querySelectorAll(':scope > p').forEach(p => { if (!p.textContent.trim() && !p.querySelector('img')) p.remove(); });
 }
 
@@ -1615,7 +2119,7 @@ function wikiContentHtml() {
     while (used.has(id)) id = `${base}-${n++}`;
     used.add(id); h.id = id;
   });
-  return ed.innerHTML.trim();
+  return wikiCleanHtml(ed);
 }
 
 function wikiPayload() {
