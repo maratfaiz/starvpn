@@ -12,10 +12,11 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from bot.api import app as fastapi_app
 from bot.config import settings
 from bot.utils.database import init_db, AsyncSessionLocal
-from bot.utils import admin_auth
+from bot.utils import admin_auth, bot_texts
+from bot.utils.wiki_page import seed_wiki_articles
 from bot.middlewares.db import DbSessionMiddleware
 from bot.middlewares.ban import BanMiddleware
-from bot.handlers import admin, start, payment, profile, referral, instructions, gift, devices, crypto_payment, card_payment
+from bot.handlers import admin, start, payment, profile, referral, instructions, gift, devices, crypto_payment, card_payment, custom_blocks
 from bot.tasks.scheduler import scheduler_loop
 
 logging.basicConfig(
@@ -32,6 +33,18 @@ async def main() -> None:
     async with AsyncSessionLocal() as session:
         await admin_auth.load_sessions_cache(session)
     logger.info("Admin sessions cache warmed.")
+
+    async with AsyncSessionLocal() as session:
+        await bot_texts.load_cache(session)
+    logger.info("Bot texts cache warmed.")
+
+    try:
+        async with AsyncSessionLocal() as session:
+            await seed_wiki_articles(session)
+    except Exception:
+        # Чаще всего — не применена миграция 0014 (alembic upgrade head).
+        # Бот при этом должен работать, ломается только /wiki.
+        logger.exception("Wiki seed failed — run `alembic upgrade head`")
 
     bot = Bot(
         token=settings.telegram_api_token,
@@ -57,6 +70,7 @@ async def main() -> None:
     dp.include_router(instructions.router)
     dp.include_router(crypto_payment.router)
     dp.include_router(card_payment.router)
+    dp.include_router(custom_blocks.router)
 
     # FastAPI (Mini App API) — порт 8080
     api_config = uvicorn.Config(

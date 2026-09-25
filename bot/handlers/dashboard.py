@@ -6,7 +6,7 @@ Shows: subscription status, days remaining, traffic used/limit, balance.
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime
 
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message

@@ -115,7 +115,7 @@ class Robokassa:
         expected = hashlib.md5(f"{out_sum}:{inv_id}:{self._password2}".encode()).hexdigest()
         # compare_digest — как в cryptopay.check_signature, не сравниваем
         # подписи через "==" (не constant-time).
-        return hmac.compare_digest(expected.lower(), signature.lower())
+        return hmac.compare_digest(expected.lower(), (signature or "").lower())
 
 
 # Глобальный синглтон — используется в handlers и api.py

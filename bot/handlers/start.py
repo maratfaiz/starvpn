@@ -7,6 +7,7 @@
   • Всегда: 🎧 Поддержка | 👥 Партнёрка | 📚 Инструкции
 """
 
+import html
 import logging
 from datetime import datetime
 
@@ -26,6 +27,8 @@ from sqlalchemy import select
 
 from bot.config import settings
 from bot.models.user import User
+from bot.utils import bot_texts
+from bot.utils.bot_texts import MenuText, t
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -38,19 +41,22 @@ def main_keyboard(user: User) -> ReplyKeyboardMarkup:
 
     rows: list[list[KeyboardButton]] = []
 
-    if has_sub:
-        rows.append([KeyboardButton(text="📱 Моя подписка")])
-        rows.append([
-            KeyboardButton(text="🎁 Подарить VPN"),
-            KeyboardButton(text="👥 Партнёрка"),
-        ])
-    else:
-        rows.append([KeyboardButton(text="⚡️ Подключить VPN")])
-        if not user.trial_used:
-            rows.append([KeyboardButton(text="🎁 Пробный период")])
-        rows.append([KeyboardButton(text="👥 Партнёрка")])
+    def visible(*keys: str) -> list[KeyboardButton]:
+        return [KeyboardButton(text=t(k)) for k in keys if not bot_texts.is_hidden(k)]
 
-    rows.append([KeyboardButton(text="🎧 Поддержка")])
+    if has_sub:
+        rows.append(visible("btn.my_sub"))
+        rows.append(visible("btn.gift", "btn.referral"))
+    else:
+        rows.append(visible("btn.connect"))
+        if not user.trial_used:
+            rows.append(visible("btn.trial"))
+        rows.append(visible("btn.referral"))
+
+    # Свои блоки из админки (/admin → Бот), вынесенные в главное меню.
+    rows.extend([KeyboardButton(text=b["menu_label"])] for b in bot_texts.menu_blocks())
+    rows.append(visible("btn.support"))
+    rows = [r for r in rows if r]
 
     return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True)
 
@@ -62,7 +68,7 @@ def _start_inline(user: User) -> InlineKeyboardMarkup:
     # Кнопка мини-приложения — всегда присутствует
     if settings.webapp_url:
         buttons.append([InlineKeyboardButton(
-            text="🚀 Открыть приложение",
+            text=t("btn.open_app"),
             web_app=WebAppInfo(url=settings.webapp_url + "/app"),
         )])
 
@@ -72,11 +78,11 @@ def _start_inline(user: User) -> InlineKeyboardMarkup:
     if not has_sub:
         if not user.trial_used:
             buttons.append([InlineKeyboardButton(
-                text="🎁 Попробовать бесплатно — 2 дня",
+                text=t("btn.try_trial"),
                 callback_data="activate_trial",
             )])
         buttons.append([InlineKeyboardButton(
-            text="⚡️ Подключить VPN",
+            text=t("btn.connect_inline"),
             callback_data="show_plans",
         )])
 
@@ -89,7 +95,7 @@ async def _notify_admin_new_user(bot, user: User) -> None:
         await bot.send_message(
             settings.telegram_admin_id,
             f"👤 <b>Новый пользователь!</b>\n"
-            f"Имя: {user.full_name}\n"
+            f"Имя: {html.escape(user.full_name or '')}\n"
             f"Username: {uname}\n"
             f"ID: <code>{user.telegram_id}</code>",
             parse_mode="HTML",
@@ -120,14 +126,11 @@ async def cmd_start(
 
         if command.args and command.args.startswith("ref") and command.args[3:].isdigit():
             referrer_id = int(command.args[3:])
-            if referrer_id != tg_id:
+            # referral_count — число ОПЛАТИВШИХ друзей (его увеличивает только
+            # _credit_referral при первой оплате). Раньше он рос уже здесь, на
+            # /start, и бонус «за 2 оплативших» выдавался за одного.
+            if referrer_id != tg_id and await session.get(User, referrer_id):
                 user.referrer_id = referrer_id
-                ref_result = await session.execute(
-                    select(User).where(User.telegram_id == referrer_id)
-                )
-                referrer: User | None = ref_result.scalar_one_or_none()
-                if referrer:
-                    referrer.referral_count = (referrer.referral_count or 0) + 1
 
         session.add(user)
         await session.commit()
@@ -138,30 +141,12 @@ async def cmd_start(
     has_sub = bool(user.subscription_expires_at and user.subscription_expires_at > now)
 
     if has_sub:
-        expires = user.subscription_expires_at
-        days_left = (expires - now).days
-        greeting = (
-            f"⭐ <b>С возвращением в STAR VPN!</b>\n\n"
-            f"✅ Подписка активна — осталось <b>{days_left} дн.</b>\n\n"
-            "Всё работает. Открой приложение, чтобы управлять устройствами."
-        )
+        days_left = (user.subscription_expires_at - now).days
+        greeting = t("start.welcome_back", days_left=days_left)
     else:
-        trial_hint = (
-            "\n\n🎁 Тебе доступен <b>бесплатный период на 2 дня</b> — активируй прямо сейчас!"
-            if not user.trial_used
-            else ""
-        )
-        greeting = (
-            f"⭐ <b>Добро пожаловать в STAR VPN</b>\n\n"
-            "Твой личный инструмент для безопасного и свободного доступа в интернет. "
-            "Мы используем протоколы нового поколения, которые обеспечивают стабильную связь и полную анонимность.\n\n"
-            "С помощью этого бота ты можешь:\n"
-            "• Мгновенно подключить свои устройства\n"
-            "• Управлять подпиской и устройствами\n"
-            "• Дарить подписку друзьям\n\n"
-            "Нажми на кнопку ниже, чтобы открыть личный кабинет и активировать защиту."
-            f"{trial_hint}"
-        )
+        greeting = t("start.welcome_new")
+        if not user.trial_used:
+            greeting += "\n\n" + t("start.trial_hint")
 
     await message.answer(
         greeting,
@@ -170,18 +155,19 @@ async def cmd_start(
     )
 
     await message.answer(
-        "👇",
+        t("start.inline_prompt"),
         reply_markup=_start_inline(user),
     )
 
 
-@router.message(F.text == "🎧 Поддержка")
+def support_text() -> str:
+    return t("support.text", support_link=f"https://t.me/{settings.support_username.lstrip('@')}")
+
+
+@router.message(MenuText("btn.support"))
 async def support_handler(message: Message) -> None:
     await message.answer(
-        "🎧 <b>Служба поддержки</b>\n\n"
-        "Возникли вопросы? Не работает подключение?\n"
-        "Напиши нашему администратору — решим любую проблему.\n\n"
-        f"👉 <a href=\"https://t.me/{settings.support_username.lstrip('@')}\">Написать в поддержку</a>",
+        support_text(),
         parse_mode="HTML",
         disable_web_page_preview=True,
     )
@@ -215,7 +201,7 @@ async def back_to_main(callback: CallbackQuery, session: AsyncSession) -> None:
         pass
     if user:
         await callback.message.answer(
-            "🏠 Главное меню",
+            t("menu.title"),
             reply_markup=main_keyboard(user),
         )
     await callback.answer()

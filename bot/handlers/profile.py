@@ -23,6 +23,7 @@ from sqlalchemy import select
 from bot.models.user import User
 from bot.utils.marzban import marzban
 from bot.utils.branding import set_vless_remark, subscription_url
+from bot.utils.bot_texts import MenuText, t
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -47,8 +48,8 @@ def _days_left(expires: datetime | None) -> tuple[str, str]:
 
 def _subscription_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📱 Устройства", callback_data="sub:devices")],
-        [InlineKeyboardButton(text="🔄 Продлить подписку", callback_data="sub:pay_choice")],
+        [InlineKeyboardButton(text=t("btn.devices"), callback_data="sub:devices")],
+        [InlineKeyboardButton(text=t("btn.renew"), callback_data="sub:pay_choice")],
     ])
 
 
@@ -61,12 +62,12 @@ async def _pay_choice_kb() -> InlineKeyboardMarkup:
 
     rows = []
     if states["stars"]:
-        rows.append([InlineKeyboardButton(text="⭐  Telegram Stars", callback_data="sub:renew")])
+        rows.append([InlineKeyboardButton(text=t("btn.pay_stars"), callback_data="sub:renew")])
     if states["card"]:
-        rows.append([InlineKeyboardButton(text="💳  Банковская карта  (₽)", callback_data="sub:card")])
+        rows.append([InlineKeyboardButton(text=t("btn.pay_card"), callback_data="sub:card")])
     if states["crypto"]:
-        rows.append([InlineKeyboardButton(text="💎  Криптовалюта", callback_data="sub:crypto")])
-    rows.append([InlineKeyboardButton(text="◀️ Назад", callback_data="sub:back")])
+        rows.append([InlineKeyboardButton(text=t("btn.pay_crypto"), callback_data="sub:crypto")])
+    rows.append([InlineKeyboardButton(text=t("btn.back"), callback_data="sub:back")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
@@ -75,16 +76,12 @@ async def _build_text(user: User) -> str:
     exp = user.subscription_expires_at
     exp_str = exp.strftime("%d.%m.%Y") if exp else "—"
 
-    return (
-        f"📱 <b>Моя подписка</b>\n\n"
-        f"{icon} Осталось дней: <b>{days_str}</b>\n"
-        f"⏳ Действует до: <b>{exp_str}</b>"
-    )
+    return t("sub.text", status_icon=icon, days_left=days_str, expires=exp_str)
 
 
 # ─────────────────────────── handlers ───────────────────────────────────────
 
-@router.message(F.text.in_({"📱 Моя подписка", "👤 Моя подписка"}))
+@router.message(MenuText("btn.my_sub", "👤 Моя подписка"))
 async def show_my_subscription(message: Message, session: AsyncSession) -> None:
     tg_id = message.from_user.id
     result = await session.execute(select(User).where(User.telegram_id == tg_id))
@@ -142,11 +139,8 @@ async def pay_choice_text() -> str:
         states = await get_all_provider_states(session)
 
     if any(states.values()):
-        return "💳 <b>Выбери способ оплаты</b>"
-    return (
-        "💳 <b>Оплата временно недоступна</b>\n\n"
-        "Все способы сейчас отключены — попробуй чуть позже или напиши в поддержку."
-    )
+        return t("pay.choose")
+    return t("pay.unavailable")
 
 
 @router.callback_query(F.data == "sub:pay_choice")
@@ -171,11 +165,9 @@ async def sub_renew(callback: CallbackQuery) -> None:
         )]
         for key, plan in PLANS.items()
     ]
-    buttons.append([InlineKeyboardButton(text="◀️ Назад", callback_data="sub:pay_choice")])
+    buttons.append([InlineKeyboardButton(text=t("btn.back"), callback_data="sub:pay_choice")])
     await callback.message.edit_text(
-        "⭐ <b>Оплата Telegram Stars</b>\n\n"
-        "Дни добавляются к текущей подписке.\n"
-        "Оплата мгновенная — прямо внутри Telegram.",
+        t("stars.text"),
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
     )
@@ -220,7 +212,6 @@ async def show_link(callback: CallbackQuery, session: AsyncSession) -> None:
         return
 
     # Берём первое активное устройство
-    from bot.models.device import Device
     dev_r = await session.execute(
         select(Device).where(Device.telegram_id == tg_id, Device.is_active.is_(True))
         .order_by(Device.slot).limit(1)

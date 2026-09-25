@@ -60,7 +60,7 @@ Marzban (VPN-ядро) разворачивается отдельно, не ч�
 | `bot/models/` | SQLAlchemy 2.0 async ORM-модели | — |
 | `bot/utils/` | Marzban-клиент, Robokassa/CryptoPay, settings_store (тумблеры оплаты), sub_page (страница подписки в боте) | — |
 | `landing/` | **Сайт** — статичные `.html`-файлы, без сборки. Правишь файл → коммит → на сервере `git pull` + рестарт бота | Отдаётся FastAPI напрямую как есть |
-| `landing/wiki/` | Статьи базы знаний (Wiki) | — |
+| `landing/wiki/` | Шаблоны Wiki (`_article.html`, `index.html`). Сами статьи — в БД, редактируются в `/admin` → Wiki | — |
 | `admin/index.html` | Веб-админка (один файл, ванильный JS, ходит в `/web/*` эндпоинты) | Отдаётся FastAPI напрямую как есть |
 | `webapp/` | Telegram Mini App — React 18 + Vite 5 + Tailwind. Исходники в `webapp/src/` | **Требует сборки**, см. ниже |
 | `webapp/app.html` | Собранный однофайловый бандл Mini App — именно этот файл реально открывается по `/app` | Коммитится в git, генерируется через `npm run build:app` |

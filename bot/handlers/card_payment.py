@@ -14,12 +14,13 @@
                        выдаём подписку → уведомляем
 """
 
+import html
 import logging
 import uuid
 
 from aiogram import Bot, Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.models.payment import Payment
@@ -137,29 +138,36 @@ async def card_pay(callback: CallbackQuery) -> None:
 
 # ─── Вызывается из api.py после подтверждения подписи ResultURL ─────────────
 
-async def handle_card_webhook(payment_id: int, bot: Bot) -> None:
+async def handle_card_webhook(payment_id: int, bot: Bot, out_sum: str | None = None) -> None:
     """
     Вызывается из /card/webhook после верификации подписи Robokassa.
+    Robokassa повторяет ResultURL, пока не получит OK, — поэтому платёж
+    помечается оплаченным атомарно (UPDATE … WHERE status='pending'), и
+    повтор не выдаёт подписку второй раз.
     """
     from datetime import datetime
-    from bot.handlers.payment import _grant_subscription
+    from bot.handlers.payment import _credit_referral, _grant_subscription
 
     async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            select(Payment).where(
-                Payment.id == payment_id,
-                Payment.payment_method == "card",
-                Payment.status == "pending",
-            )
-        )
-        payment: Payment | None = result.scalar_one_or_none()
-
-        if not payment:
-            logger.warning("Card webhook: pending payment not found for id=%s", payment_id)
+        payment = await session.get(Payment, payment_id)
+        if not payment or payment.payment_method != "card":
+            logger.warning("Card webhook: payment not found for id=%s", payment_id)
+            return
+        if out_sum is not None and abs(float(out_sum) - float(payment.amount)) > 0.01:
+            logger.error("Card webhook: amount mismatch for id=%s (paid %s, expected %s)",
+                         payment_id, out_sum, payment.amount)
             return
 
-        payment.status = "paid"
-        payment.paid_at = datetime.utcnow()
+        claimed = await session.execute(
+            update(Payment)
+            .where(Payment.id == payment_id, Payment.status == "pending")
+            .values(status="paid", paid_at=datetime.utcnow())
+        )
+        await session.commit()
+        if claimed.rowcount != 1:
+            logger.info("Card webhook: payment id=%s already processed", payment_id)
+            return
+        await session.refresh(payment)
         days = payment.days or 30
 
         if payment.gift_link_code:
@@ -183,6 +191,10 @@ async def handle_card_webhook(payment_id: int, bot: Bot) -> None:
             return
 
         await _grant_subscription(user, days, session)
+        if not payment.is_gift:
+            # Первая оплата друга по реферальной ссылке — бонус рефереру
+            # (раньше засчитывались только оплаты звёздами).
+            await _credit_referral(user, session, bot)
 
         plan_label = {30: "1 месяц", 90: "3 месяца", 180: "6 месяцев"}.get(days, f"{days} дней")
 
@@ -236,11 +248,11 @@ async def _notify_gift_recipient(
     await session.commit()
 
     exp_str = recipient.subscription_expires_at.strftime("%d.%m.%Y") if recipient.subscription_expires_at else "—"
-    personal_block = f"\n\n💬 <i>«{payment.gift_message}»</i>" if payment.gift_message else ""
+    personal_block = f"\n\n💬 <i>«{html.escape(payment.gift_message)}»</i>" if payment.gift_message else ""
 
     notif_text = (
         f"🎁 <b>Тебе подарили подписку STAR VPN!</b>\n\n"
-        f"От: <b>{sender_name}</b>\n"
+        f"От: <b>{html.escape(sender_name)}</b>\n"
         f"📦 Тариф: <b>{plan_label}</b>\n"
         f"⏳ Действует до: <b>{exp_str}</b>"
         f"{personal_block}\n\n"

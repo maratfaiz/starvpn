@@ -238,8 +238,14 @@ const backLink = document.getElementById('backLink');
 let pendingEmail = '';
 
 /* ── Ошибка входа через Telegram (редирект с /api/telegram-oauth/callback) ── */
-if (new URLSearchParams(location.search).get('tg_error')) {
-  document.getElementById('tgErr').textContent = 'Не удалось войти через Telegram. Попробуйте ещё раз.';
+const TG_ERRORS = {
+  not_configured: 'Вход через Telegram пока не настроен на сайте. Войдите по email или напишите в поддержку.',
+  denied: 'Вход отменён в Telegram. Нажмите кнопку ещё раз, если передумали.',
+  state: 'Сессия входа устарела. Нажмите «Продолжить в Telegram» ещё раз.',
+};
+const tgError = new URLSearchParams(location.search).get('tg_error');
+if (tgError) {
+  document.getElementById('tgErr').textContent = TG_ERRORS[tgError] || 'Не удалось войти через Telegram. Попробуйте ещё раз.';
   history.replaceState(null, '', location.pathname);
 }
 

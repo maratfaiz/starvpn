@@ -4,8 +4,9 @@
 """
 
 import asyncio
+import html
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from aiogram import Router, F
 from aiogram.filters import Command
@@ -25,6 +26,7 @@ from bot.models.payment import Payment
 from bot.models.user import User
 from bot.states.payment_states import AdminForm
 from bot.utils.marzban import marzban
+from bot.utils.vpn_access import set_vpn_enabled
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -43,7 +45,7 @@ async def _resolve(arg: str, session: AsyncSession) -> User | None:
     if arg.lstrip("-").isdigit():
         r = await session.execute(select(User).where(User.telegram_id == int(arg)))
     else:
-        r = await session.execute(select(User).where(User.username == arg.lstrip("@")))
+        r = await session.execute(select(User).where(func.lower(User.username) == arg.lstrip("@").lower()).limit(1))
     return r.scalar_one_or_none()
 
 
@@ -278,7 +280,7 @@ async def fsm_userinfo(message: Message, state: FSMContext, session: AsyncSessio
     try:
         user = await _resolve(message.text or "", session)
         if not user:
-            await message.answer(f"❌ Пользователь <b>{message.text}</b> не найден.", parse_mode="HTML")
+            await message.answer(f"❌ Пользователь <b>{html.escape(message.text or '')}</b> не найден.", parse_mode="HTML")
             return
         await message.answer(await _user_card(user, session), parse_mode="HTML")
     except Exception as e:
@@ -293,7 +295,7 @@ async def fsm_ban(message: Message, state: FSMContext, session: AsyncSession) ->
     try:
         user = await _resolve(message.text or "", session)
         if not user:
-            await message.answer(f"❌ Пользователь <b>{message.text}</b> не найден.", parse_mode="HTML")
+            await message.answer(f"❌ Пользователь <b>{html.escape(message.text or '')}</b> не найден.", parse_mode="HTML")
             return
         await _do_ban(message, user, session)
     except Exception as e:
@@ -307,13 +309,13 @@ async def fsm_grant_user(message: Message, state: FSMContext, session: AsyncSess
     try:
         user = await _resolve(message.text or "", session)
         if not user:
-            await message.answer(f"❌ Пользователь <b>{message.text}</b> не найден.", parse_mode="HTML")
+            await message.answer(f"❌ Пользователь <b>{html.escape(message.text or '')}</b> не найден.", parse_mode="HTML")
             await state.clear()
             return
         await state.update_data(grant_tg_id=user.telegram_id)
         await state.set_state(AdminForm.grant_days)
         await message.answer(
-            f"✅ {user.full_name} (<code>{user.telegram_id}</code>)\n"
+            f"✅ {html.escape(user.full_name or '')} (<code>{user.telegram_id}</code>)\n"
             "На сколько дней выдать подписку?",
             parse_mode="HTML",
             reply_markup=_cancel_kb(),
@@ -352,7 +354,7 @@ async def fsm_gadgets(message: Message, state: FSMContext, session: AsyncSession
     try:
         user = await _resolve(message.text or "", session)
         if not user:
-            await message.answer(f"❌ Пользователь <b>{message.text}</b> не найден.", parse_mode="HTML")
+            await message.answer(f"❌ Пользователь <b>{html.escape(message.text or '')}</b> не найден.", parse_mode="HTML")
             return
         await _do_gadgets(message, user)
     except Exception as e:
@@ -384,13 +386,13 @@ async def fsm_msg_user(message: Message, state: FSMContext, session: AsyncSessio
     try:
         user = await _resolve(message.text or "", session)
         if not user:
-            await message.answer(f"❌ Пользователь <b>{message.text}</b> не найден.", parse_mode="HTML")
+            await message.answer(f"❌ Пользователь <b>{html.escape(message.text or '')}</b> не найден.", parse_mode="HTML")
             await state.clear()
             return
         await state.update_data(msg_tg_id=user.telegram_id)
         await state.set_state(AdminForm.message_text)
         await message.answer(
-            f"✅ {user.full_name} (<code>{user.telegram_id}</code>)\nВведи текст сообщения:",
+            f"✅ {html.escape(user.full_name or '')} (<code>{user.telegram_id}</code>)\nВведи текст сообщения:",
             parse_mode="HTML",
             reply_markup=_cancel_kb(),
         )
@@ -661,7 +663,7 @@ async def _user_card(user: User, session: AsyncSession | None = None) -> str:
         f"<code>{sep}</code>\n"
         f"🆔 ID: <code>{user.telegram_id}</code>\n"
         f"👤 Username: {uname}\n"
-        f"📝 Имя: {user.full_name or '—'}\n"
+        f"📝 Имя: {html.escape(user.full_name or '—')}\n"
         f"📅 Регистрация: {_fmt(user.created_at)}\n"
         f"🔒 Статус: {ban_str}\n"
         f"<code>{sep}</code>\n"
@@ -685,11 +687,7 @@ async def _user_card(user: User, session: AsyncSession | None = None) -> str:
 
 async def _do_ban(msg: Message, user: User, session: AsyncSession) -> None:
     user.is_banned = True
-    if user.marzban_username:
-        try:
-            await marzban.disable_user(user.marzban_username)
-        except Exception as e:
-            logger.warning("Marzban disable failed: %s", e)
+    await set_vpn_enabled(user, session, False)
     await session.commit()
     uname = f"@{user.username}" if user.username else str(user.telegram_id)
     await msg.answer(
@@ -703,7 +701,7 @@ async def _do_ban(msg: Message, user: User, session: AsyncSession) -> None:
             user.telegram_id,
             f"🚫 <b>Ваш аккаунт заблокирован в STAR VPN.</b>\n\n"
             f"Причина: нарушение Политики конфиденциальности сервиса.\n\n"
-            f"📄 <a href=\"https://starvpn.ru/privacy\">Политика конфиденциальности STAR VPN</a>\n\n"
+            f"📄 <a href=\"{settings.site_url.rstrip('/')}/privacy\">Политика конфиденциальности STAR VPN</a>\n\n"
             f"По вопросам разблокировки обратитесь в поддержку: {settings.support_username}",
             parse_mode="HTML",
             disable_web_page_preview=True,
@@ -714,11 +712,8 @@ async def _do_ban(msg: Message, user: User, session: AsyncSession) -> None:
 
 async def _do_unban(msg: Message, user: User, session: AsyncSession) -> None:
     user.is_banned = False
-    if user.marzban_username:
-        try:
-            await marzban.enable_user(user.marzban_username)
-        except Exception as e:
-            logger.warning("Marzban enable failed: %s", e)
+    if user.subscription_expires_at and user.subscription_expires_at > datetime.utcnow():
+        await set_vpn_enabled(user, session, True)
     await session.commit()
     uname = f"@{user.username}" if user.username else str(user.telegram_id)
     await msg.answer(
@@ -735,18 +730,10 @@ async def _do_unban(msg: Message, user: User, session: AsyncSession) -> None:
 
 
 async def _do_grant(msg: Message, user: User, days: int, session: AsyncSession) -> None:
-    if user.marzban_username:
-        await marzban.extend_user(user.marzban_username, days)
-    else:
-        mz = await marzban.create_user(
-            user.telegram_id, days, note=f"admin_grant|tg:{user.telegram_id}"
-        )
-        user.marzban_username = mz["username"]
-
-    now = datetime.utcnow()
-    base = user.subscription_expires_at if (user.subscription_expires_at and user.subscription_expires_at > now) else now
-    user.subscription_expires_at = base + timedelta(days=days)
-    await session.commit()
+    # Та же логика, что при оплате: продлевает все устройства (раньше —
+    # только старый основной аккаунт), включает их и сдвигает дату в БД.
+    from bot.handlers.payment import _grant_subscription
+    await _grant_subscription(user, days, session)
 
     uname = f"@{user.username}" if user.username else str(user.telegram_id)
     await msg.answer(

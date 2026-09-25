@@ -17,7 +17,7 @@ body{background:#060606;color:#EBE0CC;font-family:'Inter',system-ui,sans-serif;f
 a{color:#FFB800;text-decoration:none}
 a:hover{color:#FFD84D}
 input,textarea,select,button{font-family:inherit}
-input::placeholder,textarea::placeholder{color:#3A3028}
+input::placeholder,textarea::placeholder{color:#6E6250}
 textarea{resize:vertical}
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.09);border-radius:6px}
@@ -40,11 +40,11 @@ textarea{resize:vertical}
 .login-btn{width:100%;padding:15px;background:#FFB800;color:#000;border:none;border-radius:13px;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;transition:background .15s;margin-top:8px}
 .login-btn:hover{background:#FFD84D}
 .login-err{color:#F87171;font-size:12.5px;margin-top:4px;min-height:16px}
-.login-note{font-size:12px;color:#3A3028;margin-top:16px;line-height:1.6;text-align:center}
+.login-note{font-size:12px;color:#6E6250;margin-top:16px;line-height:1.6;text-align:center}
 .login-tabs{display:flex;gap:6px;background:rgba(0,0,0,.4);border-radius:12px;padding:4px;margin-bottom:22px}
 .login-tab{flex:1;padding:10px;border-radius:9px;background:transparent;color:#8A7A60;font-size:13px;font-weight:600;transition:background .15s,color .15s}
 .login-tab.active{background:rgba(255,184,0,.14);color:#FFB800}
-.login-back{display:block;text-align:center;margin-top:22px;font-size:13px;color:#3A3028}
+.login-back{display:block;text-align:center;margin-top:22px;font-size:13px;color:#6E6250}
 .login-back:hover{color:#8A7A60}
 
 /* ── Shell ─────────────────────────────────────────────────── */
@@ -52,22 +52,22 @@ textarea{resize:vertical}
 aside{display:flex;flex-direction:column;background:#0A0908;border-right:1px solid rgba(255,255,255,.07);position:sticky;top:0;height:100vh}
 .sb-head{display:flex;align-items:center;gap:10px;padding:20px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
 .sb-head-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;letter-spacing:.04em;color:#FFB800;line-height:1.2}
-.sb-head-sub{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#3A3028}
+.sb-head-sub{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#6E6250}
 .sb-nav{padding:14px 12px;flex:1;overflow:auto}
 .sb-group{margin-bottom:18px}
-.sb-group-title{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#3A3028;padding:0 10px;margin-bottom:8px}
+.sb-group-title{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#6E6250;padding:0 10px;margin-bottom:8px}
 .sb-item{cursor:pointer;display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:10px;color:#8A7A60;transition:background .15s;margin-bottom:2px}
 .sb-item:hover{background:rgba(255,255,255,.045)}
 .sb-item.active{background:rgba(255,184,0,.09);color:#FFB800}
 .sb-item svg{width:17px;height:17px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .sb-item span{font-size:13.5px;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sb-item .cnt{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#3A3028;background:rgba(255,255,255,.05);border-radius:6px;padding:2px 7px}
+.sb-item .cnt{flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#8A7A60;background:rgba(255,255,255,.06);border-radius:6px;padding:2px 7px;min-width:22px;text-align:center}
 .sb-item.active .cnt{color:#FFB800;background:rgba(255,184,0,.12)}
 .sb-foot{padding:14px;border-top:1px solid rgba(255,255,255,.07)}
 .sb-foot-inner{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:11px;background:rgba(255,255,255,.03)}
 .sb-avatar{width:30px;height:30px;border-radius:9px;background:rgba(255,184,0,.14);border:1px solid rgba(255,184,0,.3);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;color:#FFB800;flex-shrink:0}
 .sb-foot-name{font-size:12.5px;font-weight:600;color:#EBE0CC}
-.sb-foot-role{font-size:10.5px;color:#3A3028}
+.sb-foot-role{font-size:10.5px;color:#6E6250}
 .sb-logout{font-size:11px;color:#8A7A60;white-space:nowrap;cursor:pointer}
 .sb-logout:hover{color:#FFB800}
 
@@ -88,10 +88,10 @@ main{min-width:0;display:flex;flex-direction:column}
 #topbar{position:sticky;top:0;z-index:50;background:rgba(6,6,6,.92);backdrop-filter:blur(24px);border-bottom:1px solid rgba(255,255,255,.07);padding:0 26px}
 .tb-inner{display:flex;align-items:center;gap:16px;height:60px;flex-wrap:wrap}
 .tb-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;color:#EBE0CC;line-height:1.2}
-.tb-sub{font-size:11.5px;color:#3A3028}
+.tb-sub{font-size:11.5px;color:#6E6250}
 .tb-search{display:flex;align-items:center;gap:8px;background:#161513;border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:0 12px;min-width:200px}
 .tb-search input{flex:1;background:transparent;border:0;outline:0;color:#EBE0CC;font-size:13.5px;padding:9px 0;min-width:0}
-.tb-search svg{width:15px;height:15px;flex-shrink:0;stroke:#3A3028;fill:none;stroke-width:1.7}
+.tb-search svg{width:15px;height:15px;flex-shrink:0;stroke:#6E6250;fill:none;stroke-width:1.7}
 .tb-status{display:flex;align-items:center;gap:7px;border:1px solid rgba(74,222,128,.28);background:rgba(74,222,128,.08);border-radius:100px;padding:5px 11px;white-space:nowrap;font-size:11.5px;font-weight:600;color:#4ADE80}
 .tb-status.down{border-color:rgba(248,113,113,.28);background:rgba(248,113,113,.08);color:#F87171}
 .tb-status .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
@@ -115,10 +115,14 @@ main{min-width:0;display:flex;flex-direction:column}
 
 /* ── Stat cards / Dashboard ───────────────────────────────── */
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:14px}
-.stat-card{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px 20px}
-.stat-label{font-size:10.5px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:#3A3028;margin-bottom:10px}
+.stat-card{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.stat-top{display:flex;align-items:center;gap:10px}
+.stat-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(255,184,0,.1);color:#FFB800}
+.stat-ico svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.stat-label{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#8A7A60;line-height:1.35}
 .stat-val{font-family:'Space Grotesk',sans-serif;font-size:27px;font-weight:700;color:#EBE0CC;line-height:1}
 .stat-delta{font-size:12px;color:#4ADE80;margin-top:6px}
+@media(max-width:860px){.stat-grid{grid-template-columns:1fr 1fr;gap:10px}.stat-card{padding:14px}.stat-val{font-size:23px}.stat-ico{width:26px;height:26px}}
 
 .dash-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:12px}
 @media(max-width:900px){.dash-grid{grid-template-columns:1fr}}
@@ -128,14 +132,14 @@ main{min-width:0;display:flex;flex-direction:column}
 .bars{display:flex;align-items:flex-end;gap:6px;height:150px;margin-top:16px}
 .bar-col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;position:relative}
 .bar{width:100%;border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,#FFD84D,#FFB800);min-height:2px}
-.bar-lbl{font-size:10px;color:#3A3028;text-align:center;margin-top:6px;white-space:nowrap;overflow:hidden}
+.bar-lbl{font-size:10px;color:#6E6250;text-align:center;margin-top:6px;white-space:nowrap;overflow:hidden}
 .bar-val{font-family:'JetBrains Mono',monospace;font-size:10px;color:#8A7A60;text-align:center;margin-bottom:4px}
 
 .activity-row{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
 .activity-row:last-child{margin-bottom:0}
 .activity-dot{width:7px;height:7px;border-radius:50%;margin-top:7px;flex-shrink:0}
 .activity-text{font-size:13.5px;color:#EBE0CC}
-.activity-time{font-family:'JetBrains Mono',monospace;font-size:11px;color:#3A3028;margin-top:2px}
+.activity-time{font-family:'JetBrains Mono',monospace;font-size:11px;color:#6E6250;margin-top:2px}
 
 /* ── Filters / table ──────────────────────────────────────── */
 .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
@@ -150,7 +154,7 @@ main{min-width:0;display:flex;flex-direction:column}
 .tbl-wrap{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden}
 .tbl-scroll{overflow-x:auto}
 table{width:100%;border-collapse:collapse;min-width:640px}
-th{text-align:left;padding:13px 18px;font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#3A3028;border-bottom:1px solid rgba(255,255,255,.08);white-space:nowrap}
+th{text-align:left;padding:13px 18px;font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6E6250;border-bottom:1px solid rgba(255,255,255,.08);white-space:nowrap}
 td{padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.05);white-space:nowrap;font-size:13.5px}
 tbody tr{cursor:pointer;transition:background .15s}
 tbody tr:hover{background:rgba(255,255,255,.035)}
@@ -161,9 +165,9 @@ tbody tr.sel{background:rgba(255,184,0,.06)}
 .chip.red{color:#F87171;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.28)}
 .chip.grey{color:#8A7A60;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
 .mono{font-family:'JetBrains Mono',monospace}
-.sub{display:block;font-size:11.5px;color:#3A3028;margin-top:3px}
-.tbl-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 18px;border-top:1px solid rgba(255,255,255,.07);flex-wrap:wrap;font-size:12.5px;color:#3A3028}
-.empty{text-align:center;padding:50px 20px;color:#3A3028;font-size:13.5px}
+.sub{display:block;font-size:11.5px;color:#6E6250;margin-top:3px}
+.tbl-foot{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 18px;border-top:1px solid rgba(255,255,255,.07);flex-wrap:wrap;font-size:12.5px;color:#6E6250}
+.empty{text-align:center;padding:50px 20px;color:#6E6250;font-size:13.5px}
 
 /* ── Detail panel ─────────────────────────────────────────── */
 .detail{margin-top:12px;background:rgba(255,184,0,.05);border:1px solid rgba(255,184,0,.22);border-radius:16px;padding:22px}
@@ -181,7 +185,7 @@ tbody tr.sel{background:rgba(255,184,0,.06)}
 .close-x{cursor:pointer;display:flex;align-items:center;color:#8A7A60;padding:8px 12px;border:1px solid rgba(255,255,255,.12);border-radius:9px}
 .field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden}
 .field-box{background:#0B0A09;padding:14px 16px}
-.field-lbl{font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#3A3028;margin-bottom:5px}
+.field-lbl{font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6E6250;margin-bottom:5px}
 .field-val{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#EBE0CC}
 
 .sub-panel{margin-top:14px;background:rgba(0,0,0,.4);border-radius:14px;padding:20px}
@@ -214,7 +218,7 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 .tkt-card-top{display:flex;align-items:center;gap:9px;margin-bottom:7px}
 .tkt-user{font-size:12.5px;font-weight:600;color:#EBE0CC;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tkt-subject{font-size:13.5px;color:#EBE0CC;line-height:1.45;margin-bottom:8px}
-.tkt-foot{display:flex;justify-content:space-between;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#3A3028}
+.tkt-foot{display:flex;justify-content:space-between;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#6E6250}
 .tkt-detail{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px}
 .tkt-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:18px}
 .msg-bubble{max-width:88%;border-radius:14px;padding:14px 16px;margin-bottom:12px}
@@ -222,14 +226,14 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 .msg-bubble.admin{background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.22);margin-left:auto}
 .msg-who{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;margin-bottom:6px}
 .msg-text{font-size:14px;line-height:1.6;color:#EBE0CC;white-space:pre-wrap}
-.msg-time{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#3A3028;margin-top:7px}
+.msg-time{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#6E6250;margin-top:7px}
 
 /* ── Servers ─────────────────────────────────────────────── */
 .srv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
 .srv-card{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px}
 .srv-card.down{border-color:rgba(248,113,113,.3)}
 .srv-name{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;color:#EBE0CC}
-.srv-host{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#3A3028;margin-top:2px}
+.srv-host{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6E6250;margin-top:2px}
 .srv-load-track{height:6px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden;margin:8px 0 16px}
 .srv-load-bar{height:100%;background:#FFB800;border-radius:4px}
 .srv-stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden}
@@ -238,7 +242,7 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 /* ── Wiki ────────────────────────────────────────────────── */
 .wiki-row{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px 20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .wiki-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#EBE0CC}
-.wiki-slug{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#3A3028}
+.wiki-slug{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#6E6250}
 .editor-grid{display:grid;grid-template-columns:1.7fr 1fr;gap:12px;align-items:start}
 @media(max-width:900px){.editor-grid{grid-template-columns:1fr}}
 .editor-card{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px}
@@ -251,10 +255,90 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 .editor-toolbar + .editor-body{border-radius:0 0 12px 12px;border-top:none}
 .tb-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:7px;width:28px;height:28px;color:#EBE0CC;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .tb-btn:hover{border-color:rgba(255,184,0,.4);color:#FFB800}
-.tb-hint{font-size:11px;color:#5A5040;font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-hint{font-size:11px;color:#7E705B;font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:700px){.tb-hint{display:none}}
+.tb-btn:disabled{opacity:.3;cursor:default;border-color:rgba(255,255,255,.1);color:#EBE0CC}
+.tb-select{background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);border-radius:7px;height:28px;color:#EBE0CC;font-size:12.5px;padding:0 8px;outline:none;margin-right:4px}
+.editor-toolbar{flex-wrap:wrap}
+.wiki-order{display:flex;flex-direction:column;gap:4px}
+.wiki-frame{display:block;width:100%;height:560px;border:1px solid rgba(255,255,255,.1);border-top:none;border-radius:0 0 12px 12px;background:#060606}
+#wHtml{min-height:560px;border-radius:0 0 12px 12px;border-top:none}
+.seg{display:flex;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:3px;gap:3px}
+.seg button{background:transparent;border:none;border-radius:6px;padding:5px 11px;font-size:12px;font-weight:600;color:#8A7A60;cursor:pointer}
+.seg button.on{background:rgba(255,184,0,.14);color:#FFB800}
+details.editor-card > summary{list-style:none}
+details.editor-card > summary::after{content:' ▸';color:#7E705B}
+details.editor-card[open] > summary::after{content:' ▾'}
+
+
+/* ── Бот: схема блоков ───────────────────────────────────── */
+.flow-legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:#8A7A60;margin:-6px 0 12px}
+.flow-legend span{display:inline-flex;align-items:center;gap:7px}
+.lg{width:12px;height:12px;border-radius:4px;display:inline-block}
+.lg.sys{background:#161513;border:1px solid rgba(255,184,0,.45)}
+.lg.code{background:#0E0D0C;border:1px dashed rgba(255,255,255,.2)}
+.lg.own{background:rgba(255,184,0,.1);border:1px solid #FFB800}
+.bot-layout{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:12px;align-items:start}
+@media(max-width:1100px){.bot-layout{grid-template-columns:1fr}}
+.flow-wrap{background:#0B0A09;border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:auto;max-height:calc(100vh - 190px);min-height:420px;background-image:radial-gradient(rgba(255,255,255,.06) 1px,transparent 1px);background-size:22px 22px}
+@media(max-width:1100px){.flow-wrap{max-height:70vh}}
+.flow{position:relative}
+.flow-edges{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.flow-edges .edge{fill:none;stroke:rgba(255,184,0,.32);stroke-width:1.6}
+.flow-edges .edge.own{stroke-dasharray:5 4}
+.flow-edges .edge.off{stroke:rgba(255,255,255,.1)}
+.flow-edges .edge.on{stroke:#FFB800;stroke-width:2.2}
+.fnode{position:absolute;width:236px;background:#161513;border:1px solid rgba(255,184,0,.3);border-radius:14px;padding:12px 12px 10px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.fnode:hover{border-color:rgba(255,184,0,.6)}
+.fnode.sel{border-color:#FFB800;box-shadow:0 0 0 3px rgba(255,184,0,.18)}
+.fnode.code{background:#0E0D0C;border:1px dashed rgba(255,255,255,.18)}
+.fnode.code .fnode-title{color:#8A7A60}
+.fnode.own{background:rgba(255,184,0,.06);border-color:rgba(255,184,0,.55)}
+.fnode-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.fnode-title{flex:1;font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:600;color:#EBE0CC;line-height:1.3}
+.fnode-tag{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#7E705B;white-space:nowrap}
+.fnode-tag.warn{color:#F87171}
+.fnode-text{font-size:11.5px;line-height:1.5;color:#8A7A60;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.fnode-btns{display:flex;flex-direction:column;gap:4px}
+.fnode-btn{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#EBE0CC;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:5px 8px}
+.fnode-btn span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fnode-btn em{font-style:normal;font-size:10.5px;color:#7E705B;white-space:nowrap}
+.fnode-btn.pseudo{background:transparent;border-style:dashed;color:#8A7A60}
+.fnode-btn.off{opacity:.35;text-decoration:line-through}
+.bot-panel{display:flex;flex-direction:column;gap:12px;position:sticky;top:84px;max-height:calc(100vh - 100px);overflow:auto}
+@media(max-width:1100px){.bot-panel{position:static;max-height:none}}
+.tfield{margin-bottom:14px}
+.tfield-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.tfield-name{flex:1;font-size:12.5px;font-weight:600;color:#EBE0CC}
+.tfield-reset{font-size:11.5px;color:#FFB800;cursor:pointer;white-space:nowrap}
+.tfield-tools{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.tfield-input{width:100%;margin-bottom:0;font-size:13px;line-height:1.55;resize:vertical}
+.ph-chip{cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#FFB800;background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.25);border-radius:6px;padding:3px 6px}
+.ph-chip:hover{background:rgba(255,184,0,.16)}
+.bfield{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.bfield .ipt{flex:1;min-width:0}
+.bfield-hide{display:flex;align-items:center;gap:5px;font-size:11.5px;color:#8A7A60;white-space:nowrap;cursor:pointer}
+.bfield-hint{font-size:11px;color:#7E705B;margin:0 0 10px 2px}
+.cb-btn{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:9px;margin-bottom:8px}
+.cb-btn .ipt{padding:8px 10px}
+.cb-target .ipt{width:100%}
+.cb-check{display:flex;align-items:center;gap:8px;font-size:13px;color:#EBE0CC;cursor:pointer}
+.tg-chat{background:#0E1621;border-radius:14px;padding:14px;background-image:linear-gradient(135deg,rgba(255,255,255,.02),rgba(0,0,0,.1))}
+.tg-bubble{background:#182533;color:#F5F5F5;border-radius:12px 12px 12px 4px;padding:9px 12px;font-size:13.5px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;max-width:100%;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
+.tg-bubble a{color:#6AB2F2}
+.tg-bubble code,.tg-bubble pre{font-family:'JetBrains Mono',monospace;font-size:12px;color:#E5A06E}
+.tg-bubble blockquote{border-left:3px solid #6AB2F2;padding-left:8px;margin:2px 0}
+.tg-kb{display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.tg-kb div{background:rgba(40,56,74,.85);color:#FFF;text-align:center;border-radius:8px;padding:8px;font-size:13px;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
+.tg-reply{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-top:10px;background:#17212B;border-radius:10px;padding:6px}
+.tg-reply span{background:#2B5278;color:#fff;text-align:center;border-radius:6px;padding:8px 4px;font-size:12.5px;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
 
 /* ── Settings ────────────────────────────────────────────── */
+.copy-field{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:6px 6px 6px 12px;font-size:12.5px;margin-bottom:8px}
+.copy-field .mono{flex:1;min-width:0;word-break:break-all}
+.copy-btn{flex-shrink:0;width:30px;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#8A7A60;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.copy-btn:hover{color:#FFB800;border-color:rgba(255,184,0,.4)}
+.copy-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8}
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
 @media(max-width:820px){.settings-grid{grid-template-columns:1fr}}
 .tariff-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px;margin-bottom:10px}
@@ -472,9 +556,26 @@ async function api(method, path, body) {
   return r.status === 204 ? null : r.json();
 }
 
-function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function fmtDate(iso) { if (!iso) return '—'; return new Date(iso).toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit',year:'2-digit'}); }
 function fmtDateTime(iso) { if (!iso) return '—'; return new Date(iso).toLocaleString('ru-RU', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+function copyText(text) {
+  const done = () => toast('Скопировано');
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done));
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { toast('Не удалось скопировать', true); }
+  ta.remove();
+}
+/* Поле с моноширинным значением и кнопкой «Скопировать». */
+function copyField(value, color) {
+  return `<div class="copy-field"><span class="mono" style="color:${color || '#EBE0CC'}">${esc(value)}</span><button type="button" class="copy-btn" title="Скопировать" onclick="copyText(this.dataset.v)" data-v="${esc(value)}"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></svg></button></div>`;
+}
 function toast(msg, isErr) {
   const el = document.createElement('div');
   el.className = 'toast-item' + (isErr ? ' err' : '');
@@ -493,6 +594,7 @@ const NAV_ICONS = {
   referrals: 'M6 14a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 7.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 21a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8.2 10.3l7.6-3.6M8.2 13.2l7.6 3.6',
   support: 'M4 5h16v11H8l-4 4V5zM8 9h8M8 12h5',
   wiki: 'M4 5a1 1 0 011-1h5a2 2 0 012 2v13a2 2 0 00-2-1.6H4zM20 5a1 1 0 00-1-1h-5a2 2 0 00-2 2v13a2 2 0 012-1.6h6z',
+  bot: 'M4 5h7v5H4zM13 14h7v5h-7zM7.5 10v4.5a2 2 0 002 2H13M4 14h5M17 5h3M17 10V5',
   settings: 'M4 7h9M17 7h3M4 12h3M11 12h9M4 17h11M19 17h1M15 5v4M9 10v4M17 15v4',
   profile: 'M12 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5',
   adbanner: 'M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z',
@@ -502,7 +604,7 @@ const NAV_GROUPS = [
   { title: 'VPN', items: [{ id: 'users', label: 'Аккаунты', countKey: 'users' }, { id: 'devices', label: 'Устройства', countKey: 'devices' }, { id: 'servers', label: 'Серверы' }] },
   { title: 'Деньги', items: [{ id: 'payments', label: 'Платежи', countKey: 'payments' }, { id: 'referrals', label: 'Рефералы', countKey: 'referrals' }] },
   { title: 'Поддержка', items: [{ id: 'support', label: 'Обращения', countKey: 'tickets' }] },
-  { title: 'Контент', items: [{ id: 'wiki', label: 'Wiki', countKey: 'wiki' }, { id: 'adbanner', label: 'Реклама' }] },
+  { title: 'Контент', items: [{ id: 'bot', label: 'Бот' }, { id: 'wiki', label: 'Wiki', countKey: 'wiki' }, { id: 'adbanner', label: 'Реклама' }] },
   { title: 'Система', items: [{ id: 'settings', label: 'Настройки' }] },
   { title: 'Аккаунт', items: [{ id: 'profile', label: 'Профиль' }] },
 ];
@@ -516,7 +618,8 @@ const PAGE_META = {
   payments: ['Платежи', 'История всех оплаченных транзакций'],
   referrals: ['Рефералы', 'Лидерборд по приглашённым'],
   support: ['Обращения', 'Тикеты из /support и личного кабинета'],
-  wiki: ['Wiki', 'Статьи базы знаний'],
+  bot: ['Бот', 'Тексты, кнопки и свои блоки Telegram-бота'],
+  wiki: ['Wiki', 'Статьи базы знаний — пишите и редактируйте прямо здесь'],
   settings: ['Настройки', 'Тарифы, лимиты и провайдеры оплаты'],
   profile: ['Профиль', 'Ваш аккаунт и права доступа'],
   adbanner: ['Реклама', 'Баннер на верхней полосе главной страницы'],
@@ -580,7 +683,35 @@ function closeBottomSheet() {
   document.getElementById('bottomSheetOverlay').classList.remove('open');
 }
 
+/* ── Несохранённые правки ─────────────────────────────────
+   Любой ввод в редакторе (Wiki, Бот, Реклама) помечает страницу как
+   изменённую; уход с неё спрашивает подтверждение. */
+let unsaved = false;
+function confirmLeave() {
+  if (unsaved && !confirm('Есть несохранённые изменения. Уйти без сохранения?')) return false;
+  unsaved = false;
+  return true;
+}
+window.addEventListener('beforeunload', (e) => { if (unsaved) { e.preventDefault(); e.returnValue = ''; } });
+
+/* Горячие клавиши: «/» — поиск, Ctrl/Cmd+S — сохранить в редакторе. */
+function hotkeys(e) {
+  const t = e.target;
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable;
+  if (e.key === '/' && !typing) {
+    e.preventDefault();
+    document.getElementById('globalQuery').focus();
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+    const btn = document.querySelector('#content [data-save]');
+    if (btn) { e.preventDefault(); btn.click(); }
+  } else if (e.key === 'Escape' && typeof selectedRow !== 'undefined' && selectedRow) {
+    closeDetail();
+  }
+}
+document.addEventListener('keydown', hotkeys);
+
 function goto(s) {
+  if (!confirmLeave()) return;
   section = s;
   filter = 'all'; query = ''; selectedRow = null; selectedTicket = null;
   document.getElementById('globalQuery').value = '';
@@ -589,7 +720,7 @@ function goto(s) {
   document.getElementById('tbTitle').textContent = title;
   document.getElementById('tbSub').textContent = sub;
   document.getElementById('content').innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
-  const fns = { dash: renderDashboard, users: () => renderTable('users'), devices: () => renderTable('devices'), servers: renderServers, payments: () => renderTable('payments'), referrals: () => renderTable('referrals'), support: renderSupport, wiki: renderWiki, settings: renderSettings, profile: renderProfile, adbanner: renderAdBanner };
+  const fns = { dash: renderDashboard, users: () => renderTable('users'), devices: () => renderTable('devices'), servers: renderServers, payments: () => renderTable('payments'), referrals: () => renderTable('referrals'), support: renderSupport, wiki: renderWiki, bot: renderBot, settings: renderSettings, profile: renderProfile, adbanner: renderAdBanner };
   (fns[s] || (() => {}))();
 }
 
@@ -624,6 +755,18 @@ async function loadCounts() {
 /* ═══════════════════════════════════════════════════════════
    DASHBOARD
 ═══════════════════════════════════════════════════════════ */
+const STAT_ICONS = {
+  users: 'M12 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5',
+  active: 'M12 3l7 3v5c0 4.5-3 8.2-7 9.5-4-1.3-7-5-7-9.5V6zM9 12l2 2 4-4',
+  banned: 'M12 21a9 9 0 100-18 9 9 0 000 18zM5.6 5.6l12.8 12.8',
+  trial: 'M20 12v8H4v-8M2 8h20v4H2zM12 20V8M12 8H8a2 2 0 110-4c2.5 0 4 4 4 4zm0 0h4a2 2 0 100-4c-2.5 0-4 4-4 4z',
+  payments: 'M3 6h18v12H3zM3 10h18M6.5 14.5h3',
+};
+function statCard(icon, label, val, color) {
+  const tint = color ? `background:${color}1A;color:${color}` : '';
+  return `<div class="stat-card"><div class="stat-top"><span class="stat-ico" style="${tint}"><svg viewBox="0 0 24 24"><path d="${STAT_ICONS[icon]}"/></svg></span><div class="stat-label">${label}</div></div><div class="stat-val" ${color ? `style="color:${color}"` : ''}>${val}</div></div>`;
+}
+
 async function renderDashboard() {
   const c = document.getElementById('content');
   try {
@@ -632,11 +775,11 @@ async function renderDashboard() {
     const maxUsr = Math.max(1, ...s.users_chart.map(r => r.count));
     c.innerHTML = `
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-label">Всего аккаунтов</div><div class="stat-val">${s.total_users}</div></div>
-        <div class="stat-card"><div class="stat-label">Активных подписок</div><div class="stat-val">${s.active_subscriptions}</div></div>
-        <div class="stat-card"><div class="stat-label">Забанено</div><div class="stat-val" style="color:#F87171">${s.banned}</div></div>
-        <div class="stat-card"><div class="stat-label">Пробный использовали</div><div class="stat-val">${s.trial_used}</div></div>
-        <div class="stat-card"><div class="stat-label">Всего платежей</div><div class="stat-val">${s.total_payments}</div></div>
+        ${statCard('users', 'Всего аккаунтов', s.total_users)}
+        ${statCard('active', 'Активных подписок', s.active_subscriptions, '#4ADE80')}
+        ${statCard('trial', 'Пробный использовали', s.trial_used)}
+        ${statCard('payments', 'Всего платежей', s.total_payments)}
+        ${statCard('banned', 'Забанено', s.banned, '#F87171')}
       </div>
       <div class="dash-grid">
         <div class="dcard">
@@ -691,9 +834,9 @@ async function loadActivity() {
         <span class="activity-dot" style="background:${e.dot}"></span>
         <div><div class="activity-text">${esc(e.text)}</div><div class="activity-time">${fmtDateTime(e.time)}</div></div>
       </div>
-    `).join('') : '<div style="color:#3A3028;font-size:13px">Пока пусто</div>';
+    `).join('') : '<div style="color:#6E6250;font-size:13px">Пока пусто</div>';
   } catch (e) {
-    el.innerHTML = `<div style="color:#3A3028;font-size:13px">Ошибка загрузки</div>`;
+    el.innerHTML = `<div style="color:#6E6250;font-size:13px">Ошибка загрузки</div>`;
   }
 }
 
@@ -760,7 +903,7 @@ async function renderTable(sec) {
       const icoGem = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12l4 6-10 12L2 9z"/><path d="M2 9h20M9 3l3 6-3 12M15 3l-3 6 3 12"/></svg>';
       const methodChip = { stars: [icoStar + ' Stars', 'gold'], card: [icoCard + ' Карта', 'grey'], crypto: [icoGem + ' Крипта', 'gold'] };
       rows = data.payments.map(p => { const mc = methodChip[p.method] || ['—', 'grey']; return { key: p.id, owner: p.telegram_id, cells: [
-        `<span class="mono" style="color:#3A3028">#${p.id}</span>`,
+        `<span class="mono" style="color:#6E6250">#${p.id}</span>`,
         `<a href="#" onclick="event.preventDefault();openUserDetail(${p.telegram_id})">${p.telegram_id}</a>`,
         `<span class="mono" style="color:#FFB800;font-weight:700">${p.amount}</span>`,
         `<span class="chip ${mc[1]}">${mc[0]}</span>`,
@@ -846,7 +989,7 @@ async function openUserDetail(tgId) {
             <div class="dev-row">
               <span class="dev-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#FFB800" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg></span>
               <div style="flex:1;min-width:0"><div class="dev-name">${esc(d.name)}</div><div class="dev-meta">${esc(d.marzban_username)} · ${d.status}</div></div>
-              <span style="width:7px;height:7px;border-radius:50%;background:${d.status === 'active' ? '#4ADE80' : '#3A3028'}"></span>
+              <span style="width:7px;height:7px;border-radius:50%;background:${d.status === 'active' ? '#4ADE80' : '#6E6250'}"></span>
             </div>
           `).join('') : '<div style="font-size:13px;color:#8A7A60">Нет активных устройств.</div>'}
         </div>
@@ -974,7 +1117,7 @@ async function renderServers() {
    SUPPORT
 ═══════════════════════════════════════════════════════════ */
 let selectedTicket = null;
-const TICKET_STATUS = { open: ['Открыт', '#FFB800'], answered: ['Отвечен', '#4ADE80'], closed: ['Закрыт', '#3A3028'] };
+const TICKET_STATUS = { open: ['Открыт', '#FFB800'], answered: ['Отвечен', '#4ADE80'], closed: ['Закрыт', '#6E6250'] };
 
 async function renderSupport() {
   const c = document.getElementById('content');
@@ -1000,7 +1143,7 @@ async function renderSupport() {
             </div>
           `).join('') : '<div class="empty">Нет обращений</div>'}
         </div>
-        <div id="ticketDetail">${selectedTicket ? '' : '<div style="border:1px dashed rgba(255,255,255,.12);border-radius:16px;padding:60px 30px;text-align:center;color:#3A3028;font-size:14px">Выберите обращение слева</div>'}</div>
+        <div id="ticketDetail">${selectedTicket ? '' : '<div style="border:1px dashed rgba(255,255,255,.12);border-radius:16px;padding:60px 30px;text-align:center;color:#6E6250;font-size:14px">Выберите обращение слева</div>'}</div>
       </div>
     `;
     if (selectedTicket) openTicket(selectedTicket);
@@ -1044,7 +1187,7 @@ async function openTicket(id) {
         ` : ''}
         <textarea class="ipt" id="replyInput" placeholder="Ответ пользователю…" style="width:100%;min-height:110px;margin-top:14px"></textarea>
         <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px">
-          <span style="font-size:12px;color:#3A3028">Ответ уйдёт в бота или на email — туда, откуда пришло обращение.</span>
+          <span style="font-size:12px;color:#6E6250">Ответ уйдёт в бота или на email — туда, откуда пришло обращение.</span>
           <div class="primary-btn" onclick="sendReply(${t.id})">Отправить</div>
         </div>
       </div>
@@ -1079,17 +1222,23 @@ async function renderWiki() {
   const c = document.getElementById('content');
   try {
     const data = await api('GET', '/web/wiki');
+    window._wikiList = data.articles;
     c.innerHTML = `
       <div class="filters">
-        <span style="font-size:13px;color:#8A7A60">Статьи, созданные из админ-панели (7 базовых статей редактируются в коде landing/wiki/)</span>
+        <span style="font-size:13px;color:#8A7A60">Все статьи раздела /wiki. Порядок здесь = порядок в меню и на странице Wiki.</span>
         <div style="flex:1"></div>
+        <a class="ghost-btn" href="/wiki" target="_blank" rel="noopener" style="text-decoration:none">Открыть Wiki ↗</a>
         <div class="primary-btn" onclick="openWikiEditor(null)">+ Новая статья</div>
       </div>
-      ${data.articles.length ? data.articles.map(a => `
+      ${data.articles.length ? data.articles.map((a, i) => `
         <div class="wiki-row">
+          <div class="wiki-order">
+            <button type="button" class="tb-btn" title="Выше" ${i === 0 ? 'disabled' : ''} onclick="wikiMove(${i}, -1)">↑</button>
+            <button type="button" class="tb-btn" title="Ниже" ${i === data.articles.length - 1 ? 'disabled' : ''} onclick="wikiMove(${i}, 1)">↓</button>
+          </div>
           <div style="min-width:220px;flex:1">
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">
-              <span class="wiki-title">${esc(a.title)}</span>
+              <span class="wiki-title">${esc(a.short_title || a.title)}</span>
               <span class="chip ${a.is_published ? 'green' : 'grey'}">${a.is_published ? 'Опубликовано' : 'Черновик'}</span>
             </div>
             <div class="wiki-slug">/wiki/${esc(a.slug)}</div>
@@ -1102,159 +1251,916 @@ async function renderWiki() {
             <div class="act-btn danger" onclick="deleteWikiArticle(${a.id})">Удалить</div>
           </div>
         </div>
-      `).join('') : '<div class="empty">Пока нет статей — создайте первую</div>'}
+      `).join('') : '<div class="empty">Статей пока нет — нажмите «Новая статья», чтобы написать первую</div>'}
     `;
   } catch (e) {
     c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
   }
 }
 
+async function wikiMove(index, delta) {
+  const list = window._wikiList.slice();
+  const [item] = list.splice(index, 1);
+  list.splice(index + delta, 0, item);
+  try {
+    await api('POST', '/web/wiki/reorder', { ids: list.map(a => a.id) });
+    renderWiki();
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ── Визуальный редактор статьи ──────────────────────────────
+   Текст редактируется в iframe со стилями самого сайта, поэтому
+   статья выглядит ровно так, как на /wiki. Режим «HTML» — для
+   тонкой правки разметки. */
+const WIKI_BLOCKS = [['p', 'Абзац'], ['h2', 'Заголовок раздела'], ['h3', 'Подзаголовок']];
+const WIKI_TOOLS = [
+  ['bold', 'Жирный', '<b>B</b>'],
+  ['italic', 'Курсив', '<i>I</i>'],
+  ['link', 'Ссылка', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 007.5.5l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 10a5 5 0 00-7.5-.5l-2 2a5 5 0 007 7l1-1"/></svg>'],
+  ['ul', 'Маркированный список', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/></svg>'],
+  ['ol', 'Нумерованный список', '<span style="font-size:11px;font-weight:700">1.</span>'],
+  ['quote', 'Цитата', '<span style="font-size:17px;line-height:1">“</span>'],
+  ['callout', 'Заметка (жёлтая плашка)', '<span style="font-weight:700">!</span>'],
+  ['code', 'Код', '<span class="mono" style="font-size:11px">&lt;/&gt;</span>'],
+  ['image', 'Картинка по ссылке', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-9 9"/></svg>'],
+  ['hr', 'Разделитель', '—'],
+  ['clear', 'Убрать оформление', '<span style="font-size:12px">T<sub>x</sub></span>'],
+  ['undo', 'Отменить', '↶'],
+  ['redo', 'Повторить', '↷'],
+];
+
+let wikiEditorCss = null;
+let wikiMode = 'visual';
+
+function wikiDoc() { const f = document.getElementById('wFrame'); return f && f.contentDocument; }
+function wikiEd() { const d = wikiDoc(); return d && d.getElementById('ed'); }
+
 async function openWikiEditor(id) {
   const c = document.getElementById('content');
-  let a = { slug: '', title: '', lede: '', body: '', section: 'О сервисе', keywords: '', is_published: false };
-  if (id) {
-    try { a = await api('GET', `/web/wiki/${id}`); } catch (e) { toast(e.message, true); return; }
-  }
-  const sections = ['О сервисе', 'Оплата и аккаунт', 'Помощь', 'Технологии'];
+  let a = { slug: '', title: '', short_title: '', lede: '', content_html: '', custom_css: '', section: 'О сервисе', keywords: '', sort_order: '', is_published: false };
+  try {
+    if (id) a = await api('GET', `/web/wiki/${id}`);
+    if (wikiEditorCss === null) wikiEditorCss = await fetch('/web/wiki-editor-css', { headers: { Authorization: 'Bearer ' + token } }).then(r => r.ok ? r.text() : '');
+    if (!window._wikiList) window._wikiList = (await api('GET', '/web/wiki')).articles;
+  } catch (e) { toast(e.message, true); return; }
+  const sections = [...new Set(['О сервисе', ...window._wikiList.map(x => x.section)])];
+  wikiMode = 'visual';
   c.innerHTML = `
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px">
-      <div class="ghost-btn" onclick="renderWiki()">← К списку</div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+      <div class="ghost-btn" onclick="if (confirmLeave()) renderWiki()">← К списку</div>
       <div style="flex:1"></div>
-      <div class="act-btn plain" id="publishBtn" onclick="wikiTogglePublish()">${a.is_published ? 'Снять с публикации' : 'Опубликовать'}</div>
-      <div class="primary-btn" onclick="saveWikiArticle(${id || 'null'})">Сохранить</div>
+      <div class="act-btn plain" onclick="previewWikiArticle()">Предпросмотр</div>
+      <div class="primary-btn" data-save title="Ctrl+S" onclick="saveWikiArticle(${id || 'null'})">Сохранить</div>
     </div>
     <div class="editor-grid">
       <div class="editor-card">
         <label class="editor-label">Заголовок</label>
-        <input class="editor-title-input" id="wTitle" value="${esc(a.title)}" placeholder="Например: Zero Logs — что не пишется">
-        <label class="editor-label">Краткое описание</label>
-        <input class="ipt" id="wLede" value="${esc(a.lede)}" placeholder="Одна строка — попадает в meta description" style="width:100%;margin-bottom:18px">
-        <label class="editor-label">Текст статьи</label>
-        <div class="editor-toolbar">
-          <button type="button" class="tb-btn" onclick="wikiInsertMarkup('bold')" title="Жирный"><b>B</b></button>
-          <button type="button" class="tb-btn" onclick="wikiInsertMarkup('italic')" title="Курсив"><i>I</i></button>
-          <button type="button" class="tb-btn" onclick="wikiInsertMarkup('link')" title="Ссылка"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 007.5.5l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 10a5 5 0 00-7.5-.5l-2 2a5 5 0 007 7l1-1"/></svg></button>
-          <button type="button" class="tb-btn" onclick="wikiInsertMarkup('list')" title="Список"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg></button>
-          <div style="flex:1"></div>
-          <div class="tb-hint">**жирный** · *курсив* · [текст](ссылка) · - пункт списка</div>
+        <input class="editor-title-input" id="wTitle" value="${esc(a.title)}" placeholder="Например: Как подключиться на iPhone">
+        <label class="editor-label">Подзаголовок</label>
+        <textarea class="ipt" id="wLede" rows="2" maxlength="400" placeholder="1–2 предложения под заголовком. Попадает в карточку на /wiki и в описание для поисковиков. Поддерживает [текст](ссылка) и **жирный**." style="margin-bottom:18px">${esc(a.lede)}</textarea>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <label class="editor-label" style="margin:0;flex:1">Текст статьи</label>
+          <div class="seg">
+            <button type="button" id="wModeVisual" class="on" onclick="wikiSetMode('visual')">Визуально</button>
+            <button type="button" id="wModeHtml" onclick="wikiSetMode('html')">HTML</button>
+          </div>
         </div>
-        <textarea class="editor-body" id="wBody" placeholder="Текст статьи — абзацы разделяйте пустой строкой…">${esc(a.body)}</textarea>
+        <div class="editor-toolbar" id="wToolbar">
+          <select class="tb-select" id="wBlock" onchange="wikiCmd('block', this.value)" title="Тип блока">
+            ${WIKI_BLOCKS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}
+          </select>
+          ${WIKI_TOOLS.map(([cmd, title, icon]) => `<button type="button" class="tb-btn" title="${title}" onmousedown="event.preventDefault()" onclick="wikiCmd('${cmd}')">${icon}</button>`).join('')}
+        </div>
+        <iframe id="wFrame" class="wiki-frame" title="Редактор статьи"></iframe>
+        <textarea class="editor-body" id="wHtml" spellcheck="false" style="display:none"></textarea>
+        <div class="tb-hint" style="margin-top:8px;white-space:normal">Заголовки «Заголовок раздела» автоматически попадают в оглавление справа на странице статьи.</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
         <div class="editor-card">
-          <div class="dcard-title" style="margin-bottom:14px">Публикация</div>
-          <label class="editor-label">Адрес страницы (slug)</label>
-          <input class="ipt mono" id="wSlug" value="${esc(a.slug)}" placeholder="zero-logs" ${id ? 'disabled' : ''} style="width:100%;margin-bottom:6px">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#3A3028" id="wSlugPreview">/wiki/${esc(a.slug)}</div>
-        </div>
-        <div class="editor-card">
-          <div class="dcard-title" style="margin-bottom:14px">Раздел</div>
-          <div style="display:flex;flex-direction:column;gap:7px" id="wSections">
-            ${sections.map(s => `
-              <div style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;border:1px solid ${s === a.section ? 'rgba(255,184,0,.4)' : 'rgba(255,255,255,.1)'};background:${s === a.section ? 'rgba(255,184,0,.08)' : 'transparent'}" data-section="${esc(s)}" onclick="wikiSelectSection(this)">
-                <span style="width:14px;height:14px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:${s === a.section ? '#FFB800' : 'transparent'};flex-shrink:0"></span>
-                <span style="font-size:13px;color:${s === a.section ? '#FFB800' : '#EBE0CC'}">${s}</span>
-              </div>
-            `).join('')}
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <div class="dcard-title" style="flex:1">Публикация</div>
+            <div class="toggle-track" id="wPublish" data-on="${a.is_published ? '1' : '0'}" onclick="wikiTogglePublish()" style="cursor:pointer"><div class="toggle-knob"></div></div>
           </div>
+          <div style="font-size:12.5px;color:#8A7A60;margin:-6px 0 14px" id="wPublishHint"></div>
+          <label class="editor-label">Адрес страницы</label>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <span class="mono" style="font-size:12px;color:#7E705B">/wiki/</span>
+            <input class="ipt mono" id="wSlug" value="${esc(a.slug)}" placeholder="kak-podklyuchitsya" style="flex:1;min-width:0">
+          </div>
+          <div style="font-size:11.5px;color:#7E705B">Латиница, цифры и дефис. ${id && a.is_published ? `<a href="/wiki/${esc(a.slug)}" target="_blank" rel="noopener" style="color:#FFB800">Открыть на сайте ↗</a>` : ''}</div>
         </div>
         <div class="editor-card">
-          <div class="dcard-title" style="margin-bottom:14px">Ключевые слова</div>
+          <div class="dcard-title" style="margin-bottom:14px">Меню Wiki</div>
+          <label class="editor-label">Раздел</label>
+          <input class="ipt" id="wSection" list="wSectionList" value="${esc(a.section)}" style="width:100%;margin-bottom:6px">
+          <datalist id="wSectionList">${sections.map(s => `<option value="${esc(s)}">`).join('')}</datalist>
+          <div style="font-size:11.5px;color:#7E705B;margin-bottom:14px">Выберите из списка или впишите новый раздел.</div>
+          <label class="editor-label">Название в меню</label>
+          <input class="ipt" id="wShort" value="${esc(a.short_title)}" placeholder="Коротко — если пусто, берётся заголовок" style="width:100%;margin-bottom:14px">
+          <label class="editor-label">Ключевые слова для поиска</label>
           <input class="ipt" id="wKeywords" value="${esc(a.keywords)}" placeholder="логи, приватность, xray" style="width:100%">
         </div>
+        <details class="editor-card">
+          <summary class="dcard-title" style="cursor:pointer">Дополнительно: CSS статьи</summary>
+          <div style="font-size:12px;color:#8A7A60;margin:10px 0">Стили, которые нужны только этой статье. Обычно не нужны — встроенного оформления хватает.</div>
+          <textarea class="editor-body" id="wCss" spellcheck="false" style="min-height:160px;border-radius:12px;border-top:1px solid rgba(255,255,255,.1)" oninput="wikiApplyCss()">${esc(a.custom_css)}</textarea>
+        </details>
       </div>
     </div>
   `;
   window._wikiPublished = a.is_published;
-  window._wikiSection = a.section;
-  document.getElementById('wSlug').addEventListener('input', (e) => {
-    document.getElementById('wSlugPreview').textContent = '/wiki/' + e.target.value;
-  });
-}
-
-function wikiSelectSection(el) {
-  window._wikiSection = el.dataset.section;
-  document.querySelectorAll('#wSections > div').forEach(d => {
-    const on = d === el;
-    d.style.borderColor = on ? 'rgba(255,184,0,.4)' : 'rgba(255,255,255,.1)';
-    d.style.background = on ? 'rgba(255,184,0,.08)' : 'transparent';
-    d.querySelector('span').style.background = on ? '#FFB800' : 'transparent';
-    d.querySelector('span:last-child').style.color = on ? '#FFB800' : '#EBE0CC';
-  });
-}
-
-function wikiInsertMarkup(type) {
-  const ta = document.getElementById('wBody');
-  const start = ta.selectionStart;
-  const end = ta.selectionEnd;
-  const val = ta.value;
-  const selected = val.slice(start, end);
-  const before = val.slice(0, start);
-  const after = val.slice(end);
-  let insertText, selStart, selEnd;
-
-  if (type === 'bold' || type === 'italic') {
-    const marker = type === 'bold' ? '**' : '*';
-    const text = selected || (type === 'bold' ? 'жирный текст' : 'курсив');
-    insertText = `${marker}${text}${marker}`;
-    selStart = before.length + marker.length;
-    selEnd = selStart + text.length;
-  } else if (type === 'link') {
-    const url = prompt('Ссылка (https://...)', 'https://');
-    if (!url) return;
-    const text = selected || 'текст ссылки';
-    insertText = `[${text}](${url})`;
-    selStart = before.length + 1;
-    selEnd = selStart + text.length;
-  } else if (type === 'list') {
-    const text = selected || 'пункт списка';
-    insertText = text.split('\n').map(l => l.startsWith('- ') ? l : `- ${l}`).join('\n');
-    selStart = before.length;
-    selEnd = before.length + insertText.length;
-  } else {
-    return;
+  wikiPaintPublish();
+  const slugEl = document.getElementById('wSlug');
+  if (!id) {
+    document.getElementById('wTitle').addEventListener('input', (e) => {
+      if (!slugEl.dataset.touched) slugEl.value = wikiSlugify(e.target.value);
+    });
+    slugEl.addEventListener('input', () => { slugEl.dataset.touched = '1'; });
   }
+  wikiInitFrame(a.content_html, a.custom_css);
+}
 
-  ta.value = before + insertText + after;
-  ta.focus();
-  ta.setSelectionRange(selStart, selEnd);
+function wikiInitFrame(html, css) {
+  const f = document.getElementById('wFrame');
+  f.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>${wikiEditorCss}</style><style id="customCss"></style>
+    <style>body{padding:22px 26px;min-height:100%}#ed{outline:none;max-width:none;padding-bottom:40px}#ed:empty::before,#ed > p:only-child:empty::before{content:'Начните писать статью…';color:var(--text3)}</style>
+    </head><body><article id="ed" contenteditable="true"></article></body></html>`;
+  f.onload = () => {
+    const ed = wikiEd();
+    ed.innerHTML = html || '<p><br></p>';
+    wikiApplyCss(css);
+    const d = wikiDoc();
+    d.execCommand('defaultParagraphSeparator', false, 'p');
+    ed.addEventListener('input', () => { unsaved = true; });
+    d.addEventListener('keydown', hotkeys);
+    d.addEventListener('selectionchange', wikiSyncBlockSelect);
+    // Вставка из Word/Google Docs приносит свои шрифты и цвета — берём только текст.
+    ed.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      d.execCommand('insertText', false, text);
+    });
+  };
+}
+
+function wikiApplyCss(css) {
+  const d = wikiDoc();
+  if (!d || !d.getElementById('customCss')) return;
+  d.getElementById('customCss').textContent = css !== undefined ? css : document.getElementById('wCss').value;
+}
+
+function wikiSyncBlockSelect() {
+  const d = wikiDoc();
+  const sel = d.getSelection();
+  if (!sel || !sel.rangeCount) return;
+  let n = sel.anchorNode;
+  while (n && n.nodeType !== 1) n = n.parentNode;
+  const block = n && n.closest('h2,h3,p');
+  document.getElementById('wBlock').value = block ? block.tagName.toLowerCase() : 'p';
+}
+
+function wikiCmd(cmd, value) {
+  if (wikiMode !== 'visual') { toast('Инструменты работают в режиме «Визуально»', true); return; }
+  const d = wikiDoc();
+  wikiEd().focus();
+  const wrap = (tag, cls) => {
+    const sel = d.getSelection();
+    const text = sel && sel.toString() ? esc(sel.toString()) : (tag === 'pre' ? 'код' : 'Текст');
+    d.execCommand('insertHTML', false, `<${tag}${cls ? ` class="${cls}"` : ''}>${text}</${tag}><p><br></p>`);
+  };
+  switch (cmd) {
+    case 'block': d.execCommand('formatBlock', false, value); break;
+    case 'bold': d.execCommand('bold'); break;
+    case 'italic': d.execCommand('italic'); break;
+    case 'ul': d.execCommand('insertUnorderedList'); break;
+    case 'ol': d.execCommand('insertOrderedList'); break;
+    case 'quote': d.execCommand('formatBlock', false, 'blockquote'); break;
+    case 'callout': wrap('div', 'callout'); break;
+    case 'code': wrap('pre'); break;
+    case 'hr': d.execCommand('insertHorizontalRule'); break;
+    case 'clear': d.execCommand('removeFormat'); d.execCommand('unlink'); d.execCommand('formatBlock', false, 'p'); break;
+    case 'undo': d.execCommand('undo'); break;
+    case 'redo': d.execCommand('redo'); break;
+    case 'link': {
+      const url = prompt('Ссылка (https://… или /страница)', 'https://');
+      if (!url) return;
+      if (d.getSelection().toString()) d.execCommand('createLink', false, url);
+      else d.execCommand('insertHTML', false, `<a href="${esc(url)}">${esc(url)}</a>`);
+      break;
+    }
+    case 'image': {
+      const url = prompt('Ссылка на картинку (https://…)', 'https://');
+      if (!url) return;
+      d.execCommand('insertHTML', false, `<img src="${esc(url)}" alt="">`);
+      break;
+    }
+  }
+  wikiSyncBlockSelect();
+}
+
+function wikiSetMode(mode) {
+  if (mode === wikiMode) return;
+  const frame = document.getElementById('wFrame');
+  const ta = document.getElementById('wHtml');
+  if (mode === 'html') {
+    ta.value = wikiEd().innerHTML;
+    frame.style.display = 'none'; ta.style.display = '';
+  } else {
+    wikiEd().innerHTML = ta.value;
+    ta.style.display = 'none'; frame.style.display = '';
+  }
+  wikiMode = mode;
+  document.getElementById('wModeVisual').classList.toggle('on', mode === 'visual');
+  document.getElementById('wModeHtml').classList.toggle('on', mode === 'html');
+  document.getElementById('wToolbar').style.opacity = mode === 'visual' ? '1' : '.4';
+}
+
+const WIKI_TRANSLIT = {а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'ts',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya'};
+function wikiSlugify(s) {
+  return String(s).toLowerCase().split('').map(ch => WIKI_TRANSLIT[ch] ?? ch).join('')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+}
+
+/* Браузерный contenteditable иногда кладёт список/плашку внутрь <p> и
+   оставляет пустые абзацы в конце — чистим перед сохранением. */
+function wikiNormalize(ed) {
+  ed.querySelectorAll(':scope > p').forEach(p => {
+    if (!p.querySelector(':scope > ul, :scope > ol, :scope > div, :scope > pre, :scope > blockquote, :scope > h2, :scope > h3, :scope > table, :scope > hr')) return;
+    let buf = null;
+    [...p.childNodes].forEach(n => {
+      if (n.nodeType === 1 && /^(UL|OL|DIV|PRE|BLOCKQUOTE|H2|H3|TABLE|HR)$/.test(n.tagName)) {
+        p.before(n); buf = null;
+      } else {
+        if (!buf) { buf = ed.ownerDocument.createElement('p'); p.before(buf); }
+        buf.appendChild(n);
+      }
+    });
+    p.remove();
+  });
+  ed.querySelectorAll(':scope > p').forEach(p => { if (!p.textContent.trim() && !p.querySelector('img')) p.remove(); });
+}
+
+/* Заголовкам разделов без id даём id — по нему строится оглавление. */
+function wikiContentHtml() {
+  if (wikiMode === 'html') wikiSetMode('visual');
+  const ed = wikiEd();
+  wikiNormalize(ed);
+  const used = new Set([...ed.querySelectorAll('[id]')].map(el => el.id));
+  ed.querySelectorAll(':scope > h2:not([id])').forEach(h => {
+    let base = wikiSlugify(h.textContent) || 'section', id = base, n = 2;
+    while (used.has(id)) id = `${base}-${n++}`;
+    used.add(id); h.id = id;
+  });
+  return ed.innerHTML.trim();
+}
+
+function wikiPayload() {
+  return {
+    title: document.getElementById('wTitle').value.trim(),
+    short_title: document.getElementById('wShort').value.trim(),
+    lede: document.getElementById('wLede').value.trim(),
+    content_html: wikiContentHtml(),
+    custom_css: document.getElementById('wCss').value,
+    section: document.getElementById('wSection').value.trim() || 'О сервисе',
+    keywords: document.getElementById('wKeywords').value.trim(),
+    slug: document.getElementById('wSlug').value.trim().toLowerCase(),
+    is_published: !!window._wikiPublished,
+  };
+}
+
+function wikiPaintPublish() {
+  const t = document.getElementById('wPublish');
+  const on = !!window._wikiPublished;
+  t.style.background = on ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)';
+  t.querySelector('.toggle-knob').style.cssText = `background:${on ? '#FFB800' : '#7E705B'};margin-left:${on ? 'auto' : '0'}`;
+  document.getElementById('wPublishHint').textContent = on ? 'Статья видна на сайте после сохранения.' : 'Черновик — на сайте не показывается.';
 }
 
 function wikiTogglePublish() {
   window._wikiPublished = !window._wikiPublished;
-  document.getElementById('publishBtn').textContent = window._wikiPublished ? 'Снять с публикации' : 'Опубликовать';
+  unsaved = true;
+  wikiPaintPublish();
+}
+
+async function previewWikiArticle() {
+  const win = window.open('', '_blank');
+  try {
+    const r = await fetch('/web/wiki/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(wikiPayload()),
+    });
+    if (!r.ok) throw new Error('Не удалось собрать предпросмотр');
+    const html = await r.text();
+    win.document.open(); win.document.write(html); win.document.close();
+  } catch (e) { if (win) win.close(); toast(e.message, true); }
 }
 
 async function saveWikiArticle(id) {
-  const payload = {
-    title: document.getElementById('wTitle').value.trim(),
-    lede: document.getElementById('wLede').value.trim(),
-    body: document.getElementById('wBody').value.trim(),
-    section: window._wikiSection || 'О сервисе',
-    keywords: document.getElementById('wKeywords').value.trim(),
-    is_published: !!window._wikiPublished,
-  };
+  const payload = wikiPayload();
+  if (!payload.title) { toast('Укажите заголовок', true); return; }
+  if (!payload.slug) { toast('Укажите адрес страницы', true); return; }
   try {
-    if (id) {
-      await api('PUT', `/web/wiki/${id}`, payload);
-    } else {
-      payload.slug = document.getElementById('wSlug').value.trim();
-      if (!payload.slug) { toast('Укажите адрес страницы (slug)', true); return; }
-      await api('POST', '/web/wiki', payload);
-    }
+    if (id) await api('PUT', `/web/wiki/${id}`, payload);
+    else await api('POST', '/web/wiki', payload);
+    unsaved = false;
     toast('Сохранено');
     renderWiki();
   } catch (e) { toast(e.message, true); }
 }
 
 async function deleteWikiArticle(id) {
-  if (!confirm('Удалить статью?')) return;
+  if (!confirm('Удалить статью насовсем? Восстановить её будет нельзя.')) return;
   try {
     await api('DELETE', `/web/wiki/${id}`);
     toast('Статья удалена');
     renderWiki();
   } catch (e) { toast(e.message, true); }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   БОТ — схема экранов (блок → стрелка → блок) и редактор текстов.
+   Системные экраны: тексты и подписи кнопок (логика в коде).
+   Свои блоки: сообщение + кнопки на другой блок / экран / ссылку.
+═══════════════════════════════════════════════════════════ */
+const FLOW_W = 236, FLOW_GAP_X = 96, FLOW_GAP_Y = 22, FLOW_PAD = 20;
+let botSchema = null;
+let botSel = null;          // id выбранного блока: 'start' | 'c12' | 'new'
+let botDraft = null;        // черновик своего блока в панели
+let botFocusKey = null;     // какой текст сейчас в превью
+
+async function renderBot() {
+  const c = document.getElementById('content');
+  try {
+    botSchema = await api('GET', '/web/bot/schema');
+  } catch (e) {
+    c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
+    return;
+  }
+  c.innerHTML = `
+    <div class="filters">
+      <span style="font-size:13px;color:#8A7A60">Нажмите на блок, чтобы изменить его тексты и кнопки. Стрелки показывают, куда ведут кнопки. Изменения доходят до бота сразу после сохранения, перезапуск не нужен.</span>
+      <div style="flex:1"></div>
+      <div class="primary-btn" onclick="botNewBlock()">+ Свой блок</div>
+    </div>
+    <div class="flow-legend">
+      <span><i class="lg sys"></i>Экран бота: редактируются тексты</span>
+      <span><i class="lg code"></i>Логика в коде</span>
+      <span><i class="lg own"></i>Свой блок</span>
+    </div>
+    <div class="bot-layout">
+      <div class="flow-wrap" id="flowWrap"><div class="flow" id="flow"></div></div>
+      <div class="bot-panel" id="botPanel"></div>
+    </div>`;
+  botDrawFlow();
+  if (botSel && !botNodeById(botSel) && botSel !== 'new') botSel = null;
+  botRenderPanel();
+}
+
+function botNodeById(id) {
+  if (!botSchema) return null;
+  if (id && id.startsWith('c')) return botSchema.custom.find(b => 'c' + b.id === id) || null;
+  return botSchema.screens.find(s => s.id === id) || null;
+}
+
+/* Куда ведут кнопки каждого узла: [{label, to, back, ext}] */
+function botNodeButtons(node, isCustom) {
+  if (isCustom) {
+    return node.buttons.map(b => {
+      if (b.type === 'url') return { label: b.label, ext: '↗ ссылка' };
+      if (b.type === 'block') return { label: b.label, to: 'c' + b.target };
+      return { label: b.label, to: b.target };
+    });
+  }
+  const out = node.buttons.map(b => {
+    const label = b.text ? b.text.value : b.label;
+    const hidden = b.text && b.text.hidden;
+    if (b.to === 'mini_app') return { label, ext: 'Mini App', hidden, pseudo: !b.text };
+    if (b.to === 'share') return { label, ext: '↗ переслать', hidden, pseudo: !b.text };
+    return { label, to: b.to, back: b.back, hidden, pseudo: !b.text };
+  });
+  if (node.id === 'main_menu') {
+    botSchema.custom.filter(b => b.show_in_menu && b.menu_label).forEach(b => out.push({ label: b.menu_label, to: 'c' + b.id, own: true }));
+  }
+  return out;
+}
+
+/* Колонки своих блоков: из меню/по команде — колонка 2, дальше +1 по ссылкам. */
+function botCustomColumns() {
+  const col = {};
+  const custom = botSchema.custom;
+  const queue = [];
+  custom.forEach(b => { if (b.show_in_menu || b.command) { col[b.id] = 2; queue.push(b); } });
+  while (queue.length) {
+    const b = queue.shift();
+    b.buttons.filter(x => x.type === 'block').forEach(x => {
+      if (col[x.target] === undefined) {
+        col[x.target] = col[b.id] + 1;
+        const t = custom.find(y => y.id === x.target);
+        if (t) queue.push(t);
+      }
+    });
+  }
+  custom.forEach(b => { if (col[b.id] === undefined) col[b.id] = 2; });
+  return col;
+}
+
+function botDrawFlow() {
+  const flow = document.getElementById('flow');
+  const nodes = [];
+  botSchema.screens.forEach(s => nodes.push({ id: s.id, col: s.col, order: s.row, node: s, custom: false }));
+  const ccol = botCustomColumns();
+  botSchema.custom.forEach((b, i) => nodes.push({ id: 'c' + b.id, col: ccol[b.id], order: 100 + i, node: b, custom: true }));
+  nodes.sort((a, b) => a.col - b.col || a.order - b.order);
+
+  flow.innerHTML = '<svg class="flow-edges" id="flowEdges"></svg>' + nodes.map(n => botNodeHtml(n)).join('');
+  // Раскладка: колонки по x, внутри колонки — друг под другом.
+  const colY = {};
+  let maxX = 0, maxY = 0;
+  nodes.forEach(n => {
+    const el = document.getElementById('fn-' + n.id);
+    const x = FLOW_PAD + n.col * (FLOW_W + FLOW_GAP_X);
+    const y = colY[n.col] ?? FLOW_PAD;
+    el.style.left = x + 'px'; el.style.top = y + 'px';
+    colY[n.col] = y + el.offsetHeight + FLOW_GAP_Y;
+    maxX = Math.max(maxX, x + FLOW_W); maxY = Math.max(maxY, colY[n.col]);
+    n.x = x; n.y = y;
+  });
+  flow.style.width = (maxX + FLOW_PAD) + 'px';
+  flow.style.height = (maxY + FLOW_PAD) + 'px';
+  window._flowNodes = nodes;
+  botDrawEdges();
+}
+
+function botNodeHtml(n) {
+  const node = n.node;
+  const kind = n.custom ? 'own' : (node.kind === 'code' ? 'code' : 'sys');
+  const btns = botNodeButtons(node, n.custom);
+  const preview = n.custom ? node.text : (node.texts && node.texts[0] ? node.texts[0].value : (node.note || ''));
+  const tag = n.custom
+    ? (node.show_in_menu ? 'в меню' : node.command ? '/' + esc(node.command) : 'не подключён')
+    : (kind === 'code' ? 'код' : `${node.texts.length} ${node.texts.length === 1 ? 'текст' : 'текста'}`);
+  return `
+    <div class="fnode ${kind} ${botSel === n.id ? 'sel' : ''}" id="fn-${n.id}" onclick="botSelect('${n.id}')">
+      <div class="fnode-head"><span class="fnode-title">${esc(n.custom ? node.title : node.title)}</span><span class="fnode-tag ${n.custom && !node.show_in_menu && !node.command ? 'warn' : ''}">${tag}</span></div>
+      ${preview ? `<div class="fnode-text">${esc(botPlain(preview)).slice(0, 140)}</div>` : ''}
+      ${btns.length ? `<div class="fnode-btns">${btns.map((b, i) => `
+        <div class="fnode-btn ${b.hidden ? 'off' : ''} ${b.pseudo ? 'pseudo' : ''}" id="fb-${n.id}-${i}">
+          <span>${esc(b.label)}</span>${b.ext ? `<em>${esc(b.ext)}</em>` : b.back || botIsBackward(n, b.to) ? `<em>↩ ${esc(botTitle(b.to))}</em>` : ''}
+        </div>`).join('')}</div>` : ''}
+    </div>`;
+}
+
+function botTitle(id) {
+  const n = botNodeById(id);
+  return n ? n.title : '—';
+}
+
+function botColOf(id) {
+  const n = (window._flowNodes || []).find(x => x.id === id);
+  if (n) return n.col;
+  const s = botSchema.screens.find(x => x.id === id);
+  if (s) return s.col;
+  const ccol = botCustomColumns();
+  return id.startsWith('c') ? ccol[+id.slice(1)] : 0;
+}
+
+function botIsBackward(n, to) {
+  return !!to && botColOf(to) <= n.col;
+}
+
+function botDrawEdges() {
+  const svg = document.getElementById('flowEdges');
+  const flow = document.getElementById('flow');
+  const fr = flow.getBoundingClientRect();
+  let paths = '';
+  (window._flowNodes || []).forEach(n => {
+    botNodeButtons(n.node, n.custom).forEach((b, i) => {
+      if (!b.to || b.back || botIsBackward(n, b.to)) return;
+      const btnEl = document.getElementById(`fb-${n.id}-${i}`);
+      const target = document.getElementById('fn-' + b.to);
+      if (!btnEl || !target) return;
+      const br = btnEl.getBoundingClientRect(), tr = target.getBoundingClientRect();
+      const x1 = br.right - fr.left, y1 = br.top + br.height / 2 - fr.top;
+      const x2 = tr.left - fr.left, y2 = tr.top + 22 - fr.top;
+      const dx = Math.max(40, (x2 - x1) / 2);
+      const active = botSel === n.id || botSel === b.to;
+      const cls = ['edge', n.custom || b.own ? 'own' : '', b.hidden ? 'off' : '', active ? 'on' : ''].join(' ');
+      paths += `<path class="${cls}" d="M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2 - 6},${y2}" marker-end="url(#arr${active ? 'On' : ''})"/>`;
+    });
+  });
+  svg.setAttribute('width', flow.offsetWidth);
+  svg.setAttribute('height', flow.offsetHeight);
+  svg.innerHTML = `<defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="rgba(255,184,0,.45)"/></marker>
+      <marker id="arrOn" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#FFB800"/></marker>
+    </defs>${paths}`;
+}
+
+function botSelect(id) {
+  if (id === botSel || !confirmLeave()) return;
+  botSel = id;
+  botDraft = null;
+  botFocusKey = null;
+  document.querySelectorAll('.fnode').forEach(el => el.classList.toggle('sel', el.id === 'fn-' + id));
+  botDrawEdges();
+  botRenderPanel();
+  if (window.innerWidth < 1100) document.getElementById('botPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ── Панель редактирования ─────────────────────────────────── */
+function botRenderPanel() {
+  const p = document.getElementById('botPanel');
+  if (!p) return;
+  if (!botSel) {
+    p.innerHTML = `<div class="editor-card"><div class="dcard-title" style="margin-bottom:8px">Выберите блок на схеме</div>
+      <div style="font-size:13px;color:#8A7A60;line-height:1.6">Системные экраны: меняются тексты сообщений и подписи кнопок, логика остаётся в коде.<br><br>Свои блоки: любое сообщение с кнопками. Кнопка может вести на другой блок, на экран бота (тарифы, подписку, поддержку…) или на ссылку. Блок можно вынести в главное меню или открывать командой, например <span class="mono">/help</span>.</div></div>`;
+    return;
+  }
+  if (botSel === 'new' || botSel.startsWith('c')) return botRenderCustomPanel(p);
+  botRenderSystemPanel(p, botNodeById(botSel));
+}
+
+function botRenderSystemPanel(p, node) {
+  const keyed = node.buttons.filter(b => b.text);
+  const texts = node.texts;
+  if (!botFocusKey && texts.length) botFocusKey = texts[0].key;
+  p.innerHTML = `
+    <div class="editor-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <div class="dcard-title" style="flex:1">${esc(node.title)}</div>
+        <span class="chip ${node.kind === 'code' ? 'grey' : 'gold'}">${node.kind === 'code' ? 'Логика в коде' : 'Экран бота'}</span>
+      </div>
+      ${node.note ? `<div style="font-size:12.5px;color:#8A7A60;margin-bottom:14px">${esc(node.note)}</div>` : ''}
+      ${texts.map(tx => botTextField(tx)).join('')}
+      ${keyed.length ? `<div class="editor-label" style="margin-top:6px">Кнопки</div>${keyed.map(b => botButtonField(b.text)).join('')}` : ''}
+      ${!texts.length && !keyed.length ? '<div style="font-size:13px;color:#7E705B">Здесь нечего редактировать: этот экран полностью собирается в коде.</div>' : ''}
+      ${texts.length || keyed.length ? `<div style="display:flex;gap:8px;margin-top:16px"><div class="primary-btn" data-save title="Ctrl+S" onclick="botSaveSystem()">Сохранить</div><div class="ghost-btn" onclick="unsaved=false;botRenderPanel()">Отменить правки</div></div>` : ''}
+    </div>
+    ${texts.length ? `<div class="editor-card"><div class="editor-label">Как увидит пользователь</div><div id="tgPreview"></div></div>` : ''}`;
+  botUpdatePreview();
+}
+
+function botTextField(tx) {
+  const isMsg = tx.kind === 'message';
+  return `
+    <div class="tfield" data-key="${tx.key}">
+      <div class="tfield-head">
+        <span class="tfield-name">${esc(BOT_TEXT_NAMES[tx.key] || (tx.key.startsWith('instr.') ? 'Инструкция: ' + tx.hint : tx.key))}</span>
+        <span class="tfield-reset" style="${tx.overridden ? '' : 'display:none'}" onclick="botResetField('${tx.key}')">Сбросить</span>
+      </div>
+      ${isMsg ? `<div class="tfield-tools">
+        <button type="button" class="tb-btn" title="Жирный" onmousedown="event.preventDefault()" onclick="botWrap('${tx.key}','b')"><b>B</b></button>
+        <button type="button" class="tb-btn" title="Курсив" onmousedown="event.preventDefault()" onclick="botWrap('${tx.key}','i')"><i>I</i></button>
+        <button type="button" class="tb-btn" title="Моноширинный (можно скопировать нажатием)" onmousedown="event.preventDefault()" onclick="botWrap('${tx.key}','code')"><span class="mono" style="font-size:11px">{}</span></button>
+        <button type="button" class="tb-btn" title="Ссылка" onmousedown="event.preventDefault()" onclick="botWrap('${tx.key}','a')">🔗</button>
+        ${tx.placeholders.map(ph => `<span class="ph-chip" title="Подставится автоматически" onmousedown="event.preventDefault()" onclick="botInsert('${tx.key}','{${ph}}')">{${ph}}</span>`).join('')}
+      </div>` : ''}
+      ${tx.hint && !tx.key.startsWith('instr.') ? `<div class="bfield-hint" style="margin:-2px 0 6px">${esc(tx.hint)}</div>` : ''}
+      <textarea class="ipt tfield-input" id="tf-${tx.key}" rows="${isMsg ? Math.min(12, Math.max(3, tx.value.split('\n').length + 1)) : 1}" data-default="${esc(tx.default)}"
+        onfocus="botFocusKey='${tx.key}';botUpdatePreview()" oninput="botFieldChanged('${tx.key}')">${esc(tx.value)}</textarea>
+    </div>`;
+}
+
+function botButtonField(tx) {
+  return `
+    <div class="bfield" data-key="${tx.key}">
+      <input class="ipt" id="tf-${tx.key}" value="${esc(tx.value)}" data-default="${esc(tx.default)}" maxlength="64" oninput="botFieldChanged('${tx.key}')" placeholder="${esc(tx.default)}">
+      ${tx.hideable ? `<label class="bfield-hide" title="Показывать кнопку в меню"><input type="checkbox" id="hd-${tx.key}" ${tx.hidden ? '' : 'checked'} onchange="unsaved=true;botUpdatePreview()"> видна</label>` : ''}
+      <span class="tfield-reset" style="${tx.overridden ? '' : 'display:none'}" onclick="botResetField('${tx.key}')">Сбросить</span>
+    </div>
+    ${tx.hint ? `<div class="bfield-hint">${esc(tx.hint)}</div>` : ''}`;
+}
+
+const BOT_TEXT_NAMES = {
+  'start.welcome_new': 'Приветствие — нет подписки',
+  'start.trial_hint': 'Приписка про пробный период',
+  'start.welcome_back': 'Приветствие — подписка активна',
+  'start.inline_prompt': 'Сообщение над кнопками',
+  'menu.title': 'Возврат в главное меню',
+  'sub.text': 'Экран подписки',
+  'pay.choose': 'Выбор способа оплаты',
+  'pay.unavailable': 'Оплата недоступна',
+  'stars.text': 'Оплата звёздами',
+  'plans.text': 'Выбор тарифа',
+  'paid.text': 'После оплаты',
+  'trial.offer': 'Предложение пробного периода',
+  'trial.used': 'Пробный уже использован',
+  'trial.creating': 'Пока создаётся аккаунт',
+  'trial.activated': 'Пробный период активирован',
+  'referral.text': 'Экран партнёрки',
+  'referral.share_text': 'Текст при пересылке ссылки',
+  'support.text': 'Экран поддержки',
+  'instr.menu': 'Выбор устройства',
+};
+
+function botFieldChanged(key) {
+  const el = document.getElementById('tf-' + key);
+  const reset = el.closest('.tfield, .bfield').querySelector('.tfield-reset');
+  reset.style.display = el.value !== el.dataset.default ? '' : 'none';
+  botUpdatePreview();
+}
+
+function botResetField(key) {
+  const el = document.getElementById('tf-' + key);
+  el.value = el.dataset.default;
+  botFieldChanged(key);
+}
+
+function botInsert(key, text) {
+  const ta = document.getElementById('tf-' + key);
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  ta.value = ta.value.slice(0, s) + text + ta.value.slice(e);
+  ta.focus(); ta.setSelectionRange(s + text.length, s + text.length);
+  botFieldChanged(key);
+}
+
+function botWrap(key, tag) {
+  const ta = document.getElementById('tf-' + key);
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  const sel = ta.value.slice(s, e) || 'текст';
+  let open = `<${tag}>`;
+  if (tag === 'a') {
+    const url = prompt('Ссылка (https://…)', 'https://');
+    if (!url) return;
+    open = `<a href="${url.replace(/"/g, '&quot;')}">`;
+  }
+  const ins = open + sel + `</${tag}>`;
+  ta.value = ta.value.slice(0, s) + ins + ta.value.slice(e);
+  ta.focus(); ta.setSelectionRange(s + open.length, s + open.length + sel.length);
+  botFieldChanged(key);
+}
+
+async function botSaveSystem() {
+  const values = {}, hidden = {};
+  document.querySelectorAll('#botPanel [id^="tf-"]').forEach(el => {
+    const key = el.id.slice(3);
+    const tx = botFindText(key);
+    const v = el.value;
+    if (v === tx.value) return;
+    values[key] = v === tx.default ? null : v;
+  });
+  document.querySelectorAll('#botPanel [id^="hd-"]').forEach(el => {
+    const key = el.id.slice(3);
+    if (!el.checked !== botFindText(key).hidden) hidden[key] = !el.checked;
+  });
+  if (!Object.keys(values).length && !Object.keys(hidden).length) { toast('Изменений нет'); return; }
+  try {
+    await api('PUT', '/web/bot/texts', { values, hidden });
+    unsaved = false;
+    toast('Сохранено: бот уже говорит по-новому');
+    await renderBot();
+  } catch (e) { toast(e.message, true); }
+}
+
+function botFindText(key) {
+  for (const s of botSchema.screens) {
+    const t = s.texts.find(x => x.key === key) || (s.buttons.find(b => b.text && b.text.key === key) || {}).text;
+    if (t) return t;
+  }
+  return null;
+}
+
+/* ── Превью в стиле Telegram ───────────────────────────────── */
+const TG_TAGS = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'INS', 'S', 'STRIKE', 'DEL', 'A', 'CODE', 'PRE', 'BLOCKQUOTE', 'TG-SPOILER', 'SPAN']);
+function botTgHtml(raw) {
+  const doc = new DOMParser().parseFromString('<div>' + raw + '</div>', 'text/html');
+  const walk = (node) => [...node.childNodes].map(n => {
+    if (n.nodeType === 3) return esc(n.textContent);
+    if (n.nodeType !== 1) return '';
+    const inner = walk(n);
+    if (!TG_TAGS.has(n.tagName)) return inner;
+    const tag = n.tagName.toLowerCase();
+    if (tag === 'a') return `<a>${inner}</a>`;
+    return `<${tag}>${inner}</${tag}>`;
+  }).join('');
+  return walk(doc.body.firstChild);
+}
+function botPlain(raw) {
+  return new DOMParser().parseFromString('<div>' + raw + '</div>', 'text/html').body.textContent.replace(/\s+/g, ' ').trim();
+}
+function botFill(text) {
+  return text.replace(/\{(\w+)\}/g, (m, k) => botSchema.samples[k] ?? m);
+}
+
+/* Какие inline-кнопки видны под каждым сообщением (для превью). */
+const PLAN_SAMPLE = ['1 месяц — 100 ⭐', '3 месяца — 270 ⭐', '12 месяцев — 960 ⭐'];
+const BOT_PREVIEW_BUTTONS = {
+  'start.inline_prompt': ['btn.open_app', 'btn.try_trial', 'btn.connect_inline'],
+  'sub.text': ['btn.devices', 'btn.renew'],
+  'pay.choose': ['btn.pay_stars', 'btn.pay_card', 'btn.pay_crypto', 'btn.back'],
+  'pay.unavailable': ['btn.back'],
+  'stars.text': [...PLAN_SAMPLE, 'btn.back'],
+  'plans.text': [...PLAN_SAMPLE, 'btn.gift_friend'],
+  'trial.offer': ['btn.activate_trial'],
+  'referral.text': ['btn.share'],
+  'instr.menu': ['🍏 iPhone / iPad', '🤖 Android', '🍎 macOS', '💻 Windows', '🐧 Linux', '🍏 Apple TV', '📺 Смарт-ТВ'],
+};
+
+function botLabel(keyOrText) {
+  if (!/^btn\./.test(keyOrText)) return keyOrText;
+  const el = document.getElementById('tf-' + keyOrText);
+  const tx = botFindText(keyOrText);
+  return el ? el.value : tx ? tx.value : keyOrText;
+}
+
+function botUpdatePreview() {
+  const box = document.getElementById('tgPreview');
+  if (!box) return;
+  if (botSel === 'new' || (botSel && botSel.startsWith('c'))) {
+    const buttons = botReadDraftButtons().map(b => (b.label || '…') + (b.type === 'url' ? ' ↗' : ''));
+    box.innerHTML = botTgBubble(document.getElementById('cbText').value, buttons);
+    return;
+  }
+  const node = botNodeById(botSel);
+  const el = document.getElementById('tf-' + botFocusKey);
+  let text = el ? el.value : '';
+  if (botFocusKey === 'start.welcome_new') {
+    const hint = document.getElementById('tf-start.trial_hint');
+    if (hint) text += '\n\n' + hint.value;
+  }
+  let buttons = BOT_PREVIEW_BUTTONS[botFocusKey] || [];
+  if (botFocusKey && botFocusKey.startsWith('instr.') && botFocusKey !== 'instr.menu') buttons = ['btn.instr_back'];
+  let html = botTgBubble(text, buttons.map(botLabel));
+  if (botSel === 'main_menu' || botFocusKey === 'start.welcome_new' || botFocusKey === 'start.welcome_back') {
+    const menu = botSchema.screens.find(s => s.id === 'main_menu');
+    html += `<div class="tg-reply">${menu.buttons.filter(b => b.text).map(b => {
+      const hd = document.getElementById('hd-' + b.text.key);
+      if (hd ? !hd.checked : b.text.hidden) return '';
+      return `<span>${esc(botLabel(b.text.key))}</span>`;
+    }).join('')}${botSchema.custom.filter(b => b.show_in_menu && b.menu_label).map(b => `<span>${esc(b.menu_label)}</span>`).join('')}</div>
+    <div style="font-size:11.5px;color:#7E705B;margin-top:8px">Нижняя клавиатура: пользователь видит только кнопки, подходящие под его статус (есть подписка или нет).</div>`;
+  }
+  box.innerHTML = html;
+}
+
+function botTgBubble(text, buttons) {
+  return `<div class="tg-chat"><div class="tg-bubble">${text.trim() ? botTgHtml(botFill(text)) : '<span style="color:#7E705B">Пустое сообщение</span>'}</div>
+    ${buttons.length ? `<div class="tg-kb">${buttons.map(b => `<div>${esc(b)}</div>`).join('')}</div>` : ''}</div>`;
+}
+
+/* ── Свои блоки ────────────────────────────────────────────── */
+function botNewBlock() {
+  if (!confirmLeave()) return;
+  botSel = 'new';
+  botDraft = { title: '', text: '', buttons: [], show_in_menu: false, menu_label: '', command: '' };
+  document.querySelectorAll('.fnode').forEach(el => el.classList.remove('sel'));
+  botDrawEdges();
+  botRenderPanel();
+  if (window.innerWidth < 1100) document.getElementById('botPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function botRenderCustomPanel(p) {
+  const isNew = botSel === 'new';
+  const b = botDraft || JSON.parse(JSON.stringify(botNodeById(botSel)));
+  botDraft = b;
+  const others = botSchema.custom.filter(x => 'c' + x.id !== botSel);
+  p.innerHTML = `
+    <div class="editor-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <div class="dcard-title" style="flex:1">${isNew ? 'Новый блок' : 'Свой блок'}</div>
+        <span class="chip gold">Свой блок</span>
+      </div>
+      <label class="editor-label">Название (видно только в админке)</label>
+      <input class="ipt" id="cbTitle" value="${esc(b.title)}" placeholder="Например: Акции" style="width:100%;margin-bottom:14px">
+      <label class="editor-label">Текст сообщения</label>
+      <div class="tfield-tools">
+        <button type="button" class="tb-btn" title="Жирный" onmousedown="event.preventDefault()" onclick="botWrapCb('b')"><b>B</b></button>
+        <button type="button" class="tb-btn" title="Курсив" onmousedown="event.preventDefault()" onclick="botWrapCb('i')"><i>I</i></button>
+        <button type="button" class="tb-btn" title="Моноширинный" onmousedown="event.preventDefault()" onclick="botWrapCb('code')"><span class="mono" style="font-size:11px">{}</span></button>
+        <button type="button" class="tb-btn" title="Ссылка" onmousedown="event.preventDefault()" onclick="botWrapCb('a')">🔗</button>
+      </div>
+      <textarea class="ipt tfield-input" id="cbText" rows="6" placeholder="Что бот ответит, когда откроют этот блок" oninput="botUpdatePreview()">${esc(b.text)}</textarea>
+
+      <div class="editor-label" style="margin-top:12px">Кнопки под сообщением</div>
+      <div id="cbButtons">${b.buttons.map((btn, i) => botCbButtonRow(btn, i, b.buttons.length, others)).join('')}</div>
+      <div class="ghost-btn" style="display:inline-block;margin-top:4px" onclick="botCbAddButton()">+ Кнопка</div>
+
+      <div class="editor-label" style="margin-top:18px">Как открыть этот блок</div>
+      <label class="cb-check"><input type="checkbox" id="cbMenu" ${b.show_in_menu ? 'checked' : ''} onchange="document.getElementById('cbMenuLabel').style.display=this.checked?'':'none'"> Кнопка в главном меню</label>
+      <input class="ipt" id="cbMenuLabel" value="${esc(b.menu_label)}" maxlength="64" placeholder="Подпись кнопки, например 🔥 Акции" style="width:100%;margin:6px 0 10px;${b.show_in_menu ? '' : 'display:none'}">
+      <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+        <span class="mono" style="color:#8A7A60">/</span>
+        <input class="ipt mono" id="cbCommand" value="${esc(b.command)}" maxlength="32" placeholder="команда (необязательно), например help" style="flex:1;min-width:0">
+      </div>
+      <div style="font-size:11.5px;color:#7E705B;margin-top:6px">Блок также открывается кнопкой из любого другого блока.</div>
+
+      <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">
+        <div class="primary-btn" data-save title="Ctrl+S" onclick="botSaveCustom()">${isNew ? 'Создать блок' : 'Сохранить'}</div>
+        ${isNew ? `<div class="ghost-btn" onclick="unsaved=false;botSel=null;botDraft=null;botRenderPanel()">Отмена</div>` : `<div class="act-btn danger" onclick="botDeleteCustom()">Удалить блок</div>`}
+      </div>
+    </div>
+    <div class="editor-card"><div class="editor-label">Как увидит пользователь</div><div id="tgPreview"></div></div>`;
+  botUpdatePreview();
+}
+
+function botCbButtonRow(btn, i, total, others) {
+  const type = btn.type || 'block';
+  const targetField = type === 'url'
+    ? `<input class="ipt" data-f="target" value="${esc(btn.target || '')}" placeholder="https://…" oninput="botUpdatePreview()">`
+    : type === 'screen'
+      ? `<select class="ipt" data-f="target">${botSchema.screen_targets.map(s => `<option value="${s.id}" ${btn.target === s.id ? 'selected' : ''}>${esc(s.title)}</option>`).join('')}</select>`
+      : `<select class="ipt" data-f="target">${others.length ? '' : '<option value="">Сначала создайте другой блок</option>'}${others.map(o => `<option value="${o.id}" ${String(btn.target) === String(o.id) ? 'selected' : ''}>${esc(o.title)}</option>`).join('')}</select>`;
+  return `
+    <div class="cb-btn" data-i="${i}">
+      <div style="display:flex;gap:6px;align-items:center">
+        <input class="ipt" data-f="label" value="${esc(btn.label || '')}" maxlength="64" placeholder="Подпись кнопки" style="flex:1;min-width:0" oninput="botUpdatePreview()">
+        <button type="button" class="tb-btn" title="Выше" ${i === 0 ? 'disabled' : ''} onclick="botCbMove(${i},-1)">↑</button>
+        <button type="button" class="tb-btn" title="Ниже" ${i === total - 1 ? 'disabled' : ''} onclick="botCbMove(${i},1)">↓</button>
+        <button type="button" class="tb-btn" title="Удалить кнопку" onclick="botCbRemove(${i})">✕</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <select class="ipt" data-f="type" onchange="botCbTypeChanged(${i}, this.value)" style="width:150px;flex-shrink:0">
+          <option value="block" ${type === 'block' ? 'selected' : ''}>→ Свой блок</option>
+          <option value="screen" ${type === 'screen' ? 'selected' : ''}>→ Экран бота</option>
+          <option value="url" ${type === 'url' ? 'selected' : ''}>↗ Ссылка</option>
+        </select>
+        <div style="flex:1;min-width:0" class="cb-target">${targetField}</div>
+      </div>
+    </div>`;
+}
+
+function botReadDraftButtons() {
+  return [...document.querySelectorAll('#cbButtons .cb-btn')].map(row => ({
+    label: row.querySelector('[data-f=label]').value.trim(),
+    type: row.querySelector('[data-f=type]').value,
+    target: row.querySelector('[data-f=target]').value.trim(),
+  }));
+}
+
+function botSyncDraft() {
+  botDraft.title = document.getElementById('cbTitle').value;
+  botDraft.text = document.getElementById('cbText').value;
+  botDraft.buttons = botReadDraftButtons();
+  botDraft.show_in_menu = document.getElementById('cbMenu').checked;
+  botDraft.menu_label = document.getElementById('cbMenuLabel').value;
+  botDraft.command = document.getElementById('cbCommand').value;
+}
+
+function botCbAddButton() {
+  botSyncDraft(); unsaved = true;
+  botDraft.buttons.push({ label: '', type: 'screen', target: 'plans' });
+  botRenderPanel();
+}
+function botCbRemove(i) { botSyncDraft(); unsaved = true; botDraft.buttons.splice(i, 1); botRenderPanel(); }
+function botCbMove(i, d) {
+  botSyncDraft();
+  const [x] = botDraft.buttons.splice(i, 1);
+  botDraft.buttons.splice(i + d, 0, x);
+  botRenderPanel();
+}
+function botCbTypeChanged(i, type) {
+  botSyncDraft();
+  botDraft.buttons[i].type = type;
+  botDraft.buttons[i].target = type === 'screen' ? 'plans' : type === 'url' ? 'https://' : '';
+  botRenderPanel();
+}
+function botWrapCb(tag) {
+  const ta = document.getElementById('cbText');
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  const sel = ta.value.slice(s, e) || 'текст';
+  let open = `<${tag}>`;
+  if (tag === 'a') {
+    const url = prompt('Ссылка (https://…)', 'https://');
+    if (!url) return;
+    open = `<a href="${url.replace(/"/g, '&quot;')}">`;
+  }
+  ta.value = ta.value.slice(0, s) + open + sel + `</${tag}>` + ta.value.slice(e);
+  ta.focus(); ta.setSelectionRange(s + open.length, s + open.length + sel.length);
+  botUpdatePreview();
+}
+
+async function botSaveCustom() {
+  botSyncDraft();
+  const isNew = botSel === 'new';
+  try {
+    if (isNew) {
+      const r = await api('POST', '/web/bot/blocks', botDraft);
+      botSel = 'c' + r.id;
+      toast('Блок создан');
+    } else {
+      await api('PUT', `/web/bot/blocks/${botSel.slice(1)}`, botDraft);
+      toast('Сохранено: бот уже отвечает по-новому');
+    }
+    botDraft = null;
+    unsaved = false;
+    await renderBot();
+  } catch (e) { toast(e.message, true); }
+}
+
+async function botDeleteCustom() {
+  if (!confirm('Удалить блок? Кнопки других блоков, которые вели на него, тоже исчезнут.')) return;
+  try {
+    await api('DELETE', `/web/bot/blocks/${botSel.slice(1)}`);
+    botSel = null; botDraft = null;
+    toast('Блок удалён');
+    await renderBot();
+  } catch (e) { toast(e.message, true); }
+}
+
+window.addEventListener('resize', () => { if (section === 'bot' && document.getElementById('flow')) botDrawEdges(); });
 
 /* ═══════════════════════════════════════════════════════════
    SETTINGS — реальный обзор, read-only (тарифы задаются в коде)
@@ -1275,7 +2181,7 @@ async function renderSettings() {
                 <div class="mono" style="color:#EBE0CC">${t.rub} ₽</div>
                 <div class="mono" style="color:#8A7A60;display:inline-flex;align-items:center;gap:4px">${t.stars}<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.7 1.1 6.6L12 17.1l-5.8 3.2 1.1-6.6L2.5 9l6.6-.9z"/></svg></div>
                 <div style="flex:1"></div>
-                <div style="font-size:12px;color:#3A3028">${t.days} дней</div>
+                <div style="font-size:12px;color:#6E6250">${t.days} дней</div>
               </div>
             `).join('')}
           </div>
@@ -1289,7 +2195,7 @@ async function renderSettings() {
                 <div class="toggle-track" data-provider="${key}" data-on="${p.enabled ? '1' : '0'}"
                      style="background:${p.enabled ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'};cursor:pointer"
                      onclick="togglePaymentProvider('${key}')" title="${p.enabled ? 'Выключить' : 'Включить'}">
-                  <div class="toggle-knob" style="background:${p.enabled ? '#FFB800' : '#5A5040'};margin-left:${p.enabled ? 'auto' : '0'}"></div>
+                  <div class="toggle-knob" style="background:${p.enabled ? '#FFB800' : '#7E705B'};margin-left:${p.enabled ? 'auto' : '0'}"></div>
                 </div>
               </div>
             `).join('')}
@@ -1301,6 +2207,7 @@ async function renderSettings() {
             <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="color:#8A7A60;font-size:13px">Устройств на аккаунт</span><span class="mono" style="color:#FFB800">${s.limits.max_devices}</span></div>
             <div style="display:flex;justify-content:space-between"><span style="color:#8A7A60;font-size:13px">Пробный период</span><span class="mono" style="color:#FFB800">${s.limits.trial_days} дня</span></div>
           </div>
+          ${telegramLoginCard(s.telegram_login)}
           <div class="editor-card">
             <div class="dcard-title" style="margin-bottom:14px">Доступ к админке</div>
             <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">У каждого сотрудника свой логин и пароль. Мастер-ключ ниже — из ADMIN_WEB_KEY в .env, нужен только для регистрации самого первого аккаунта (ранга admin). Дальше приглашения — через личный ключ в разделе «Профиль».</div>
@@ -1323,6 +2230,41 @@ async function renderSettings() {
   }
 }
 
+const TG_LOGIN_HINTS = {
+  not_configured: 'В .env не заданы TELEGRAM_OAUTH_CLIENT_ID / TELEGRAM_OAUTH_CLIENT_SECRET.',
+  token: 'Telegram не выдал токен: чаще всего неверный Client Secret или Redirect URI не зарегистрирован в BotFather.',
+  aud: 'TELEGRAM_OAUTH_CLIENT_ID не совпадает с ботом, в котором настроен Login Widget (это числовой ID бота — часть токена до двоеточия).',
+  state: 'Вход начат на другом домене (www / без www) или прошло больше 10 минут. SITE_URL должен совпадать с адресом, по которому открывают сайт.',
+  provider: 'Telegram вернул ошибку — проверьте Redirect URIs и Trusted Origins в BotFather.',
+  denied: 'Пользователь отменил вход в Telegram — это не ошибка настройки.',
+  claims: 'В ответе Telegram нет Telegram ID пользователя.',
+  server: 'Ошибка на нашей стороне при создании сессии — см. лог бота.',
+};
+
+function telegramLoginCard(t) {
+  if (!t) return '';
+  const err = t.last_error;
+  return `
+    <div class="editor-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div class="dcard-title" style="flex:1">Вход через Telegram на сайте</div>
+        <span class="chip ${t.configured ? 'green' : 'grey'}">${t.configured ? 'Настроено' : 'Не настроено'}</span>
+      </div>
+      <div style="font-size:13px;color:#8A7A60;margin-bottom:12px">@BotFather → ваш бот → Bot Settings → Login Widget. Адреса должны совпадать символ в символ.</div>
+      <div class="field-lbl">Redirect URIs</div>
+      ${copyField(t.redirect_uri)}
+      <div class="field-lbl" style="margin-top:6px">Trusted Origins</div>
+      ${copyField(t.origin)}
+      <div style="font-size:12.5px;color:#8A7A60">Client ID из .env: <span class="mono" style="color:#EBE0CC">${esc(t.client_id || '—')}</span></div>
+      ${err ? `
+        <div style="margin-top:12px;border:1px solid rgba(255,90,90,.25);background:rgba(255,90,90,.06);border-radius:10px;padding:10px 12px">
+          <div style="font-size:12px;color:#FF8A80;margin-bottom:4px">Последняя ошибка · ${fmtDateTime(err.at + 'Z')}</div>
+          <div style="font-size:13px;color:#EBE0CC;margin-bottom:4px">${esc(TG_LOGIN_HINTS[err.code] || err.code)}</div>
+          <div class="mono" style="font-size:11.5px;color:#8A7A60;word-break:break-all">${esc(err.detail)}</div>
+        </div>` : ''}
+    </div>`;
+}
+
 async function renderProfile() {
   const c = document.getElementById('content');
   try {
@@ -1342,7 +2284,7 @@ async function renderProfile() {
           <div class="dcard-title" style="margin-bottom:14px">Приглашения</div>
           ${me.rank === 'admin' ? `
             <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">Дайте этот ключ новому сотруднику — при первом входе (вкладка «Первый вход») он создаст свой логин и пароль рангом «Работник» (без права приглашать).</div>
-            <div class="mono" style="background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:10px 12px;font-size:13px;color:#FFB800;word-break:break-all">${esc(me.invite_key || '—')}</div>
+            ${me.invite_key ? copyField(me.invite_key, '#FFB800') : '<div class="mono" style="color:#8A7A60">—</div>'}
           ` : `
             <div style="font-size:13px;color:#8A7A60">Ранг «Работник» не может приглашать новых сотрудников — эта возможность только у ранга Admin.</div>
           `}
@@ -1408,12 +2350,12 @@ async function renderAdBanner() {
           <div style="flex:1;font-size:14px;font-weight:600;color:#EBE0CC">Показывать на сайте</div>
           <div class="toggle-track" id="abToggle" data-on="${b.enabled ? '1' : '0'}"
                style="background:${b.enabled ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'};cursor:pointer"
-               onclick="this.dataset.on = this.dataset.on === '1' ? '0' : '1'; this.style.background = this.dataset.on === '1' ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'; this.querySelector('.toggle-knob').style.marginLeft = this.dataset.on === '1' ? 'auto' : '0'; this.querySelector('.toggle-knob').style.background = this.dataset.on === '1' ? '#FFB800' : '#5A5040';">
-            <div class="toggle-knob" style="background:${b.enabled ? '#FFB800' : '#5A5040'};margin-left:${b.enabled ? 'auto' : '0'}"></div>
+               onclick="this.dataset.on = this.dataset.on === '1' ? '0' : '1'; this.style.background = this.dataset.on === '1' ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'; this.querySelector('.toggle-knob').style.marginLeft = this.dataset.on === '1' ? 'auto' : '0'; this.querySelector('.toggle-knob').style.background = this.dataset.on === '1' ? '#FFB800' : '#7E705B';">
+            <div class="toggle-knob" style="background:${b.enabled ? '#FFB800' : '#7E705B'};margin-left:${b.enabled ? 'auto' : '0'}"></div>
           </div>
         </div>
 
-        <button class="login-btn" style="margin-top:4px" onclick="saveAdBanner()">Сохранить</button>
+        <button class="login-btn" style="margin-top:4px" data-save title="Ctrl+S" onclick="saveAdBanner()">Сохранить</button>
       </div>
     `;
   } catch (e) {
@@ -1428,6 +2370,7 @@ async function saveAdBanner() {
   const enabled = document.getElementById('abToggle').dataset.on === '1';
   try {
     await api('POST', '/web/ad-banner', { text, link_url, link_label, enabled, icon: selectedBannerIcon });
+    unsaved = false;
     toast('Баннер сохранён');
   } catch (e) { toast(e.message, true); }
 }
@@ -1443,6 +2386,10 @@ async function togglePaymentProvider(provider) {
 }
 
 /* ── Boot ──────────────────────────────────────────────────── */
+document.addEventListener('input', (e) => {
+  if (e.target.closest && e.target.closest('#content .editor-card, #content .bot-panel')) unsaved = true;
+});
+
 (function boot() {
   const saved = localStorage.getItem('adminToken');
   if (saved) {
