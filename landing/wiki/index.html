@@ -108,7 +108,7 @@ section{padding:0 24px clamp(36px,5vw,56px);position:relative;z-index:2}
 .article-card{display:flex;flex-direction:column;gap:7px;background:#0D0C0A;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px 24px;transition:border-color .2s,transform .2s}
 .article-card:hover{border-color:rgba(255,184,0,.35);transform:translateY(-2px)}
 .article-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;color:var(--text)}
-.article-text{font-size:13.5px;line-height:1.6;color:var(--text2)}
+.article-text{font-size:13.5px;line-height:1.6;color:var(--text2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .article-meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);margin-top:4px}
 
 .empty-note{display:none;border:1px dashed rgba(255,255,255,.12);border-radius:18px;padding:40px;text-align:center;color:var(--text2)}
@@ -210,94 +210,7 @@ footer{border-top:1px solid rgba(255,255,255,.07);padding:0;position:relative;z-
 <section>
 <div class="wrap" style="padding:0">
 
-  <div data-group>
-    <div class="group-head"><h2>Технологии</h2><div class="group-rule"></div><span class="group-count" data-count></span></div>
-    <div class="article-grid">
-      <a class="article-card" href="/wiki/vless-reality" data-kw="reality vless dpi tls xray протокол блокировки обход">
-        <span class="article-title">VLESS + Reality</span>
-        <span class="article-text">Как заимствование TLS-рукопожатия делает трафик неотличимым от обычного HTTPS.</span>
-        <span class="article-meta">12 мин · протокол</span>
-      </a>
-      <a class="article-card" href="/wiki/zero-logs" data-kw="логи zero logs приватность access error loglevel none xray">
-        <span class="article-title">Zero Logs</span>
-        <span class="article-text">Что именно не пишется в Xray, какие ключи конфига за это отвечают и почему это проверяемо.</span>
-        <span class="article-meta">8 мин · приватность</span>
-      </a>
-    </div>
-  </div>
-
-  <div data-group style="margin-top:48px">
-    <div class="group-head"><h2>Подключение</h2><div class="group-rule"></div><span class="group-count" data-count></span></div>
-    <div class="article-grid">
-      <a class="article-card" href="/wiki/install-ios" data-kw="ios iphone ipad happ streisand shadowrocket установка подключение">
-        <span class="article-title">iOS — Happ, Streisand, Shadowrocket</span>
-        <span class="article-text">Три клиента на выбор, пошагово: установка, импорт подписки, первый коннект.</span>
-        <span class="article-meta">9 мин · iPhone, iPad</span>
-      </a>
-      <a class="article-card" href="/wiki/install-android" data-kw="android v2rayng hiddify apk google play">
-        <span class="article-title">Android — v2rayNG, Hiddify</span>
-        <span class="article-text">Установка из Google Play или APK, импорт ссылки подписки, автозапуск.</span>
-        <span class="article-meta">8 мин · Android</span>
-      </a>
-      <a class="article-card" href="/wiki/install-windows" data-kw="windows v2rayn прокси tun пк">
-        <span class="article-title">Windows — v2rayN</span>
-        <span class="article-text">Распаковка, добавление подписки, системный прокси и режим TUN.</span>
-        <span class="article-meta">7 мин · Windows</span>
-      </a>
-      <a class="article-card" href="/wiki/install-macos" data-kw="macos mac v2box app store">
-        <span class="article-title">macOS — V2Box</span>
-        <span class="article-text">Установка из App Store, импорт подписки, разрешения системы.</span>
-        <span class="article-meta">6 мин · Mac</span>
-      </a>
-      <a class="article-card" href="/wiki/install-ios" data-kw="устройства лимит 3 подписка одновременно">
-        <span class="article-title">Три устройства</span>
-        <span class="article-text">Как одна подписка живёт на телефоне, ноутбуке и планшете одновременно.</span>
-        <span class="article-meta">4 мин · аккаунт</span>
-      </a>
-    </div>
-  </div>
-
-  <div data-group style="margin-top:48px">
-    <div class="group-head"><h2>Оплата и аккаунт</h2><div class="group-rule"></div><span class="group-count" data-count></span></div>
-    <div class="article-grid">
-      <a class="article-card" href="/wiki/payment" data-kw="оплата stars robokassa карта криптовалюта паспорт документы">
-        <span class="article-title">Способы оплаты</span>
-        <span class="article-text">Карта или криптовалюта — и почему нигде не нужен паспорт.</span>
-        <span class="article-meta">5 мин · оплата</span>
-      </a>
-      <a class="article-card" href="/wiki/referrals" data-kw="реферал бонус дни +30 друзья приглашение подписка">
-        <span class="article-title">Реферальная программа</span>
-        <span class="article-text">Двое друзей с платной подпиской — +30 дней к вашей подписке автоматически.</span>
-        <span class="article-meta">5 мин · бонусы</span>
-      </a>
-      <a class="article-card" href="/wiki/trial" data-kw="триал пробный 2 дня бесплатно telegram_id">
-        <span class="article-title">Пробный период</span>
-        <span class="article-text">Два дня бесплатно, один раз на telegram_id: как активировать и что будет дальше.</span>
-        <span class="article-meta">4 мин · старт</span>
-      </a>
-      <a class="article-card" href="/get-vpn" data-kw="без телеграма сайт ключ россия недоступен покупка">
-        <span class="article-title">Покупка без Telegram</span>
-        <span class="article-text">Сценарий для России, где сам Telegram иногда недоступен без VPN.</span>
-        <span class="article-meta">5 мин · доступ</span>
-      </a>
-    </div>
-  </div>
-
-  <div data-group style="margin-top:48px">
-    <div class="group-head"><h2>Помощь</h2><div class="group-rule"></div><span class="group-count" data-count></span></div>
-    <div class="article-grid">
-      <a class="article-card" href="/wiki/faq" data-kw="faq вопросы ответы">
-        <span class="article-title">FAQ</span>
-        <span class="article-text">Короткие ответы на вопросы, которые задают чаще всего.</span>
-        <span class="article-meta">10 мин · вопросы</span>
-      </a>
-      <a class="article-card" href="/wiki/troubleshooting" data-kw="проблема не работает ошибка медленно отваливается диагностика">
-        <span class="article-title">Устранение неполадок</span>
-        <span class="article-text">Не подключается, отваливается, медленно — что проверять и в каком порядке.</span>
-        <span class="article-meta">11 мин · диагностика</span>
-      </a>
-    </div>
-  </div>
+__WIKI_GROUPS__
 
   <div class="empty-note" id="empty-note" style="margin-top:48px">Ничего не нашлось. Попробуй другое слово — или напиши в <a href="https://t.me/starisvpnbot">@starisvpnbot</a>.</div>
 
@@ -410,7 +323,8 @@ footer{border-top:1px solid rgba(255,255,255,.07);padding:0;position:relative;z-
       const countEl = g.querySelector('[data-count]');
       if(countEl) countEl.textContent = countLabel(shown.length);
     });
-    note.textContent = q ? `Найдено: ${visible}` : `${total} статей в четырёх разделах`;
+    note.textContent = q ? `Найдено: ${visible}` : total ? `${countLabel(total)} · разделов: ${groups.length}` : '';
+    if (!total) empty.textContent = 'Статей пока нет — загляните позже.';
     empty.classList.toggle('show', visible === 0);
   }
   input.addEventListener('input', filter);

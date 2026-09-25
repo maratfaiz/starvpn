@@ -137,43 +137,37 @@ async def serve_tariffs():
     return _serve_html(_LANDING_DIR / "tariffs.html")
 
 
-_WIKI_SLUGS = {
-    "vless-reality", "zero-logs", "payment", "trial", "referrals", "troubleshooting", "faq",
-    "install-ios", "install-android", "install-windows", "install-macos",
-}
+async def _published_wiki_articles(session: AsyncSession) -> list:
+    from bot.models.wiki_article import WikiArticle
+    r = await session.execute(select(WikiArticle).where(WikiArticle.is_published.is_(True)))
+    return list(r.scalars().all())
 
 
 @app.get("/wiki", response_class=HTMLResponse, include_in_schema=False)
 @app.get("/wiki.html", response_class=HTMLResponse, include_in_schema=False)
 async def serve_wiki_index():
-    return _serve_html(_LANDING_DIR / "wiki" / "index.html")
+    from bot.utils.wiki_page import render_wiki_index_page
+
+    async with AsyncSessionLocal() as session:
+        published = await _published_wiki_articles(session)
+    return HTMLResponse(render_wiki_index_page(published))
 
 
 @app.get("/wiki/{slug}", response_class=HTMLResponse, include_in_schema=False)
 @app.get("/wiki/{slug}.html", response_class=HTMLResponse, include_in_schema=False)
 async def serve_wiki_article(slug: str):
-    slug = slug.removesuffix(".html")
-    if slug in _WIKI_SLUGS:
-        return _serve_html(_LANDING_DIR / "wiki" / f"{slug}.html")
-
-    # Не одна из 7 базовых статей — ищем среди созданных из админ-панели.
-    from bot.models.wiki_article import WikiArticle
     from bot.utils.wiki_page import render_wiki_article_page
 
+    slug = slug.removesuffix(".html")
     async with AsyncSessionLocal() as session:
-        r = await session.execute(
-            select(WikiArticle).where(WikiArticle.slug == slug, WikiArticle.is_published.is_(True))
-        )
-        article: WikiArticle | None = r.scalar_one_or_none()
+        published = await _published_wiki_articles(session)
+        article = next((a for a in published if a.slug == slug), None)
         if not article:
-            return HTMLResponse(content="<h1>Not found</h1>", status_code=404)
+            raise HTTPException(status_code=404)
         article.views = (article.views or 0) + 1
         await session.commit()
 
-    return HTMLResponse(render_wiki_article_page(
-        slug=article.slug, title=article.title, lede=article.lede,
-        body=article.body, section=article.section,
-    ))
+    return HTMLResponse(render_wiki_article_page(article, published))
 
 
 # ─── GET /sub/{username} — подписка для VPN-клиентов (Happ, v2rayNG, ...) ────
@@ -2816,24 +2810,62 @@ async def web_referrals(limit: int = 100, authorization: str | None = Header(def
 
 # ─── Wiki CRUD (админка) ───────────────────────────────────────────────────────
 
+_WIKI_TEXT_LIMITS = {
+    "title": 200, "short_title": 120, "lede": 400, "section": 64, "keywords": 300,
+    "content_html": 200_000, "custom_css": 50_000,
+}
+
+
+def _wiki_article_json(a, full: bool = False) -> dict:
+    data = {
+        "id": a.id, "slug": a.slug, "title": a.title, "short_title": a.short_title,
+        "lede": a.lede, "section": a.section, "keywords": a.keywords,
+        "sort_order": a.sort_order, "is_published": a.is_published, "views": a.views,
+        "updated_at": a.updated_at.isoformat() if a.updated_at else None,
+    }
+    if full:
+        data["content_html"] = a.content_html
+        data["custom_css"] = a.custom_css
+    return data
+
+
+def _apply_wiki_fields(a, body: dict) -> None:
+    for field, limit in _WIKI_TEXT_LIMITS.items():
+        if field in body:
+            value = body.get(field) or ""
+            value = value[:limit] if field in ("content_html", "custom_css") else value.strip()[:limit]
+            if field == "title" and not value:
+                continue
+            if field == "section" and not value:
+                value = "О сервисе"
+            setattr(a, field, value)
+    if "sort_order" in body:
+        try:
+            a.sort_order = int(body.get("sort_order") or 0)
+        except (TypeError, ValueError):
+            raise HTTPException(400, "Порядок должен быть числом")
+    if "is_published" in body:
+        a.is_published = bool(body.get("is_published"))
+
+
+@app.get("/web/wiki-editor-css", response_class=PlainTextResponse)
+async def web_wiki_editor_css(authorization: str | None = Header(default=None)):
+    """Стили страницы статьи — чтобы визуальный редактор выглядел как сайт."""
+    _web_auth(authorization)
+    tpl = (_LANDING_DIR / "wiki" / "_article.html").read_text(encoding="utf-8")
+    return tpl.split("<style>", 1)[1].split("/*__WIKI_CUSTOM_CSS__*/", 1)[0]
+
+
 @app.get("/web/wiki")
 async def web_wiki_list(authorization: str | None = Header(default=None)):
     _web_auth(authorization)
     from bot.models.wiki_article import WikiArticle
 
     async with AsyncSessionLocal() as session:
-        rows = (await session.execute(select(WikiArticle).order_by(WikiArticle.updated_at.desc()))).scalars().all()
-    return {
-        "articles": [
-            {
-                "id": a.id, "slug": a.slug, "title": a.title, "lede": a.lede,
-                "section": a.section, "keywords": a.keywords,
-                "is_published": a.is_published, "views": a.views,
-                "updated_at": a.updated_at.isoformat() if a.updated_at else None,
-            }
-            for a in rows
-        ]
-    }
+        rows = (await session.execute(
+            select(WikiArticle).order_by(WikiArticle.sort_order, WikiArticle.id)
+        )).scalars().all()
+    return {"articles": [_wiki_article_json(a) for a in rows]}
 
 
 @app.get("/web/wiki/{article_id}")
@@ -2845,10 +2877,7 @@ async def web_wiki_get(article_id: int, authorization: str | None = Header(defau
         a = (await session.execute(select(WikiArticle).where(WikiArticle.id == article_id))).scalar_one_or_none()
         if not a:
             raise HTTPException(404, "Not found")
-    return {
-        "id": a.id, "slug": a.slug, "title": a.title, "lede": a.lede, "body": a.body,
-        "section": a.section, "keywords": a.keywords, "is_published": a.is_published,
-    }
+    return _wiki_article_json(a, full=True)
 
 
 def _valid_wiki_slug(slug: str) -> bool:
@@ -2863,24 +2892,20 @@ async def web_wiki_create(request: Request, authorization: str | None = Header(d
 
     body = await request.json()
     slug = (body.get("slug") or "").strip().lower()
-    if slug in _WIKI_SLUGS or not _valid_wiki_slug(slug):
-        raise HTTPException(400, "Недопустимый или занятый slug (латиница, цифры, дефис)")
-    title = (body.get("title") or "").strip()[:200]
-    if not title:
+    if not _valid_wiki_slug(slug):
+        raise HTTPException(400, "Адрес статьи: 3–64 символа, латиница, цифры и дефис")
+    if not (body.get("title") or "").strip():
         raise HTTPException(400, "Заголовок обязателен")
 
     async with AsyncSessionLocal() as session:
         exists = (await session.execute(select(WikiArticle).where(WikiArticle.slug == slug))).scalar_one_or_none()
         if exists:
-            raise HTTPException(400, "Статья с таким slug уже существует")
-        a = WikiArticle(
-            slug=slug, title=title,
-            lede=(body.get("lede") or "").strip()[:400],
-            body=(body.get("body") or "").strip()[:20000],
-            section=(body.get("section") or "О сервисе").strip()[:64],
-            keywords=(body.get("keywords") or "").strip()[:300],
-            is_published=bool(body.get("is_published", False)),
-        )
+            raise HTTPException(400, "Статья с таким адресом уже существует")
+        a = WikiArticle(slug=slug, title="")
+        if "sort_order" not in body:
+            last = (await session.execute(select(func.max(WikiArticle.sort_order)))).scalar()
+            a.sort_order = (last or 0) + 10
+        _apply_wiki_fields(a, body)
         session.add(a)
         await session.commit()
         await session.refresh(a)
@@ -2897,20 +2922,55 @@ async def web_wiki_update(article_id: int, request: Request, authorization: str 
         a = (await session.execute(select(WikiArticle).where(WikiArticle.id == article_id))).scalar_one_or_none()
         if not a:
             raise HTTPException(404, "Not found")
-        if "title" in body:
-            a.title = (body.get("title") or "").strip()[:200] or a.title
-        if "lede" in body:
-            a.lede = (body.get("lede") or "").strip()[:400]
-        if "body" in body:
-            a.body = (body.get("body") or "").strip()[:20000]
-        if "section" in body:
-            a.section = (body.get("section") or "О сервисе").strip()[:64]
-        if "keywords" in body:
-            a.keywords = (body.get("keywords") or "").strip()[:300]
-        if "is_published" in body:
-            a.is_published = bool(body.get("is_published"))
+        if "slug" in body:
+            slug = (body.get("slug") or "").strip().lower()
+            if slug != a.slug:
+                if not _valid_wiki_slug(slug):
+                    raise HTTPException(400, "Адрес статьи: 3–64 символа, латиница, цифры и дефис")
+                taken = (await session.execute(
+                    select(WikiArticle.id).where(WikiArticle.slug == slug)
+                )).scalar_one_or_none()
+                if taken:
+                    raise HTTPException(400, "Статья с таким адресом уже существует")
+                a.slug = slug
+        _apply_wiki_fields(a, body)
         await session.commit()
     return {"ok": True}
+
+
+@app.post("/web/wiki/reorder")
+async def web_wiki_reorder(request: Request, authorization: str | None = Header(default=None)):
+    """Тело: {"ids": [id, id, …]} — новый порядок статей сверху вниз."""
+    _web_auth(authorization)
+    from bot.models.wiki_article import WikiArticle
+
+    ids = (await request.json()).get("ids") or []
+    async with AsyncSessionLocal() as session:
+        rows = (await session.execute(select(WikiArticle).where(WikiArticle.id.in_(ids)))).scalars().all()
+        by_id = {a.id: a for a in rows}
+        for pos, article_id in enumerate(ids):
+            if article_id in by_id:
+                by_id[article_id].sort_order = (pos + 1) * 10
+        await session.commit()
+    return {"ok": True}
+
+
+@app.post("/web/wiki/preview", response_class=HTMLResponse)
+async def web_wiki_preview(request: Request, authorization: str | None = Header(default=None)):
+    """Рендер несохранённой статьи из редактора — ровно так, как на сайте."""
+    _web_auth(authorization)
+    from bot.models.wiki_article import WikiArticle
+    from bot.utils.wiki_page import render_wiki_article_page
+
+    body = await request.json()
+    a = WikiArticle(slug=(body.get("slug") or "preview"), title="", updated_at=datetime.utcnow())
+    a.short_title = a.lede = a.keywords = a.content_html = a.custom_css = ""
+    a.section = "О сервисе"
+    a.sort_order = 0
+    _apply_wiki_fields(a, body)
+    async with AsyncSessionLocal() as session:
+        published = [p for p in await _published_wiki_articles(session) if p.slug != a.slug]
+    return HTMLResponse(render_wiki_article_page(a, published + [a]))
 
 
 @app.delete("/web/wiki/{article_id}")

@@ -253,6 +253,18 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 .tb-btn:hover{border-color:rgba(255,184,0,.4);color:#FFB800}
 .tb-hint{font-size:11px;color:#5A5040;font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:700px){.tb-hint{display:none}}
+.tb-btn:disabled{opacity:.3;cursor:default;border-color:rgba(255,255,255,.1);color:#EBE0CC}
+.tb-select{background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);border-radius:7px;height:28px;color:#EBE0CC;font-size:12.5px;padding:0 8px;outline:none;margin-right:4px}
+.editor-toolbar{flex-wrap:wrap}
+.wiki-order{display:flex;flex-direction:column;gap:4px}
+.wiki-frame{display:block;width:100%;height:560px;border:1px solid rgba(255,255,255,.1);border-top:none;border-radius:0 0 12px 12px;background:#060606}
+#wHtml{min-height:560px;border-radius:0 0 12px 12px;border-top:none}
+.seg{display:flex;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:3px;gap:3px}
+.seg button{background:transparent;border:none;border-radius:6px;padding:5px 11px;font-size:12px;font-weight:600;color:#8A7A60;cursor:pointer}
+.seg button.on{background:rgba(255,184,0,.14);color:#FFB800}
+details.editor-card > summary{list-style:none}
+details.editor-card > summary::after{content:' ▸';color:#5A5040}
+details.editor-card[open] > summary::after{content:' ▾'}
 
 /* ── Settings ────────────────────────────────────────────── */
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
@@ -516,7 +528,7 @@ const PAGE_META = {
   payments: ['Платежи', 'История всех оплаченных транзакций'],
   referrals: ['Рефералы', 'Лидерборд по приглашённым'],
   support: ['Обращения', 'Тикеты из /support и личного кабинета'],
-  wiki: ['Wiki', 'Статьи базы знаний'],
+  wiki: ['Wiki', 'Статьи базы знаний — пишите и редактируйте прямо здесь'],
   settings: ['Настройки', 'Тарифы, лимиты и провайдеры оплаты'],
   profile: ['Профиль', 'Ваш аккаунт и права доступа'],
   adbanner: ['Реклама', 'Баннер на верхней полосе главной страницы'],
@@ -1079,17 +1091,23 @@ async function renderWiki() {
   const c = document.getElementById('content');
   try {
     const data = await api('GET', '/web/wiki');
+    window._wikiList = data.articles;
     c.innerHTML = `
       <div class="filters">
-        <span style="font-size:13px;color:#8A7A60">Статьи, созданные из админ-панели (7 базовых статей редактируются в коде landing/wiki/)</span>
+        <span style="font-size:13px;color:#8A7A60">Все статьи раздела /wiki. Порядок здесь = порядок в меню и на странице Wiki.</span>
         <div style="flex:1"></div>
+        <a class="ghost-btn" href="/wiki" target="_blank" rel="noopener" style="text-decoration:none">Открыть Wiki ↗</a>
         <div class="primary-btn" onclick="openWikiEditor(null)">+ Новая статья</div>
       </div>
-      ${data.articles.length ? data.articles.map(a => `
+      ${data.articles.length ? data.articles.map((a, i) => `
         <div class="wiki-row">
+          <div class="wiki-order">
+            <button type="button" class="tb-btn" title="Выше" ${i === 0 ? 'disabled' : ''} onclick="wikiMove(${i}, -1)">↑</button>
+            <button type="button" class="tb-btn" title="Ниже" ${i === data.articles.length - 1 ? 'disabled' : ''} onclick="wikiMove(${i}, 1)">↓</button>
+          </div>
           <div style="min-width:220px;flex:1">
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">
-              <span class="wiki-title">${esc(a.title)}</span>
+              <span class="wiki-title">${esc(a.short_title || a.title)}</span>
               <span class="chip ${a.is_published ? 'green' : 'grey'}">${a.is_published ? 'Опубликовано' : 'Черновик'}</span>
             </div>
             <div class="wiki-slug">/wiki/${esc(a.slug)}</div>
@@ -1102,153 +1120,324 @@ async function renderWiki() {
             <div class="act-btn danger" onclick="deleteWikiArticle(${a.id})">Удалить</div>
           </div>
         </div>
-      `).join('') : '<div class="empty">Пока нет статей — создайте первую</div>'}
+      `).join('') : '<div class="empty">Статей пока нет — нажмите «Новая статья», чтобы написать первую</div>'}
     `;
   } catch (e) {
     c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
   }
 }
 
+async function wikiMove(index, delta) {
+  const list = window._wikiList.slice();
+  const [item] = list.splice(index, 1);
+  list.splice(index + delta, 0, item);
+  try {
+    await api('POST', '/web/wiki/reorder', { ids: list.map(a => a.id) });
+    renderWiki();
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ── Визуальный редактор статьи ──────────────────────────────
+   Текст редактируется в iframe со стилями самого сайта, поэтому
+   статья выглядит ровно так, как на /wiki. Режим «HTML» — для
+   тонкой правки разметки. */
+const WIKI_BLOCKS = [['p', 'Абзац'], ['h2', 'Заголовок раздела'], ['h3', 'Подзаголовок']];
+const WIKI_TOOLS = [
+  ['bold', 'Жирный', '<b>B</b>'],
+  ['italic', 'Курсив', '<i>I</i>'],
+  ['link', 'Ссылка', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 007.5.5l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 10a5 5 0 00-7.5-.5l-2 2a5 5 0 007 7l1-1"/></svg>'],
+  ['ul', 'Маркированный список', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/></svg>'],
+  ['ol', 'Нумерованный список', '<span style="font-size:11px;font-weight:700">1.</span>'],
+  ['quote', 'Цитата', '<span style="font-size:17px;line-height:1">“</span>'],
+  ['callout', 'Заметка (жёлтая плашка)', '<span style="font-weight:700">!</span>'],
+  ['code', 'Код', '<span class="mono" style="font-size:11px">&lt;/&gt;</span>'],
+  ['image', 'Картинка по ссылке', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-9 9"/></svg>'],
+  ['hr', 'Разделитель', '—'],
+  ['clear', 'Убрать оформление', '<span style="font-size:12px">T<sub>x</sub></span>'],
+  ['undo', 'Отменить', '↶'],
+  ['redo', 'Повторить', '↷'],
+];
+
+let wikiEditorCss = null;
+let wikiMode = 'visual';
+
+function wikiDoc() { const f = document.getElementById('wFrame'); return f && f.contentDocument; }
+function wikiEd() { const d = wikiDoc(); return d && d.getElementById('ed'); }
+
 async function openWikiEditor(id) {
   const c = document.getElementById('content');
-  let a = { slug: '', title: '', lede: '', body: '', section: 'О сервисе', keywords: '', is_published: false };
-  if (id) {
-    try { a = await api('GET', `/web/wiki/${id}`); } catch (e) { toast(e.message, true); return; }
-  }
-  const sections = ['О сервисе', 'Оплата и аккаунт', 'Помощь', 'Технологии'];
+  let a = { slug: '', title: '', short_title: '', lede: '', content_html: '', custom_css: '', section: 'О сервисе', keywords: '', sort_order: '', is_published: false };
+  try {
+    if (id) a = await api('GET', `/web/wiki/${id}`);
+    if (wikiEditorCss === null) wikiEditorCss = await fetch('/web/wiki-editor-css', { headers: { Authorization: 'Bearer ' + token } }).then(r => r.ok ? r.text() : '');
+    if (!window._wikiList) window._wikiList = (await api('GET', '/web/wiki')).articles;
+  } catch (e) { toast(e.message, true); return; }
+  const sections = [...new Set(['О сервисе', ...window._wikiList.map(x => x.section)])];
+  wikiMode = 'visual';
   c.innerHTML = `
-    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px">
       <div class="ghost-btn" onclick="renderWiki()">← К списку</div>
       <div style="flex:1"></div>
-      <div class="act-btn plain" id="publishBtn" onclick="wikiTogglePublish()">${a.is_published ? 'Снять с публикации' : 'Опубликовать'}</div>
+      <div class="act-btn plain" onclick="previewWikiArticle()">Предпросмотр</div>
       <div class="primary-btn" onclick="saveWikiArticle(${id || 'null'})">Сохранить</div>
     </div>
     <div class="editor-grid">
       <div class="editor-card">
         <label class="editor-label">Заголовок</label>
-        <input class="editor-title-input" id="wTitle" value="${esc(a.title)}" placeholder="Например: Zero Logs — что не пишется">
-        <label class="editor-label">Краткое описание</label>
-        <input class="ipt" id="wLede" value="${esc(a.lede)}" placeholder="Одна строка — попадает в meta description" style="width:100%;margin-bottom:18px">
-        <label class="editor-label">Текст статьи</label>
-        <div class="editor-toolbar">
-          <button type="button" class="tb-btn" onclick="wikiInsertMarkup('bold')" title="Жирный"><b>B</b></button>
-          <button type="button" class="tb-btn" onclick="wikiInsertMarkup('italic')" title="Курсив"><i>I</i></button>
-          <button type="button" class="tb-btn" onclick="wikiInsertMarkup('link')" title="Ссылка"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a5 5 0 007.5.5l2-2a5 5 0 00-7-7l-1 1"/><path d="M14 10a5 5 0 00-7.5-.5l-2 2a5 5 0 007 7l1-1"/></svg></button>
-          <button type="button" class="tb-btn" onclick="wikiInsertMarkup('list')" title="Список"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg></button>
-          <div style="flex:1"></div>
-          <div class="tb-hint">**жирный** · *курсив* · [текст](ссылка) · - пункт списка</div>
+        <input class="editor-title-input" id="wTitle" value="${esc(a.title)}" placeholder="Например: Как подключиться на iPhone">
+        <label class="editor-label">Подзаголовок</label>
+        <textarea class="ipt" id="wLede" rows="2" maxlength="400" placeholder="1–2 предложения под заголовком. Попадает в карточку на /wiki и в описание для поисковиков. Поддерживает [текст](ссылка) и **жирный**." style="margin-bottom:18px">${esc(a.lede)}</textarea>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <label class="editor-label" style="margin:0;flex:1">Текст статьи</label>
+          <div class="seg">
+            <button type="button" id="wModeVisual" class="on" onclick="wikiSetMode('visual')">Визуально</button>
+            <button type="button" id="wModeHtml" onclick="wikiSetMode('html')">HTML</button>
+          </div>
         </div>
-        <textarea class="editor-body" id="wBody" placeholder="Текст статьи — абзацы разделяйте пустой строкой…">${esc(a.body)}</textarea>
+        <div class="editor-toolbar" id="wToolbar">
+          <select class="tb-select" id="wBlock" onchange="wikiCmd('block', this.value)" title="Тип блока">
+            ${WIKI_BLOCKS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}
+          </select>
+          ${WIKI_TOOLS.map(([cmd, title, icon]) => `<button type="button" class="tb-btn" title="${title}" onmousedown="event.preventDefault()" onclick="wikiCmd('${cmd}')">${icon}</button>`).join('')}
+        </div>
+        <iframe id="wFrame" class="wiki-frame" title="Редактор статьи"></iframe>
+        <textarea class="editor-body" id="wHtml" spellcheck="false" style="display:none"></textarea>
+        <div class="tb-hint" style="margin-top:8px;white-space:normal">Заголовки «Заголовок раздела» автоматически попадают в оглавление справа на странице статьи.</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
         <div class="editor-card">
-          <div class="dcard-title" style="margin-bottom:14px">Публикация</div>
-          <label class="editor-label">Адрес страницы (slug)</label>
-          <input class="ipt mono" id="wSlug" value="${esc(a.slug)}" placeholder="zero-logs" ${id ? 'disabled' : ''} style="width:100%;margin-bottom:6px">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#3A3028" id="wSlugPreview">/wiki/${esc(a.slug)}</div>
-        </div>
-        <div class="editor-card">
-          <div class="dcard-title" style="margin-bottom:14px">Раздел</div>
-          <div style="display:flex;flex-direction:column;gap:7px" id="wSections">
-            ${sections.map(s => `
-              <div style="cursor:pointer;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;border:1px solid ${s === a.section ? 'rgba(255,184,0,.4)' : 'rgba(255,255,255,.1)'};background:${s === a.section ? 'rgba(255,184,0,.08)' : 'transparent'}" data-section="${esc(s)}" onclick="wikiSelectSection(this)">
-                <span style="width:14px;height:14px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:${s === a.section ? '#FFB800' : 'transparent'};flex-shrink:0"></span>
-                <span style="font-size:13px;color:${s === a.section ? '#FFB800' : '#EBE0CC'}">${s}</span>
-              </div>
-            `).join('')}
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <div class="dcard-title" style="flex:1">Публикация</div>
+            <div class="toggle-track" id="wPublish" data-on="${a.is_published ? '1' : '0'}" onclick="wikiTogglePublish()" style="cursor:pointer"><div class="toggle-knob"></div></div>
           </div>
+          <div style="font-size:12.5px;color:#8A7A60;margin:-6px 0 14px" id="wPublishHint"></div>
+          <label class="editor-label">Адрес страницы</label>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+            <span class="mono" style="font-size:12px;color:#5A5040">/wiki/</span>
+            <input class="ipt mono" id="wSlug" value="${esc(a.slug)}" placeholder="kak-podklyuchitsya" style="flex:1;min-width:0">
+          </div>
+          <div style="font-size:11.5px;color:#5A5040">Латиница, цифры и дефис. ${id && a.is_published ? `<a href="/wiki/${esc(a.slug)}" target="_blank" rel="noopener" style="color:#FFB800">Открыть на сайте ↗</a>` : ''}</div>
         </div>
         <div class="editor-card">
-          <div class="dcard-title" style="margin-bottom:14px">Ключевые слова</div>
+          <div class="dcard-title" style="margin-bottom:14px">Меню Wiki</div>
+          <label class="editor-label">Раздел</label>
+          <input class="ipt" id="wSection" list="wSectionList" value="${esc(a.section)}" style="width:100%;margin-bottom:6px">
+          <datalist id="wSectionList">${sections.map(s => `<option value="${esc(s)}">`).join('')}</datalist>
+          <div style="font-size:11.5px;color:#5A5040;margin-bottom:14px">Выберите из списка или впишите новый раздел.</div>
+          <label class="editor-label">Название в меню</label>
+          <input class="ipt" id="wShort" value="${esc(a.short_title)}" placeholder="Коротко — если пусто, берётся заголовок" style="width:100%;margin-bottom:14px">
+          <label class="editor-label">Ключевые слова для поиска</label>
           <input class="ipt" id="wKeywords" value="${esc(a.keywords)}" placeholder="логи, приватность, xray" style="width:100%">
         </div>
+        <details class="editor-card">
+          <summary class="dcard-title" style="cursor:pointer">Дополнительно: CSS статьи</summary>
+          <div style="font-size:12px;color:#8A7A60;margin:10px 0">Стили, которые нужны только этой статье. Обычно не нужны — встроенного оформления хватает.</div>
+          <textarea class="editor-body" id="wCss" spellcheck="false" style="min-height:160px;border-radius:12px;border-top:1px solid rgba(255,255,255,.1)" oninput="wikiApplyCss()">${esc(a.custom_css)}</textarea>
+        </details>
       </div>
     </div>
   `;
   window._wikiPublished = a.is_published;
-  window._wikiSection = a.section;
-  document.getElementById('wSlug').addEventListener('input', (e) => {
-    document.getElementById('wSlugPreview').textContent = '/wiki/' + e.target.value;
-  });
-}
-
-function wikiSelectSection(el) {
-  window._wikiSection = el.dataset.section;
-  document.querySelectorAll('#wSections > div').forEach(d => {
-    const on = d === el;
-    d.style.borderColor = on ? 'rgba(255,184,0,.4)' : 'rgba(255,255,255,.1)';
-    d.style.background = on ? 'rgba(255,184,0,.08)' : 'transparent';
-    d.querySelector('span').style.background = on ? '#FFB800' : 'transparent';
-    d.querySelector('span:last-child').style.color = on ? '#FFB800' : '#EBE0CC';
-  });
-}
-
-function wikiInsertMarkup(type) {
-  const ta = document.getElementById('wBody');
-  const start = ta.selectionStart;
-  const end = ta.selectionEnd;
-  const val = ta.value;
-  const selected = val.slice(start, end);
-  const before = val.slice(0, start);
-  const after = val.slice(end);
-  let insertText, selStart, selEnd;
-
-  if (type === 'bold' || type === 'italic') {
-    const marker = type === 'bold' ? '**' : '*';
-    const text = selected || (type === 'bold' ? 'жирный текст' : 'курсив');
-    insertText = `${marker}${text}${marker}`;
-    selStart = before.length + marker.length;
-    selEnd = selStart + text.length;
-  } else if (type === 'link') {
-    const url = prompt('Ссылка (https://...)', 'https://');
-    if (!url) return;
-    const text = selected || 'текст ссылки';
-    insertText = `[${text}](${url})`;
-    selStart = before.length + 1;
-    selEnd = selStart + text.length;
-  } else if (type === 'list') {
-    const text = selected || 'пункт списка';
-    insertText = text.split('\n').map(l => l.startsWith('- ') ? l : `- ${l}`).join('\n');
-    selStart = before.length;
-    selEnd = before.length + insertText.length;
-  } else {
-    return;
+  wikiPaintPublish();
+  const slugEl = document.getElementById('wSlug');
+  if (!id) {
+    document.getElementById('wTitle').addEventListener('input', (e) => {
+      if (!slugEl.dataset.touched) slugEl.value = wikiSlugify(e.target.value);
+    });
+    slugEl.addEventListener('input', () => { slugEl.dataset.touched = '1'; });
   }
+  wikiInitFrame(a.content_html, a.custom_css);
+}
 
-  ta.value = before + insertText + after;
-  ta.focus();
-  ta.setSelectionRange(selStart, selEnd);
+function wikiInitFrame(html, css) {
+  const f = document.getElementById('wFrame');
+  f.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>${wikiEditorCss}</style><style id="customCss"></style>
+    <style>body{padding:22px 26px;min-height:100%}#ed{outline:none;max-width:none;padding-bottom:40px}#ed:empty::before,#ed > p:only-child:empty::before{content:'Начните писать статью…';color:var(--text3)}</style>
+    </head><body><article id="ed" contenteditable="true"></article></body></html>`;
+  f.onload = () => {
+    const ed = wikiEd();
+    ed.innerHTML = html || '<p><br></p>';
+    wikiApplyCss(css);
+    const d = wikiDoc();
+    d.execCommand('defaultParagraphSeparator', false, 'p');
+    d.addEventListener('selectionchange', wikiSyncBlockSelect);
+    // Вставка из Word/Google Docs приносит свои шрифты и цвета — берём только текст.
+    ed.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      d.execCommand('insertText', false, text);
+    });
+  };
+}
+
+function wikiApplyCss(css) {
+  const d = wikiDoc();
+  if (!d || !d.getElementById('customCss')) return;
+  d.getElementById('customCss').textContent = css !== undefined ? css : document.getElementById('wCss').value;
+}
+
+function wikiSyncBlockSelect() {
+  const d = wikiDoc();
+  const sel = d.getSelection();
+  if (!sel || !sel.rangeCount) return;
+  let n = sel.anchorNode;
+  while (n && n.nodeType !== 1) n = n.parentNode;
+  const block = n && n.closest('h2,h3,p');
+  document.getElementById('wBlock').value = block ? block.tagName.toLowerCase() : 'p';
+}
+
+function wikiCmd(cmd, value) {
+  if (wikiMode !== 'visual') { toast('Инструменты работают в режиме «Визуально»', true); return; }
+  const d = wikiDoc();
+  wikiEd().focus();
+  const wrap = (tag, cls) => {
+    const sel = d.getSelection();
+    const text = sel && sel.toString() ? esc(sel.toString()) : (tag === 'pre' ? 'код' : 'Текст');
+    d.execCommand('insertHTML', false, `<${tag}${cls ? ` class="${cls}"` : ''}>${text}</${tag}><p><br></p>`);
+  };
+  switch (cmd) {
+    case 'block': d.execCommand('formatBlock', false, value); break;
+    case 'bold': d.execCommand('bold'); break;
+    case 'italic': d.execCommand('italic'); break;
+    case 'ul': d.execCommand('insertUnorderedList'); break;
+    case 'ol': d.execCommand('insertOrderedList'); break;
+    case 'quote': d.execCommand('formatBlock', false, 'blockquote'); break;
+    case 'callout': wrap('div', 'callout'); break;
+    case 'code': wrap('pre'); break;
+    case 'hr': d.execCommand('insertHorizontalRule'); break;
+    case 'clear': d.execCommand('removeFormat'); d.execCommand('unlink'); d.execCommand('formatBlock', false, 'p'); break;
+    case 'undo': d.execCommand('undo'); break;
+    case 'redo': d.execCommand('redo'); break;
+    case 'link': {
+      const url = prompt('Ссылка (https://… или /страница)', 'https://');
+      if (!url) return;
+      if (d.getSelection().toString()) d.execCommand('createLink', false, url);
+      else d.execCommand('insertHTML', false, `<a href="${esc(url)}">${esc(url)}</a>`);
+      break;
+    }
+    case 'image': {
+      const url = prompt('Ссылка на картинку (https://…)', 'https://');
+      if (!url) return;
+      d.execCommand('insertHTML', false, `<img src="${esc(url)}" alt="">`);
+      break;
+    }
+  }
+  wikiSyncBlockSelect();
+}
+
+function wikiSetMode(mode) {
+  if (mode === wikiMode) return;
+  const frame = document.getElementById('wFrame');
+  const ta = document.getElementById('wHtml');
+  if (mode === 'html') {
+    ta.value = wikiEd().innerHTML;
+    frame.style.display = 'none'; ta.style.display = '';
+  } else {
+    wikiEd().innerHTML = ta.value;
+    ta.style.display = 'none'; frame.style.display = '';
+  }
+  wikiMode = mode;
+  document.getElementById('wModeVisual').classList.toggle('on', mode === 'visual');
+  document.getElementById('wModeHtml').classList.toggle('on', mode === 'html');
+  document.getElementById('wToolbar').style.opacity = mode === 'visual' ? '1' : '.4';
+}
+
+const WIKI_TRANSLIT = {а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'ts',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya'};
+function wikiSlugify(s) {
+  return String(s).toLowerCase().split('').map(ch => WIKI_TRANSLIT[ch] ?? ch).join('')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+}
+
+/* Браузерный contenteditable иногда кладёт список/плашку внутрь <p> и
+   оставляет пустые абзацы в конце — чистим перед сохранением. */
+function wikiNormalize(ed) {
+  ed.querySelectorAll(':scope > p').forEach(p => {
+    if (!p.querySelector(':scope > ul, :scope > ol, :scope > div, :scope > pre, :scope > blockquote, :scope > h2, :scope > h3, :scope > table, :scope > hr')) return;
+    let buf = null;
+    [...p.childNodes].forEach(n => {
+      if (n.nodeType === 1 && /^(UL|OL|DIV|PRE|BLOCKQUOTE|H2|H3|TABLE|HR)$/.test(n.tagName)) {
+        p.before(n); buf = null;
+      } else {
+        if (!buf) { buf = ed.ownerDocument.createElement('p'); p.before(buf); }
+        buf.appendChild(n);
+      }
+    });
+    p.remove();
+  });
+  ed.querySelectorAll(':scope > p').forEach(p => { if (!p.textContent.trim() && !p.querySelector('img')) p.remove(); });
+}
+
+/* Заголовкам разделов без id даём id — по нему строится оглавление. */
+function wikiContentHtml() {
+  if (wikiMode === 'html') wikiSetMode('visual');
+  const ed = wikiEd();
+  wikiNormalize(ed);
+  const used = new Set([...ed.querySelectorAll('[id]')].map(el => el.id));
+  ed.querySelectorAll(':scope > h2:not([id])').forEach(h => {
+    let base = wikiSlugify(h.textContent) || 'section', id = base, n = 2;
+    while (used.has(id)) id = `${base}-${n++}`;
+    used.add(id); h.id = id;
+  });
+  return ed.innerHTML.trim();
+}
+
+function wikiPayload() {
+  return {
+    title: document.getElementById('wTitle').value.trim(),
+    short_title: document.getElementById('wShort').value.trim(),
+    lede: document.getElementById('wLede').value.trim(),
+    content_html: wikiContentHtml(),
+    custom_css: document.getElementById('wCss').value,
+    section: document.getElementById('wSection').value.trim() || 'О сервисе',
+    keywords: document.getElementById('wKeywords').value.trim(),
+    slug: document.getElementById('wSlug').value.trim().toLowerCase(),
+    is_published: !!window._wikiPublished,
+  };
+}
+
+function wikiPaintPublish() {
+  const t = document.getElementById('wPublish');
+  const on = !!window._wikiPublished;
+  t.style.background = on ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)';
+  t.querySelector('.toggle-knob').style.cssText = `background:${on ? '#FFB800' : '#5A5040'};margin-left:${on ? 'auto' : '0'}`;
+  document.getElementById('wPublishHint').textContent = on ? 'Статья видна на сайте после сохранения.' : 'Черновик — на сайте не показывается.';
 }
 
 function wikiTogglePublish() {
   window._wikiPublished = !window._wikiPublished;
-  document.getElementById('publishBtn').textContent = window._wikiPublished ? 'Снять с публикации' : 'Опубликовать';
+  wikiPaintPublish();
+}
+
+async function previewWikiArticle() {
+  const win = window.open('', '_blank');
+  try {
+    const r = await fetch('/web/wiki/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(wikiPayload()),
+    });
+    if (!r.ok) throw new Error('Не удалось собрать предпросмотр');
+    const html = await r.text();
+    win.document.open(); win.document.write(html); win.document.close();
+  } catch (e) { if (win) win.close(); toast(e.message, true); }
 }
 
 async function saveWikiArticle(id) {
-  const payload = {
-    title: document.getElementById('wTitle').value.trim(),
-    lede: document.getElementById('wLede').value.trim(),
-    body: document.getElementById('wBody').value.trim(),
-    section: window._wikiSection || 'О сервисе',
-    keywords: document.getElementById('wKeywords').value.trim(),
-    is_published: !!window._wikiPublished,
-  };
+  const payload = wikiPayload();
+  if (!payload.title) { toast('Укажите заголовок', true); return; }
+  if (!payload.slug) { toast('Укажите адрес страницы', true); return; }
   try {
-    if (id) {
-      await api('PUT', `/web/wiki/${id}`, payload);
-    } else {
-      payload.slug = document.getElementById('wSlug').value.trim();
-      if (!payload.slug) { toast('Укажите адрес страницы (slug)', true); return; }
-      await api('POST', '/web/wiki', payload);
-    }
+    if (id) await api('PUT', `/web/wiki/${id}`, payload);
+    else await api('POST', '/web/wiki', payload);
     toast('Сохранено');
     renderWiki();
   } catch (e) { toast(e.message, true); }
 }
 
 async function deleteWikiArticle(id) {
-  if (!confirm('Удалить статью?')) return;
+  if (!confirm('Удалить статью насовсем? Восстановить её будет нельзя.')) return;
   try {
     await api('DELETE', `/web/wiki/${id}`);
     toast('Статья удалена');
