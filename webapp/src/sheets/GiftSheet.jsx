@@ -13,6 +13,7 @@ export default function GiftSheet({
   onDaysSelect,
   onCommentChange,
   onSubmit,
+  submitting,
 }) {
   if (step === "success") {
     return (
@@ -99,13 +100,13 @@ export default function GiftSheet({
 
         <button
           onClick={onSubmit}
-          disabled={!username.trim()}
+          disabled={!username.trim() || submitting}
           className="border-none py-4 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-40"
           style={{ background: username.trim() ? "linear-gradient(135deg,#F7CE68,#C9962F)" : "rgba(255,255,255,.08)" }}
         >
           <StarIcon size={15} color={username.trim() ? "#1A1408" : "#F5F3EE"} />
           <span className="font-display font-bold text-[15px]" style={{ color: username.trim() ? "#1A1408" : "#F5F3EE" }}>
-            Подарить {days} дней
+            {submitting ? "Отправляем…" : `Подарить ${days} дней`}
           </span>
         </button>
       </div>

@@ -3,7 +3,6 @@ import { StarIcon, BoltIcon, GiftIcon, LocationIcon } from "../components/icons.
 export default function HomeScreen({
   subscription,
   server,
-  speedValue,
   trafficUsedTotal,
   autoServer,
   onToggleAutoServer,
@@ -13,9 +12,6 @@ export default function HomeScreen({
   trialActivating,
 }) {
   const active = subscription.active;
-  const percentPassed = active
-    ? Math.round(((subscription.totalDays - subscription.daysLeft) / subscription.totalDays) * 100)
-    : 0;
   const showTrialCard = !active && !subscription.trialUsed;
 
   return (
@@ -37,11 +33,6 @@ export default function HomeScreen({
           >
             {active ? subscription.connectionLabel : "Нет подписки"}
           </span>
-          {active && (
-            <span className="ml-auto font-display font-semibold text-[11px] text-gold bg-gold/10 px-2.5 py-[3px] rounded-full border border-gold/25">
-              {subscription.planName}
-            </span>
-          )}
         </div>
 
         <div className="relative flex items-end gap-2">
@@ -53,41 +44,27 @@ export default function HomeScreen({
         <div className="font-medium text-[13px] text-ink/40 mt-1">
           {active ? `Подписка действует до ${subscription.expiryDate}` : "Оформи подписку, чтобы подключиться"}
         </div>
-
-        <div className="mt-4 h-1.5 rounded-full bg-white/[.07] overflow-hidden">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-gold-dark to-gold"
-            style={{ width: `${percentPassed}%` }}
-          />
-        </div>
       </div>
 
-      {/* server + quick stats bento */}
+      {/* server + traffic */}
       {active && (
-        <div className="grid grid-cols-[1.3fr_1fr] grid-rows-2 gap-2.5">
-          <div className="row-span-2 bg-app-card border border-white/[.06] rounded-[18px] p-4 flex flex-col justify-between">
+        <div className="grid grid-cols-[1.3fr_1fr] gap-2.5">
+          <div className="bg-app-card border border-white/[.06] rounded-[18px] p-4 flex flex-col justify-between">
             <div className="flex items-center gap-1.5">
               <span className="text-sm">{server.flag}</span>
               <span className="font-semibold text-xs text-ink/50">текущий сервер</span>
             </div>
             <div>
               <div className="font-display font-bold text-base text-ink">{server.name}</div>
-              <div className="font-medium text-[11.5px] text-ink/40 mt-0.5">
-                {server.ping} мс · {server.protocol}
-              </div>
+              <div className="font-medium text-[11.5px] text-ink/40 mt-0.5">{server.protocol}</div>
             </div>
-            <span className="font-display font-bold text-xs text-gold">Сменить →</span>
           </div>
-          <div className="bg-app-card border border-white/[.06] rounded-[18px] p-3.5">
-            <div className="font-display font-extrabold text-[22px] text-ink">{speedValue}</div>
-            <div className="font-medium text-[10.5px] text-ink/40 mt-0.5">Мбит/с сейчас</div>
-          </div>
-          <div className="bg-app-card border border-white/[.06] rounded-[18px] p-3.5">
+          <div className="bg-app-card border border-white/[.06] rounded-[18px] p-3.5 flex flex-col justify-center">
             <div className="font-display font-extrabold text-[22px] text-ink">
               {trafficUsedTotal}
               <span className="text-[13px] text-ink/40"> ГБ</span>
             </div>
-            <div className="font-medium text-[10.5px] text-ink/40 mt-0.5">за этот месяц</div>
+            <div className="font-medium text-[10.5px] text-ink/40 mt-0.5">трафика использовано</div>
           </div>
         </div>
       )}

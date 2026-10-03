@@ -7,6 +7,7 @@ telegram_id (см. docstring в bot/models/user.py). Это позволяет �
 со всей существующей моделью Device/Payment/референкой без изменений.
 """
 
+import asyncio
 import hashlib
 import logging
 import random
@@ -46,13 +47,20 @@ def _hash_token(raw: str) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+async def hash_password(password: str) -> str:
+    # bcrypt — блокирующий CPU-bound вызов (~100-300ms); бот и FastAPI-апп
+    # работают в одном event loop (см. bot/api.py), поэтому считаем хэш в
+    # отдельном потоке, чтобы не подвесить обработку остальных апдейтов
+    # (включая pre_checkout_query с его 10-секундным лимитом ответа).
+    hashed = await asyncio.to_thread(bcrypt.hashpw, password.encode("utf-8"), bcrypt.gensalt())
+    return hashed.decode("utf-8")
 
 
-def verify_password(password: str, password_hash: str) -> bool:
+async def verify_password(password: str, password_hash: str) -> bool:
     try:
-        return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
+        return await asyncio.to_thread(
+            bcrypt.checkpw, password.encode("utf-8"), password_hash.encode("utf-8")
+        )
     except ValueError:
         # повреждённый/незнакомый формат хэша — считаем паролем неверным
         return False
@@ -77,6 +85,17 @@ async def _get_or_create_user_by_email(email: str, session: AsyncSession) -> Use
             return user
         except IntegrityError:
             await session.rollback()
+            # Регенерация synthetic_id лечит только столкновение по
+            # telegram_id (крайне маловероятное). На практике конфликт тут
+            # почти всегда по email — параллельный запрос успел создать
+            # пользователя с тем же email первым. Ретрай с новым
+            # telegram_id это не исправит, поэтому просто возвращаем уже
+            # созданную конкурентом запись вместо того, чтобы 5 раз
+            # безрезультатно повторить одну и ту же гонку.
+            r = await session.execute(select(User).where(User.email == email))
+            existing = r.scalar_one_or_none()
+            if existing:
+                return existing
             continue
     raise RuntimeError("Failed to allocate a synthetic user id after 5 attempts")
 
@@ -164,7 +183,7 @@ async def register_user(email: str, password: str, session: AsyncSession) -> Use
     заранее (см. /api/account/register)."""
     email = email.lower().strip()
     user = await _get_or_create_user_by_email(email, session)
-    user.password_hash = hash_password(password)
+    user.password_hash = await hash_password(password)
     await session.commit()
     return user
 

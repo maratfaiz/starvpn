@@ -1,4 +1,4 @@
-import { StarIcon, GearIcon, SettingIcon, ChevronIcon } from "../components/icons.jsx";
+import { GearIcon, SettingIcon, ChevronIcon } from "../components/icons.jsx";
 
 function openExternal(url) {
   const tg = window.Telegram?.WebApp;
@@ -73,21 +73,17 @@ export default function AccountScreen({
 
       <div className="rounded-[20px] p-[18px] border border-gold/30 bg-[linear-gradient(160deg,#1A1408_0%,#13161D_60%)]">
         <div className="flex justify-between items-center">
-          <span className="font-semibold text-[13px] text-ink/55">Текущий план</span>
+          <span className="font-semibold text-[13px] text-ink/55">Подписка</span>
           <span className="font-display font-bold text-[13px] text-gold bg-gold/[.12] px-2.5 py-1 rounded-lg">
-            {subscription.planName}
+            {subscription.active ? "Активна" : "Не активна"}
           </span>
         </div>
-        <div className="flex justify-between items-center mt-2.5">
-          <span className="font-medium text-[12.5px] text-ink/40">Продление</span>
-          <span className="font-semibold text-[13px] text-ink">{subscription.expiryDate}</span>
-        </div>
-        <div className="flex justify-between items-center mt-2">
-          <span className="font-medium text-[12.5px] text-ink/40">Оплата</span>
-          <span className="flex items-center gap-1 font-semibold text-[13px] text-ink">
-            <StarIcon size={11} /> Telegram Stars
-          </span>
-        </div>
+        {subscription.active && (
+          <div className="flex justify-between items-center mt-2.5">
+            <span className="font-medium text-[12.5px] text-ink/40">Продление</span>
+            <span className="font-semibold text-[13px] text-ink">{subscription.expiryDate}</span>
+          </div>
+        )}
         <button
           onClick={onManageSubscription}
           className="w-full mt-3.5 border border-gold/35 bg-gold/[.08] py-2.5 rounded-[13px] font-display font-bold text-[13px] text-gold"

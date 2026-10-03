@@ -16,10 +16,12 @@
 
 import html
 import logging
+import uuid
 
 from aiogram import Bot, Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.models.payment import Payment
 from bot.models.user import User
@@ -85,9 +87,13 @@ async def card_pay(callback: CallbackQuery) -> None:
     await callback.answer("⏳ Создаём счёт...")
 
     async with AsyncSessionLocal() as session:
-        # Robokassa требует InvId — целое число, используем id самого платежа.
+        # Robokassa требует InvId — целое число, используем id самого платежа,
+        # который узнаём только после flush ниже. До этого момента order_id
+        # должен быть чем-то временным, но ГАРАНТИРОВАННО уникальным (колонка
+        # unique=True) — раньше здесь была одна и та же "" для всех, и два
+        # одновременных запроса на оплату картой падали с IntegrityError.
         payment = Payment(
-            order_id="",
+            order_id=f"card_pending_{uuid.uuid4().hex}",
             telegram_id=tg_id,
             amount=float(plan["rub"]),
             status="pending",
@@ -215,7 +221,9 @@ async def handle_card_webhook(payment_id: int, bot: Bot, out_sum: str | None = N
     )
 
 
-async def _notify_gift_recipient(payment: Payment, recipient: User, plan_label: str, bot: Bot, session) -> None:
+async def _notify_gift_recipient(
+    payment: Payment, recipient: User, plan_label: str, bot: Bot, session: AsyncSession
+) -> None:
     """Общая логика уведомления о сайтовом подарке (картой) — GiftNotification
     для мини-аппа + сообщение в Telegram получателю с учётом анонимности."""
     from bot.models.gift_notification import GiftNotification

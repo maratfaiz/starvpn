@@ -113,7 +113,7 @@ async def register_admin(
 
     admin = AdminAccount(
         username=username,
-        password_hash=hash_password(password),
+        password_hash=await hash_password(password),
         rank=rank,
         invite_key=_new_invite_key() if rank == "admin" else None,
         invited_by_id=inviter.id if inviter else None,
@@ -133,7 +133,7 @@ async def login_admin(
     admin = (await session.execute(
         select(AdminAccount).where(AdminAccount.username == username)
     )).scalar_one_or_none()
-    if not admin or not verify_password(password, admin.password_hash):
+    if not admin or not await verify_password(password, admin.password_hash):
         return None
     token = await _create_session(admin, session)
     return admin, token
