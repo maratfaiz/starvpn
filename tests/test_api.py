@@ -39,3 +39,22 @@ async def test_master_key_only_registers_first_admin(session, monkeypatch):
         await admin_auth.register_admin("master-key-123", "intruder", "password123", session)
     worker, _ = await admin_auth.register_admin(first.invite_key, "helper", "password123", session)
     assert worker.rank == "worker"
+
+
+async def test_site_plans_custom_days_and_crypto_only(monkeypatch):
+    from bot.utils.cryptopay import cryptopay
+    from bot.utils.robokassa import robokassa
+
+    monkeypatch.setattr(type(robokassa), "configured", property(lambda self: True))
+    monkeypatch.setattr(type(cryptopay), "configured", property(lambda self: True), raising=False)
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="https://test") as client:
+        plans = (await client.get("/api/site/plans?days=47")).json()
+        custom = [p for p in plans if p["key"] == "custom"]
+        assert custom and custom[0]["days"] == 47 and custom[0]["rub"] == 310  # 47 × 6.6 ₽, как на /tariffs
+        assert len((await client.get("/api/site/plans?days=90")).json()) == 3
+
+    monkeypatch.setattr(type(robokassa), "configured", property(lambda self: False))
+    async with httpx.AsyncClient(transport=transport, base_url="https://test") as client:
+        plans = (await client.get("/api/site/plans?days=47")).json()
+        assert len(plans) == 3 and all(p["rub"] is None and p["usd"] for p in plans)

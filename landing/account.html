@@ -625,6 +625,14 @@ async function resumePendingPurchase() {
   let pending = null;
   try { pending = JSON.parse(localStorage.getItem('star_vpn_pending_purchase') || 'null'); } catch (e) {}
   if (!pending || !pending.plan) return;
+  if (pending.plan === 'custom' && pending.days) {
+    // Свой срок есть только на /get-vpn — возвращаемся туда уже с аккаунтом
+    // (срок едет в ссылке, отложенную покупку убираем — иначе каждый заход
+    // в кабинет перекидывал бы на /get-vpn).
+    try { localStorage.removeItem('star_vpn_pending_purchase'); } catch (e) {}
+    location.href = `/get-vpn?days=${encodeURIComponent(pending.days)}`;
+    return;
+  }
   const renewTab = document.querySelector('[data-tab="renew"]');
   if (renewTab) renewTab.click();
   await new Promise(r => setTimeout(r, 400));

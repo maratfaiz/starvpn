@@ -2146,6 +2146,48 @@ async def get_guest_plans():
     ]
 
 
+@app.get("/api/site/plans")
+async def get_site_plans(days: int | None = None):
+    """Тарифы для /get-vpn (публично, до входа): цена картой и криптой —
+    null, если способ недоступен. Раньше страница брала /api/guest/plans
+    (только карта) и при выключенной карте писала «нет тарифов», хотя
+    крипта работала. ?days=N (слайдер «Свой срок» на /tariffs) добавляет
+    тариф "custom" — только картой, по формуле custom_plan_price."""
+    from bot.utils.cryptopay import CRYPTO_PLANS, cryptopay
+    from bot.utils.robokassa import (
+        CARD_PLANS, CUSTOM_DAYS_MAX, CUSTOM_DAYS_MIN, custom_plan_price, robokassa,
+    )
+    from bot.utils.settings_store import get_all_provider_states
+
+    async with AsyncSessionLocal() as session:
+        states = await get_all_provider_states(session)
+    card_ok = robokassa.configured and states["card"]
+    crypto_ok = cryptopay.configured and states["crypto"]
+    if not card_ok and not crypto_ok:
+        return []
+
+    plans = []
+    for key, card in CARD_PLANS.items():
+        crypto = CRYPTO_PLANS.get(key)
+        plans.append({
+            "key": key,
+            "label": card["label"],
+            "days": card["days"],
+            "desc": card["desc"] if card_ok else (crypto or card)["desc"],
+            "rub": float(card["rub"]) if card_ok else None,
+            "usd": float(crypto["usd"]) if crypto_ok and crypto else None,
+        })
+    fixed_days = {p["days"] for p in plans}
+    if (card_ok and days is not None and CUSTOM_DAYS_MIN <= days <= CUSTOM_DAYS_MAX
+            and days not in fixed_days):
+        rub = float(custom_plan_price(days))
+        plans.append({
+            "key": "custom", "label": "Свой срок", "days": days,
+            "desc": f"{days} дн. · {rub:.0f} ₽ · только картой", "rub": rub, "usd": None,
+        })
+    return plans
+
+
 @app.get("/api/guest/providers")
 async def get_guest_providers():
     """Какие способы оплаты доступны для покупки без Telegram."""
