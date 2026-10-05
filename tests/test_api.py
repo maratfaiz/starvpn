@@ -24,3 +24,18 @@ async def test_trial_is_telegram_only(session, fake_marzban):
         assert r.status_code == 200
         r = await client.post("/api/trial")
         assert r.status_code == 400
+
+
+async def test_master_key_only_registers_first_admin(session, monkeypatch):
+    import pytest
+
+    from bot.config import settings
+    from bot.utils import admin_auth
+
+    monkeypatch.setattr(settings, "admin_web_key", "master-key-123")
+    first, _ = await admin_auth.register_admin("master-key-123", "owner", "password123", session)
+    assert first.rank == "admin"
+    with pytest.raises(ValueError, match="bad_invite_key"):
+        await admin_auth.register_admin("master-key-123", "intruder", "password123", session)
+    worker, _ = await admin_auth.register_admin(first.invite_key, "helper", "password123", session)
+    assert worker.rank == "worker"

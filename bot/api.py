@@ -1092,9 +1092,9 @@ async def admin_stats(x_telegram_init_data: str | None = Header(default=None)):
         banned = (await session.execute(
             select(func.count()).where(User.is_banned.is_(True))
         )).scalar_one()
-        stars_sum = (await session.execute(
-            select(func.sum(Payment.amount)).where(Payment.status == "paid")
-        )).scalar_one()
+        # Payment.amount — в валюте способа оплаты (⭐ / ₽ / $), складывать
+        # все платежи нельзя; звёзды считаем по пользователям.
+        stars_sum = (await session.execute(select(func.sum(User.total_stars_paid)))).scalar_one()
         pays_count = (await session.execute(
             select(func.count(Payment.id)).where(Payment.status == "paid")
         )).scalar_one()
@@ -1229,8 +1229,8 @@ async def admin_grant(request: Request, x_telegram_init_data: str | None = Heade
     body = await request.json()
     target_id = int(body.get("telegram_id", 0))
     days = int(body.get("days", 0))
-    if not target_id or days <= 0:
-        raise HTTPException(400, "telegram_id and days required")
+    if not target_id or not 0 < days <= 3650:
+        raise HTTPException(400, "telegram_id and days (1..3650) required")
 
     async with AsyncSessionLocal() as session:
         r = await session.execute(select(User).where(User.telegram_id == target_id))
@@ -1323,19 +1323,25 @@ async def admin_broadcast(request: Request, x_telegram_init_data: str | None = H
         raise HTTPException(400, "text required")
 
     async with AsyncSessionLocal() as session:
+        # Веб-аккаунты (отрицательный id) в Telegram не адресуемы.
         ids = list((await session.execute(
-            select(User.telegram_id).where(User.is_banned.is_(False))
+            select(User.telegram_id).where(User.is_banned.is_(False), User.telegram_id > 0)
         )).scalars().all())
 
     sent = failed = 0
     async with httpx.AsyncClient(timeout=10) as client:
         for uid in ids:
             try:
-                await client.post(
+                resp = await client.post(
                     f"https://api.telegram.org/bot{settings.telegram_api_token}/sendMessage",
                     json={"chat_id": uid, "text": text, "parse_mode": "HTML"},
                 )
-                sent += 1
+                # Telegram отвечает 403/400 (бот заблокирован, чат не найден)
+                # без исключения — раньше такие считались отправленными.
+                if resp.json().get("ok"):
+                    sent += 1
+                else:
+                    failed += 1
             except Exception:
                 failed += 1
             await asyncio.sleep(0.05)
@@ -1360,7 +1366,8 @@ async def admin_payments(x_telegram_init_data: str | None = Header(default=None)
         {
             "id": p.id,
             "telegram_id": p.telegram_id,
-            "amount": int(p.amount),
+            "amount": float(p.amount),
+            "payment_method": p.payment_method,
             "paid_at": p.paid_at.isoformat() if p.paid_at else None,
             "order_id": p.order_id or "",
         }
@@ -2739,14 +2746,22 @@ async def web_stats(authorization: str | None = Header(default=None)):
         for i in range(6, -1, -1):
             day_start = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
             day_end = day_start + timedelta(days=1)
-            amt = (await session.execute(
-                select(func.sum(Payment.amount)).where(Payment.status == "paid", Payment.paid_at >= day_start, Payment.paid_at < day_end)
-            )).scalar_one() or 0
+            # Payment.amount хранится в валюте способа оплаты — раньше ⭐, ₽ и $
+            # складывались в одно число. Рубли — карта (и старые рублёвые платежи).
+            by_method = (await session.execute(
+                select(Payment.payment_method, func.sum(Payment.amount))
+                .where(Payment.status == "paid", Payment.paid_at >= day_start, Payment.paid_at < day_end)
+                .group_by(Payment.payment_method)
+            )).all()
+            sums = {"rub": 0.0, "usd": 0.0, "stars": 0.0}
+            for method, amount in by_method:
+                key = {"stars": "stars", "crypto": "usd"}.get(method, "rub")
+                sums[key] += float(amount or 0)
             cnt = (await session.execute(
                 select(func.count(User.telegram_id)).where(User.created_at >= day_start, User.created_at < day_end)
             )).scalar_one() or 0
             label = day_start.strftime("%d.%m")
-            revenue_rows.append({"date": label, "amount": float(amt)})
+            revenue_rows.append({"date": label, "amount": sums["rub"], **sums})
             new_rows.append({"date": label, "count": cnt})
     return {
         "total_users": total, "active_subscriptions": active, "banned": banned,
@@ -2863,8 +2878,8 @@ async def web_user_grant(tg_id: int, request: Request, authorization: str | None
     _web_auth(authorization, "users")
     body = await request.json()
     days = int(body.get("days", 0))
-    if days <= 0:
-        raise HTTPException(400, "days required")
+    if not 0 < days <= 3650:
+        raise HTTPException(400, "days: от 1 до 3650")
     async with AsyncSessionLocal() as session:
         u = (await session.execute(select(User).where(User.telegram_id == tg_id))).scalar_one_or_none()
         if not u:
@@ -3784,7 +3799,25 @@ async def web_marzban_disable(username: str, authorization: str | None = Header(
 async def web_marzban_extend(username: str, request: Request, authorization: str | None = Header(default=None)):
     _web_auth(authorization, "servers")
     body = await request.json()
-    return await marzban.extend_user(username, int(body.get("days", 30)))
+    days = int(body.get("days", 30))
+    if days <= 0:
+        raise HTTPException(400, "days must be positive")
+    # Если это устройство (или старый аккаунт) нашего пользователя — продлеваем
+    # подписку в БД: раньше менялся только срок в Marzban, и планировщик всё
+    # равно отключал пользователя по сроку из БД.
+    async with AsyncSessionLocal() as session:
+        owner_id = (await session.execute(
+            select(Device.telegram_id).where(Device.marzban_username == username)
+        )).scalar_one_or_none()
+        user = await session.get(User, owner_id) if owner_id is not None else (await session.execute(
+            select(User).where(User.marzban_username == username)
+        )).scalar_one_or_none()
+        if user:
+            from bot.handlers.payment import _grant_subscription
+            await _grant_subscription(user, days, session)
+            return {"ok": True, "telegram_id": user.telegram_id,
+                    "subscription_expires_at": user.subscription_expires_at.isoformat()}
+    return await marzban.extend_user(username, days)
 
 
 @app.delete("/web/marzban/users/{username}")

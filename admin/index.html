@@ -915,7 +915,12 @@ async function renderDashboard() {
       </div>
       <div class="dash-grid">
         <div class="dcard">
-          <div class="dcard-title">Выручка за 7 дней</div>
+          <div class="dcard-title">Выручка за 7 дней, ₽</div>
+          <div style="color:#8A7A60;font-size:12px;margin-top:4px">${(() => {
+            const stars = s.revenue_chart.reduce((a, r) => a + (r.stars || 0), 0);
+            const usd = s.revenue_chart.reduce((a, r) => a + (r.usd || 0), 0);
+            return `Картой — по дням. Ещё за неделю: ${Math.round(stars)} ⭐ · $${usd.toFixed(2)}`;
+          })()}</div>
           <div class="bars">
             ${s.revenue_chart.map(r => `
               <div class="bar-col">
