@@ -58,3 +58,34 @@ async def test_site_plans_custom_days_and_crypto_only(monkeypatch):
     async with httpx.AsyncClient(transport=transport, base_url="https://test") as client:
         plans = (await client.get("/api/site/plans?days=47")).json()
         assert len(plans) == 3 and all(p["rub"] is None and p["usd"] for p in plans)
+
+
+async def test_password_reset_flow(session, monkeypatch):
+    from bot.utils import mailer
+    from bot.utils.webauth import hash_password, verify_password
+    from bot.models.user import User
+    from bot.utils.database import AsyncSessionLocal
+
+    sent: dict[str, str] = {}
+
+    async def fake_send(to, code):
+        sent[to] = code
+
+    monkeypatch.setattr(mailer, "send_password_reset_email", fake_send)
+    old_client = await _client_for(session, -9, email="r@e.st", email_verified=True,
+                                   password_hash=hash_password("oldpassword"))
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="https://test") as client:
+        assert (await client.post("/api/account/forgot-password", json={"email": "no@one.xx"})).json()["ok"]
+        assert "no@one.xx" not in sent
+        await client.post("/api/account/forgot-password", json={"email": "r@e.st"})
+        bad = await client.post("/api/account/reset-password",
+                                json={"email": "r@e.st", "code": "000000", "password": "newpassword"})
+        assert bad.status_code == 400 or sent["r@e.st"] == "000000"
+        ok = await client.post("/api/account/reset-password",
+                               json={"email": "r@e.st", "code": sent["r@e.st"], "password": "newpassword"})
+        assert ok.status_code == 200 and "star_session" in ok.cookies
+    async with AsyncSessionLocal() as s:
+        assert verify_password("newpassword", (await s.get(User, -9)).password_hash)
+    async with old_client:
+        assert (await old_client.get("/api/me")).status_code == 401  # старая сессия закрыта

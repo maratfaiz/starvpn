@@ -95,3 +95,25 @@ async def send_subscription_email(to_email: str, subject: str, text: str) -> Non
     </div>
     """
     await asyncio.to_thread(_send_sync, to_email, subject, text_body, html_body)
+
+
+async def send_password_reset_email(to_email: str, code: str) -> None:
+    if not settings.smtp_host:
+        logger.warning("SMTP не настроен — код сброса пароля для %s: %s", to_email, code)
+        return
+
+    subject = f"{code} — сброс пароля STAR VPN"
+    text_body = (
+        f"Код для сброса пароля личного кабинета STAR VPN: {code}\n\n"
+        "Действует 15 минут. Если вы не запрашивали сброс — просто проигнорируйте письмо, "
+        "пароль останется прежним."
+    )
+    html_body = f"""
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#060606;color:#EBE0CC">
+      <h2 style="color:#FFB800;margin:0 0 16px">STAR VPN</h2>
+      <p>Код для сброса пароля личного кабинета:</p>
+      <p style="margin:24px 0;font-family:monospace;font-size:32px;font-weight:700;letter-spacing:.2em;color:#FFB800">{code}</p>
+      <p style="color:#8A7A60;font-size:13px">Действует 15 минут. Если вы не запрашивали сброс — просто проигнорируйте письмо, пароль останется прежним.</p>
+    </div>
+    """
+    await asyncio.to_thread(_send_sync, to_email, subject, text_body, html_body)

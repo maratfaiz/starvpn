@@ -533,6 +533,68 @@ async def account_login(request: Request):
     return resp
 
 
+@app.post("/api/account/forgot-password")
+async def account_forgot_password(request: Request):
+    """Шаг 1 сброса пароля: письмо с кодом. Всегда отвечает ok — по ответу
+    нельзя узнать, зарегистрирован ли email."""
+    from bot.utils.mailer import send_password_reset_email
+    from bot.utils.webauth import create_verification_code, is_valid_email
+    from sqlalchemy import select as _select
+
+    body = await request.json()
+    email = (body.get("email") or "").strip().lower()
+    if not is_valid_email(email):
+        raise HTTPException(400, "Некорректный email")
+
+    async with AsyncSessionLocal() as session:
+        user = (await session.execute(_select(User).where(User.email == email))).scalar_one_or_none()
+        if not user or not user.email_verified:
+            return {"ok": True}
+        try:
+            raw_code = await create_verification_code(email, session)
+        except ValueError:
+            return {"ok": True}  # код недавно уже отправлен
+
+    try:
+        await send_password_reset_email(email, raw_code)
+    except Exception as e:
+        logger.error("forgot_password: failed to send email to %s: %s", email, e)
+        raise HTTPException(502, "Не удалось отправить письмо. Попробуйте позже.")
+    return {"ok": True}
+
+
+@app.post("/api/account/reset-password")
+async def account_reset_password(request: Request):
+    """Шаг 2 сброса пароля: код из письма + новый пароль → сразу вход."""
+    from bot.utils.webauth import (
+        SESSION_COOKIE_NAME, SESSION_TTL, create_web_session, is_valid_email,
+        is_valid_password, reset_password,
+    )
+
+    body = await request.json()
+    email = (body.get("email") or "").strip().lower()
+    code = (body.get("code") or "").strip()
+    password = body.get("password") or ""
+    if not is_valid_email(email) or not code:
+        raise HTTPException(400, "Некорректные данные")
+    if not is_valid_password(password):
+        raise HTTPException(400, "Пароль должен быть от 8 до 128 символов")
+
+    async with AsyncSessionLocal() as session:
+        user = await reset_password(email, code, password, session)
+        if not user:
+            raise HTTPException(400, "Неверный или устаревший код")
+        session_token = await create_web_session(user, session)
+
+    resp = JSONResponse({"ok": True})
+    resp.set_cookie(
+        SESSION_COOKIE_NAME, session_token,
+        max_age=int(SESSION_TTL.total_seconds()),
+        httponly=True, secure=True, samesite="lax", path="/",
+    )
+    return resp
+
+
 @app.post("/api/account/logout")
 async def account_logout(request: Request):
     from bot.utils.webauth import delete_web_session, SESSION_COOKIE_NAME
