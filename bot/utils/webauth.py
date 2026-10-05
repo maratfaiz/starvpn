@@ -88,6 +88,9 @@ async def get_or_create_user_by_telegram_id(
     на сайте — реальный (положительный) telegram_id, а не синтетический."""
     r = await session.execute(select(User).where(User.telegram_id == telegram_id))
     user = r.scalar_one_or_none()
+    if username:
+        from bot.middlewares.user_sync import release_username
+        await release_username(session, username, telegram_id)
     if user:
         if username and user.username != username:
             user.username = username
