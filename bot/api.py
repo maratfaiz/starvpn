@@ -3759,7 +3759,10 @@ async def web_broadcast(request: Request, authorization: str | None = Header(def
     bot = ABot(token=settings.telegram_api_token)
     sent = failed = 0
     async with AsyncSessionLocal() as session:
-        uids = (await session.execute(select(User.telegram_id).where(User.is_banned.is_(False)))).scalars().all()
+        # Веб-аккаунты (отрицательный id) в Telegram не адресуемы.
+        uids = (await session.execute(
+            select(User.telegram_id).where(User.is_banned.is_(False), User.telegram_id > 0)
+        )).scalars().all()
     try:
         for uid in uids:
             try:
@@ -3767,6 +3770,9 @@ async def web_broadcast(request: Request, authorization: str | None = Header(def
                 sent += 1
             except Exception:
                 failed += 1
+            # Лимит Telegram ~30 сообщений/с: без паузы большая рассылка
+            # упиралась во flood-ошибки и считала их «не доставлено».
+            await asyncio.sleep(0.05)
     finally:
         try:
             await bot.session.close()

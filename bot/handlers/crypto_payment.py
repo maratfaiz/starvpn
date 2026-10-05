@@ -179,6 +179,9 @@ async def handle_crypto_webhook(
             logger.warning("Crypto webhook: no pending payment for invoice_id=%s", invoice_id)
             return
         payment = await session.get(Payment, payment_id)
+        if payment is None:  # строку только что обновили — сюда не доходит
+            await session.rollback()
+            return
         days = payment.days or 30
         plan_label = {30: "1 месяц", 90: "3 месяца", 180: "6 месяцев"}.get(days, f"{days} дней")
 

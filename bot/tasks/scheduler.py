@@ -13,6 +13,7 @@
 
 import asyncio
 import logging
+from collections.abc import Sequence
 from datetime import datetime, timedelta
 
 from aiogram import Bot
@@ -63,7 +64,7 @@ async def _first_month_price() -> str | None:
     return None
 
 
-async def _trial_only_ids(users: list[User]) -> set[int]:
+async def _trial_only_ids(users: Sequence[User]) -> set[int]:
     """Кто сидит только на пробном периоде: брал пробный и ни разу не получал
     дни иначе — ни оплатой, ни подарком, ни бонусом за рефералов. Раньше
     «не платил» = «пробный», и получатели подарков читали, что у них

@@ -456,9 +456,12 @@ async def handle_gift_payment(
         return
     _, recipient_id, anon, payment_id = parsed
 
+    paid = message.successful_payment
+    if paid is None or message.from_user is None:
+        return
     sender_id = message.from_user.id
-    stars = message.successful_payment.total_amount
-    charge_id = message.successful_payment.telegram_payment_charge_id
+    stars = paid.total_amount
+    charge_id = paid.telegram_payment_charge_id
     order_id = f"gift_{sender_id}_{charge_id}"
 
     payment = await session.get(Payment, payment_id) if payment_id else None
