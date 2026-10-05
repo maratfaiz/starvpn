@@ -76,17 +76,17 @@ async def main() -> None:
     dp.include_router(card_payment.router)
     dp.include_router(custom_blocks.router)
 
-    # FastAPI (Mini App API) — порт 8080
+    # FastAPI (Mini App API) — порт WEBHOOK_PORT (по умолчанию 8080)
     api_config = uvicorn.Config(
         fastapi_app,
-        host="0.0.0.0",
-        port=8080,
+        host=settings.webhook_host,
+        port=settings.webhook_port,
         log_level="warning",
         access_log=False,
     )
     api_server = uvicorn.Server(api_config)
 
-    logger.info("STAR VPN bot + API + Scheduler starting (API on :8080)...")
+    logger.info("STAR VPN bot + API + Scheduler starting (API on :%s)...", settings.webhook_port)
     await asyncio.gather(
         dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types()),
         api_server.serve(),
