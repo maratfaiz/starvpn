@@ -21,7 +21,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from bot.models.user import User
-from bot.utils.bot_texts import MenuText, t
+from bot.utils.bot_media import send_screen
+from bot.utils.bot_texts import MenuText, image_for, t
 from bot.handlers.payment import REFERRAL_DAYS_BONUS, REFERRAL_MILESTONE_SIZE, REFERRAL_ACHIEVEMENTS
 
 router = Router()
@@ -79,7 +80,8 @@ async def send_referral_info(message: Message, tg_id: int, session: AsyncSession
             )
     achievements_block = "\n".join(achievements_lines)
 
-    await message.answer(
+    await send_screen(
+        message,
         t(
             "referral.text",
             milestone_size=REFERRAL_MILESTONE_SIZE, bonus_days=REFERRAL_DAYS_BONUS,
@@ -87,7 +89,7 @@ async def send_referral_info(message: Message, tg_id: int, session: AsyncSession
             next_milestone=next_milestone_line, achievements=achievements_block,
             ref_link=ref_link,
         ),
-        parse_mode="HTML",
+        image=image_for("referral.text"),
         reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
         disable_web_page_preview=True,
     )

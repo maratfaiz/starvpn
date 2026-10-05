@@ -23,7 +23,8 @@ from sqlalchemy import select
 from bot.models.user import User
 from bot.utils.marzban import marzban
 from bot.utils.branding import set_vless_remark, subscription_url
-from bot.utils.bot_texts import MenuText, t
+from bot.utils.bot_media import send_screen
+from bot.utils.bot_texts import MenuText, image_for, t
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -89,10 +90,8 @@ async def show_my_subscription(message: Message, session: AsyncSession) -> None:
     if not user:
         await message.answer("Сначала отправь /start.")
         return
-    await message.answer(
-        await _build_text(user),
-        parse_mode="HTML",
-        reply_markup=_subscription_kb(),
+    await send_screen(
+        message, await _build_text(user), image=image_for("sub.text"), reply_markup=_subscription_kb(),
     )
 
 
@@ -119,13 +118,10 @@ async def refresh_subscription(callback: CallbackQuery, session: AsyncSession) -
     if not user:
         await callback.answer("Пользователь не найден.", show_alert=True)
         return
-    try:
-        await callback.message.edit_text(
-            await _build_text(user), parse_mode="HTML",
-            reply_markup=_subscription_kb(),
-        )
-    except Exception:
-        pass
+    await send_screen(
+        callback.message, await _build_text(user), image=image_for("sub.text"),
+        reply_markup=_subscription_kb(), edit=True,
+    )
     await callback.answer("Обновлено ✅")
 
 
@@ -146,10 +142,9 @@ async def pay_choice_text() -> str:
 @router.callback_query(F.data == "sub:pay_choice")
 async def pay_choice(callback: CallbackQuery) -> None:
     """Выбор способа оплаты — Stars, карта или крипта."""
-    await callback.message.edit_text(
-        await pay_choice_text(),
-        parse_mode="HTML",
-        reply_markup=await _pay_choice_kb(),
+    await send_screen(
+        callback.message, await pay_choice_text(), image=image_for("pay.choose"),
+        reply_markup=await _pay_choice_kb(), edit=True,
     )
     await callback.answer()
 
@@ -166,10 +161,9 @@ async def sub_renew(callback: CallbackQuery) -> None:
         for key, plan in PLANS.items()
     ]
     buttons.append([InlineKeyboardButton(text=t("btn.back"), callback_data="sub:pay_choice")])
-    await callback.message.edit_text(
-        t("stars.text"),
-        parse_mode="HTML",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
+    await send_screen(
+        callback.message, t("stars.text"), image=image_for("stars.text"),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons), edit=True,
     )
     await callback.answer()
 
@@ -192,10 +186,10 @@ async def back_to_subscription(callback: CallbackQuery, session: AsyncSession) -
     if not user:
         await callback.answer()
         return
-    try:
-        await callback.message.edit_text(await _build_text(user), parse_mode="HTML", reply_markup=_subscription_kb())
-    except Exception:
-        await callback.message.answer(await _build_text(user), parse_mode="HTML", reply_markup=_subscription_kb())
+    await send_screen(
+        callback.message, await _build_text(user), image=image_for("sub.text"),
+        reply_markup=_subscription_kb(), edit=True,
+    )
     await callback.answer()
 
 

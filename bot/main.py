@@ -31,6 +31,7 @@ async def main() -> None:
     logger.info("Database initialized.")
 
     async with AsyncSessionLocal() as session:
+        await admin_auth.seed_roles(session)
         await admin_auth.load_sessions_cache(session)
     logger.info("Admin sessions cache warmed.")
 

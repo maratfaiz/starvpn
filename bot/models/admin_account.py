@@ -14,7 +14,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, String
+from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from bot.models.user import Base
@@ -36,3 +36,11 @@ class AdminAccount(Base):
         BigInteger, ForeignKey("admin_accounts.id"), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    # Роль определяет, какие разделы видит 'worker' (у 'admin' — всё).
+    role_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("admin_roles.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    # Выключенный сотрудник не может войти, его сессии удаляются.
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    display_name: Mapped[str] = mapped_column(String(64), default="", nullable=False)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

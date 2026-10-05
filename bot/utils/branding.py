@@ -13,6 +13,7 @@ Happ отображался marzban_username вместо "STAR VPN".
 import hashlib
 import hmac
 import urllib.parse
+from pathlib import Path
 
 APP_NAME = "STAR VPN"
 
@@ -81,8 +82,15 @@ _TEMPLATE_BOT = "starisvpnbot"
 _TEMPLATE_SUPPORT = "hashprojects"
 
 
+# Общая шапка сайта: страницы содержат только маркер, меню одно на всех.
+SITE_NAV_MARKER = "<!--SITE_NAV-->"
+_SITE_NAV_FILE = Path(__file__).resolve().parent.parent.parent / "landing" / "_nav.html"
+
+
 def brand_html(page: str) -> str:
     from bot.config import settings
+    if SITE_NAV_MARKER in page:
+        page = page.replace(SITE_NAV_MARKER, _SITE_NAV_FILE.read_text(encoding="utf-8"), 1)
     bot = settings.bot_username.lstrip("@")
     support = settings.support_username.lstrip("@")
     if bot and bot != _TEMPLATE_BOT:

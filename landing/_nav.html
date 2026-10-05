@@ -1,0 +1,207 @@
+<!-- ═══ Общая шапка сайта ═══════════════════════════════════════════
+     Одна на все страницы: сервер подставляет этот файл вместо маркера
+     SITE_NAV (bot/utils/branding.py → brand_html). Меню правится только
+     здесь — в самих страницах своей шапки, её стилей и скриптов нет.
+     Сюда же входит окно «С чего начать» для кнопки «2 дня бесплатно»:
+     её (и любой элемент с data-start) открывает общий скрипт ниже. -->
+<style>
+#nav{
+  position:sticky;top:0;z-index:100;padding:0 24px;
+  background:rgba(6,6,6,.82);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  border-bottom:1px solid var(--gold-border,rgba(255,184,0,.2));
+  transition:background .3s;
+}
+#nav.scrolled{background:rgba(6,6,6,.95)}
+#nav .nav-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;height:64px;gap:40px}
+#nav .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+#nav .nav-logo-text{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;letter-spacing:.05em;color:var(--gold,#FFB800)}
+#nav .nav-menu{display:contents}
+#nav .nav-links{display:flex;gap:28px;flex:1;min-width:0}
+#nav .nav-links a{font-size:13px;font-weight:500;color:var(--text2,#8A7A60);text-decoration:none;transition:color .2s;position:relative;white-space:nowrap}
+#nav .nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--gold,#FFB800);transition:width .25s}
+#nav .nav-links a:hover,#nav .nav-links a.active{color:var(--gold,#FFB800)}
+#nav .nav-links a:hover::after,#nav .nav-links a.active::after{width:100%}
+#nav .nav-login{font-size:13.5px;font-weight:500;color:var(--text,#EBE0CC);white-space:nowrap;padding:9px 16px;border:1px solid rgba(255,255,255,.18);border-radius:11px;text-decoration:none;transition:color .2s,border-color .2s;flex-shrink:0}
+#nav .nav-login:hover{color:var(--gold,#FFB800);border-color:var(--gold-border,rgba(255,184,0,.2))}
+#nav .nav-cta{background:var(--gold,#FFB800);color:#000;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;padding:10px 22px;border-radius:10px;text-decoration:none;white-space:nowrap;flex-shrink:0;transition:background .2s,transform .15s,box-shadow .2s}
+#nav .nav-cta:hover{background:var(--gold2,#FFD84D);transform:translateY(-1px);box-shadow:0 8px 24px rgba(255,184,0,.3)}
+#nav .nav-right{display:flex;align-items:center;gap:10px;flex-shrink:0;order:2}
+#nav .nav-hamburger{display:none;flex-direction:column;justify-content:center;gap:4px;width:34px;height:34px;background:transparent;border:1px solid rgba(255,255,255,.14);border-radius:9px;flex-shrink:0;cursor:pointer}
+#nav .nav-hamburger span{display:block;width:16px;height:1.5px;background:var(--gold,#FFB800);margin:0 auto}
+#nav .account-btn{display:none;position:relative;flex-shrink:0}
+#nav .account-btn.show{display:block}
+#nav .account-pill{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:500;color:var(--text,#EBE0CC);white-space:nowrap;padding:7px 14px 7px 7px;border:1px solid rgba(255,255,255,.14);border-radius:100px;text-decoration:none;transition:border-color .2s}
+#nav .account-pill:hover{border-color:rgba(255,184,0,.4)}
+#nav .account-avatar{width:26px;height:26px;border-radius:50%;background:rgba(255,184,0,.15);border:1px solid rgba(255,184,0,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#nav .account-avatar svg{width:13px;height:13px;stroke:var(--gold,#FFB800);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#nav .account-dropdown{position:absolute;top:100%;right:0;padding-top:8px;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility .15s}
+#nav .account-dropdown.open{opacity:1;visibility:visible;transform:translateY(0)}
+#nav .account-dropdown-inner{background:#0D0C0A;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:8px;min-width:200px;box-shadow:0 20px 44px rgba(0,0,0,.5)}
+#nav .dropdown-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;font-size:13.5px;color:var(--text,#EBE0CC);text-decoration:none;background:none;border:none;width:100%;text-align:left;cursor:pointer;font-family:inherit}
+#nav .dropdown-item:hover{background:rgba(255,255,255,.05)}
+#nav .dropdown-item svg{width:16px;height:16px;flex-shrink:0;stroke:var(--text2,#8A7A60);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#nav .dropdown-divider{height:1px;background:rgba(255,255,255,.08);margin:6px 4px}
+#nav .dropdown-item.danger{color:#F87171}
+#nav .dropdown-item.danger svg{stroke:#F87171}
+#nav .dropdown-item.danger:hover{background:rgba(248,113,113,.1)}
+@media(min-width:769px){#nav .nav-actions{display:contents}#nav .nav-login{order:2}#nav .nav-cta{order:3}}
+@media(max-width:768px){
+  #nav{padding:0 20px}
+  #nav .nav-hamburger{display:flex}
+  #nav .nav-right{margin-left:auto}
+  #nav #account-email{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #nav .nav-menu{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:#0a0a0a;border-bottom:1px solid var(--gold-border,rgba(255,184,0,.2));padding:10px 20px 18px;box-shadow:0 20px 40px rgba(0,0,0,.5)}
+  #nav .nav-menu.open{display:flex}
+  #nav .nav-links{flex-direction:column;gap:2px}
+  #nav .nav-links a{padding:12px 4px}
+  #nav .nav-links a::after{display:none}
+  #nav .nav-actions{display:flex;gap:10px;margin-top:12px}
+  #nav .nav-cta{padding:9px 16px}
+}
+
+.start-modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(6,6,6,.72);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
+.start-modal-overlay.open{display:flex}
+.start-modal{max-width:640px;width:100%;background:#0B0A09;border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:clamp(24px,4vw,40px);position:relative;text-align:left}
+.start-modal-close{position:absolute;top:18px;right:18px;width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text2,#8A7A60);font-size:18px;line-height:1;cursor:pointer}
+.start-modal-label{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--gold,#FFB800);margin-bottom:12px}
+.start-modal h3{font-family:'Space Grotesk',sans-serif;font-size:clamp(22px,3vw,28px);font-weight:700;line-height:1.15;margin:0 0 10px;color:var(--text,#EBE0CC)}
+.start-modal p{color:var(--text2,#8A7A60);margin:0 0 26px}
+.start-modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.start-modal-opt{display:block;border-radius:18px;padding:22px;text-decoration:none;transition:border-color .2s}
+.start-modal-opt.opt-site{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1)}
+.start-modal-opt.opt-site:hover{border-color:var(--gold-border,rgba(255,184,0,.2))}
+.start-modal-opt.opt-tg{background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.3)}
+.start-modal-opt.opt-tg:hover{border-color:rgba(255,184,0,.5)}
+.start-modal .opt-tag{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.start-modal .opt-tag.tag-site{color:var(--text2,#8A7A60)}
+.start-modal .opt-tag.tag-tg{color:var(--gold,#FFB800)}
+.start-modal .opt-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text,#EBE0CC);margin-bottom:8px}
+.start-modal .opt-text{font-size:13.5px;color:var(--text2,#8A7A60);line-height:1.5}
+</style>
+
+<nav id="nav">
+  <div class="nav-inner">
+    <a class="nav-logo" href="/"><span class="nav-logo-text">STAR VPN</span></a>
+    <div class="nav-right">
+      <div class="account-btn" id="account-btn">
+        <a class="account-pill" href="/account" id="account-toggle">
+          <span class="account-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6"/></svg></span><span id="account-email"></span>
+        </a>
+        <div class="account-dropdown" id="account-dropdown">
+          <div class="account-dropdown-inner">
+            <a class="dropdown-item" href="/account#subscription"><svg viewBox="0 0 24 24"><path d="M4 11.5L12 5l8 6.5V20a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1z"/></svg>Подписка</a>
+            <a class="dropdown-item" href="/account#devices"><svg viewBox="0 0 24 24"><path d="M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1M17 7h4v8h-4"/></svg>Устройства</a>
+            <a class="dropdown-item" href="/account#referral"><svg viewBox="0 0 24 24"><path d="M6 14a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 7.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 21a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8.2 10.3l7.6-3.6M8.2 13.7l7.6 3.6"/></svg>Приглашения</a>
+            <a class="dropdown-item" href="/account#profile"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6"/></svg>Профиль</a>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item danger" id="account-logout" type="button"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Выйти</button>
+          </div>
+        </div>
+      </div>
+      <button class="nav-hamburger" id="navHamburger" aria-label="Меню" type="button"><span></span><span></span><span></span></button>
+    </div>
+    <div class="nav-menu" id="navMenu">
+      <div class="nav-links">
+        <a href="/#how">Преимущества</a>
+        <a href="/#compare">Сравнение</a>
+        <a href="/#apps">Устройства</a>
+        <a href="/#faq">Вопросы</a>
+        <a href="/tariffs">Тарифы</a>
+        <a href="/wiki">Wiki</a>
+      </div>
+      <div class="nav-actions">
+        <a class="nav-login" id="nav-login" href="/login">Войти в кабинет</a>
+        <a class="nav-cta" id="nav-start-btn" href="https://t.me/starisvpnbot" data-start>2 дня бесплатно</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="start-modal-overlay" id="start-modal">
+  <div class="start-modal" onclick="event.stopPropagation()">
+    <button class="start-modal-close" id="start-modal-close" type="button" aria-label="Закрыть">×</button>
+    <div class="start-modal-label">С чего начать</div>
+    <h3>Как вам удобнее подключиться?</h3>
+    <p>Два равноценных пути к одному и тому же ключу — выберите свой.</p>
+    <div class="start-modal-grid">
+      <a class="start-modal-opt opt-site" href="/login" data-channel="site">
+        <div class="opt-tag tag-site">Личный кабинет</div>
+        <div class="opt-title">Через сайт</div>
+        <div class="opt-text">Вход по email и паролю. Работает, даже если Telegram недоступен.</div>
+      </a>
+      <a class="start-modal-opt opt-tg" href="https://t.me/starisvpnbot" data-channel="telegram">
+        <div class="opt-tag tag-tg">Telegram</div>
+        <div class="opt-title">Через бота</div>
+        <div class="opt-text">@starisvpnbot — подписка, продление и поддержка в одном чате.</div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const nav = document.getElementById('nav');
+  const menu = document.getElementById('navMenu');
+  const path = location.pathname.replace(/\/+$/, '') || '/';
+
+  // Текущий раздел: /tariffs, /wiki и все статьи /wiki/…
+  nav.querySelectorAll('.nav-links a').forEach(a => {
+    const href = a.getAttribute('href');
+    if (!href.includes('#') && (path === href || path.startsWith(href + '/'))) a.classList.add('active');
+  });
+  // На главной ссылки на разделы — прокрутка без перезагрузки; меню на телефоне закрываем.
+  nav.querySelectorAll('.nav-links a, .nav-actions a').forEach(a => a.addEventListener('click', () => menu.classList.remove('open')));
+  document.getElementById('navHamburger').addEventListener('click', () => menu.classList.toggle('open'));
+  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 40), { passive: true });
+
+  // Аккаунт: если вошёл — вместо «Войти в кабинет» кружок с почтой и меню.
+  const accountBtn = document.getElementById('account-btn');
+  const dropdown = document.getElementById('account-dropdown');
+  let me = null;
+  fetch('/api/me', { credentials: 'include' })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(data => {
+      me = data;
+      document.getElementById('nav-login').style.display = 'none';
+      accountBtn.classList.add('show');
+      document.getElementById('account-email').textContent = data.email || data.username || 'Аккаунт';
+    })
+    .catch(() => {});
+  document.getElementById('account-toggle').addEventListener('click', (e) => {
+    e.preventDefault();
+    dropdown.classList.toggle('open');
+  });
+  document.addEventListener('click', (e) => {
+    if (!accountBtn.contains(e.target)) dropdown.classList.remove('open');
+  });
+  document.getElementById('account-logout').addEventListener('click', async () => {
+    await fetch('/api/account/logout', { method: 'POST' });
+    window.location.href = '/';
+  });
+
+  // «2 дня бесплатно»: вошёл — в кабинет, нет — выбор «сайт или бот».
+  const overlay = document.getElementById('start-modal');
+  const closeModal = () => overlay.classList.remove('open');
+  window.starStart = function(e){
+    if (e) e.preventDefault();
+    if (me) { window.location.href = '/account'; return; }
+    fetch('/api/me', { credentials: 'include' })
+      .then(r => { if (r.ok) window.location.href = '/account'; else overlay.classList.add('open'); })
+      .catch(() => overlay.classList.add('open'));
+  };
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest && e.target.closest('[data-start]');
+    if (t) window.starStart(e);
+  });
+  overlay.addEventListener('click', closeModal);
+  document.getElementById('start-modal-close').addEventListener('click', closeModal);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+  overlay.querySelector('[data-channel="site"]').addEventListener('click', (e) => {
+    e.preventDefault();
+    fetch('/api/me', { credentials: 'include' })
+      .then(r => { window.location.href = r.ok ? '/account' : '/login'; })
+      .catch(() => { window.location.href = '/login'; });
+  });
+})();
+</script>

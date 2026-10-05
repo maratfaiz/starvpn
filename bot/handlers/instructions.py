@@ -8,7 +8,8 @@ from aiogram.types import (
     Message,
 )
 
-from bot.utils.bot_texts import t
+from bot.utils.bot_media import send_screen
+from bot.utils.bot_texts import image_for, t
 
 router = Router()
 
@@ -35,11 +36,7 @@ GUIDES = ("ios", "android", "windows", "macos", "linux", "appletv", "androidtv")
 
 @router.message(F.text == "📚 Инструкции")
 async def instructions_menu(message: Message) -> None:
-    await message.answer(
-        t("instr.menu"),
-        parse_mode="HTML",
-        reply_markup=DEVICE_MENU,
-    )
+    await send_screen(message, t("instr.menu"), image=image_for("instr.menu"), reply_markup=DEVICE_MENU)
 
 
 def _back_to_menu_kb() -> InlineKeyboardMarkup:
@@ -53,10 +50,8 @@ async def show_guide(callback: CallbackQuery) -> None:
     device = callback.data.split(":", 1)[1]
 
     if device == "pick":
-        await callback.message.answer(
-            t("instr.menu"),
-            parse_mode="HTML",
-            reply_markup=DEVICE_MENU,
+        await send_screen(
+            callback.message, t("instr.menu"), image=image_for("instr.menu"), reply_markup=DEVICE_MENU,
         )
         await callback.answer()
         return

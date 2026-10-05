@@ -61,51 +61,6 @@ body{
 .splash-percent{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--gold);min-width:38px;text-align:right}
 @keyframes splashPulse{0%,100%{opacity:.5}50%{opacity:1}}
 
-/* ─── NAV ──────────────────────────────────────────────────── */
-#nav{
-  position:sticky;top:0;z-index:100;
-  padding:0 24px;
-  background:rgba(6,6,6,0.82);
-  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
-  border-bottom:1px solid var(--gold-border);
-  transition:background .3s;
-}
-.nav-inner{
-  max-width:var(--max);margin:0 auto;
-  display:flex;align-items:center;height:64px;gap:40px;
-}
-.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
-.nav-logo img{width:30px;height:30px;border-radius:8px;object-fit:cover}
-.nav-logo-text{
-  font-family:'Space Grotesk',sans-serif;
-  font-size:18px;font-weight:700;letter-spacing:.05em;color:var(--gold);
-}
-.nav-links{display:flex;gap:28px;flex:1}
-.nav-links a{
-  font-size:13px;font-weight:500;color:var(--text2);
-  text-decoration:none;transition:color .2s;position:relative;
-}
-.nav-links a::after{
-  content:'';position:absolute;bottom:-4px;left:0;
-  width:0;height:1px;background:var(--gold);transition:width .25s;
-}
-.nav-links a:hover,.nav-links a.active{color:var(--gold)}
-.nav-links a:hover::after,.nav-links a.active::after{width:100%}
-.nav-cta{
-  background:var(--gold);color:#000;
-  font-family:'Space Grotesk',sans-serif;
-  font-size:13px;font-weight:700;
-  padding:10px 22px;border-radius:10px;
-  text-decoration:none;white-space:nowrap;flex-shrink:0;
-  transition:background .2s,transform .15s,box-shadow .2s;
-}
-.nav-cta:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 8px 24px rgba(255,184,0,0.3)}
-.nav-hamburger{display:none;flex-direction:column;justify-content:center;gap:4px;width:34px;height:34px;background:transparent;border:1px solid rgba(255,255,255,.14);border-radius:9px;flex-shrink:0;cursor:pointer}
-.nav-hamburger span{display:block;width:16px;height:1.5px;background:var(--gold);margin:0 auto}
-.nav-menu{display:contents}
-@media(max-width:768px){.nav-hamburger{display:flex}.nav-right{margin-left:auto}#account-email{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nav-menu{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:#0a0a0a;border-bottom:1px solid var(--gold-border);padding:10px 20px 18px;box-shadow:0 20px 40px rgba(0,0,0,.5)}.nav-menu.open{display:flex}.nav-links{display:flex;flex-direction:column;gap:2px}.nav-links a{padding:12px 4px}.nav-actions{display:flex;gap:10px;margin-top:12px}.nav-cta{padding:9px 16px;font-size:13px}}
-@media(min-width:769px){.nav-actions{display:contents}.nav-login{order:2}.nav-cta{order:3}}
-
 /* ─── Wrapper ──────────────────────────────────────────────── */
 .wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}
 
@@ -225,7 +180,7 @@ section{padding:120px 0}
 /* ─── SERVER MAP ───────────────────────────────────────────── */
 .map-grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(230px,.65fr);gap:clamp(24px,3vw,44px);align-items:center;margin-top:34px}
 @media(max-width:900px){.map-grid{grid-template-columns:1fr}}
-.map-canvas-wrap{position:relative;width:100%;aspect-ratio:1672/941}
+.map-canvas-wrap{position:relative;width:100%;aspect-ratio:220/107}
 .map-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .map-markers{position:absolute;inset:0;pointer-events:none}
 .map-marker{
@@ -237,6 +192,7 @@ section{padding:120px 0}
   width:7px;height:7px;background:#6B6459;
   box-shadow:0 0 0 3px rgba(255,255,255,.08);
 }
+.map-marker-label{position:absolute;transform:translate(10px,-50%);font-size:11.5px;font-weight:600;color:var(--gold);white-space:nowrap;text-shadow:0 1px 6px #000}
 .map-locations{display:flex;flex-direction:column;gap:10px}
 .map-location{
   display:flex;align-items:center;gap:10px;background:#0D0C0A;
@@ -341,83 +297,25 @@ footer{
 /* ─── TOP BANNER ───────────────────────────────────────────── */
 .top-banner{
   position:relative;z-index:110;
-  background:rgba(255,184,0,.09);border-bottom:1px solid var(--gold-border);
+  --b-bg:rgba(255,184,0,.09);--b-border:var(--gold-border);--b-text:var(--text);--b-accent:var(--gold);
+  background:var(--b-bg);border-bottom:1px solid var(--b-border);color:var(--b-text);
 }
 .top-banner-inner{
-  max-width:var(--max);margin:0 auto;padding:9px 24px;
-  display:flex;gap:14px;align-items:center;justify-content:center;
-  flex-wrap:wrap;font-size:12.5px;color:var(--text);letter-spacing:.01em;
+  max-width:var(--max);margin:0 auto;padding:9px 48px;
+  display:flex;gap:12px;align-items:center;justify-content:center;
+  flex-wrap:wrap;font-size:12.5px;letter-spacing:.01em;text-align:center;
 }
-.top-banner-inner svg{width:14px;height:14px;flex-shrink:0}
-.top-banner-inner a{font-weight:600;white-space:nowrap;color:var(--gold);text-decoration:none}
-.top-banner-inner a:hover{color:var(--gold2)}
+.top-banner-icon{display:inline-flex;width:16px;height:16px;flex-shrink:0;color:var(--b-accent)}
+.top-banner-icon svg{width:16px;height:16px}
+.top-banner-icon img{width:18px;height:18px;object-fit:contain;border-radius:4px}
+.top-banner-timer{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;color:var(--b-accent);background:rgba(0,0,0,.18);border-radius:6px;padding:2px 8px;white-space:nowrap}
+.top-banner-inner a{font-weight:600;white-space:nowrap;color:var(--b-accent);text-decoration:none}
+.top-banner-inner a:hover{text-decoration:underline}
+.top-banner-close{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:28px;height:28px;border:0;border-radius:8px;background:none;color:var(--b-text);opacity:.6;font-size:20px;line-height:1;cursor:pointer}
+.top-banner-close:hover{opacity:1;background:rgba(0,0,0,.15)}
+@media(max-width:640px){.top-banner-inner{padding:9px 40px 9px 16px;gap:8px}}
 
-/* ─── NAV login pill ───────────────────────────────────────── */
-.nav-login{
-  font-size:13.5px;font-weight:500;color:var(--text);white-space:nowrap;
-  padding:9px 16px;border:1px solid rgba(255,255,255,.18);border-radius:11px;
-  text-decoration:none;transition:color .2s,border-color .2s;flex-shrink:0;
-}
-.nav-login:hover{color:var(--gold);border-color:var(--gold-border)}
 
-.account-btn{display:none;position:relative;flex-shrink:0}
-.nav-right{display:flex;align-items:center;gap:10px;flex-shrink:0;order:2}
-.account-btn.show{display:block}
-.account-pill{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;padding:7px 14px 7px 7px;border:1px solid rgba(255,255,255,.14);border-radius:100px;text-decoration:none;transition:border-color .2s}
-.account-pill:hover{border-color:rgba(255,184,0,.4)}
-.account-avatar{width:26px;height:26px;border-radius:50%;background:rgba(255,184,0,.15);border:1px solid rgba(255,184,0,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.account-avatar svg{width:13px;height:13px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.account-dropdown{position:absolute;top:100%;right:0;padding-top:8px;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .15s,transform .15s,visibility .15s}
-.account-dropdown.open{opacity:1;visibility:visible;transform:translateY(0)}
-.account-dropdown-inner{background:#0D0C0A;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:8px;min-width:200px;box-shadow:0 20px 44px rgba(0,0,0,.5)}
-.dropdown-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;font-size:13.5px;color:var(--text);text-decoration:none;background:none;border:none;width:100%;text-align:left;cursor:pointer}
-.dropdown-item:hover{background:rgba(255,255,255,.05)}
-.dropdown-item svg{width:16px;height:16px;flex-shrink:0;stroke:var(--text2);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.dropdown-divider{height:1px;background:rgba(255,255,255,.08);margin:6px 4px}
-.dropdown-item.danger{color:#F87171}
-.dropdown-item.danger svg{stroke:#F87171}
-.dropdown-item.danger:hover{background:rgba(248,113,113,.1)}
-
-/* ─── START MODAL ──────────────────────────────────────────── */
-.start-modal-overlay{
-  display:none;position:fixed;inset:0;z-index:200;
-  background:rgba(6,6,6,.72);backdrop-filter:blur(6px);
-  align-items:center;justify-content:center;padding:20px;
-}
-.start-modal-overlay.open{display:flex}
-.start-modal{
-  max-width:640px;width:100%;background:#0B0A09;
-  border:1px solid rgba(255,255,255,.1);border-radius:24px;
-  padding:clamp(24px,4vw,40px);position:relative;
-}
-.start-modal-close{
-  position:absolute;top:18px;right:18px;width:32px;height:32px;border-radius:9px;
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
-  color:var(--text2);font-size:18px;line-height:1;cursor:pointer;
-}
-.start-modal-label{
-  font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;
-  letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;
-}
-.start-modal h3{
-  font-family:'Space Grotesk',sans-serif;font-size:clamp(22px,3vw,28px);
-  font-weight:700;line-height:1.15;margin-bottom:10px;
-}
-.start-modal p{color:var(--text2);margin-bottom:26px}
-.start-modal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-.start-modal-opt{
-  display:block;border-radius:18px;padding:22px;text-decoration:none;
-  transition:border-color .2s;
-}
-.start-modal-opt.opt-site{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1)}
-.start-modal-opt.opt-site:hover{border-color:var(--gold-border)}
-.start-modal-opt.opt-tg{background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.3)}
-.start-modal-opt.opt-tg:hover{border-color:rgba(255,184,0,.5)}
-.opt-tag{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
-.opt-tag.tag-site{color:var(--text2)}
-.opt-tag.tag-tg{color:var(--gold)}
-.opt-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
-.opt-text{font-size:13.5px;color:var(--text2);line-height:1.5}
 
 /* ─── HERO (grid + device card) ────────────────────────────── */
 .hero{
@@ -566,79 +464,19 @@ footer{
 <div id="progress"></div>
 <canvas id="bg-canvas"></canvas>
 
-<!-- ═══ TOP BANNER (управляется из админ-панели, раздел "Реклама") ═══ -->
+<!-- ═══ TOP BANNER (управляется из админ-панели, раздел «Баннер») ═══ -->
 <div class="top-banner" id="adBanner" style="display:none">
   <div class="top-banner-inner">
-    <svg viewBox="0 0 24 24" fill="#FFB800"><path id="adBannerIconPath" d="M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z"></path></svg>
+    <span class="top-banner-icon" id="adBannerIcon"></span>
     <span id="adBannerText"></span>
+    <span class="top-banner-timer" id="adBannerTimer" style="display:none"></span>
     <a href="#" id="adBannerLink" style="display:none"></a>
   </div>
+  <button type="button" class="top-banner-close" id="adBannerClose" aria-label="Закрыть" style="display:none">&times;</button>
 </div>
 
 <!-- ═══ NAV ═══════════════════════════════════════════════════ -->
-<nav id="nav">
-  <div class="nav-inner">
-    <a class="nav-logo" href="#">
-      <span class="nav-logo-text">STAR VPN</span>
-    </a>
-    <div class="nav-right">
-      <div class="account-btn" id="account-btn">
-      <a class="account-pill" href="/account" id="account-toggle">
-        <span class="account-avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6"/></svg></span><span id="account-email"></span>
-      </a>
-      <div class="account-dropdown" id="account-dropdown">
-        <div class="account-dropdown-inner">
-          <a class="dropdown-item" href="/account"><svg viewBox="0 0 24 24"><path d="M4 11.5L12 5l8 6.5V20a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1z"/></svg>Подписка</a>
-          <a class="dropdown-item" href="/account"><svg viewBox="0 0 24 24"><path d="M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1M17 7h4v8h-4"/></svg>Устройства</a>
-          <a class="dropdown-item" href="/account"><svg viewBox="0 0 24 24"><path d="M6 14a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 7.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 21a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8.2 10.3l7.6-3.6M8.2 13.7l7.6 3.6"/></svg>Приглашения</a>
-          <a class="dropdown-item" href="/account"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6"/></svg>Профиль</a>
-          <div class="dropdown-divider"></div>
-          <button class="dropdown-item danger" id="account-logout"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Выйти</button>
-        </div>
-      </div>
-    </div>
-      <button class="nav-hamburger" id="navHamburger" aria-label="Меню" type="button" onclick="document.getElementById('navMenu').classList.toggle('open')">
-      <span></span><span></span><span></span>
-    </button>
-    </div>
-        <div class="nav-menu" id="navMenu">
-      <div class="nav-links">
-      <a href="#how">Преимущества</a>
-      <a href="#compare">Сравнение</a>
-      <a href="#apps">Устройства</a>
-      <a href="#faq">Вопросы</a>
-      <a href="/tariffs">Тарифы</a>
-      <a href="/wiki">Wiki</a>
-    </div>
-      <div class="nav-actions">
-      <a class="nav-login" id="nav-login" href="/login">Войти в кабинет</a>
-          <a class="nav-cta" id="nav-start-btn" href="https://t.me/starisvpnbot">2 дня бесплатно</a>
-      </div>
-    </div>
-  </div>
-</nav>
-
-<!-- ═══ START MODAL ═══════════════════════════════════════════════ -->
-<div class="start-modal-overlay" id="start-modal">
-  <div class="start-modal" onclick="event.stopPropagation()">
-    <button class="start-modal-close" id="start-modal-close" aria-label="Закрыть">×</button>
-    <div class="start-modal-label">С чего начать</div>
-    <h3>Как вам удобнее подключиться?</h3>
-    <p>Два равноценных пути к одному и тому же ключу — выберите свой.</p>
-    <div class="start-modal-grid">
-      <a class="start-modal-opt opt-site" href="/login" data-channel="site">
-        <div class="opt-tag tag-site">Личный кабинет</div>
-        <div class="opt-title">Через сайт</div>
-        <div class="opt-text">Вход по email и паролю. Работает, даже если Telegram недоступен.</div>
-      </a>
-      <a class="start-modal-opt opt-tg" href="https://t.me/starisvpnbot" data-channel="telegram">
-        <div class="opt-tag tag-tg">Telegram</div>
-        <div class="opt-title">Через бота</div>
-        <div class="opt-text">@starisvpnbot — подписка, продление и поддержка в одном чате.</div>
-      </a>
-    </div>
-  </div>
-</div>
+<!--SITE_NAV-->
 
 <!-- ═══ HERO ═══════════════════════════════════════════════════ -->
 <section class="hero">
@@ -654,7 +492,7 @@ footer{
       </p>
 
       <div class="hero-buttons">
-        <a class="btn-gold" href="https://t.me/starisvpnbot" id="hero-primary-btn">
+        <a class="btn-gold" href="https://t.me/starisvpnbot" id="hero-primary-btn" data-start>
           <span id="hero-primary-label">Подключиться</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
@@ -1200,35 +1038,72 @@ footer{
   setTimeout(hideSplash, 3500); // на случай медленной загрузки — не держим сплэш вечно
 })();
 
-/* ═══ Рекламный баннер (редактируется из админ-панели) ═══════════ */
-/* Тот же набор ключей — в admin/index.html (BANNER_ICONS), см. AD_BANNER_ICONS в bot/api.py */
-const BANNER_ICONS = {
-  sparkle: 'M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z',
-  star: 'M12 2L14.64 8.36L21.51 8.91L16.28 13.39L17.88 20.09L12 16.5L6.12 20.09L7.72 13.39L2.49 8.91L9.36 8.36Z',
-  fire: 'M12 2c1 3-3 4-3 8a3 3 0 006 0c0-2-1-2-1-4 2 1 3 3 3 6a5 5 0 01-10 0c0-5 3-6 5-10z',
-  gift: 'M4 11h16v10H4zM3 8h18v3H3zM11 8h2v13h-2zM8.5 4a2 2 0 100 4h2v-2a2 2 0 00-2-2zm7 0a2 2 0 010 4h-2v-2a2 2 0 012-2z',
-  percent: 'M6 6a2.5 2.5 0 100 5 2.5 2.5 0 000-5zm12 7a2.5 2.5 0 100 5 2.5 2.5 0 000-5zM17.5 5.5l-11 13 1.5 1.5 11-13z',
-  bell: 'M12 2a1 1 0 011 1v1.06a8 8 0 016 7.74v3l1.6 2.4a1 1 0 01-.83 1.55H5.23a1 1 0 01-.83-1.55L6 14.8v-3a8 8 0 016-7.74V3a1 1 0 011-1zM9.5 20a2.5 2.5 0 005 0h-5z',
-  rocket: 'M12 2c3 2.5 4 6.5 4 9.5 0 2-.7 3.8-1.8 5.1l.3 4.4-2.5-2-2.5 2 .3-4.4C8.7 15.3 8 13.5 8 11.5 8 8.5 9 4.5 12 2zm0 6a2 2 0 100 4 2 2 0 000-4zM6.5 15l-2 5 4-3zM17.5 15l2 5-4-3z',
-  heart: 'M12 21s-7-4.6-9.3-9.1C1.4 9 2.6 5.8 5.6 5c2-.5 3.8.3 4.9 1.9C11.6 5.3 13.4 4.5 15.4 5c3 .8 4.2 4 3 6.9C16 16.4 12 21 12 21z',
-  zap: 'M13 2L3 14h6l-1 8 11-13h-6z',
-  clock: 'M12 2a10 10 0 100 20 10 10 0 000-20zm1 5v5.5l4 2.3-1 1.7-5-3V7z',
-};
+/* ═══ Баннер (редактируется из админ-панели → «Баннер») ═══════════ */
+/* Иконка, цвета и срок приходят из /api/ad-banner (bot/utils/banner.py). */
 (async function loadAdBanner(){
+  const CLOSED_KEY = 'star_banner_closed';
+  const ping = (ev) => fetch('/api/ad-banner/' + ev, { method: 'POST', keepalive: true }).catch(() => {});
   try {
     const r = await fetch('/api/ad-banner');
     const data = await r.json();
     if (!data.enabled || !data.text) return;
+    try { if (data.dismissible && localStorage.getItem(CLOSED_KEY) === String(data.version)) return; } catch (e) {}
+
+    const el = document.getElementById('adBanner');
+    Object.entries(data.style || {}).forEach(([k, v]) => el.style.setProperty('--b-' + k, v));
     document.getElementById('adBannerText').textContent = data.text;
-    const iconPath = BANNER_ICONS[data.icon] || BANNER_ICONS.sparkle;
-    document.getElementById('adBannerIconPath').setAttribute('d', iconPath);
+
+    const icon = document.getElementById('adBannerIcon');
+    if (data.icon_url) {
+      const img = document.createElement('img');
+      img.src = data.icon_url; img.alt = '';
+      icon.appendChild(img);
+    } else {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.setAttribute('fill', 'currentColor');
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('fill-rule', 'evenodd');
+      path.setAttribute('d', data.icon_path);
+      svg.appendChild(path);
+      icon.appendChild(svg);
+    }
+
     const linkEl = document.getElementById('adBannerLink');
     if (data.link_url) {
       linkEl.href = data.link_url;
       linkEl.textContent = (data.link_label || 'Подробнее') + ' →';
+      if (/^https?:/.test(data.link_url)) { linkEl.target = '_blank'; linkEl.rel = 'noopener'; }
       linkEl.style.display = '';
+      linkEl.addEventListener('click', () => ping('click'));
     }
-    document.getElementById('adBanner').style.display = '';
+
+    if (data.ends_at) {
+      const end = new Date(data.ends_at).getTime();
+      const timer = document.getElementById('adBannerTimer');
+      const pad = (n) => String(n).padStart(2, '0');
+      const tick = () => {
+        const left = Math.floor((end - Date.now()) / 1000);
+        if (left <= 0) { el.style.display = 'none'; clearInterval(iv); return; }
+        const d = Math.floor(left / 86400), h = Math.floor(left % 86400 / 3600);
+        const m = Math.floor(left % 3600 / 60), s = left % 60;
+        timer.textContent = (d ? d + ' д ' : '') + pad(h) + ':' + pad(m) + ':' + pad(s);
+      };
+      const iv = setInterval(tick, 1000);
+      tick();
+      timer.style.display = '';
+    }
+
+    if (data.dismissible) {
+      const close = document.getElementById('adBannerClose');
+      close.style.display = '';
+      close.addEventListener('click', () => {
+        el.style.display = 'none';
+        try { localStorage.setItem(CLOSED_KEY, String(data.version)); } catch (e) {}
+      });
+    }
+    el.style.display = '';
+    ping('view');
   } catch (e) { /* баннер просто не покажется */ }
 })();
 
@@ -1237,16 +1112,27 @@ const BANNER_ICONS = {
   const c = document.getElementById('world-map-canvas');
   if (!c) return;
   const markersEl = document.getElementById('world-map-markers');
-  const markerPositions = [
-    { x: '51.4%', y: '20.9%', live: true },   // Амстердам — единственный реально работающий узел
-    { x: '52.4%', y: '22.2%', live: false },  // Франкфурт — скоро
-    { x: '57.0%', y: '16.6%', live: false },  // Хельсинки — скоро
-    { x: '55.0%', y: '17.1%', live: false },  // Стокгольм — скоро
-    { x: '29.4%', y: '27.4%', live: false },  // Нью-Йорк — скоро
+  // Настоящие координаты городов; x/y считаются в той же проекции, что и точки карты.
+  const servers = [
+    { city: 'Амстердам', lat: 52.37, lon: 4.90, live: true },
+    { city: 'Франкфурт', lat: 50.11, lon: 8.68, live: false },
+    { city: 'Хельсинки', lat: 60.17, lon: 24.94, live: false },
+    { city: 'Стокгольм', lat: 59.33, lon: 18.07, live: false },
+    { city: 'Нью-Йорк', lat: 40.71, lon: -74.01, live: false },
   ];
-  markersEl.innerHTML = markerPositions.map(m =>
-    '<span class="map-marker' + (m.live ? '' : ' soon') + '" style="left:' + m.x + ';top:' + m.y + '"></span>'
-  ).join('');
+  const miller = lat => 1.25 * Math.log(Math.tan(Math.PI / 4 + 0.4 * lat * Math.PI / 180));
+  function placeMarkers(d){
+    const [lonL, lonR] = d.lon, [latT, latB] = d.lat;
+    const yT = miller(latT), yB = miller(latB);
+    markersEl.innerHTML = servers.map(m => {
+      let lon = m.lon; if (lon < lonL) lon += 360;
+      const x = (lon - lonL) / (lonR - lonL) * 100;
+      const y = (yT - miller(m.lat)) / (yT - yB) * 100;
+      const pos = 'left:' + x.toFixed(2) + '%;top:' + y.toFixed(2) + '%';
+      return '<span class="map-marker' + (m.live ? '' : ' soon') + '" style="' + pos + '" title="' + m.city + '"></span>'
+        + (m.live ? '<span class="map-marker-label" style="' + pos + '">' + m.city + '</span>' : '');
+    }).join('');
+  }
 
   function draw(){
     const d = window.WORLD_DOTS;
@@ -1259,7 +1145,7 @@ const BANNER_ICONS = {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
     const cw = w / d.cols, ch = h / d.rows;
-    const r = Math.max(0.7, Math.min(cw, ch) * 0.36);
+    const r = Math.max(0.7, Math.min(cw, ch) * 0.38);
     for (const [q, row] of d.dots) {
       const t = 1 - Math.abs(row / d.rows - 0.45) * 0.85;
       ctx.fillStyle = 'rgba(196,178,150,' + (0.30 + 0.42 * Math.max(0, t)).toFixed(3) + ')';
@@ -1270,7 +1156,12 @@ const BANNER_ICONS = {
   }
   function waitForDots(tries){
     tries = tries || 0;
-    if (window.WORLD_DOTS) { draw(); return; }
+    if (window.WORLD_DOTS) {
+      c.parentElement.style.aspectRatio = window.WORLD_DOTS.cols + '/' + window.WORLD_DOTS.rows;
+      placeMarkers(window.WORLD_DOTS);
+      draw();
+      return;
+    }
     if (tries > 80) return;
     setTimeout(() => waitForDots(tries + 1), 60);
   }
@@ -1348,14 +1239,14 @@ document.querySelectorAll('[data-target]').forEach(el => counterIO.observe(el));
 
 /* ═══ Active nav section ═════════════════════════════════════ */
 const sections = document.querySelectorAll('section[id]');
-const navLinks = document.querySelectorAll('.nav-links a');
+const navLinks = document.querySelectorAll('#nav .nav-links a');
 window.addEventListener('scroll', () => {
   let cur = '';
   sections.forEach(s => {
     if(window.scrollY >= s.offsetTop - 120) cur = s.id;
   });
   navLinks.forEach(a => {
-    a.classList.toggle('active', a.getAttribute('href') === '#' + cur);
+    a.classList.toggle('active', a.getAttribute('href') === '/#' + cur);
   });
 }, {passive:true});
 
@@ -1368,47 +1259,6 @@ document.querySelectorAll('.faq-btn').forEach(btn => {
     if(!isOpen) item.classList.add('open');
   });
 });
-
-/* ═══ Nav scroll bg ══════════════════════════════════════════ */
-const nav = document.getElementById('nav');
-window.addEventListener('scroll', () => {
-  nav.style.background = window.scrollY > 40
-    ? 'rgba(6,6,6,0.95)' : 'rgba(6,6,6,0.82)';
-}, {passive:true});
-
-/* ═══ Start modal — всегда спрашивает Telegram/сайт, если не вошли ═ */
-(function(){
-  const overlay = document.getElementById('start-modal');
-  const closeBtn = document.getElementById('start-modal-close');
-  const heroBtn = document.getElementById('hero-primary-btn');
-  const navBtn = document.getElementById('nav-start-btn');
-
-  function openModal(){ overlay.classList.add('open'); }
-  function closeModal(){ overlay.classList.remove('open'); }
-
-  function onStartClick(e){
-    e.preventDefault();
-    fetch('/api/me', { credentials: 'include' })
-      .then(r => { if (r.ok) { window.location.href = '/account'; } else { openModal(); } })
-      .catch(() => openModal());
-  }
-  heroBtn.addEventListener('click', onStartClick);
-  navBtn.addEventListener('click', onStartClick);
-
-  overlay.addEventListener('click', closeModal);
-  closeBtn.addEventListener('click', closeModal);
-
-  document.querySelectorAll('.start-modal-opt').forEach(opt => {
-    opt.addEventListener('click', e => {
-      if (opt.dataset.channel === 'site') {
-        e.preventDefault();
-        fetch('/api/me', { credentials: 'include' })
-          .then(r => { window.location.href = r.ok ? '/account' : '/login'; })
-          .catch(() => { window.location.href = '/login'; });
-      }
-    });
-  });
-})();
 
 /* ═══ Device card copy button ════════════════════════════════ */
 document.querySelectorAll('.device-copy').forEach(btn => {
@@ -1423,37 +1273,5 @@ document.querySelectorAll('.device-copy').forEach(btn => {
 });
 </script>
 
-<script>
-/* ═══ Аккаунт в шапке (если вошёл) ══════════════════════════════ */
-(function(){
-  const navLogin = document.getElementById('nav-login');
-  const accountBtn = document.getElementById('account-btn');
-  const accountToggle = document.getElementById('account-toggle');
-  const accountDropdown = document.getElementById('account-dropdown');
-  const accountEmail = document.getElementById('account-email');
-  if (!navLogin || !accountBtn) return;
-
-  fetch('/api/me', { credentials: 'include' })
-    .then(r => r.ok ? r.json() : Promise.reject())
-    .then(me => {
-      navLogin.style.display = 'none';
-      accountBtn.classList.add('show');
-      accountEmail.textContent = me.email || me.username || 'Аккаунт';
-    })
-    .catch(() => {});
-
-  accountToggle.addEventListener('click', (e) => {
-    e.preventDefault();
-    accountDropdown.classList.toggle('open');
-  });
-  document.addEventListener('click', (e) => {
-    if (!accountBtn.contains(e.target)) accountDropdown.classList.remove('open');
-  });
-  document.getElementById('account-logout').addEventListener('click', async () => {
-    await fetch('/api/account/logout', { method: 'POST' });
-    window.location.href = '/';
-  });
-})();
-</script>
 </body>
 </html>

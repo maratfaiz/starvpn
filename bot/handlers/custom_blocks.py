@@ -8,30 +8,21 @@ inline-входа (партнёрка, поддержка).
 import logging
 
 from aiogram import F, Router
-from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.utils import bot_texts
+from bot.utils.bot_media import send_screen
 
 router = Router()
 logger = logging.getLogger(__name__)
 
 
 async def _send_block(message: Message, block: dict, edit: bool = False) -> None:
-    kwargs = {
-        "parse_mode": "HTML",
-        "reply_markup": bot_texts.block_keyboard(block),
-        "disable_web_page_preview": True,
-    }
-    if edit:
-        try:
-            await message.edit_text(block["text"], **kwargs)
-            return
-        except TelegramBadRequest:
-            # Сообщение с фото/ключом или без изменений — отправим новое.
-            pass
-    await message.answer(block["text"], **kwargs)
+    await send_screen(
+        message, block["text"], image=block.get("image") or "",
+        reply_markup=bot_texts.block_keyboard(block), edit=edit, disable_web_page_preview=True,
+    )
 
 
 @router.callback_query(F.data.startswith("cb:"))
@@ -55,7 +46,10 @@ async def open_referral(callback: CallbackQuery, session: AsyncSession) -> None:
 @router.callback_query(F.data == "scr:support")
 async def open_support(callback: CallbackQuery) -> None:
     from bot.handlers.start import support_text
-    await callback.message.answer(support_text(), parse_mode="HTML", disable_web_page_preview=True)
+    await send_screen(
+        callback.message, support_text(), image=bot_texts.image_for("support.text"),
+        disable_web_page_preview=True,
+    )
     await callback.answer()
 
 

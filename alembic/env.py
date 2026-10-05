@@ -21,6 +21,9 @@ import bot.models.app_setting       # noqa: F401
 import bot.models.admin_account     # noqa: F401
 import bot.models.admin_session     # noqa: F401
 import bot.models.ad_banner         # noqa: F401
+import bot.models.bot_content       # noqa: F401
+import bot.models.media_file        # noqa: F401
+import bot.models.admin_role        # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

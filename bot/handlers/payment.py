@@ -35,7 +35,8 @@ from bot.models.device import Device
 from bot.models.payment import Payment
 from bot.models.user import User
 from bot.utils.marzban import marzban
-from bot.utils.bot_texts import MenuText, t
+from bot.utils.bot_media import send_screen
+from bot.utils.bot_texts import MenuText, image_for, t
 from bot.handlers.gift import handle_gift_payment
 
 router = Router()
@@ -259,15 +260,12 @@ async def _stars_enabled(session: AsyncSession) -> bool:
 async def show_plans(message: Message, session: AsyncSession) -> None:
     if not await _stars_enabled(session):
         from bot.handlers.profile import _pay_choice_kb, pay_choice_text
-        await message.answer(
-            await pay_choice_text(), parse_mode="HTML", reply_markup=await _pay_choice_kb(),
+        await send_screen(
+            message, await pay_choice_text(), image=image_for("pay.choose"),
+            reply_markup=await _pay_choice_kb(),
         )
         return
-    await message.answer(
-        t("plans.text"),
-        parse_mode="HTML",
-        reply_markup=_plans_keyboard(),
-    )
+    await send_screen(message, t("plans.text"), image=image_for("plans.text"), reply_markup=_plans_keyboard())
 
 
 @router.callback_query(F.data == "show_plans")
@@ -275,15 +273,14 @@ async def show_plans_inline(callback: CallbackQuery, session: AsyncSession) -> N
     """Вызывается из инлайн-кнопок стартового сообщения."""
     if not await _stars_enabled(session):
         from bot.handlers.profile import _pay_choice_kb, pay_choice_text
-        await callback.message.answer(
-            await pay_choice_text(), parse_mode="HTML", reply_markup=await _pay_choice_kb(),
+        await send_screen(
+            callback.message, await pay_choice_text(), image=image_for("pay.choose"),
+            reply_markup=await _pay_choice_kb(),
         )
         await callback.answer()
         return
-    await callback.message.answer(
-        t("plans.text"),
-        parse_mode="HTML",
-        reply_markup=_plans_keyboard(),
+    await send_screen(
+        callback.message, t("plans.text"), image=image_for("plans.text"), reply_markup=_plans_keyboard(),
     )
     await callback.answer()
 
@@ -403,9 +400,8 @@ async def on_stars_payment(message: Message, session: AsyncSession) -> None:
     exp = user.subscription_expires_at
     exp_str = exp.strftime("%d.%m.%Y") if exp else "—"
 
-    await message.answer(
-        t("paid.text", plan=plan["label"], expires=exp_str),
-        parse_mode="HTML",
+    await send_screen(
+        message, t("paid.text", plan=plan["label"], expires=exp_str), image=image_for("paid.text"),
         reply_markup=main_keyboard(user),
     )
 
@@ -431,9 +427,8 @@ async def trial_menu(message: Message, session: AsyncSession) -> None:
         )
         return
 
-    await message.answer(
-        t("trial.offer"),
-        parse_mode="HTML",
+    await send_screen(
+        message, t("trial.offer"), image=image_for("trial.offer"),
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text=t("btn.activate_trial"), callback_data="activate_trial")]
         ]),
@@ -462,9 +457,8 @@ async def activate_trial(callback: CallbackQuery, session: AsyncSession) -> None
     await session.refresh(user)
 
     from bot.handlers.start import main_keyboard
-    await callback.message.answer(
-        t("trial.activated", days=settings.trial_days),
-        parse_mode="HTML",
-        reply_markup=main_keyboard(user),
+    await send_screen(
+        callback.message, t("trial.activated", days=settings.trial_days),
+        image=image_for("trial.activated"), reply_markup=main_keyboard(user),
     )
     await callback.answer()

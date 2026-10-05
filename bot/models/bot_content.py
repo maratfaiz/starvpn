@@ -39,6 +39,8 @@ class BotBlock(Base):
     text: Mapped[str] = mapped_column(Text, nullable=False, default="")
     # JSON: [{"label": "…", "type": "block"|"screen"|"url", "target": "…"}]
     buttons: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    # Картинка над текстом: "media:<id>" (загружена в админке) или https://…
+    image: Mapped[str] = mapped_column(String(500), nullable=False, default="")
     show_in_menu: Mapped[bool] = mapped_column(Boolean, default=False)
     menu_label: Mapped[str] = mapped_column(String(64), nullable=False, default="")
     # Команда без слэша ("help" → /help); пусто — без команды.
