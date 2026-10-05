@@ -323,7 +323,8 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
             <a class="btn-ghost" href="/wiki">Как подключить</a>
           </div>
         </div>
-        <div class="trial-note" id="trialNote" style="display:none">Пробный период — <span id="trialDaysLbl">2</span> дня, выдаётся один раз на аккаунт. Карта не нужна.</div>
+        <div class="trial-note" id="trialNote" style="display:none">Пробный период — <span id="trialDaysLbl">2 дня</span>, выдаётся один раз на Telegram-аккаунт. Карта не нужна.</div>
+        <div class="trial-note" id="trialTgNote" style="display:none">Пробный период выдаётся один раз на Telegram-аккаунт — <a href="/api/telegram-oauth/start">войдите через Telegram</a>, чтобы его получить.</div>
       </div>
 
       <div class="card key-card" id="subKeyCard" style="display:none">
@@ -704,17 +705,22 @@ function renderStatus() {
   document.getElementById('sideDaysFill').style.width = Math.max(3, Math.min(100, Math.round(days / totalDays * 100))) + '%';
 
   const trialCard = !active && !ME.trial_used;
+  // Email-аккаунтам пробный период не выдаётся (иначе — новый email, новый пробный).
+  const trialAvailable = trialCard && ME.telegram_linked;
   const activateBtn = document.getElementById('activateTrialBtn');
   const trialNote = document.getElementById('trialNote');
-  activateBtn.style.display = trialCard ? 'block' : 'none';
-  trialNote.style.display = trialCard ? 'block' : 'none';
-  document.getElementById('trialDaysLbl').textContent = ME.trial_days || 2;
+  activateBtn.style.display = trialAvailable ? 'block' : 'none';
+  trialNote.style.display = trialAvailable ? 'block' : 'none';
+  document.getElementById('trialTgNote').style.display = trialCard && !trialAvailable ? 'block' : 'none';
+  document.getElementById('trialDaysLbl').textContent = ruDays(ME.trial_days || 2);
 
   // "Продлить" не имеет смысла, пока у аккаунта вообще не было подписки —
   // ни разу не активировался пробный период, ни разу не покупали.
+  // Без доступного пробного (email-аккаунт) кнопка ведёт к покупке.
   const neverHadSubscription = trialCard;
-  document.getElementById('renewSubBtn').style.display = neverHadSubscription ? 'none' : '';
-  document.getElementById('sideRenewBtn').style.display = neverHadSubscription ? 'none' : '';
+  document.getElementById('renewSubBtn').style.display = trialAvailable ? 'none' : '';
+  document.getElementById('renewSubBtn').textContent = neverHadSubscription ? 'Купить подписку' : 'Продлить подписку';
+  document.getElementById('sideRenewBtn').style.display = trialAvailable ? 'none' : '';
 
   const card = document.getElementById('overviewCard');
   card.classList.toggle('inactive', !active);
@@ -785,6 +791,13 @@ async function logout() {
   window.location.href = '/';
 }
 
+function ruDays(n) {
+  const m10 = n % 10, m100 = n % 100;
+  const word = m10 === 1 && m100 !== 11 ? 'день'
+    : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? 'дня' : 'дней';
+  return `${n} ${word}`;
+}
+
 async function activateTrial() {
   const btn = document.getElementById('activateTrialBtn');
   btn.disabled = true;
@@ -793,7 +806,7 @@ async function activateTrial() {
     const r = await API('/api/trial', {method: 'POST'});
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || 'Не удалось активировать');
-    showToast(`Пробный период на ${data.days} дня активирован`);
+    showToast(`Пробный период на ${ruDays(data.days)} активирован`);
     const me = await API('/api/me');
     ME = await me.json();
     renderStatus();

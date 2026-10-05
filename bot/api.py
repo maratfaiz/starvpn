@@ -1791,8 +1791,8 @@ async def gift_link_claim(code: str, request: Request, x_telegram_init_data: str
 
 @app.post("/api/trial")
 async def activate_trial_api(request: Request, x_telegram_init_data: str | None = Header(default=None)):
-    """Активировать пробный период (2 дня). Только один раз на аккаунт.
-    Работает и для Mini App (initData), и для веб-аккаунта (star_session cookie)."""
+    """Активировать пробный период. Один раз на Telegram-аккаунт: Mini App
+    (initData) или вход на сайте через Telegram. Email-аккаунтам не выдаётся."""
     async with AsyncSessionLocal() as session:
         tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         result = await session.execute(select(User).where(User.telegram_id == tg_id))
@@ -1803,6 +1803,13 @@ async def activate_trial_api(request: Request, x_telegram_init_data: str | None 
             raise HTTPException(status_code=400, detail="Пробный период уже был активирован")
         if user.is_banned:
             raise HTTPException(status_code=403, detail="Аккаунт заблокирован")
+        if tg_id <= 0:
+            # Пробный период — один на Telegram-аккаунт. Email-аккаунт можно
+            # завести на любой новый адрес, и каждый давал ещё N дней бесплатно.
+            raise HTTPException(
+                status_code=403,
+                detail="Пробный период доступен только при входе через Telegram",
+            )
 
         # Дни добавляются к текущему сроку: раньше тут было «сейчас + 2 дня»,
         # и оплативший подписку, но не бравший пробный, терял оплаченное.
