@@ -12,7 +12,6 @@
   POST /crypto/webhook (api.py) → выдаём подписку → уведомляем
 """
 
-import html
 import logging
 
 from aiogram import Bot, Router, F
@@ -151,14 +150,19 @@ async def handle_crypto_webhook(
     """
     Вызывается из /crypto/webhook после верификации подписи.
     Поддерживает обычные платежи и подарки (payload начинается с 'gift:').
+
+    Отметка об оплате и выдача подписки — одна транзакция (единственный
+    коммит внутри _grant_subscription): если выдача упала, откатывается и
+    отметка, исключение уходит в api.py, и вебхук можно доставить повторно.
+    Повторная доставка после успеха ничего не делает — pending-строки нет.
     """
     from datetime import datetime
+    from bot.handlers.card_payment import _notify_gift_recipient
     from bot.handlers.payment import _credit_referral, _grant_subscription
 
     is_gift = invoice_payload.startswith("gift:")
 
     async with AsyncSessionLocal() as session:
-        # Атомарно: повторная доставка вебхука не выдаст подписку второй раз.
         claimed = await session.execute(
             update(Payment)
             .where(
@@ -170,12 +174,13 @@ async def handle_crypto_webhook(
             .returning(Payment.id)
         )
         payment_id = claimed.scalar_one_or_none()
-        await session.commit()
         if payment_id is None:
+            await session.rollback()
             logger.warning("Crypto webhook: no pending payment for invoice_id=%s", invoice_id)
             return
         payment = await session.get(Payment, payment_id)
         days = payment.days or 30
+        plan_label = {30: "1 месяц", 90: "3 месяца", 180: "6 месяцев"}.get(days, f"{days} дней")
 
         if is_gift:
             # Формат payload: gift:{plan_key}:{recipient_id}:{anon}:{sender_id}
@@ -183,6 +188,12 @@ async def handle_crypto_webhook(
             recipient_id = int(parts[2]) if len(parts) > 2 else payment.telegram_id
             anon = parts[3] == "1" if len(parts) > 3 else False
             sender_id = int(parts[4]) if len(parts) > 4 else payment.telegram_id
+            # Счета, выставленные до появления этих полей, заполняем из payload —
+            # от них зависят имя дарителя и запись о подарке.
+            payment.is_gift = True
+            if payment.gift_sender_id is None:
+                payment.gift_sender_id = sender_id
+                payment.gift_anon = anon
 
             recipient_result = await session.execute(
                 select(User).where(User.telegram_id == recipient_id)
@@ -193,33 +204,12 @@ async def handle_crypto_webhook(
                 await session.commit()
                 return
 
-            await _grant_subscription(recipient, days, session)
+            await _grant_subscription(recipient, days, session)  # коммитит и отметку
+            # Уведомление получателю (Telegram + окно о подарке в мини-аппе/
+            # кабинете) и личное сообщение — как у подарков Stars и картой.
+            await _notify_gift_recipient(payment, recipient, plan_label, bot, session)
 
-            # Уведомляем получателя
-            plan_label = {30: "1 месяц", 90: "3 месяца", 180: "6 месяцев"}.get(days, f"{days} дней")
-            sender_result = await session.execute(
-                select(User).where(User.telegram_id == sender_id)
-            )
-            sender: User | None = sender_result.scalar_one_or_none()
-            sender_name = (
-                f"@{sender.username}" if sender and sender.username
-                else (sender.full_name if sender else "Аноним")
-            ) if not anon else "Аноним"
-
-            try:
-                await bot.send_message(
-                    recipient_id,
-                    f"🎁 <b>Тебе подарили STAR VPN!</b>\n\n"
-                    f"От: <b>{html.escape(sender_name or 'Аноним')}</b>\n"
-                    f"📦 Тариф: <b>{plan_label}</b>\n\n"
-                    f"VPN активирован 🚀 Перейди в <b>📱 Устройства</b> за ключом.",
-                    parse_mode="HTML",
-                    reply_markup=main_keyboard(recipient),
-                )
-            except Exception as e:
-                logger.error("Gift notify recipient error: %s", e)
-
-            # Уведомляем дарителя
+            sender = await session.get(User, sender_id)
             try:
                 await bot.send_message(
                     sender_id,
@@ -244,10 +234,12 @@ async def handle_crypto_webhook(
                 await session.commit()
                 return
 
-            await _grant_subscription(user, days, session)
-            await _credit_referral(user, session, bot)
+            await _grant_subscription(user, days, session)  # коммитит и отметку
+            try:
+                await _credit_referral(user, session, bot)
+            except Exception:
+                logger.exception("Crypto webhook: referral credit failed, invoice=%s", invoice_id)
 
-            plan_label = {30: "1 месяц", 90: "3 месяца", 180: "6 месяцев"}.get(days, f"{days} дней")
             try:
                 await bot.send_message(
                     payment.telegram_id,

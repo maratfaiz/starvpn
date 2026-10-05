@@ -6,14 +6,20 @@
   2. Выбирает способ оплаты: ⭐ Stars или 💎 Крипта  (GiftForm.pay_method)
   3. Вводит @username или ID получателя (GiftForm.recipient)
   4. Выбирает: анонимно или нет (GiftForm.anon_choice)
-  5. Пишет личное сообщение (GiftForm.personal_message, только для Stars; можно пропустить)
+  5. Пишет личное сообщение (GiftForm.personal_message; можно пропустить)
   6. Stars  → answer_invoice (XTR)
      Крипта → create_invoice CryptoPay → ссылка на @CryptoBot
   7. После оплаты → подписка активируется получателю, оба получают уведомления
+
+Подарок сохраняется pending-платежом (Payment.is_gift + gift_*) ещё до
+оплаты — личное сообщение и анонимность берутся оттуда. Раньше сообщение
+лежало в памяти процесса и терялось при рестарте, а у крипты не
+сохранялось вовсе.
 """
 
 import html
 import logging
+import uuid
 
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
@@ -35,19 +41,12 @@ from bot.states.payment_states import GiftForm
 from bot.utils.cryptopay import cryptopay, CRYPTO_PLANS
 from bot.utils.database import AsyncSessionLocal
 from bot.utils.bot_texts import MenuText
+from bot.utils.plans import STARS_PLANS
 
 router = Router()
 logger = logging.getLogger(__name__)
 
-PLANS: dict[str, dict] = {
-    "plan_1m": {"days": 30,  "stars": 99,  "label": "1 месяц",   "desc": "30 дней безлимитного VPN"},
-    "plan_3m": {"days": 90,  "stars": 200, "label": "3 месяца",  "desc": "90 дней · скидка 11%"},
-    "plan_6m": {"days": 180, "stars": 370, "label": "6 месяцев", "desc": "180 дней · скидка 18%"},
-}
-
-# Временное хранилище личных сообщений до подтверждения оплаты (только Stars)
-# ключ: "sender_id:recipient_id"
-_pending_messages: dict[str, str] = {}
+PLANS = STARS_PLANS
 
 
 def _cancel_kb() -> InlineKeyboardMarkup:
@@ -238,24 +237,13 @@ async def gift_enter_recipient(message: Message, state: FSMContext, session: Asy
     )
 
 
-# ──────────────────────── Шаг 5 — личное сообщение (только Stars) ───────────
+# ──────────────────────── Шаг 5 — личное сообщение ──────────────────────────
 
 @router.callback_query(F.data.startswith("gift_anon:"), GiftForm.anon_choice)
 async def gift_choose_anon(callback: CallbackQuery, state: FSMContext) -> None:
     anon = callback.data.split(":", 1)[1]
     await state.update_data(gift_anon=anon)
 
-    data = await state.get_data()
-    method = data.get("gift_method", "stars")
-
-    if method == "crypto":
-        # Для крипты личное сообщение не поддерживается — сразу к оплате
-        await state.update_data(gift_personal_message="")
-        await callback.answer()
-        await _send_gift_invoice(callback.message, state, data, "")
-        return
-
-    # Stars — спрашиваем личное сообщение
     await state.set_state(GiftForm.personal_message)
     await callback.message.edit_text(
         "✍️ <b>Хочешь добавить личное сообщение получателю?</b>\n\n"
@@ -311,6 +299,17 @@ async def _send_gift_invoice(
 
     anon_label = "Анонимно 🕵️" if anon == "1" else "От твоего имени 👤"
 
+    async with AsyncSessionLocal() as session:
+        recipient = await session.get(User, recipient_id)
+        if not recipient or recipient.is_banned:
+            await msg.answer("❌ Получатель не найден. Начни заново.")
+            return
+
+    gift_fields = dict(
+        telegram_id=recipient_id, days=plan["days"], is_gift=True, gift_sender_id=sender_id,
+        gift_anon=anon == "1", gift_message=personal_message or None, status="pending",
+    )
+
     if method == "crypto":
         # ── Крипто-подарок ──────────────────────────────────────────────────
         crypto_plan = CRYPTO_PLANS.get(plan_key)
@@ -338,16 +337,13 @@ async def _send_gift_invoice(
 
         # Сохраняем pending-платёж в БД
         async with AsyncSessionLocal() as session:
-            payment = Payment(
+            session.add(Payment(
                 order_id=f"crypto_gift_{invoice_id}",
-                telegram_id=sender_id,
                 amount=float(crypto_plan["usd"]),
-                status="pending",
                 payment_method="crypto",
                 invoice_id=invoice_id,
-                days=plan["days"],
-            )
-            session.add(payment)
+                **gift_fields,
+            ))
             await session.commit()
 
         kb = InlineKeyboardMarkup(inline_keyboard=[
@@ -371,10 +367,8 @@ async def _send_gift_invoice(
 
     else:
         # ── Stars-подарок ────────────────────────────────────────────────────
-        if personal_message:
-            _pending_messages[f"{sender_id}:{recipient_id}"] = personal_message
-
-        payload = f"gift:{plan_key}:{recipient_id}:{anon}"
+        payment_id = await create_stars_gift_payment(plan["stars"], gift_fields)
+        payload = stars_gift_payload(plan_key, recipient_id, anon, payment_id)
         msg_label = (
             f"\n✍️ Сообщение: <i>{html.escape(personal_message[:50])}{'...' if len(personal_message) > 50 else ''}</i>"
             if personal_message else ""
@@ -397,6 +391,40 @@ async def _send_gift_invoice(
         )
 
 
+async def create_stars_gift_payment(stars: int, gift_fields: dict) -> int:
+    """Pending-платёж для подарка за Stars (бот и Mini App). Возвращает его id —
+    он уходит в payload счёта, по нему после оплаты берутся сообщение и
+    анонимность."""
+    async with AsyncSessionLocal() as session:
+        payment = Payment(
+            order_id=f"stars_gift_{uuid.uuid4().hex}",
+            amount=float(stars),
+            payment_method="stars",
+            **gift_fields,
+        )
+        session.add(payment)
+        await session.commit()
+        return payment.id
+
+
+def stars_gift_payload(plan_key: str, recipient_id: int, anon: str, payment_id: int) -> str:
+    return f"gift:{plan_key}:{recipient_id}:{anon}:{payment_id}"
+
+
+def parse_stars_gift_payload(payload: str) -> tuple[str, int, bool, int | None] | None:
+    """gift:{plan}:{recipient}:{anon}[:{payment_id}] → (plan, recipient, anon, payment_id).
+    Четырёхчастный формат — счета, выставленные до появления pending-платежа."""
+    parts = payload.split(":")
+    if len(parts) not in (4, 5) or parts[0] != "gift":
+        return None
+    try:
+        recipient_id = int(parts[2])
+        payment_id = int(parts[4]) if len(parts) == 5 else None
+    except ValueError:
+        return None
+    return parts[1], recipient_id, parts[3] == "1", payment_id
+
+
 # ──────────────────────── Отмена ─────────────────────────────────────────────
 
 @router.callback_query(F.data == "gift:cancel")
@@ -416,37 +444,53 @@ async def handle_gift_payment(
     payload: str,
     session: AsyncSession,
 ) -> None:
-    """Вызывается из payment.py при успешной оплате gift-invoice (Stars)."""
-    try:
-        parts = payload.split(":", 3)
-        if len(parts) != 4:
-            raise ValueError("wrong parts count")
-        _, plan_key, recipient_id_str, anon_str = parts
-    except ValueError:
+    """Вызывается из payment.py при успешной оплате gift-invoice (Stars):
+    отмечает платёж оплаченным вместе с выдачей подписки получателю и
+    уведомляет обоих."""
+    from datetime import datetime
+
+    parsed = parse_stars_gift_payload(payload)
+    plan = STARS_PLANS.get(parsed[0]) if parsed else None
+    if not parsed or not plan:
         logger.error("Malformed gift payload: %s", payload)
         return
+    _, recipient_id, anon, payment_id = parsed
 
-    plan = PLANS.get(plan_key)
-    if not plan:
-        logger.error("Unknown plan in gift payload: %s", plan_key)
-        return
-
-    recipient_id = int(recipient_id_str)
-    anon = anon_str == "1"
     sender_id = message.from_user.id
+    stars = message.successful_payment.total_amount
+    charge_id = message.successful_payment.telegram_payment_charge_id
+    order_id = f"gift_{sender_id}_{charge_id}"
 
-    # Достаём личное сообщение
-    personal_message = _pending_messages.pop(f"{sender_id}:{recipient_id}", "")
+    payment = await session.get(Payment, payment_id) if payment_id else None
+    if payment and payment.status == "pending":
+        payment.status = "paid"
+        payment.paid_at = datetime.utcnow()
+        payment.order_id = order_id
+        anon = payment.gift_anon
+    else:
+        # Счёт старого формата (без pending-платежа) — записываем оплату сейчас.
+        payment = Payment(
+            order_id=order_id, telegram_id=recipient_id, amount=float(stars), status="paid",
+            paid_at=datetime.utcnow(), payment_method="stars", days=plan["days"], is_gift=True,
+            gift_sender_id=sender_id, gift_anon=anon,
+        )
+        session.add(payment)
+    personal_message = payment.gift_message or ""
 
-    result = await session.execute(select(User).where(User.telegram_id == recipient_id))
-    recipient: User | None = result.scalar_one_or_none()
+    buyer = await session.get(User, sender_id)
+    if buyer:
+        buyer.total_stars_paid = (buyer.total_stars_paid or 0) + stars
+
+    recipient = await session.get(User, recipient_id)
     if not recipient:
+        # Сюда не доходит: pre_checkout отклоняет счёт без получателя.
+        await session.commit()
         await message.answer("❌ Получатель не найден. Обратись в поддержку.")
         return
 
     # Активируем подписку получателю — та же логика, что при обычной оплате:
-    # продлеваются и включаются все его устройства. Раньше продлевался только
-    # старый «основной» аккаунт, а без него создавалось лишнее устройство.
+    # продлеваются и включаются все его устройства. Коммит один — вместе
+    # с отметкой об оплате.
     from bot.handlers.payment import _grant_subscription
     await _grant_subscription(recipient, plan["days"], session)
 

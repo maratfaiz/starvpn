@@ -158,10 +158,9 @@ async def conn_show_key(callback: CallbackQuery, session: AsyncSession) -> None:
 
     await callback.answer("⏳")
     try:
-        now = datetime.utcnow()
-        exp = user.subscription_expires_at
-        days_left = max(1, (exp - now).days) if exp and exp > now else 30
-        mz = await marzban.get_or_create_user(mz_username, tg_id, days_left)
+        # При истёкшей подписке не пересоздаём пользователя Marzban
+        # (раньше создавался на 30 дней — бесплатный VPN).
+        mz = await marzban.get_or_create_user(mz_username, tg_id, user.subscription_expires_at)
         link = set_vless_remark(marzban.extract_vless_link(mz))
     except Exception as e:
         logger.error("Marzban get_or_create failed for %s: %s", mz_username, e)

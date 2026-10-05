@@ -220,10 +220,9 @@ async def show_link(callback: CallbackQuery, session: AsyncSession) -> None:
         return
 
     try:
-        now = datetime.utcnow()
-        exp = user.subscription_expires_at
-        days_left = max(1, (exp - now).days) if exp and exp > now else 30
-        mz = await marzban.get_or_create_user(mz_username, tg_id, days_left)
+        # При истёкшей подписке не пересоздаём пользователя Marzban
+        # (раньше создавался на 30 дней — бесплатный VPN).
+        mz = await marzban.get_or_create_user(mz_username, tg_id, user.subscription_expires_at)
     except Exception as e:
         logger.error("Marzban error for %s: %s", mz_username, e)
         await callback.answer("Ошибка получения ссылки.", show_alert=True)

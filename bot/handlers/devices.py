@@ -10,12 +10,14 @@
       [Тип] → создание в Marzban → QR + ключ
       [Устройство] → карточка: статус / трафик / онлайн + [🔑 Ключ] [🗑 Удалить]
 
-Marzban username: {type}_tg_{username_or_id}
+Marzban username: tg_{telegram_id}_d{n} (web_{id}_d{n} для веб-аккаунтов) —
+см. new_device_mz_username.
 """
 
 import logging
 from datetime import datetime
 
+import httpx
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
@@ -77,29 +79,28 @@ def _type_label(name: str) -> str:
     return dt["label"] if dt else name
 
 
-def _mz_username_for_type(
-    type_key: str,
-    telegram_id: int,
-    username: str | None,
-    existing: list[str],
-) -> str:
-    """Генерирует Marzban username: {type}_tg_{ident}[2..9].
+async def new_device_mz_username(telegram_id: int, session: AsyncSession) -> str:
+    """Имя пользователя Marzban для нового устройства: tg_{id}_d{n}.
 
-    Marzban принимает имена не длиннее 32 символов — длинный @username
-    обрезается, иначе создание устройства падало для таких пользователей.
+    Раньше имя строилось из Telegram @username ({type}_tg_{username}) и
+    подбиралось только среди активных устройств. Отсюда два бага:
+    повторное добавление удалённого устройства того же типа падало на
+    UNIQUE (строка удалённого устройства остаётся в БД), а @username можно
+    освободить и занять другим человеком — его новое устройство попадало
+    в чужого пользователя Marzban. Теперь в имени telegram_id (он уникален),
+    а n не повторяется ни с одним устройством пользователя, включая
+    удалённые: у нового устройства всегда новый ключ.
+    Веб-аккаунты (отрицательный id) — web_{id}_d{n}; длина ≤ 32 символов.
     """
-    ident = username.lower() if username else (
-        f"web{-telegram_id}" if telegram_id < 0 else str(telegram_id)
+    ident = f"tg_{telegram_id}" if telegram_id > 0 else f"web_{-telegram_id}"
+    rows = await session.execute(
+        select(Device.marzban_username).where(Device.telegram_id == telegram_id)
     )
-    ident = ident[:32 - len(f"{type_key}9_tg_") - 2]
-    base = f"{type_key}_tg_{ident}"
-    if base not in existing:
-        return base
-    for i in range(2, 10):
-        candidate = f"{type_key}{i}_tg_{ident}"
-        if candidate not in existing:
-            return candidate
-    return f"{type_key}_tg_{ident}_x"
+    taken = set(rows.scalars().all())
+    n = 1
+    while f"{ident}_d{n}" in taken:
+        n += 1
+    return f"{ident}_d{n}"
 
 
 async def _get_devices(telegram_id: int, session: AsyncSession) -> list[Device]:
@@ -319,10 +320,8 @@ async def dev_add_type(callback: CallbackQuery, session: AsyncSession) -> None:
         await callback.answer("Нет свободных слотов.", show_alert=True)
         return
 
-    existing_mz = [d.marzban_username for d in devices]
-    mz_username = _mz_username_for_type(type_key, tg_id, user.username, existing_mz)
+    mz_username = await new_device_mz_username(tg_id, session)
     dt = DEVICE_TYPES[type_key]
-    days_left = max(1, (user.subscription_expires_at - now).days)
 
     await callback.message.edit_text(
         f"⏳ Создаю конфигурацию для <b>{dt['icon']} {dt['label']}</b>...",
@@ -333,7 +332,7 @@ async def dev_add_type(callback: CallbackQuery, session: AsyncSession) -> None:
     link: str | None = None
     try:
         mz = await marzban.provision_user(
-            mz_username, tg_id, days_left,
+            mz_username, tg_id, user.subscription_expires_at,
             note=f"device|type:{type_key}|slot:{slot}|tg:{tg_id}", ip_limit=1,
         )
         link = set_vless_remark(marzban.extract_vless_link(mz), type_key)
@@ -439,7 +438,7 @@ async def dev_show_link(callback: CallbackQuery, session: AsyncSession) -> None:
     result = await session.execute(select(Device).where(Device.id == dev_id))
     dev = result.scalar_one_or_none()
 
-    if not dev or dev.telegram_id != callback.from_user.id:
+    if not dev or dev.telegram_id != callback.from_user.id or not dev.is_active:
         await callback.answer("Устройство не найдено.", show_alert=True)
         return
 
@@ -447,13 +446,24 @@ async def dev_show_link(callback: CallbackQuery, session: AsyncSession) -> None:
 
     user_r = await session.execute(select(User).where(User.telegram_id == dev.telegram_id))
     owner = user_r.scalar_one_or_none()
-    now = datetime.utcnow()
     exp = owner.subscription_expires_at if owner else None
-    days_left = max(1, (exp - now).days) if exp and exp > now else 30
 
     try:
-        mz = await marzban.get_or_create_user(dev.marzban_username, dev.telegram_id, days_left)
+        # При истёкшей подписке пользователь Marzban заново не создаётся
+        # (раньше создавался на 30 дней — бесплатный VPN).
+        mz = await marzban.get_or_create_user(dev.marzban_username, dev.telegram_id, exp)
         link = set_vless_remark(marzban.extract_vless_link(mz), dev.name)
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 404 and not (exp and exp > datetime.utcnow()):
+            await callback.message.answer(
+                "⛔ Подписка истекла — продли её, и ключ снова станет доступен."
+            )
+            return
+        logger.error("dev:link failed for %s: %s", dev.marzban_username, e)
+        await callback.message.answer(
+            "❌ Не удалось получить ключ. Попробуй ещё раз или напиши в поддержку."
+        )
+        return
     except Exception as e:
         logger.error("dev:link failed for %s: %s", dev.marzban_username, e)
         await callback.message.answer(
