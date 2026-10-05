@@ -109,3 +109,43 @@ async def test_stars_gift_keeps_personal_message(session, fake_marzban, bot):
     assert await _pre_checkout_error(session, 40, payload) is not None
     rows = (await session.execute(select(Payment))).scalars().all()
     assert len(rows) == 1
+
+
+async def test_crypto_gift_webhook_delivers_message_and_popup(session, fake_marzban, bot):
+    from bot.handlers.crypto_payment import handle_crypto_webhook
+    from bot.models.gift_notification import GiftNotification
+
+    await make_user(session, 50, username="giver")
+    await make_user(session, 51)
+    session.add(Payment(
+        order_id="crypto_gift_777", telegram_id=51, amount=1.5, status="pending",
+        payment_method="crypto", invoice_id=777, days=30, is_gift=True,
+        gift_sender_id=50, gift_anon=False, gift_message="Держи VPN",
+    ))
+    await session.commit()
+
+    payload = "gift:plan_1m:51:0:50"
+    await handle_crypto_webhook(777, "USDT", bot, payload)
+    await handle_crypto_webhook(777, "USDT", bot, payload)  # повторная доставка
+
+    async with AsyncSessionLocal() as s:
+        recipient = await s.get(User, 51)
+        days = (recipient.subscription_expires_at - datetime.utcnow()).days
+        assert 29 <= days <= 30
+        notifs = (await s.execute(select(GiftNotification))).scalars().all()
+        assert len(notifs) == 1 and notifs[0].sender_name == "@giver"
+    to_recipient = [text for chat, text in bot.sent if chat == 51]
+    assert len(to_recipient) == 1 and "Держи VPN" in to_recipient[0]
+    assert any(chat == 50 for chat, _ in bot.sent)
+
+
+async def test_regrant_does_not_resurrect_deleted_legacy_device(session, fake_marzban):
+    await make_user(session, 60, marzban_username="tg_60")
+    await fake_marzban.create_user(60, datetime.utcnow(), username="tg_60")
+    session.add(Device(telegram_id=60, slot=1, name="ios", marzban_username="tg_60",
+                       is_active=False))
+    await session.commit()
+    user = await session.get(User, 60)
+    await _grant_subscription(user, 30, session)  # раньше — IntegrityError на UNIQUE
+    devices = (await session.execute(select(Device))).scalars().all()
+    assert len(devices) == 1 and not devices[0].is_active
