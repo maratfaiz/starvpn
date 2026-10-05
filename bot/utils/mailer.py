@@ -7,6 +7,7 @@
 """
 
 import asyncio
+import html
 import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -75,3 +76,22 @@ async def send_ticket_reply_email(to_email: str, ticket_subject: str, reply: str
     except Exception as e:
         logger.error("Не удалось отправить ответ на тикет %s: %s", to_email, e)
         raise
+
+
+async def send_subscription_email(to_email: str, subject: str, text: str) -> None:
+    """Уведомление о подписке (скоро истекает / истекла) для веб-аккаунтов
+    без Telegram — им бот написать не может."""
+    if not settings.smtp_host:
+        logger.warning("SMTP не настроен — письмо «%s» для %s не отправлено", subject, to_email)
+        return
+
+    account_url = f"{settings.site_url.rstrip('/')}/account"
+    text_body = f"{text}\n\nЛичный кабинет: {account_url}"
+    html_body = f"""
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#060606;color:#EBE0CC">
+      <h2 style="color:#FFB800;margin:0 0 16px">STAR VPN</h2>
+      <p style="white-space:pre-wrap">{html.escape(text)}</p>
+      <p style="margin-top:24px"><a href="{account_url}" style="color:#FFB800">Открыть личный кабинет</a></p>
+    </div>
+    """
+    await asyncio.to_thread(_send_sync, to_email, subject, text_body, html_body)
