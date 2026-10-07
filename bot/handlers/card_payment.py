@@ -135,9 +135,15 @@ async def card_pay(callback: CallbackQuery) -> None:
 async def handle_card_webhook(payment_id: int, bot: Bot, out_sum: str | None = None) -> None:
     """
     Вызывается из /card/webhook после верификации подписи Robokassa.
-    Robokassa повторяет ResultURL, пока не получит OK, — поэтому платёж
-    помечается оплаченным атомарно (UPDATE … WHERE status='pending'), и
-    повтор не выдаёт подписку второй раз.
+
+    Платёж помечается оплаченным (UPDATE … WHERE status='pending') в той же
+    транзакции, что и выдача подписки: коммит один — внутри
+    _grant_subscription. Если выдача упала, откатывается и отметка об
+    оплате, исключение уходит в api.py, тот отвечает Robokassa не-OK, и она
+    повторяет запрос. Раньше отметка коммитилась отдельно до выдачи: при
+    ошибке деньги списывались, а подписка не выдавалась уже никогда.
+    Повтор после успешной выдачи безопасен: UPDATE не найдёт pending-строку
+    (параллельный повтор ждёт блокировку строки и тоже ничего не находит).
     """
     from datetime import datetime
     from bot.handlers.payment import _credit_referral, _grant_subscription
@@ -157,11 +163,10 @@ async def handle_card_webhook(payment_id: int, bot: Bot, out_sum: str | None = N
             .where(Payment.id == payment_id, Payment.status == "pending")
             .values(status="paid", paid_at=datetime.utcnow())
         )
-        await session.commit()
         if claimed.rowcount != 1:
+            await session.rollback()
             logger.info("Card webhook: payment id=%s already processed", payment_id)
             return
-        await session.refresh(payment)
         days = payment.days or 30
 
         if payment.gift_link_code:
@@ -184,11 +189,14 @@ async def handle_card_webhook(payment_id: int, bot: Bot, out_sum: str | None = N
             await session.commit()
             return
 
-        await _grant_subscription(user, days, session)
+        await _grant_subscription(user, days, session)  # коммитит и отметку об оплате
         if not payment.is_gift:
-            # Первая оплата друга по реферальной ссылке — бонус рефереру
-            # (раньше засчитывались только оплаты звёздами).
-            await _credit_referral(user, session, bot)
+            # Первая оплата друга по реферальной ссылке — бонус рефереру.
+            # Подписка уже выдана: ошибка тут не должна вызывать повтор вебхука.
+            try:
+                await _credit_referral(user, session, bot)
+            except Exception:
+                logger.exception("Card webhook: referral credit failed for id=%s", payment_id)
 
         plan_label = {30: "1 месяц", 90: "3 месяца", 180: "6 месяцев"}.get(days, f"{days} дней")
 

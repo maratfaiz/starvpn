@@ -125,14 +125,20 @@ async def cmd_start(
             full_name=full_name,
         )
 
-        if command.args and command.args.startswith("ref") and command.args[3:].isdigit():
-            referrer_id = int(command.args[3:])
+        # ref<id>; у веб-аккаунтов id отрицательный — ref-<id> (раньше такие
+        # ссылки молча не засчитывались).
+        ref_arg = command.args[3:] if command.args and command.args.startswith("ref") else ""
+        if ref_arg.removeprefix("-").isdigit():
+            referrer_id = int(ref_arg)
             # referral_count — число ОПЛАТИВШИХ друзей (его увеличивает только
             # _credit_referral при первой оплате). Раньше он рос уже здесь, на
             # /start, и бонус «за 2 оплативших» выдавался за одного.
             if referrer_id != tg_id and await session.get(User, referrer_id):
                 user.referrer_id = referrer_id
 
+        if user.username:
+            from bot.middlewares.user_sync import release_username
+            await release_username(session, user.username, tg_id)
         session.add(user)
         await session.commit()
         await session.refresh(user)

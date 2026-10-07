@@ -87,10 +87,30 @@ SITE_NAV_MARKER = "<!--SITE_NAV-->"
 _SITE_NAV_FILE = Path(__file__).resolve().parent.parent.parent / "landing" / "_nav.html"
 
 
+def ru_days(n: int) -> str:
+    """3 → «3 дня», 5 → «5 дней», 21 → «21 день»."""
+    if n % 10 == 1 and n % 100 != 11:
+        word = "день"
+    elif 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14:
+        word = "дня"
+    else:
+        word = "дней"
+    return f"{n} {word}"
+
+
+# Страницы свёрстаны под пробный период в 2 дня; при другом TRIAL_DAYS эти
+# фразы подставляются из настроек, чтобы сайт не обещал не тот срок.
+_TEMPLATE_TRIAL_PHRASES = ("2 дня бесплатно", "Бесплатные 2 дня", "пробный период — 2 дня")
+
+
 def brand_html(page: str) -> str:
     from bot.config import settings
     if SITE_NAV_MARKER in page:
         page = page.replace(SITE_NAV_MARKER, _SITE_NAV_FILE.read_text(encoding="utf-8"), 1)
+    if settings.trial_days != 2:
+        days = ru_days(settings.trial_days)
+        for phrase in _TEMPLATE_TRIAL_PHRASES:
+            page = page.replace(phrase, phrase.replace("2 дня", days))
     bot = settings.bot_username.lstrip("@")
     support = settings.support_username.lstrip("@")
     if bot and bot != _TEMPLATE_BOT:

@@ -16,6 +16,7 @@ from bot.utils import admin_auth, bot_texts
 from bot.utils.wiki_page import seed_wiki_articles
 from bot.middlewares.db import DbSessionMiddleware
 from bot.middlewares.ban import BanMiddleware
+from bot.middlewares.user_sync import UserSyncMiddleware
 from bot.handlers import admin, start, payment, profile, referral, instructions, gift, devices, crypto_payment, card_payment, custom_blocks
 from bot.tasks.scheduler import scheduler_loop
 
@@ -57,6 +58,8 @@ async def main() -> None:
     dp.message.middleware(DbSessionMiddleware())
     dp.callback_query.middleware(DbSessionMiddleware())
     dp.pre_checkout_query.middleware(DbSessionMiddleware())
+    dp.message.middleware(UserSyncMiddleware())
+    dp.callback_query.middleware(UserSyncMiddleware())
     dp.message.middleware(BanMiddleware())
     dp.callback_query.middleware(BanMiddleware())
 
@@ -73,17 +76,17 @@ async def main() -> None:
     dp.include_router(card_payment.router)
     dp.include_router(custom_blocks.router)
 
-    # FastAPI (Mini App API) — порт 8080
+    # FastAPI (Mini App API) — порт WEBHOOK_PORT (по умолчанию 8080)
     api_config = uvicorn.Config(
         fastapi_app,
-        host="0.0.0.0",
-        port=8080,
+        host=settings.webhook_host,
+        port=settings.webhook_port,
         log_level="warning",
         access_log=False,
     )
     api_server = uvicorn.Server(api_config)
 
-    logger.info("STAR VPN bot + API + Scheduler starting (API on :8080)...")
+    logger.info("STAR VPN bot + API + Scheduler starting (API on :%s)...", settings.webhook_port)
     await asyncio.gather(
         dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types()),
         api_server.serve(),

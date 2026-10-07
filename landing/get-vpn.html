@@ -206,7 +206,7 @@ footer{border-top:1px solid rgba(255,255,255,.07)}
     <div class="faq-card"><div class="faq-q">Зачем регистрация, если это "покупка без бота"?</div><div class="faq-a">Ключ привязан к аккаунту — так его можно продлить, увидеть остаток дней и восстановить, если ссылка потеряется. "Без бота" означает, что открывать Telegram-бота не нужно — регистрация всё равно нужна.</div></div>
     <div class="faq-card"><div class="faq-q">Нужен ли паспорт?</div><div class="faq-a">Нет. Ни оплата картой через Robokassa, ни оплата криптовалютой не требуют от вас документов.</div></div>
     <div class="faq-card"><div class="faq-q">А если у меня только email, без Telegram?</div><div class="faq-a">Регистрируйтесь по email и платите картой — для этого способа Telegram не нужен вообще. А вот оплата криптовалютой проходит через @CryptoBot, для неё Telegram всё же понадобится.</div></div>
-    <div class="faq-card"><div class="faq-q">Работает ли здесь пробный период?</div><div class="faq-a">Бесплатные 2 дня выдаются один раз на аккаунт и активируются в личном кабинете или в боте.</div></div>
+    <div class="faq-card"><div class="faq-q">Работает ли здесь пробный период?</div><div class="faq-a">Бесплатные 2 дня выдаются один раз на Telegram-аккаунт: в боте или в личном кабинете при входе через Telegram. Аккаунтам, созданным по email, пробный период не выдаётся.</div></div>
     <div class="faq-card"><div class="faq-q">Чем это отличается от покупки в боте?</div><div class="faq-a">Ничем в итоге — тот же аккаунт, тот же ключ. Просто регистрация и оплата проходят на сайте, а не в переписке с ботом.</div></div>
     <div class="faq-card"><div class="faq-q">Что если платёж прошёл, а ключа нет?</div><div class="faq-a">Загляните в личный кабинет — обычно ключ появляется в течение минуты. Если нет, напишите в поддержку с номером заказа.</div></div>
   </div>
@@ -253,7 +253,7 @@ footer{border-top:1px solid rgba(255,255,255,.07)}
 /* ═══ Шаг 1 · Тариф → Шаг 2 · Аккаунт → Шаг 3 · Оплата ═══════════ */
 const PENDING_KEY = 'star_vpn_pending_purchase';
 
-let selectedPlan = null;      // {key, days, rub, label, desc}
+let selectedPlan = null;      // {key, days, rub, usd, label, desc}; key "custom" — свой срок
 let selectedProvider = null;  // 'card' | 'crypto'
 let isAuthed = false;
 let cardPlans = [];
@@ -266,10 +266,17 @@ const payNoteEl = document.getElementById('pay-note');
 const step2El = document.getElementById('step2');
 const step3El = document.getElementById('step3');
 
+// ?days=N со слайдера «Свой срок» на /tariffs.
+const requestedDays = (() => {
+  const d = parseInt(new URLSearchParams(location.search).get('days') || '', 10);
+  return Number.isFinite(d) ? d : null;
+})();
+
 function renderPlanEl(p){
   const el = document.createElement('div');
   el.className = 'plan';
-  el.innerHTML = `<div><div class="plan-label">${p.label}</div><div class="plan-desc">${p.desc}</div></div><div class="plan-price">от ${p.rub} ₽</div>`;
+  const price = p.rub == null ? `$${p.usd}` : p.key === 'custom' ? `${p.rub} ₽` : `от ${p.rub} ₽`;
+  el.innerHTML = `<div><div class="plan-label">${p.label}</div><div class="plan-desc">${p.desc}</div></div><div class="plan-price">${price}</div>`;
   el.addEventListener('click', () => selectPlan(p, el));
   return el;
 }
@@ -278,7 +285,7 @@ function selectPlan(p, el){
   selectedPlan = p;
   document.querySelectorAll('.plan').forEach(x => x.classList.remove('sel'));
   el.classList.add('sel');
-  try { localStorage.setItem(PENDING_KEY, JSON.stringify({ plan: p.key })); } catch (e) {}
+  try { localStorage.setItem(PENDING_KEY, JSON.stringify({ plan: p.key, days: p.days })); } catch (e) {}
   refreshStep3();
 }
 
@@ -291,6 +298,9 @@ function selectProvider(provider, el){
 }
 
 function priceFor(provider, planKey){
+  if (planKey === 'custom') {
+    return provider === 'card' && cardPlans.length && selectedPlan ? `${selectedPlan.rub} ₽` : null;
+  }
   const list = provider === 'crypto' ? cryptoPlans : cardPlans;
   const plan = list.find(p => p.key === planKey);
   if (!plan) return null;
@@ -322,7 +332,8 @@ function refreshStep3(){
   if (!price) {
     buyBtn.disabled = true;
     buyBtn.classList.remove('ready');
-    buyBtn.textContent = 'Способ временно недоступен';
+    buyBtn.textContent = selectedPlan.key === 'custom' && selectedProvider === 'crypto'
+      ? 'Свой срок — только картой' : 'Способ временно недоступен';
     return;
   }
   buyBtn.disabled = false;
@@ -336,7 +347,8 @@ function refreshStep3(){
 async function loadPlans(){
   let plans = [];
   try {
-    const res = await fetch('/api/guest/plans');
+    const url = requestedDays ? `/api/site/plans?days=${requestedDays}` : '/api/site/plans';
+    const res = await fetch(url);
     plans = await res.json();
   } catch (e) { /* ниже покажем плейсхолдер, если ничего не осталось */ }
 
@@ -352,7 +364,11 @@ async function loadPlans(){
   plans.forEach(p => {
     const el = renderPlanEl(p);
     plansEl.appendChild(el);
-    if (pending && pending.plan === p.key) toSelect = { p, el };
+    // Приоритет — срок из ссылки (?days=N), затем отложенная покупка.
+    const wanted = requestedDays
+      ? p.days === requestedDays
+      : pending && pending.plan === p.key && (p.key !== 'custom' || pending.days === p.days);
+    if (wanted && !toSelect) toSelect = { p, el };
   });
   if (toSelect) selectPlan(toSelect.p, toSelect.el);
 }
@@ -415,7 +431,8 @@ buyBtn.addEventListener('click', async () => {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan: selectedPlan.key }),
+      body: JSON.stringify(selectedPlan.key === 'custom'
+        ? { days: selectedPlan.days } : { plan: selectedPlan.key }),
     });
     if (!res.ok) throw new Error('checkout failed');
     const data = await res.json();

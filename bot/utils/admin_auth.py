@@ -168,7 +168,8 @@ async def register_admin(
     """Создаёт аккаунт админ-панели по инвайт-ключу.
 
     Мастер-ключ (settings.admin_web_key) даёт ранг 'admin' с собственным
-    invite_key для будущих приглашений. Личный invite_key существующего
+    invite_key для будущих приглашений — только пока нет ни одного
+    активного admin. Личный invite_key существующего
     'admin' даёт ранг 'worker' (без права приглашать дальше).
     Поднимает ValueError("bad_invite_key" | "username_taken")."""
     username = username.strip()
@@ -184,6 +185,17 @@ async def register_admin(
     invite_key = invite_key.strip()
     inviter: AdminAccount | None = None
     if settings.admin_web_key and hmac.compare_digest(invite_key, settings.admin_web_key):
+        # Мастер-ключ — только для самого первого admin. Раньше он работал
+        # вечно: утёкший ADMIN_WEB_KEY давал сколько угодно новых admin.
+        # Если активных admin не осталось (все отключены), ключ снова
+        # работает — иначе в панель было бы не попасть.
+        active_admin = (await session.execute(
+            select(AdminAccount.id).where(
+                AdminAccount.rank == "admin", AdminAccount.is_active.is_(True),
+            ).limit(1)
+        )).scalar_one_or_none()
+        if active_admin is not None:
+            raise ValueError("bad_invite_key")
         rank = "admin"
     else:
         inviter = (await session.execute(

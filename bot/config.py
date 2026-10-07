@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     robokassa_password2: str = Field("", env="ROBOKASSA_PASSWORD2")  # for verifying ResultURL webhooks
     robokassa_test_mode: bool = Field(False, env="ROBOKASSA_TEST_MODE")
 
-    # Webhook server (receives Robokassa ResultURL callbacks)
+    # HTTP-сервер: API мини-аппа/сайта и вебхуки Robokassa/CryptoPay
     webhook_host: str = Field("0.0.0.0", env="WEBHOOK_HOST")
     webhook_port: int = Field(8080, env="WEBHOOK_PORT")
 
@@ -69,11 +69,7 @@ class Settings(BaseSettings):
     telegram_oauth_client_secret: str = Field("", env="TELEGRAM_OAUTH_CLIENT_SECRET")
 
     # Business config
-    subscription_price_rub: int = Field(100, env="SUBSCRIPTION_PRICE_RUB")
-    subscription_days: int = Field(30, env="SUBSCRIPTION_DAYS")
     trial_days: int = Field(2, env="TRIAL_DAYS")
-    referral_commission_pct: float = Field(15.0, env="REFERRAL_COMMISSION_PCT")
-    min_topup: int = Field(50, env="MIN_TOPUP")
 
     class Config:
         env_file = ".env"

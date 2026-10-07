@@ -37,6 +37,7 @@ from bot.models.user import User
 from bot.utils.marzban import marzban
 from bot.utils.bot_media import send_screen
 from bot.utils.bot_texts import MenuText, image_for, t
+from bot.utils.plans import STARS_PLANS
 from bot.handlers.gift import handle_gift_payment
 
 router = Router()
@@ -87,11 +88,7 @@ def _instructions_kb() -> InlineKeyboardMarkup:
 # Обработчики instr:* живут только в instructions.py — дубликаты удалены
 
 
-PLANS: dict[str, dict] = {
-    "plan_1m": {"days": 30,  "stars": 99,  "label": "1 месяц",   "desc": "30 дней безлимитного VPN"},
-    "plan_3m": {"days": 90,  "stars": 249, "label": "3 месяца",  "desc": "90 дней · скидка 16%"},
-    "plan_6m": {"days": 180, "stars": 449, "label": "6 месяцев", "desc": "180 дней · скидка 25%"},
-}
+PLANS = STARS_PLANS
 
 REFERRAL_DAYS_BONUS = 30      # дней рефереру за каждую пачку оплативших рефералов
 REFERRAL_MILESTONE_SIZE = 2   # сколько оплативших рефералов нужно для одной пачки
@@ -112,47 +109,54 @@ REFERRAL_ACHIEVEMENTS = [
 # ---------------------------------------------------------------------------
 
 async def _grant_subscription(user: User, days: int, session: AsyncSession) -> None:
-    """Создать или продлить аккаунт в Marzban, продлить все устройства и обновить БД."""
-    from sqlalchemy import select as sa_select
-    devices_result = await session.execute(
-        sa_select(Device).where(Device.telegram_id == user.telegram_id, Device.is_active.is_(True))
-    )
-    dev_list = list(devices_result.scalars().all())
+    """Добавить days к подписке: в БД и у всех устройств в Marzban, и закоммитить.
 
-    # Продление заодно включает устройства, выключенные по истечении подписки
-    # (кроме забаненных — их доступ включает только разбан).
-    activate = not user.is_banned
-    if dev_list:
-        for dev in dev_list:
-            try:
-                await marzban.extend_user(dev.marzban_username, days, activate=activate)
-            except Exception as e:
-                logger.warning("Marzban extend device %s failed: %s", dev.marzban_username, e)
-    elif user.marzban_username:
-        # Старый формат (без устройств) — продлеваем основной аккаунт
-        try:
-            await marzban.extend_user(user.marzban_username, days, activate=activate)
-        except Exception as e:
-            logger.error("Marzban extend failed for %s: %s", user.marzban_username, e)
-        # Создаём запись в devices для миграции
-        dev = Device(
-            telegram_id=user.telegram_id,
-            slot=1,
-            name="ios",
-            marzban_username=user.marzban_username,
-        )
-        session.add(dev)
-    else:
-        # Новый пользователь — подписка активирована, устройство добавят сами
-        pass
+    Новый срок считается один раз (от текущего, если он в будущем, иначе
+    от сейчас) и выставляется устройствам ровно таким же — раньше каждое
+    устройство продлевалось от своего срока в Marzban, и сроки расходились.
+    Продление заодно включает устройства, выключенные по истечении
+    подписки (кроме забаненных — их доступ включает только разбан).
 
+    Коммит — единственный в функции: вызывающий код может до вызова
+    изменить другие строки (например, пометить платёж оплаченным), и они
+    сохранятся вместе с продлением — или не сохранятся вовсе."""
     now = datetime.utcnow()
     base = (
         user.subscription_expires_at
         if user.subscription_expires_at and user.subscription_expires_at > now
         else now
     )
-    user.subscription_expires_at = base + timedelta(days=days)
+    new_expiry = base + timedelta(days=days)
+
+    devices_result = await session.execute(
+        select(Device).where(Device.telegram_id == user.telegram_id, Device.is_active.is_(True))
+    )
+    names = [d.marzban_username for d in devices_result.scalars().all()]
+
+    if not names and user.marzban_username:
+        # Старый формат (один аккаунт без устройств) — переносим в devices.
+        # Если такое устройство уже есть, но удалено пользователем, —
+        # не воскрешаем его (и не ловим UNIQUE на повторной вставке).
+        existing = await session.execute(
+            select(Device.id).where(Device.marzban_username == user.marzban_username)
+        )
+        if existing.scalar_one_or_none() is None:
+            session.add(Device(
+                telegram_id=user.telegram_id,
+                slot=1,
+                name="ios",
+                marzban_username=user.marzban_username,
+            ))
+            names.append(user.marzban_username)
+
+    activate = not user.is_banned
+    for name in names:
+        try:
+            await marzban.set_expire(name, new_expiry, activate=activate)
+        except Exception as e:
+            logger.warning("Marzban set_expire %s failed: %s", name, e)
+
+    user.subscription_expires_at = new_expiry
     await session.commit()
 
 
@@ -308,60 +312,71 @@ async def send_invoice(callback: CallbackQuery) -> None:
 # ---------------------------------------------------------------------------
 
 @router.pre_checkout_query()
-async def pre_checkout(query: PreCheckoutQuery) -> None:
-    await query.answer(ok=True)
+async def pre_checkout(query: PreCheckoutQuery, session: AsyncSession) -> None:
+    """Последний момент, когда можно отказаться от платежа до списания звёзд.
+    Раньше здесь всегда был ok=True: звёзды списывались и за неизвестный
+    тариф, и за подарок несуществующему получателю, и при выключенных Stars."""
+    error = await _pre_checkout_error(query, session)
+    if error:
+        await query.answer(ok=False, error_message=error)
+    else:
+        await query.answer(ok=True)
+
+
+async def _pre_checkout_error(query: PreCheckoutQuery, session: AsyncSession) -> str | None:
+    from bot.handlers.gift import parse_stars_gift_payload
+
+    payload = query.invoice_payload or ""
+    if not await _stars_enabled(session):
+        return "Оплата Stars сейчас недоступна. Выберите другой способ оплаты."
+    buyer = await session.get(User, query.from_user.id)
+    if not buyer:
+        return "Сначала отправьте боту /start."
+    if buyer.is_banned:
+        return "Аккаунт заблокирован."
+
+    if payload.startswith("gift:"):
+        parsed = parse_stars_gift_payload(payload)
+        if not parsed or parsed[0] not in PLANS:
+            return "Неизвестный тариф."
+        _, recipient_id, _, payment_id = parsed
+        if payment_id is not None:
+            gift = await session.get(Payment, payment_id)
+            if not gift or gift.status != "pending" or gift.gift_sender_id != buyer.telegram_id:
+                return "Счёт устарел — оформите подарок заново."
+        recipient = await session.get(User, recipient_id)
+        if not recipient or recipient.is_banned:
+            return "Получатель не найден."
+        return None
+
+    if payload not in PLANS:
+        return "Неизвестный тариф."
+    return None
+
+
+@router.callback_query(F.data == "gift:start")
+async def gift_start_from_plans(callback: CallbackQuery) -> None:
+    """Переход к подарку из меню тарифов — тот же экран, что у кнопки
+    «🎁 Подарить» (с учётом включённых способов оплаты). Раньше здесь
+    отправлялся ReplyKeyboardRemove, и у пользователя пропадало главное меню."""
+    from bot.handlers.gift import gift_start
+    await gift_start(callback.message)
+    await callback.answer()
 
 
 # ---------------------------------------------------------------------------
 # successful_payment — активация подписки
 # ---------------------------------------------------------------------------
 
-@router.callback_query(F.data == "gift:start")
-async def gift_start_from_plans(callback: CallbackQuery) -> None:
-    """Переход к подарку из меню тарифов."""
-    from aiogram.types import ReplyKeyboardRemove
-    await callback.message.answer(
-        "🎁 Нажми кнопку ниже в меню:",
-        reply_markup=ReplyKeyboardRemove(),
-    )
-    # Эмулируем нажатие "🎁 Подарить VPN" — просто отправим текст
-    await callback.message.answer("🎁 <b>Подарить подписку STAR VPN</b>\n\n"
-        "Выбери тарифный план для подарка:", parse_mode="HTML",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            *[[InlineKeyboardButton(
-                text=f"{plan['label']} — {plan['stars']} ⭐",
-                callback_data=f"gift_plan:{key}",
-            )] for key, plan in PLANS.items()],
-            [InlineKeyboardButton(text="❌ Отмена", callback_data="gift:cancel")],
-        ]),
-    )
-    await callback.answer()
-
-
 @router.message(F.successful_payment)
 async def on_stars_payment(message: Message, session: AsyncSession) -> None:
     payment: SuccessfulPayment = message.successful_payment
     plan_key = payment.invoice_payload
 
-    # Обработка подарочных инвойсов
+    # Подарочные инвойсы: запись о платеже, звёзды покупателя и подписка
+    # получателю — внутри handle_gift_payment.
     if plan_key.startswith("gift:"):
         await handle_gift_payment(message, plan_key, session)
-        # Сохранить платёж
-        tg_id = message.from_user.id
-        stars = payment.total_amount
-        db_payment = Payment(
-            order_id=f"gift_{tg_id}_{payment.telegram_payment_charge_id}",
-            telegram_id=tg_id,
-            amount=float(stars),
-            status="paid",
-            paid_at=datetime.utcnow(),
-        )
-        session.add(db_payment)
-        result = await session.execute(select(User).where(User.telegram_id == tg_id))
-        buyer = result.scalar_one_or_none()
-        if buyer:
-            buyer.total_stars_paid = (buyer.total_stars_paid or 0) + stars
-        await session.commit()
         return
 
     plan = PLANS.get(plan_key)
@@ -376,24 +391,23 @@ async def on_stars_payment(message: Message, session: AsyncSession) -> None:
     if not user:
         return
 
-    await _grant_subscription(user, plan["days"], session)
-    await session.refresh(user)  # баг 4: обновляем объект после commit
-
     stars = payment.total_amount
-
-    await _credit_referral(user, session, message.bot)
-    await _notify_admin_purchase(message.bot, user, plan)
-
-    db_payment = Payment(
+    # Запись о платеже коммитится вместе с продлением (коммит в _grant_subscription).
+    session.add(Payment(
         order_id=f"stars_{tg_id}_{payment.telegram_payment_charge_id}",
         telegram_id=tg_id,
         amount=float(stars),
         status="paid",
+        payment_method="stars",
+        days=plan["days"],
         paid_at=datetime.utcnow(),
-    )
-    session.add(db_payment)
+    ))
     user.total_stars_paid = (user.total_stars_paid or 0) + stars
-    await session.commit()
+    await _grant_subscription(user, plan["days"], session)
+    await session.refresh(user)  # баг 4: обновляем объект после commit
+
+    await _credit_referral(user, session, message.bot)
+    await _notify_admin_purchase(message.bot, user, plan)
 
     # Обновляем reply-клавиатуру + красивое сообщение об успехе
     from bot.handlers.start import main_keyboard

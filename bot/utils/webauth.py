@@ -88,6 +88,9 @@ async def get_or_create_user_by_telegram_id(
     на сайте — реальный (положительный) telegram_id, а не синтетический."""
     r = await session.execute(select(User).where(User.telegram_id == telegram_id))
     user = r.scalar_one_or_none()
+    if username:
+        from bot.middlewares.user_sync import release_username
+        await release_username(session, username, telegram_id)
     if user:
         if username and user.username != username:
             user.username = username
@@ -201,3 +204,21 @@ async def delete_web_session(raw_token: str, session: AsyncSession) -> None:
     if ws:
         await session.delete(ws)
         await session.commit()
+
+
+async def reset_password(email: str, raw_code: str, new_password: str, session: AsyncSession) -> User | None:
+    """Сброс пароля по коду из письма: новый пароль, все старые веб-сессии
+    удаляются (кто знал старый пароль — выходит). Возвращает пользователя
+    или None, если код неверный / аккаунта нет."""
+    from sqlalchemy import delete
+
+    email = email.lower().strip()
+    user = (await session.execute(select(User).where(User.email == email))).scalar_one_or_none()
+    if not user or not user.email_verified:
+        return None
+    if not await check_verification_code(email, raw_code, session):
+        return None
+    user.password_hash = hash_password(new_password)
+    await session.execute(delete(WebSession).where(WebSession.user_id == user.telegram_id))
+    await session.commit()
+    return user

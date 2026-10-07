@@ -135,6 +135,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
           <div class="err-line" id="loginErr"></div>
           <button type="submit" class="btn" id="loginBtn">Войти</button>
         </form>
+        <a class="back-link" href="#" id="forgotLink">Забыли пароль?</a>
       </div>
 
       <div id="registerForm" style="display:none">
@@ -174,6 +175,26 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
       </form>
       <button class="resend-btn" id="resendBtn">Отправить код ещё раз</button>
       <a class="back-link" href="#" id="backLink">← Назад</a>
+    </div>
+
+    <!-- ─── Сброс пароля ───────────────────────────────────────── -->
+    <div class="pane" id="resetPane">
+      <h2>Сброс пароля</h2>
+      <p class="card-sub" id="resetSub">Пришлём код на почту, указанную при регистрации.</p>
+      <form id="resetEmailFormEl">
+        <label class="field-label" for="resetEmail">Email</label>
+        <input type="email" id="resetEmail" placeholder="you@example.com" required>
+        <button type="submit" class="btn" id="resetSendBtn">Получить код</button>
+      </form>
+      <form id="resetFormEl" style="display:none">
+        <label class="field-label" for="resetCode">Код из письма</label>
+        <input type="text" id="resetCode" inputmode="numeric" maxlength="6" placeholder="000000" required>
+        <label class="field-label" for="resetPassword">Новый пароль</label>
+        <input type="password" id="resetPassword" placeholder="Минимум 8 символов" required>
+        <button type="submit" class="btn" id="resetBtn">Сменить пароль и войти</button>
+      </form>
+      <div class="err-line" id="resetErr"></div>
+      <a class="back-link" href="#" id="resetBackLink">← Назад ко входу</a>
     </div>
 
   </div>
@@ -318,6 +339,64 @@ document.getElementById('codeFormEl').addEventListener('submit', async (e) => {
     setErr(codeErr, 'Проблема с соединением. Попробуйте ещё раз.');
   } finally {
     btn.disabled = false; btn.textContent = 'Подтвердить';
+  }
+});
+
+/* ── Сброс пароля ─────────────────────────────────────────── */
+const resetPane = document.getElementById('resetPane');
+const resetErr = document.getElementById('resetErr');
+document.getElementById('forgotLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  authPane.classList.remove('show');
+  resetPane.classList.add('show');
+  document.getElementById('resetEmail').value = document.getElementById('loginEmail').value.trim();
+  document.getElementById('resetEmailFormEl').style.display = 'block';
+  document.getElementById('resetFormEl').style.display = 'none';
+  setErr(resetErr, '');
+});
+document.getElementById('resetBackLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  resetPane.classList.remove('show');
+  showAuthPane('login');
+});
+document.getElementById('resetEmailFormEl').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('resetEmail').value.trim();
+  const btn = document.getElementById('resetSendBtn');
+  setErr(resetErr, '');
+  btn.disabled = true; btn.textContent = 'Отправляем…';
+  try {
+    const r = await API('/api/account/forgot-password', {method: 'POST', body: JSON.stringify({email})});
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { setErr(resetErr, data.detail || 'Не удалось отправить код'); return; }
+    pendingEmail = email;
+    document.getElementById('resetSub').textContent = `Если ${email} зарегистрирован, на него придёт код. Введите его и новый пароль.`;
+    document.getElementById('resetEmailFormEl').style.display = 'none';
+    document.getElementById('resetFormEl').style.display = 'block';
+    document.getElementById('resetCode').focus();
+  } catch (err) {
+    setErr(resetErr, 'Проблема с соединением. Попробуйте ещё раз.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Получить код';
+  }
+});
+document.getElementById('resetFormEl').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const code = document.getElementById('resetCode').value.trim();
+  const password = document.getElementById('resetPassword').value;
+  const btn = document.getElementById('resetBtn');
+  setErr(resetErr, '');
+  if (password.length < 8) { setErr(resetErr, 'Пароль должен быть от 8 символов'); return; }
+  btn.disabled = true; btn.textContent = 'Сохраняем…';
+  try {
+    const r = await API('/api/account/reset-password', {method: 'POST', body: JSON.stringify({email: pendingEmail, code, password})});
+    if (r.ok) { window.location.href = '/account'; return; }
+    const data = await r.json().catch(() => ({}));
+    setErr(resetErr, data.detail || 'Неверный или устаревший код');
+  } catch (err) {
+    setErr(resetErr, 'Проблема с соединением. Попробуйте ещё раз.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Сменить пароль и войти';
   }
 });
 

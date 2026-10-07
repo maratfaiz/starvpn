@@ -565,7 +565,10 @@ async def broadcast_confirm(cb: CallbackQuery, session: AsyncSession) -> None:
     if not text:
         await cb.answer("Нет текста.", show_alert=True); return
     await cb.message.edit_reply_markup(reply_markup=None)
-    ids = list((await session.execute(select(User.telegram_id))).scalars().all())
+    # Веб-аккаунты (отрицательный id) в Telegram не адресуемы, забаненным не пишем.
+    ids = list((await session.execute(
+        select(User.telegram_id).where(User.telegram_id > 0, User.is_banned.is_(False))
+    )).scalars().all())
     status_msg = await cb.message.answer(
         f"📢 Рассылка <b>{len(ids)}</b> пользователям...", parse_mode="HTML"
     )
