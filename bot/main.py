@@ -12,7 +12,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from bot.api import app as fastapi_app
 from bot.config import settings
 from bot.utils.database import init_db, AsyncSessionLocal
-from bot.utils import admin_auth, bot_texts
+from bot.utils import admin_auth, app_config, bot_texts
 from bot.utils.wiki_page import seed_wiki_articles
 from bot.middlewares.db import DbSessionMiddleware
 from bot.middlewares.ban import BanMiddleware
@@ -38,7 +38,8 @@ async def main() -> None:
 
     async with AsyncSessionLocal() as session:
         await bot_texts.load_cache(session)
-    logger.info("Bot texts cache warmed.")
+        await app_config.load_cache(session)
+    logger.info("Bot texts and settings cache warmed.")
 
     try:
         async with AsyncSessionLocal() as session:

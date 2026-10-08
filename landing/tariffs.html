@@ -145,22 +145,22 @@ footer{border-top:1px solid rgba(255,255,255,.07);padding:0}
     <div class="plan-card" data-days="30" onclick="selectDays(30)">
       <div class="plan-label">1 месяц</div>
       <div class="plan-desc">30 дней</div>
-      <div class="plan-price">199 ₽</div>
-      <div class="plan-per">6.6 ₽ в день</div>
+      <div class="plan-price" data-rub="plan_1m">199 ₽</div>
+      <div class="plan-per" data-perday="plan_1m">6.6 ₽ в день</div>
     </div>
     <div class="plan-card" data-days="90" onclick="selectDays(90)">
       <div class="plan-ribbon">−16%</div>
       <div class="plan-label">3 месяца</div>
       <div class="plan-desc">90 дней</div>
-      <div class="plan-price">499 ₽</div>
-      <div class="plan-per">5.5 ₽ в день</div>
+      <div class="plan-price" data-rub="plan_3m">499 ₽</div>
+      <div class="plan-per" data-perday="plan_3m">5.5 ₽ в день</div>
     </div>
     <div class="plan-card" data-days="180" onclick="selectDays(180)">
       <div class="plan-ribbon">−25%</div>
       <div class="plan-label">6 месяцев</div>
       <div class="plan-desc">180 дней</div>
-      <div class="plan-price">899 ₽</div>
-      <div class="plan-per">5.0 ₽ в день</div>
+      <div class="plan-price" data-rub="plan_6m">899 ₽</div>
+      <div class="plan-per" data-perday="plan_6m">5.0 ₽ в день</div>
     </div>
   </div>
 </div>
@@ -203,7 +203,7 @@ footer{border-top:1px solid rgba(255,255,255,.07);padding:0}
         <a class="summary-btn" id="checkout-btn" href="/get-vpn?days=90">Оформить на <span id="btn-days">90</span> дней</a>
       </div>
     </div>
-    <p class="plans-note">Фиксированные сроки — 1/3/6 месяцев за 199/499/899 ₽. Свой срок на слайдере ниже рассчитывается по тем же тарифам.</p>
+    <p class="plans-note">Фиксированные сроки — 1/3/6 месяцев за <span data-rub-list>199/499/899</span> ₽. Свой срок на слайдере ниже рассчитывается по тем же тарифам.</p>
   </div>
 </div>
 </section>
@@ -344,6 +344,21 @@ function selectDays(days){ render(days); }
 slider.addEventListener('input', e => selectDays(parseInt(e.target.value, 10) || 7));
 
 render(90);
+
+/* Цены фиксированных тарифов — из /admin → Настройки (в разметке — значения по умолчанию). */
+fetch('/api/site/prices').then(r => r.ok ? r.json() : null).then(prices => {
+  if (!prices) return;
+  document.querySelectorAll('[data-rub]').forEach(el => {
+    const p = prices[el.dataset.rub];
+    if (p) el.textContent = `${Math.round(p.rub)} ₽`;
+  });
+  document.querySelectorAll('[data-perday]').forEach(el => {
+    const p = prices[el.dataset.perday];
+    if (p) el.textContent = `${(p.rub / p.days).toFixed(1)} ₽ в день`;
+  });
+  const list = document.querySelector('[data-rub-list]');
+  if (list) list.textContent = ['plan_1m', 'plan_3m', 'plan_6m'].map(k => prices[k] ? Math.round(prices[k].rub) : '—').join('/');
+}).catch(() => {});
 
 /* ═══ FAQ accordion ══════════════════════════════════════════ */
 function toggleFaq(btn){

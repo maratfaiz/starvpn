@@ -27,7 +27,7 @@ from sqlalchemy import select
 
 from bot.config import settings
 from bot.models.user import User
-from bot.utils import bot_texts
+from bot.utils import app_config, bot_texts
 from bot.utils.bot_media import send_screen
 from bot.utils.bot_texts import MenuText, image_for, t
 
@@ -50,7 +50,7 @@ def main_keyboard(user: User) -> ReplyKeyboardMarkup:
         rows.append(visible("btn.gift", "btn.referral"))
     else:
         rows.append(visible("btn.connect"))
-        if not user.trial_used:
+        if not user.trial_used and app_config.trial_enabled():
             rows.append(visible("btn.trial"))
         rows.append(visible("btn.referral"))
 
@@ -77,7 +77,7 @@ def _start_inline(user: User) -> InlineKeyboardMarkup:
     has_sub = bool(user.subscription_expires_at and user.subscription_expires_at > now)
 
     if not has_sub:
-        if not user.trial_used:
+        if not user.trial_used and app_config.trial_enabled():
             buttons.append([InlineKeyboardButton(
                 text=t("btn.try_trial"),
                 callback_data="activate_trial",
@@ -157,7 +157,7 @@ async def cmd_start(
     else:
         greeting_key = "start.welcome_new"
         greeting = t(greeting_key)
-        if not user.trial_used:
+        if not user.trial_used and app_config.trial_enabled():
             greeting += "\n\n" + t("start.trial_hint")
 
     await send_screen(

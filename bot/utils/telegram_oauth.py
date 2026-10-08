@@ -53,7 +53,14 @@ def record_error(code: str, detail: str) -> None:
 
 
 def is_configured() -> bool:
-    return bool(settings.telegram_oauth_client_id and settings.telegram_oauth_client_secret)
+    return bool(client_id() and _client_secret())
+
+
+def _client_secret() -> str:
+    # Секрет можно задать в /admin → Настройки (хранится в app_settings),
+    # иначе — TELEGRAM_OAUTH_CLIENT_SECRET из .env.
+    from bot.utils import app_config
+    return app_config.tg_oauth_client_secret()
 
 
 def site_origin() -> str:
@@ -63,7 +70,9 @@ def site_origin() -> str:
 
 
 def client_id() -> str:
-    return settings.telegram_oauth_client_id.strip()
+    # Client ID — числовой ID бота; без TELEGRAM_OAUTH_CLIENT_ID берётся из токена.
+    from bot.utils import app_config
+    return app_config.tg_oauth_client_id()
 
 
 def redirect_uri() -> str:
@@ -93,7 +102,7 @@ def build_authorize_url(state: str, code_challenge: str) -> str:
 
 async def exchange_code(code: str, code_verifier: str) -> dict:
     """POST /token — обменивает authorization code на id_token."""
-    secret = settings.telegram_oauth_client_secret.strip()
+    secret = _client_secret()
     basic = base64.b64encode(f"{client_id()}:{secret}".encode("utf-8")).decode("ascii")
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.post(

@@ -36,7 +36,7 @@ from bot.models.payment import Payment
 from bot.models.user import User
 from bot.utils.marzban import marzban
 from bot.utils.bot_media import send_screen
-from bot.utils import gifts
+from bot.utils import app_config, gifts
 from bot.utils.bot_texts import MenuText, image_for, t
 from bot.utils.plans import STARS_PLANS
 from bot.handlers.gift import handle_gift_payment
@@ -91,8 +91,8 @@ def _instructions_kb() -> InlineKeyboardMarkup:
 
 PLANS = STARS_PLANS
 
-REFERRAL_DAYS_BONUS = 30      # дней рефереру за каждую пачку оплативших рефералов
-REFERRAL_MILESTONE_SIZE = 2   # сколько оплативших рефералов нужно для одной пачки
+# Бонус рефереру: app_config.referral_bonus_days() дней за каждые
+# app_config.referral_milestone() оплативших друзей (/admin → Настройки).
 
 # Разовые бейджи-достижения по общему числу оплативших рефералов — выдаются
 # один раз, ровно когда referral_count достигает threshold, поверх обычных
@@ -186,9 +186,10 @@ async def _credit_referral(buyer: User, session: AsyncSession, bot: Bot) -> None
     total_bonus_days = 0
     unlocked_achievement = None
 
-    if referrer.referral_count % REFERRAL_MILESTONE_SIZE == 0:
-        total_bonus_days += REFERRAL_DAYS_BONUS
-        bonus_lines.append(f"🎁 +{REFERRAL_DAYS_BONUS} дней — за {referrer.referral_count} оплативших друзей")
+    bonus_days = app_config.referral_bonus_days()
+    if bonus_days and referrer.referral_count % app_config.referral_milestone() == 0:
+        total_bonus_days += bonus_days
+        bonus_lines.append(f"🎁 +{bonus_days} дней — за {referrer.referral_count} оплативших друзей")
 
     unlocked_achievement = next(
         (a for a in REFERRAL_ACHIEVEMENTS if a["threshold"] == referrer.referral_count), None
@@ -443,6 +444,9 @@ async def trial_menu(message: Message, session: AsyncSession) -> None:
         await message.answer("Сначала отправь /start.")
         return
 
+    if not app_config.trial_enabled():
+        await message.answer("Пробный период сейчас недоступен.")
+        return
     if user.trial_used:
         await message.answer(
             t("trial.used"),
@@ -470,18 +474,21 @@ async def activate_trial(callback: CallbackQuery, session: AsyncSession) -> None
     if user.trial_used:
         await callback.answer("Тест уже был активирован.", show_alert=True)
         return
+    if not app_config.trial_enabled():
+        await callback.answer("Пробный период сейчас недоступен.", show_alert=True)
+        return
 
     await callback.message.answer(t("trial.creating"))
 
     # Дни добавляются к текущему сроку (раньше — «сейчас + 2 дня», что
     # затирало оплаченную подписку) и включают уже созданные устройства.
     user.trial_used = True
-    await _grant_subscription(user, settings.trial_days, session)
+    await _grant_subscription(user, app_config.trial_days(), session)
     await session.refresh(user)
 
     from bot.handlers.start import main_keyboard
     await send_screen(
-        callback.message, t("trial.activated", days=settings.trial_days),
+        callback.message, t("trial.activated", days=app_config.trial_days()),
         image=image_for("trial.activated"), reply_markup=main_keyboard(user),
     )
     await callback.answer()

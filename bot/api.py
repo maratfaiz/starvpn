@@ -28,10 +28,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from bot.config import settings
-from bot.models.device import Device, MAX_DEVICES
+from bot.models.device import Device
 from bot.models.gift_notification import GiftNotification
 from bot.models.payment import Payment
 from bot.models.user import User
+from bot.utils import app_config
 from bot.utils.database import AsyncSessionLocal
 from bot.utils.marzban import marzban
 from bot.utils.vpn_access import set_vpn_enabled
@@ -793,7 +794,7 @@ async def _get_active_devices(tg_id: int, session) -> list[Device]:
 
 def _free_slot(devices: list[Device]) -> int | None:
     used = {d.slot for d in devices}
-    for s in range(1, MAX_DEVICES + 1):
+    for s in range(1, app_config.max_devices() + 1):
         if s not in used:
             return s
     return None
@@ -840,7 +841,8 @@ async def get_me(request: Request, x_telegram_init_data: str | None = Header(def
         "subscription_expires_at": exp.isoformat() if exp else None,
         "subscription_active": bool(exp and exp > now),
         "trial_used": bool(user.trial_used),
-        "trial_days": settings.trial_days,
+        "trial_days": app_config.trial_days(),
+        "trial_enabled": app_config.trial_enabled(),
         "total_stars_paid": int(user.total_stars_paid or 0),
         "referral_count": int(user.referral_count or 0),
         "extra_days_granted": int(user.extra_days_granted or 0),
@@ -849,7 +851,7 @@ async def get_me(request: Request, x_telegram_init_data: str | None = Header(def
         "created_at": user.created_at.isoformat() if user.created_at else None,
         "support_url": f"https://t.me/{settings.support_username.lstrip('@')}",
         "bot_username": settings.bot_username,
-        "max_devices": MAX_DEVICES,
+        "max_devices": app_config.max_devices(),
         "server_host": settings.server_host,
         "server_country": settings.server_country,
         "server_city": settings.server_city,
@@ -949,7 +951,7 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
         devs = await _get_active_devices(tg_id, session)
         slot = _free_slot(devs)
         if not slot:
-            raise HTTPException(403, f"Maximum {MAX_DEVICES} devices allowed")
+            raise HTTPException(403, f"Можно подключить не больше {app_config.max_devices()} устройств")
 
         mz_username = await new_device_mz_username(user, type_key, session)
 
@@ -1091,7 +1093,7 @@ async def get_referral(request: Request, x_telegram_init_data: str | None = Head
         )
         referrals = refs_r.scalars().all()
 
-    from bot.handlers.payment import REFERRAL_DAYS_BONUS, REFERRAL_MILESTONE_SIZE, REFERRAL_ACHIEVEMENTS
+    from bot.handlers.payment import REFERRAL_ACHIEVEMENTS
 
     paying = int(user.referral_count or 0)
 
@@ -1099,8 +1101,8 @@ async def get_referral(request: Request, x_telegram_init_data: str | None = Head
         "extra_days_granted": int(user.extra_days_granted or 0),
         "link": f"https://t.me/{settings.bot_username}?start=ref{tg_id}",
         "referral_count": paying,
-        "days_bonus": REFERRAL_DAYS_BONUS,
-        "milestone_size": REFERRAL_MILESTONE_SIZE,
+        "days_bonus": app_config.referral_bonus_days(),
+        "milestone_size": app_config.referral_milestone(),
         "achievements": [
             {
                 "key": a["key"],
@@ -1688,6 +1690,8 @@ async def activate_trial_api(request: Request, x_telegram_init_data: str | None 
         user: User | None = result.scalar_one_or_none()
         if not user:
             raise HTTPException(status_code=404, detail="Пользователь не найден")
+        if not app_config.trial_enabled():
+            raise HTTPException(status_code=403, detail="Пробный период сейчас недоступен")
         if user.trial_used:
             raise HTTPException(status_code=400, detail="Пробный период уже был активирован")
         if user.is_banned:
@@ -1704,9 +1708,9 @@ async def activate_trial_api(request: Request, x_telegram_init_data: str | None 
         # и оплативший подписку, но не бравший пробный, терял оплаченное.
         from bot.handlers.payment import _grant_subscription
         user.trial_used = True
-        await _grant_subscription(user, settings.trial_days, session)
+        await _grant_subscription(user, app_config.trial_days(), session)
 
-        return {"ok": True, "days": settings.trial_days}
+        return {"ok": True, "days": app_config.trial_days()}
 
 
 # ─── GET /api/plans ──────────────────────────────────────────────────────────
@@ -3206,48 +3210,75 @@ async def web_bot_block_delete(block_id: int, authorization: str | None = Header
     return {"ok": True}
 
 
-# ─── Настройки (обзор — тарифы/лимиты/провайдеры сейчас read-only) ────────────
+# ─── Настройки — всё, что владелец меняет без правки кода (bot/utils/app_config.py) ──
 
 @app.get("/web/settings/overview")
 async def web_settings_overview(authorization: str | None = Header(default=None)):
     _web_auth(authorization, "settings")
-    from bot.handlers.payment import PLANS
-    from bot.utils.card import CARD_PLANS, card_ready
-    from bot.models.device import MAX_DEVICES
-    from bot.utils.settings_store import get_all_provider_states
-
-    tariffs = []
-    for key, plan in PLANS.items():
-        card = CARD_PLANS.get(key, {})
-        tariffs.append({
-            "key": key, "label": plan["label"], "days": plan["days"],
-            "stars": plan["stars"], "rub": float(card.get("rub", 0)),
-        })
-
     from bot.utils import telegram_oauth
+    from bot.utils.card import CARD_PLANS, card_ready
+    from bot.utils.cryptopay import CRYPTO_PLANS
+    from bot.utils.plans import STARS_PLANS
+    from bot.utils.settings_store import get_all_provider_states
 
     async with AsyncSessionLocal() as session:
         toggles = await get_all_provider_states(session)
 
     return {
+        "config": app_config.public_view(),
+        "plans": [
+            {"key": k, "label": p["label"], "days": p["days"], "stars": p["stars"],
+             "usd": float(CRYPTO_PLANS[k]["usd"]), "rub": float(CARD_PLANS[k]["rub"])}
+            for k, p in STARS_PLANS.items()
+        ],
         "telegram_login": {
             "configured": telegram_oauth.is_configured(),
             "client_id": telegram_oauth.client_id(),
+            "secret_from_env": bool(settings.telegram_oauth_client_secret.strip()),
             "origin": telegram_oauth.site_origin(),
             "redirect_uri": telegram_oauth.redirect_uri(),
             "last_error": telegram_oauth.last_error,
         },
-        "tariffs": tariffs,
         "providers": {
             "stars": {"configured": True, "enabled": toggles["stars"]},
             "card": {"configured": card_ready(), "enabled": toggles["card"]},
             "crypto": {"configured": bool(settings.cryptopay_token), "enabled": toggles["crypto"]},
         },
-        "limits": {"max_devices": MAX_DEVICES, "trial_days": settings.trial_days},
-        "admin_web_key_set": bool(settings.admin_web_key),
-        "admin_web_key_masked": (settings.admin_web_key[:4] + "…" + settings.admin_web_key[-4:]) if len(settings.admin_web_key) > 8 else "",
         "bot_username": settings.bot_username,
         "site_url": settings.site_url,
+        "smtp_configured": bool(settings.smtp_host),
+    }
+
+
+@app.put("/web/settings")
+async def web_settings_save(request: Request, authorization: str | None = Header(default=None)):
+    """{"changes": {key: значение | null}} — null возвращает значение по умолчанию."""
+    identity = _web_auth(authorization, "settings")
+    body = await request.json()
+    changes = body.get("changes") or {}
+    if not isinstance(changes, dict) or not changes:
+        raise HTTPException(400, "Нет изменений")
+    if "tg_oauth_secret" in changes and identity.rank != "admin":
+        raise HTTPException(403, "Секрет входа через Telegram меняет только главный администратор")
+    async with AsyncSessionLocal() as session:
+        try:
+            await app_config.save(session, changes)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+    logger.info("Admin %s changed settings: %s", identity.username, ", ".join(sorted(changes)))
+    return {"ok": True, "config": app_config.public_view()}
+
+
+@app.get("/api/site/prices")
+async def site_prices():
+    """Цены тарифов для статичных страниц сайта (/tariffs) — из настроек админки."""
+    from bot.utils.card import CARD_PLANS
+    from bot.utils.cryptopay import CRYPTO_PLANS
+    from bot.utils.plans import STARS_PLANS
+    return {
+        k: {"days": p["days"], "stars": p["stars"], "usd": float(CRYPTO_PLANS[k]["usd"]),
+            "rub": float(CARD_PLANS[k]["rub"])}
+        for k, p in STARS_PLANS.items()
     }
 
 

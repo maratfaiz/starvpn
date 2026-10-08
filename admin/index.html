@@ -402,6 +402,12 @@ details.editor-card[open] > summary::after{content:' ▾'}
 .copy-btn{flex-shrink:0;width:30px;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#8A7A60;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .copy-btn:hover{color:#FFB800;border-color:rgba(255,184,0,.4)}
 .copy-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8}
+.cfg-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13.5px;color:#EBE0CC;margin-top:10px;flex-wrap:wrap}
+.cfg-field{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#8A7A60}
+.cfg-affix{font-size:13px;color:#8A7A60}
+.cfg-input{padding:7px 9px!important;text-align:right}
+.cfg-reset{cursor:pointer;color:#FFB800;font-size:14px}
+.cfg-hint{font-size:12px;color:#6E6250;margin-top:4px;line-height:1.5}
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
 @media(max-width:820px){.settings-grid{grid-template-columns:1fr}}
 .tariff-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px;margin-bottom:10px}
@@ -446,8 +452,6 @@ details.editor-card[open] > summary::after{content:' ▾'}
 .banner-icon-opt.sel{border-color:#FFB800;background:rgba(255,184,0,.12);color:#FFB800}
 .toggle-track{width:42px;height:24px;border-radius:100px;padding:2px;display:flex;flex-shrink:0}
 .toggle-knob{width:18px;height:18px;border-radius:50%}
-.zl-box{background:rgba(255,184,0,.05);border:1px solid rgba(255,184,0,.22);border-radius:16px;padding:22px}
-.zl-code{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.9;color:#8A7A60;margin-top:14px}
 
 .toast-wrap{position:fixed;right:22px;bottom:22px;z-index:300;display:flex;flex-direction:column;gap:8px}
 .toast-item{background:rgba(12,11,10,.97);border:1px solid rgba(255,184,0,.35);border-radius:12px;padding:14px 20px;box-shadow:0 20px 50px rgba(0,0,0,.6);font-size:13.5px;color:#EBE0CC;animation:toastIn .2s ease}
@@ -3143,36 +3147,63 @@ window.addEventListener('resize', () => { if (section === 'bot' && document.getE
 /* ═══════════════════════════════════════════════════════════
    SETTINGS — реальный обзор, read-only (тарифы задаются в коде)
 ═══════════════════════════════════════════════════════════ */
+/* Настройки: всё, что здесь показано, редактируется (bot/utils/app_config.py).
+   Поля собираются в один PUT /web/settings по кнопке «Сохранить». */
+let settingsData = null;
+function cfgInput(key, opts = {}) {
+  const f = settingsData.config[key];
+  const step = f.type === 'money' ? '0.01' : '1';
+  const value = f.type === 'money' ? Number(f.value).toFixed(2) : f.value;
+  return `<span class="cfg-field">
+    ${opts.prefix ? `<span class="cfg-affix">${opts.prefix}</span>` : ''}
+    <input class="ipt cfg-input mono" type="number" data-cfg="${key}" value="${value}" min="${f.min}" max="${f.max}" step="${step}" style="width:${opts.width || 92}px">
+    ${opts.suffix ? `<span class="cfg-affix">${opts.suffix}</span>` : ''}
+    ${f.overridden ? `<span class="cfg-reset" title="Вернуть ${f.default}" onclick="cfgReset('${key}')">↺</span>` : ''}
+  </span>`;
+}
+function cfgReset(key) {
+  const el = document.querySelector(`[data-cfg="${key}"]`);
+  if (!el) return;
+  el.value = settingsData.config[key].default;
+  el.dataset.reset = '1';
+  unsaved = true;
+}
 async function renderSettings() {
   const c = document.getElementById('content');
   try {
     const s = await api('GET', '/web/settings/overview');
+    settingsData = s;
+    const cfg = s.config;
+    const isAdmin = myProfile && myProfile.rank === 'admin';
     c.innerHTML = `
+      <div class="filters">
+        <span style="font-size:13px;color:#8A7A60">Изменения применяются сразу после сохранения — в боте, на сайте и в Mini App, без перезапуска.</span>
+        <div style="flex:1"></div>
+        <div class="primary-btn" data-save title="Ctrl+S" onclick="saveSettings()">Сохранить</div>
+      </div>
       <div class="settings-grid">
         <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
           <div class="editor-card">
-            <div class="dcard-title">Тарифы</div>
-            <div style="font-size:13px;color:#8A7A60;margin:4px 0 18px">Цены заданы в коде (bot/utils/plans.py, bot/utils/card.py) и отдаются боту и сайту через API — измените там и задеплойте, чтобы поменять.</div>
-            ${s.tariffs.map(t => `
+            <div class="dcard-title">Цены тарифов</div>
+            <div style="font-size:13px;color:#8A7A60;margin:4px 0 14px">Звёзды — оплата в боте, $ — криптовалюта, ₽ — оплата картой (появится, когда подключат сервис оплаты).</div>
+            ${s.plans.map(p => `
               <div class="tariff-row">
-                <div style="min-width:110px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#EBE0CC">${esc(t.label)}</div>
-                <div class="mono" style="color:#EBE0CC">${t.rub} ₽</div>
-                <div class="mono" style="color:#8A7A60;display:inline-flex;align-items:center;gap:4px">${t.stars}<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.7 1.1 6.6L12 17.1l-5.8 3.2 1.1-6.6L2.5 9l6.6-.9z"/></svg></div>
-                <div style="flex:1"></div>
-                <div style="font-size:12px;color:#6E6250">${t.days} дней</div>
-              </div>
-            `).join('')}
+                <div style="min-width:96px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#EBE0CC">${esc(p.label)}<div style="font-size:11.5px;color:#6E6250;font-weight:400">${p.days} дней</div></div>
+                ${cfgInput('price.stars.' + p.key, { suffix: '⭐', width: 84 })}
+                ${cfgInput('price.usd.' + p.key, { prefix: '$', width: 84 })}
+                ${cfgInput('price.rub.' + p.key, { suffix: '₽', width: 92 })}
+              </div>`).join('')}
           </div>
           <div class="editor-card">
             <div class="dcard-title">Приём оплаты</div>
-            <div style="font-size:13px;color:#8A7A60;margin:4px 0 18px">«Настроено» — есть ключи в .env. Переключатель — показывать ли способ пользователям (боту и сайту) прямо сейчас. Stars — только в боте (на сайте недоступны в принципе).</div>
-            ${[['stars', 'Telegram Stars (только в боте)', s.providers.stars], ['card', 'Оплата картой', s.providers.card], ['crypto', 'Криптовалюта (@CryptoBot)', s.providers.crypto]].map(([key, label, p]) => `
+            <div style="font-size:13px;color:#8A7A60;margin:4px 0 18px">Переключатель — показывать ли способ пользователям. «Не подключено» — нет ключей в .env.</div>
+            ${[['stars', 'Telegram Stars (только в боте)', s.providers.stars], ['card', 'Оплата картой', s.providers.card], ['crypto', 'Криптовалюта (@CryptoBot)', s.providers.crypto]].map(([key, label, p]) => ({ key, label, p: { ...p, enabled: p.enabled && p.configured } })).map(({ key, label, p }) => `
               <div class="provider-row">
                 <div style="flex:1;font-size:14px;font-weight:600;color:#EBE0CC">${label}</div>
-                <span class="chip ${p.configured ? 'green' : 'grey'}">${p.configured ? 'Настроено' : 'Не настроено'}</span>
+                <span class="chip ${p.configured ? 'green' : 'grey'}">${p.configured ? 'Подключено' : 'Не подключено'}</span>
                 <div class="toggle-track" data-provider="${key}" data-on="${p.enabled ? '1' : '0'}"
-                     style="background:${p.enabled ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'};cursor:pointer"
-                     onclick="togglePaymentProvider('${key}')" title="${p.enabled ? 'Выключить' : 'Включить'}">
+                     style="background:${p.enabled ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'};cursor:${p.configured ? 'pointer' : 'not-allowed'};opacity:${p.configured ? 1 : .5}"
+                     ${p.configured ? `onclick="togglePaymentProvider('${key}')"` : ''} title="${p.configured ? (p.enabled ? 'Выключить' : 'Включить') : 'Сначала подключите способ оплаты'}">
                   <div class="toggle-knob" style="background:${p.enabled ? '#FFB800' : '#7E705B'};margin-left:${p.enabled ? 'auto' : '0'}"></div>
                 </div>
               </div>
@@ -3181,24 +3212,27 @@ async function renderSettings() {
         </div>
         <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
           <div class="editor-card">
-            <div class="dcard-title" style="margin-bottom:18px">Лимиты</div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="color:#8A7A60;font-size:13px">Устройств на аккаунт</span><span class="mono" style="color:#FFB800">${s.limits.max_devices}</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:#8A7A60;font-size:13px">Пробный период</span><span class="mono" style="color:#FFB800">${s.limits.trial_days} дня</span></div>
+            <div class="dcard-title" style="margin-bottom:14px">Подписка</div>
+            <label class="cfg-row"><span>Пробный период</span>
+              <span class="cfg-field"><input type="checkbox" data-cfg="trial_enabled" ${cfg.trial_enabled.value ? 'checked' : ''} style="width:17px;height:17px;accent-color:#FFB800"> включён</span></label>
+            <div class="cfg-row"><span>Длительность пробного периода</span>${cfgInput('trial_days', { suffix: 'дн.', width: 70 })}</div>
+            <div class="cfg-hint">Только для Telegram-аккаунтов, один раз. Фразы «2 дня бесплатно» на сайте подставятся сами.</div>
+            <div class="cfg-row"><span>Устройств на аккаунт</span>${cfgInput('max_devices', { width: 70 })}</div>
+            <div class="cfg-hint">Новые устройства сверх лимита добавить не получится; уже добавленные не удаляются.</div>
           </div>
-          ${telegramLoginCard(s.telegram_login)}
           <div class="editor-card">
-            <div class="dcard-title" style="margin-bottom:14px">Доступ к админке</div>
-            <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">У каждого сотрудника свой логин и пароль. Мастер-ключ ниже — из ADMIN_WEB_KEY в .env, нужен только для регистрации самого первого аккаунта (ранга admin). Дальше приглашения — через личный ключ в разделе «Профиль».</div>
-            <div class="mono" style="background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:10px 12px;font-size:13px;color:#8A7A60">${s.admin_web_key_masked || '—'}</div>
+            <div class="dcard-title" style="margin-bottom:14px">Реферальная программа</div>
+            <div class="cfg-row"><span>Бонус пригласившему</span>${cfgInput('referral_bonus_days', { suffix: 'дн.', width: 70 })}</div>
+            <div class="cfg-row"><span>За каждых … оплативших друзей</span>${cfgInput('referral_milestone', { width: 70 })}</div>
+            <div class="cfg-hint">0 дней — бонус не начисляется. Разовые достижения (5, 10, 25 друзей) не меняются.</div>
           </div>
-          <div class="zl-box">
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#FFB800;margin-bottom:8px">Zero Logs</div>
-            <div style="font-size:13.5px;line-height:1.65;color:#EBE0CC">Логирование Xray закреплено в конфиге: access, error и loglevel — none. Параметр не выводится в интерфейс намеренно, чтобы его нельзя было включить случайно.</div>
-            <div class="zl-code">
-              <div>"access": <span style="color:#FFB800">"none"</span>,</div>
-              <div>"error": <span style="color:#FFB800">"none"</span>,</div>
-              <div>"loglevel": <span style="color:#FFB800">"none"</span></div>
+          ${telegramLoginCard(s.telegram_login, cfg.tg_oauth_secret, isAdmin)}
+          <div class="editor-card">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="dcard-title" style="flex:1">Вход по email</div>
+              <span class="chip ${s.smtp_configured ? 'green' : 'red'}">${s.smtp_configured ? 'Почта настроена' : 'Почта не настроена'}</span>
             </div>
+            ${s.smtp_configured ? '' : '<div class="cfg-hint" style="margin-top:8px;color:#FBBF24">Коды подтверждения не уходят — новые пользователи не смогут закончить регистрацию по email. Задайте SMTP_HOST, SMTP_USERNAME и SMTP_PASSWORD в .env.</div>'}
           </div>
         </div>
       </div>
@@ -3208,8 +3242,31 @@ async function renderSettings() {
   }
 }
 
+async function saveSettings() {
+  const changes = {};
+  document.querySelectorAll('#content [data-cfg]').forEach(el => {
+    const key = el.dataset.cfg, f = settingsData.config[key];
+    if (el.dataset.reset === '1' && String(el.value) === String(f.default)) { changes[key] = null; return; }
+    if (el.type === 'checkbox') { if (el.checked !== f.value) changes[key] = el.checked; return; }
+    if (f.type === 'secret') { if (el.value.trim()) changes[key] = el.value.trim(); return; }
+    if (Number(el.value) !== Number(f.value)) changes[key] = el.value;
+  });
+  if (!Object.keys(changes).length) { toast('Изменений нет'); return; }
+  try {
+    await api('PUT', '/web/settings', { changes });
+    unsaved = false;
+    toast('Настройки сохранены');
+    renderSettings();
+  } catch (e) { toast(e.message, true); }
+}
+async function clearTgSecret() {
+  if (!confirm('Убрать секрет из админки? Останется значение из .env, если оно есть.')) return;
+  try { await api('PUT', '/web/settings', { changes: { tg_oauth_secret: null } }); toast('Секрет убран'); renderSettings(); }
+  catch (e) { toast(e.message, true); }
+}
+
 const TG_LOGIN_HINTS = {
-  not_configured: 'В .env не заданы TELEGRAM_OAUTH_CLIENT_ID / TELEGRAM_OAUTH_CLIENT_SECRET.',
+  not_configured: 'Не задан Client Secret — вставьте его в карточке «Вход и регистрация через Telegram».',
   token: 'Telegram не выдал токен: чаще всего неверный Client Secret или Redirect URI не зарегистрирован в BotFather.',
   aud: 'TELEGRAM_OAUTH_CLIENT_ID не совпадает с ботом, в котором настроен Login Widget (это числовой ID бота — часть токена до двоеточия).',
   state: 'Вход начат на другом домене (www / без www) или прошло больше 10 минут. SITE_URL должен совпадать с адресом, по которому открывают сайт.',
@@ -3219,21 +3276,32 @@ const TG_LOGIN_HINTS = {
   server: 'Ошибка на нашей стороне при создании сессии — см. лог бота.',
 };
 
-function telegramLoginCard(t) {
+function telegramLoginCard(t, secret, isAdmin) {
   if (!t) return '';
   const err = t.last_error;
+  const secretState = secret.value ? 'задан в админке' : (t.secret_from_env ? 'задан в .env' : 'не задан');
   return `
     <div class="editor-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div class="dcard-title" style="flex:1">Вход через Telegram на сайте</div>
-        <span class="chip ${t.configured ? 'green' : 'grey'}">${t.configured ? 'Настроено' : 'Не настроено'}</span>
+        <div class="dcard-title" style="flex:1">Вход и регистрация через Telegram</div>
+        <span class="chip ${t.configured ? 'green' : 'red'}">${t.configured ? 'Работает' : 'Не настроено'}</span>
       </div>
-      <div style="font-size:13px;color:#8A7A60;margin-bottom:12px">@BotFather → ваш бот → Bot Settings → Login Widget. Адреса должны совпадать символ в символ.</div>
+      <div style="font-size:13px;color:#8A7A60;margin-bottom:12px;line-height:1.6">
+        1. @BotFather → ваш бот → Bot Settings → <b>Login Widget</b>.<br>
+        2. Добавьте адреса ниже (символ в символ) в Redirect URIs и Trusted Origins.<br>
+        3. Скопируйте оттуда <b>Client Secret</b> и вставьте сюда.
+      </div>
       <div class="field-lbl">Redirect URIs</div>
       ${copyField(t.redirect_uri)}
       <div class="field-lbl" style="margin-top:6px">Trusted Origins</div>
       ${copyField(t.origin)}
-      <div style="font-size:12.5px;color:#8A7A60">Client ID из .env: <span class="mono" style="color:#EBE0CC">${esc(t.client_id || '—')}</span></div>
+      <div class="field-lbl" style="margin-top:6px">Client ID (ID бота — определяется автоматически)</div>
+      ${copyField(t.client_id || '—')}
+      <div class="field-lbl" style="margin-top:6px">Client Secret · ${secretState}</div>
+      ${isAdmin ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input class="ipt mono" type="password" data-cfg="tg_oauth_secret" autocomplete="off" placeholder="${secret.value ? '•••••••• — введите новый, чтобы заменить' : 'Вставьте Client Secret'}" style="flex:1;min-width:200px">
+        ${secret.value ? '<div class="act-btn plain" onclick="clearTgSecret()">Убрать</div>' : ''}
+      </div>` : '<div class="cfg-hint">Секрет меняет только главный администратор.</div>'}
       ${err ? `
         <div style="margin-top:12px;border:1px solid rgba(255,90,90,.25);background:rgba(255,90,90,.06);border-radius:10px;padding:10px 12px">
           <div style="font-size:12px;color:#FF8A80;margin-bottom:4px">Последняя ошибка · ${fmtDateTime(err.at + 'Z')}</div>

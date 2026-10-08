@@ -30,8 +30,9 @@ from aiogram.types import (
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.models.device import Device, MAX_DEVICES
+from bot.models.device import Device
 from bot.models.user import User
+from bot.utils import app_config
 from bot.utils.marzban import marzban
 from bot.utils.qr import make_qr_photo
 from bot.utils.branding import set_vless_remark, subscription_url
@@ -176,7 +177,7 @@ def _list_kb(devices: list[Device], has_sub: bool) -> InlineKeyboardMarkup:
             callback_data=f"dev:info:{dev.id}",
         )])
 
-    if has_sub and len(devices) < MAX_DEVICES:
+    if has_sub and len(devices) < app_config.max_devices():
         rows.append([InlineKeyboardButton(
             text="➕ Добавить устройство",
             callback_data="dev:add",
@@ -278,7 +279,7 @@ async def show_devices_screen(
         sub_note = "\n\n⚠️ <i>Нет активной подписки — добавить устройство нельзя.</i>"
 
     text = (
-        f"📱 <b>Мои устройства</b> ({len(devices)}/{MAX_DEVICES})\n\n"
+        f"📱 <b>Мои устройства</b> ({len(devices)}/{app_config.max_devices()})\n\n"
         f"{devices_text}"
         f"{sub_note}\n\n"
         "<i>Нажми на устройство — увидишь ключ и статус подключения.</i>"
@@ -311,8 +312,8 @@ async def dev_add_start(callback: CallbackQuery, session: AsyncSession) -> None:
         return
 
     devices = await _get_devices(tg_id, session)
-    if len(devices) >= MAX_DEVICES:
-        await callback.answer(f"Максимум {MAX_DEVICES} устройства.", show_alert=True)
+    if len(devices) >= app_config.max_devices():
+        await callback.answer(f"Максимум устройств: {app_config.max_devices()}.", show_alert=True)
         return
 
     await callback.message.edit_text(
@@ -346,13 +347,13 @@ async def dev_add_type(callback: CallbackQuery, session: AsyncSession) -> None:
         return
 
     devices = await _get_devices(tg_id, session)
-    if len(devices) >= MAX_DEVICES:
-        await callback.answer(f"Максимум {MAX_DEVICES} устройства.", show_alert=True)
+    if len(devices) >= app_config.max_devices():
+        await callback.answer(f"Максимум устройств: {app_config.max_devices()}.", show_alert=True)
         return
 
     # Свободный слот (только для внутреннего порядка)
     occupied_slots = {d.slot for d in devices}
-    slot = next((s for s in range(1, MAX_DEVICES + 1) if s not in occupied_slots), None)
+    slot = next((s for s in range(1, app_config.max_devices() + 1) if s not in occupied_slots), None)
     if not slot:
         await callback.answer("Нет свободных слотов.", show_alert=True)
         return
