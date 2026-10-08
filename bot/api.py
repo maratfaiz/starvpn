@@ -1141,7 +1141,7 @@ async def _tg_send(chat_id: int, text: str) -> bool:
                 json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
             )
         return r.status_code == 200 and bool(r.json().get("ok"))
-    except Exception as e:
+    except (httpx.HTTPError, ValueError) as e:
         logger.warning("Telegram send to %s failed: %s", chat_id, e)
         return False
 
