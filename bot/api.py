@@ -286,6 +286,16 @@ async def serve_world_dots():
     return HTMLResponse(content="", status_code=404)
 
 
+@app.get("/stars.js", include_in_schema=False)
+async def serve_stars_js():
+    """Звёздный фон, общий для всех страниц сайта."""
+    from fastapi.responses import FileResponse
+    p = _LANDING_DIR / "stars.js"
+    if p.exists():
+        return FileResponse(str(p), media_type="application/javascript")
+    return HTMLResponse(content="", status_code=404)
+
+
 @app.get("/favicon.svg", include_in_schema=False)
 async def serve_favicon_svg():
     from fastapi.responses import FileResponse

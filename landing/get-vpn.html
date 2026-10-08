@@ -25,7 +25,7 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
 body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.7;overflow-x:hidden}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
-#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.3}.wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}.wrap{position:relative;z-index:2;max-width:var(--max);margin:0 auto;padding:0 24px}
 
 .hero{padding:clamp(40px,5.5vw,76px) 24px clamp(28px,4vw,44px);max-width:70ch}
 .hero-badge{display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(255,184,0,.22);border-radius:100px;padding:7px 16px;margin-bottom:24px;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--gold);background:var(--gold-dim)}
@@ -224,31 +224,6 @@ footer{border-top:1px solid rgba(255,255,255,.07)}
 </footer>
 
 <script>
-/* ═══ Starfield ══════════════════════════════════════════════ */
-(function () {
-  const c = document.getElementById('bg-canvas');
-  const ctx = c.getContext('2d');
-  let stars = [];
-  function resize() { c.width = innerWidth; c.height = innerHeight; }
-  function init() {
-    stars = Array.from({ length: 90 }, () => ({
-      x: Math.random() * c.width, y: Math.random() * c.height,
-      r: Math.random() * 1.1 + .3, a: Math.random(),
-      s: Math.random() * .006 + .002,
-    }));
-  }
-  function draw() {
-    ctx.clearRect(0, 0, c.width, c.height);
-    stars.forEach(s => {
-      s.a += s.s; if (s.a > 1 || s.a < 0) s.s *= -1;
-      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255,216,120,${s.a * .65})`; ctx.fill();
-    });
-    requestAnimationFrame(draw);
-  }
-  resize(); init(); draw();
-  window.addEventListener('resize', () => { resize(); init(); });
-})();
 
 /* ═══ Шаг 1 · Тариф → Шаг 2 · Аккаунт → Шаг 3 · Оплата ═══════════ */
 const PENDING_KEY = 'star_vpn_pending_purchase';
@@ -448,5 +423,6 @@ loadPlans();
 checkAuth();
 
 </script>
+<script src="/stars.js"></script>
 </body>
 </html>
