@@ -8,8 +8,10 @@ import asyncio
 import base64
 import hashlib
 import hmac
+import html
 import json
 import logging
+import re
 import secrets
 import time
 import urllib.parse
@@ -1130,13 +1132,18 @@ def _require_admin(tg_id: int) -> None:
         raise HTTPException(403, "Admin only")
 
 
-async def _tg_send(chat_id: int, text: str) -> None:
-    """Отправить сообщение через Telegram Bot API напрямую."""
-    async with httpx.AsyncClient(timeout=10) as client:
-        await client.post(
-            f"https://api.telegram.org/bot{settings.telegram_api_token}/sendMessage",
-            json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
-        )
+async def _tg_send(chat_id: int, text: str) -> bool:
+    """Отправить сообщение через Telegram Bot API напрямую. True — доставлено."""
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.post(
+                f"https://api.telegram.org/bot{settings.telegram_api_token}/sendMessage",
+                json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
+            )
+        return r.status_code == 200 and bool(r.json().get("ok"))
+    except Exception as e:
+        logger.warning("Telegram send to %s failed: %s", chat_id, e)
+        return False
 
 
 # ─── GET /api/admin/check ────────────────────────────────────────────────────
@@ -3834,6 +3841,28 @@ TICKET_TOPIC_LABELS = {
 }
 
 
+def _ticket_delivery(t, user: User | None) -> dict:
+    """Куда уйдёт ответ на тикет — показывается в админке до отправки.
+
+    Аккаунт с настоящим Telegram — сообщением от бота. Веб-аккаунт или
+    анонимное обращение с email — письмом. @username без аккаунта Bot API
+    написать не даёт — только вручную, по ссылке t.me."""
+    if user and user.telegram_id > 0:
+        name = f"@{user.username}" if user.username else f"ID {user.telegram_id}"
+        return {"channel": "telegram", "to": name}
+    contact = (t.contact or "").strip()
+    email = (user.email if user else None) or (
+        contact if "@" in contact and not contact.startswith("@") else None
+    )
+    if email:
+        return {"channel": "email", "to": email}
+    if contact:
+        handle = contact.lstrip("@")
+        link = f"https://t.me/{handle}" if re.fullmatch(r"[A-Za-z0-9_]{4,32}", handle) else ""
+        return {"channel": "manual", "to": contact, "link": link}
+    return {"channel": "none", "to": ""}
+
+
 @app.get("/web/tickets")
 async def web_tickets(status: str = "", authorization: str | None = Header(default=None)):
     _web_auth(authorization, "support")
@@ -3850,6 +3879,8 @@ async def web_tickets(status: str = "", authorization: str | None = Header(defau
             return u.email or (f"@{u.username}" if u.username else str(u.telegram_id))
         return t.contact or "—"
 
+    smtp_ready = bool(settings.smtp_host)
+
     return {
         "tickets": [
             {
@@ -3863,6 +3894,9 @@ async def web_tickets(status: str = "", authorization: str | None = Header(defau
                 "platform": t.platform or "",
                 "status": t.status,
                 "admin_reply": t.admin_reply or "",
+                "contact": t.contact or "",
+                "account": (u.email or (f"@{u.username}" if u.username else "")) if u else "",
+                "delivery": {**_ticket_delivery(t, u), "smtp_ready": smtp_ready},
                 "created_at": t.created_at.isoformat() if t.created_at else None,
                 "updated_at": t.updated_at.isoformat() if t.updated_at else None,
             }
@@ -3889,26 +3923,27 @@ async def web_ticket_reply(ticket_id: int, request: Request, authorization: str 
         if reply:
             t.admin_reply = reply
         t.status = new_status
-        user_id, contact, topic_label = t.user_id, t.contact, TICKET_TOPIC_LABELS.get(t.topic, t.topic)
+        user_id, topic_label = t.user_id, TICKET_TOPIC_LABELS.get(t.topic, t.topic)
         user = (await session.execute(select(User).where(User.telegram_id == user_id))).scalar_one_or_none() if user_id else None
         await session.commit()
 
+    delivery = _ticket_delivery(t, user)
+    delivered = False
     if reply:
-        # Аккаунт с реальным Telegram — шлём в бота. Веб-аккаунт (telegram_id
-        # синтетический) или анонимное обращение с email-контактом — на почту.
-        # @username без привязанного аккаунта Bot API написать не даёт —
-        # для таких тикетов остаётся только ручной ответ через сам контакт.
-        if user and user.telegram_id > 0:
-            await _tg_send(user.telegram_id, f"💬 <b>Ответ поддержки по тикету «{topic_label}»:</b>\n\n{reply}")
-        else:
-            email = (user.email if user else None) or (contact if contact and "@" in contact and not contact.startswith("@") else None)
-            if email:
-                from bot.utils.mailer import send_ticket_reply_email
-                try:
-                    await send_ticket_reply_email(email, topic_label, reply)
-                except Exception as e:
-                    logger.error("Failed to email ticket reply to %s: %s", email, e)
-    return {"ok": True}
+        safe = html.escape(reply)
+        if delivery["channel"] == "telegram":
+            delivered = await _tg_send(
+                user.telegram_id, f"💬 <b>Ответ поддержки по тикету «{topic_label}»:</b>\n\n{safe}",
+            )
+        elif delivery["channel"] == "email" and settings.smtp_host:
+            from bot.utils.mailer import send_ticket_reply_email
+            try:
+                await send_ticket_reply_email(delivery["to"], topic_label, reply)
+                delivered = True
+            except Exception as e:
+                logger.error("Failed to email ticket reply to %s: %s", delivery["to"], e)
+    return {"ok": True, "delivered": delivered, **delivery}
+
 
 
 @app.get("/web/marzban/ping")

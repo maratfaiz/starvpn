@@ -221,12 +221,6 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 .tkt-foot{display:flex;justify-content:space-between;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#6E6250}
 .tkt-detail{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px}
 .tkt-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:18px}
-.msg-bubble{max-width:88%;border-radius:14px;padding:14px 16px;margin-bottom:12px}
-.msg-bubble.user{background:#0B0A09;border:1px solid rgba(255,255,255,.08)}
-.msg-bubble.admin{background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.22);margin-left:auto}
-.msg-who{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;margin-bottom:6px}
-.msg-text{font-size:14px;line-height:1.6;color:#EBE0CC;white-space:pre-wrap}
-.msg-time{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#6E6250;margin-top:7px}
 
 /* ── Servers ─────────────────────────────────────────────── */
 .srv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
@@ -348,6 +342,18 @@ details.editor-card[open] > summary::after{content:' ▾'}
 .rev-tab-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#EBE0CC;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rev-tab.sel .rev-tab-val{color:#FFB800}
 .rev-tab-sub{font-size:11px;color:#6E6250;margin-top:2px}
+.letter{border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:14px 16px;margin-top:12px;background:rgba(0,0,0,.25)}
+.letter.sent{border-color:rgba(255,184,0,.25);background:rgba(255,184,0,.04)}
+.letter.compose{background:rgba(255,255,255,.02)}
+.letter-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#EBE0CC;margin-bottom:8px}
+.letter-row{display:flex;gap:10px;font-size:13px;padding:3px 0;align-items:baseline;min-width:0}
+.letter-k{width:44px;flex-shrink:0;color:#6E6250}
+.letter-v{color:#EBE0CC;min-width:0;overflow-wrap:anywhere}
+.letter-body{white-space:pre-wrap;font-size:14px;line-height:1.6;color:#EBE0CC;margin-top:10px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);overflow-wrap:anywhere}
+.letter-hint{font-size:12px;color:#8A7A60;margin:8px 0 10px}
+.letter-hint.warn{color:#FBBF24}
+.tkt-date{margin-left:auto;font-size:11px;color:#6E6250;white-space:nowrap}
+.tkt-snippet{font-size:12px;color:#7E705B;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .tg-bubble blockquote{border-left:3px solid #6AB2F2;padding-left:8px;margin:2px 0}
 .img-picker{display:flex;gap:12px;align-items:center;background:rgba(0,0,0,.3);border:1px dashed rgba(255,255,255,.14);border-radius:12px;padding:10px;margin-bottom:8px}
 .img-thumb{width:84px;height:56px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -1374,14 +1380,15 @@ async function renderSupport() {
       <div class="support-grid">
         <div class="tkt-list">
           ${data.tickets.length ? data.tickets.filter(t => matchesQuery(t.user_label, t.topic_label, t.public_id, t.contact, t.message)).map(t => `
-            <div class="tkt-card ${selectedTicket === t.id ? 'sel' : ''}" onclick="openTicket(${t.id})">
+            <div class="tkt-card ${selectedTicket === t.id ? 'sel' : ''}" data-id="${t.id}" onclick="openTicket(${t.id})">
               <div class="tkt-card-top">
                 <span style="width:7px;height:7px;border-radius:50%;background:${TICKET_STATUS[t.status][1]};flex-shrink:0"></span>
                 <span class="tkt-user">${esc(t.user_label)}</span>
-                <span class="chip grey" style="font-size:10.5px">${TICKET_STATUS[t.status][0]}</span>
+                <span class="tkt-date">${fmtDateTime(t.created_at)}</span>
               </div>
               <div class="tkt-subject">${esc(t.topic_label)}</div>
-              <div class="tkt-foot"><span>${fmtDateTime(t.created_at)}</span><span>${t.public_id}</span></div>
+              <div class="tkt-snippet">${esc(t.message.slice(0, 140))}</div>
+              <div class="tkt-foot"><span>${(TICKET_CHANNEL[t.delivery.channel] || TICKET_CHANNEL.none)[0]} · ${TICKET_STATUS[t.status][0]}</span><span>${t.public_id}</span></div>
             </div>
           `).join('') : '<div class="empty">Нет обращений</div>'}
         </div>
@@ -1394,43 +1401,66 @@ async function renderSupport() {
   }
 }
 
+/* Обращение — как письмо: шапка «от / кому / тема», текст, ниже ответ
+   и форма ответа с явным адресатом и каналом доставки. */
+const TICKET_CHANNEL = {
+  telegram: ['Telegram', 'Сообщение придёт от бота в Telegram'],
+  email: ['Email', 'Ответ уйдёт письмом на почту'],
+  manual: ['Вручную', 'Бот не может написать по @username без аккаунта — ответьте сами по ссылке и отметьте обращение отвеченным'],
+  none: ['Нет контакта', 'Автор не оставил контакт — ответить некуда'],
+};
+function letterRow(label, value) {
+  return `<div class="letter-row"><span class="letter-k">${label}</span><span class="letter-v">${value}</span></div>`;
+}
 async function openTicket(id) {
   selectedTicket = id;
   const el = document.getElementById('ticketDetail');
-  document.querySelectorAll('.tkt-card').forEach(x => x.classList.remove('sel'));
+  document.querySelectorAll('.tkt-card').forEach(x => x.classList.toggle('sel', x.dataset.id === String(id)));
   el.innerHTML = `<div class="tkt-detail"><div class="spinner-wrap"><div class="spinner"></div></div></div>`;
   try {
     const data = await api('GET', '/web/tickets');
     const t = data.tickets.find(x => x.id === id);
     if (!t) { el.innerHTML = '<div class="empty">Тикет не найден</div>'; return; }
+    const d = t.delivery;
+    const [chName, chHint] = TICKET_CHANNEL[d.channel] || TICKET_CHANNEL.none;
+    const emailOff = d.channel === 'email' && !d.smtp_ready;
+    const canSend = d.channel === 'telegram' || (d.channel === 'email' && d.smtp_ready);
+    const from = [t.account, t.contact && t.contact !== t.account ? t.contact : ''].filter(Boolean).map(esc).join(' · ') || esc(t.user_label);
+    const toLine = `<span class="chip ${canSend ? 'green' : 'grey'}" style="font-size:10.5px">${chName}</span> ${esc(d.to || '—')}${d.link ? ` <a href="${esc(d.link)}" target="_blank" rel="noopener">открыть ↗</a>` : ''}`;
     el.innerHTML = `
       <div class="tkt-detail">
         <div class="tkt-detail-head">
-          <div>
-            <div class="detail-title">${esc(t.topic_label)}</div>
-            <div class="detail-sub">${esc(t.user_label)} · ${esc(t.platform || '—')} · ${fmtDateTime(t.created_at)} · ${t.public_id}</div>
-          </div>
+          <div class="detail-title">${esc(t.topic_label)} <span class="mono" style="font-size:12px;color:#6E6250;font-weight:400">${t.public_id}</span></div>
           <div class="detail-actions">
             <span class="chip grey">${TICKET_STATUS[t.status][0]}</span>
             ${t.status !== 'closed' ? `<div class="act-btn plain" onclick="setTicketStatus(${t.id}, 'closed')">Закрыть</div>` : `<div class="act-btn plain" onclick="setTicketStatus(${t.id}, 'open')">Открыть заново</div>`}
           </div>
         </div>
-        <div class="msg-bubble user">
-          <div class="msg-who" style="color:#8A7A60">${esc(t.user_label)}</div>
-          <div class="msg-text">${esc(t.message)}</div>
-          <div class="msg-time">${fmtDateTime(t.created_at)}</div>
+        <div class="letter">
+          ${letterRow('От', from + (t.user_id ? ` · <a href="#" onclick="event.preventDefault();goto('users', '${t.user_id}')">аккаунт</a>` : ''))}
+          ${letterRow('Кому', 'Поддержка STAR VPN')}
+          ${letterRow('Тема', esc(t.topic_label))}
+          ${letterRow('Дата', fmtDateTime(t.created_at) + (t.platform ? ' · ' + esc(t.platform) : ''))}
+          <div class="letter-body">${esc(t.message)}</div>
         </div>
         ${t.admin_reply ? `
-          <div class="msg-bubble admin">
-            <div class="msg-who" style="color:#FFB800">Поддержка</div>
-            <div class="msg-text">${esc(t.admin_reply)}</div>
-            <div class="msg-time">${fmtDateTime(t.updated_at)}</div>
+          <div class="letter sent">
+            ${letterRow('От', 'Поддержка STAR VPN')}
+            ${letterRow('Кому', toLine)}
+            ${letterRow('Дата', fmtDateTime(t.updated_at))}
+            <div class="letter-body">${esc(t.admin_reply)}</div>
+          </div>` : ''}
+        <div class="letter compose">
+          <div class="letter-title">${t.admin_reply ? 'Новый ответ (заменит предыдущий)' : 'Ответ'}</div>
+          ${letterRow('Кому', toLine)}
+          ${letterRow('Тема', 'Re: ' + esc(t.topic_label))}
+          <div class="letter-hint ${emailOff || !canSend ? 'warn' : ''}">${emailOff ? 'Почта на сервере не настроена (SMTP в .env) — письмо не уйдёт. Ответьте вручную и отметьте обращение отвеченным.' : chHint}</div>
+          <textarea class="ipt" id="replyInput" placeholder="Текст ответа…" style="width:100%;min-height:140px"></textarea>
+          <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:12px">
+            ${canSend
+              ? `<div class="primary-btn" onclick="sendReply(${t.id})">Отправить</div>`
+              : `<div class="primary-btn" onclick="sendReply(${t.id})" title="Сохранит ответ в обращении и отметит его отвеченным">Сохранить и отметить отвеченным</div>`}
           </div>
-        ` : ''}
-        <textarea class="ipt" id="replyInput" placeholder="Ответ пользователю…" style="width:100%;min-height:110px;margin-top:14px"></textarea>
-        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px">
-          <span style="font-size:12px;color:#6E6250">Ответ уйдёт в бота или на email — туда, откуда пришло обращение.</span>
-          <div class="primary-btn" onclick="sendReply(${t.id})">Отправить</div>
         </div>
       </div>
     `;
@@ -1441,10 +1471,13 @@ async function openTicket(id) {
 
 async function sendReply(id) {
   const reply = document.getElementById('replyInput').value.trim();
-  if (!reply) return;
+  if (!reply) { toast('Напишите текст ответа', true); return; }
   try {
-    await api('POST', `/web/tickets/${id}/reply`, { reply, status: 'answered' });
-    toast('Ответ отправлен');
+    const r = await api('POST', `/web/tickets/${id}/reply`, { reply, status: 'answered' });
+    if (r.delivered) toast(r.channel === 'telegram' ? `Ответ доставлен в Telegram (${r.to})` : `Письмо отправлено на ${r.to}`);
+    else if (r.channel === 'telegram') toast('Сохранено, но Telegram не доставил сообщение (пользователь мог заблокировать бота)', true);
+    else if (r.channel === 'email') toast('Сохранено, но письмо не ушло — проверьте SMTP', true);
+    else toast('Ответ сохранён — отправьте его пользователю вручную');
     renderSupport();
   } catch (e) { toast(e.message, true); }
 }
