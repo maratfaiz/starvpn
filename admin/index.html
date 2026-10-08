@@ -766,6 +766,7 @@ const NAV_ICONS = {
   devices: 'M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1',
   servers: 'M4 5h16v5H4zM4 14h16v5H4zM7.5 7.5h.01M7.5 16.5h.01',
   payments: 'M3 6h18v12H3zM3 10h18M6.5 14.5h3',
+  gifts: 'M20 12v8H4v-8M2 8h20v4H2zM12 20V8M12 8H8a2 2 0 110-4c2.5 0 4 4 4 4zm0 0h4a2 2 0 100-4c-2.5 0-4 4-4 4z',
   referrals: 'M6 14a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 7.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 21a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8.2 10.3l7.6-3.6M8.2 13.2l7.6 3.6',
   support: 'M4 5h16v11H8l-4 4V5zM8 9h8M8 12h5',
   wiki: 'M4 5a1 1 0 011-1h5a2 2 0 012 2v13a2 2 0 00-2-1.6H4zM20 5a1 1 0 00-1-1h-5a2 2 0 00-2 2v13a2 2 0 012-1.6h6z',
@@ -778,7 +779,7 @@ const NAV_ICONS = {
 const NAV_GROUPS = [
   { title: 'Обзор', items: [{ id: 'dash', label: 'Дашборд' }] },
   { title: 'VPN', items: [{ id: 'users', label: 'Аккаунты', countKey: 'users' }, { id: 'devices', label: 'Устройства', countKey: 'devices' }, { id: 'servers', label: 'Серверы' }] },
-  { title: 'Деньги', items: [{ id: 'payments', label: 'Платежи', countKey: 'payments' }, { id: 'referrals', label: 'Рефералы', countKey: 'referrals' }] },
+  { title: 'Деньги', items: [{ id: 'payments', label: 'Платежи', countKey: 'payments' }, { id: 'gifts', label: 'Подарки', countKey: 'gifts' }, { id: 'referrals', label: 'Рефералы', countKey: 'referrals' }] },
   { title: 'Поддержка', items: [{ id: 'support', label: 'Обращения', countKey: 'tickets' }] },
   { title: 'Контент', items: [{ id: 'bot', label: 'Бот' }, { id: 'wiki', label: 'Wiki', countKey: 'wiki' }, { id: 'banner', label: 'Баннер' }] },
   { title: 'Система', items: [{ id: 'settings', label: 'Настройки' }, { id: 'staff', label: 'Команда' }] },
@@ -792,6 +793,7 @@ const PAGE_META = {
   devices: ['Устройства', 'Активные VLESS-ключи'],
   servers: ['Серверы', 'Ноды Marzban · Xray-core'],
   payments: ['Платежи', 'История всех оплаченных транзакций'],
+  gifts: ['Подарки', 'Подарки по ссылке: кто подарил, забрали ли — и бесплатные ссылки от STAR VPN'],
   referrals: ['Рефералы', 'Лидерборд по приглашённым'],
   support: ['Обращения', 'Тикеты из /support и личного кабинета'],
   bot: ['Бот', 'Тексты, кнопки и свои блоки Telegram-бота'],
@@ -908,14 +910,14 @@ function goto(s, q = '') {
 }
 
 function renderSection(s) {
-  const fns = { dash: renderDashboard, users: () => renderTable('users'), devices: () => renderTable('devices'), servers: renderServers, payments: () => renderTable('payments'), referrals: () => renderTable('referrals'), support: renderSupport, wiki: renderWiki, bot: renderBot, settings: renderSettings, profile: renderProfile, banner: renderAdBanner, staff: renderStaff };
+  const fns = { dash: renderDashboard, users: () => renderTable('users'), devices: () => renderTable('devices'), servers: renderServers, payments: () => renderTable('payments'), gifts: renderGifts, referrals: () => renderTable('referrals'), support: renderSupport, wiki: renderWiki, bot: renderBot, settings: renderSettings, profile: renderProfile, banner: renderAdBanner, staff: renderStaff };
   (fns[s] || (() => {}))();
 }
 
 /* Поиск ищет в текущем разделе. В разделах без списка (дашборд, настройки…)
    переходит к пользователям — самое частое, что ищут. Раньше goto()
    сбрасывал строку поиска, и поиск не работал нигде. */
-const SEARCHABLE = ['users', 'devices', 'payments', 'referrals', 'support', 'staff', 'wiki'];
+const SEARCHABLE = ['users', 'devices', 'payments', 'gifts', 'referrals', 'support', 'staff', 'wiki'];
 let _queryDebounce = null;
 function onQueryInput() {
   clearTimeout(_queryDebounce);
@@ -949,6 +951,7 @@ async function loadCounts() {
     users: ['/web/users?limit=1', d => d.total],
     devices: ['/web/devices?limit=1', d => d.total],
     payments: ['/web/payments?limit=1', d => d.total],
+    gifts: ['/web/gifts?state=ready', d => d.waiting],
     referrals: ['/web/referrals', d => d.referrers_count],
     tickets: ['/web/tickets?status=open', d => d.tickets.length, 'support'],
     wiki: ['/web/wiki', d => d.articles.length],
@@ -1196,6 +1199,72 @@ async function renderTable(sec) {
   } catch (e) {
     c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GIFTS — подарки по ссылке (bot/utils/gifts.py)
+═══════════════════════════════════════════════════════════ */
+const GIFT_STATE = { ready: ['Ждёт получателя', 'gold'], claimed: ['Забран', 'green'], unpaid: ['Не оплачен', 'grey'] };
+const GIFT_METHOD = { stars: 'Stars', crypto: 'Крипта', card: 'Карта', admin: 'Бесплатно' };
+async function renderGifts() {
+  const c = document.getElementById('content');
+  try {
+    const data = await api('GET', `/web/gifts?q=${encodeURIComponent(query)}${filter !== 'all' ? '&state=' + filter : ''}`);
+    const filters = [
+      { id: 'all', label: 'Все' }, { id: 'ready', label: 'Ждут получателя', count: data.waiting },
+      { id: 'claimed', label: 'Забраны', count: data.claimed }, { id: 'unpaid', label: 'Не оплачены' },
+    ];
+    c.innerHTML = `
+      <div class="editor-card" style="margin-bottom:12px">
+        <div class="dcard-title">Создать подарочную ссылку</div>
+        <div style="font-size:13px;color:#8A7A60;margin:4px 0 14px">Бесплатно, от имени «STAR VPN» — для конкурсов, компенсаций и партнёров. Ссылку забирают один раз — на сайте или в боте.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <select class="ipt" id="gfDays" style="width:auto">
+            ${[7, 30, 90, 180].map(d => `<option value="${d}" ${d === 30 ? 'selected' : ''}>${d} дней</option>`).join('')}
+          </select>
+          <input class="ipt" id="gfMessage" maxlength="300" placeholder="Сообщение получателю (необязательно)" style="flex:1;min-width:200px">
+          <div class="primary-btn" onclick="createAdminGift()">Создать ссылку</div>
+        </div>
+        <div id="gfResult"></div>
+      </div>
+      <div class="filters">
+        ${filters.map(f => `<div class="filter-pill ${f.id === filter ? 'sel' : ''}" onclick="filter='${f.id}';renderGifts()">${f.label}${f.count != null ? `<span class="n">${f.count}</span>` : ''}</div>`).join('')}
+      </div>
+      <div class="tbl-wrap"><div class="tbl-scroll"><table>
+        <thead><tr><th>Создан</th><th>Даритель</th><th>Срок</th><th>Оплата</th><th>Статус</th><th>Забрал</th><th></th></tr></thead>
+        <tbody>${data.gifts.length ? data.gifts.map(g => {
+          const [lbl, kind] = GIFT_STATE[g.state];
+          return `<tr>
+            <td style="color:#8A7A60;font-size:12px">${fmtDateTime(g.created_at)}</td>
+            <td>${g.method === 'admin' ? esc(g.sender_label) : `<a href="#" onclick="event.preventDefault();goto('users', '${g.sender_id}')">${esc(g.sender_label)}</a>`}${g.anon && g.method !== 'admin' ? ' <span class="chip grey" style="font-size:10px">анонимно</span>' : ''}</td>
+            <td>${esc(g.plan_label)}</td>
+            <td><span class="mono">${g.method === 'admin' ? '—' : fmtMoney(g.amount, g.currency)}</span> <span style="color:#6E6250;font-size:12px">${GIFT_METHOD[g.method] || esc(g.method)}</span></td>
+            <td><span class="chip ${kind}">${lbl}</span></td>
+            <td>${esc(g.claimed_by || '—')}</td>
+            <td>${g.state === 'ready' ? `<button type="button" class="act-btn plain" onclick="copyText('${esc(g.link)}')">Ссылка</button>` : ''}</td>
+          </tr>`;
+        }).join('') : `<tr><td colspan="7"><div class="empty">Подарков пока нет</div></td></tr>`}</tbody>
+      </table></div><div class="tbl-foot"><span>Ждут получателя: ${data.waiting} · забраны: ${data.claimed}</span></div></div>
+    `;
+  } catch (e) {
+    c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
+  }
+}
+async function createAdminGift() {
+  try {
+    const r = await api('POST', '/web/gifts', {
+      days: Number(document.getElementById('gfDays').value),
+      message: document.getElementById('gfMessage').value.trim(),
+    });
+    document.getElementById('gfResult').innerHTML = `
+      <div style="margin-top:14px;display:grid;gap:8px">
+        <div class="field-lbl">Ссылка на сайт</div>${copyField(r.link, '#FFB800')}
+        <div class="field-lbl">Или ссылка на бота</div>${copyField(r.bot_link)}
+      </div>`;
+    document.getElementById('gfMessage').value = '';
+    toast('Ссылка создана');
+    loadCounts();
+  } catch (e) { toast(e.message, true); }
 }
 
 /* ── User detail (used by users/devices/payments/referrals tables) ── */
@@ -3083,7 +3152,7 @@ async function renderSettings() {
         <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
           <div class="editor-card">
             <div class="dcard-title">Тарифы</div>
-            <div style="font-size:13px;color:#8A7A60;margin:4px 0 18px">Цены заданы в коде (bot/handlers/payment.py, bot/utils/robokassa.py) и отдаются боту и сайту через API — измените там и задеплойте, чтобы поменять.</div>
+            <div style="font-size:13px;color:#8A7A60;margin:4px 0 18px">Цены заданы в коде (bot/utils/plans.py, bot/utils/card.py) и отдаются боту и сайту через API — измените там и задеплойте, чтобы поменять.</div>
             ${s.tariffs.map(t => `
               <div class="tariff-row">
                 <div style="min-width:110px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#EBE0CC">${esc(t.label)}</div>
@@ -3097,7 +3166,7 @@ async function renderSettings() {
           <div class="editor-card">
             <div class="dcard-title">Приём оплаты</div>
             <div style="font-size:13px;color:#8A7A60;margin:4px 0 18px">«Настроено» — есть ключи в .env. Переключатель — показывать ли способ пользователям (боту и сайту) прямо сейчас. Stars — только в боте (на сайте недоступны в принципе).</div>
-            ${[['stars', 'Telegram Stars (только в боте)', s.providers.stars], ['card', 'Банковская карта (Robokassa)', s.providers.card], ['crypto', 'Криптовалюта (@CryptoBot)', s.providers.crypto]].map(([key, label, p]) => `
+            ${[['stars', 'Telegram Stars (только в боте)', s.providers.stars], ['card', 'Оплата картой', s.providers.card], ['crypto', 'Криптовалюта (@CryptoBot)', s.providers.crypto]].map(([key, label, p]) => `
               <div class="provider-row">
                 <div style="flex:1;font-size:14px;font-weight:600;color:#EBE0CC">${label}</div>
                 <span class="chip ${p.configured ? 'green' : 'grey'}">${p.configured ? 'Настроено' : 'Не настроено'}</span>

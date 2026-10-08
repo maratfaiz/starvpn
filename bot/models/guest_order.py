@@ -19,9 +19,8 @@ from bot.models.user import Base
 class GuestOrder(Base):
     __tablename__ = "guest_orders"
 
-    # Целочисленный id нужен только для Robokassa InvId (см. card_payment.py
-    # и api.py — там InvId делится по чётности между Payment и GuestOrder,
-    # т.к. у Robokassa один общий ResultURL).
+    # Гостевые покупки без аккаунта шли через Robokassa — она удалена
+    # (ADR-022), новых заказов нет; таблица осталась ради старых записей.
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
 
     # Публичный опаковый идентификатор — используется в URL страницы успеха

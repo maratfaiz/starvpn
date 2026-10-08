@@ -48,16 +48,16 @@ def _buy_kb() -> InlineKeyboardMarkup:
 async def _first_month_price() -> str | None:
     """Цена месяца в первом включённом способе оплаты — раньше всегда
     показывались звёзды, даже если Stars выключены в админке."""
+    from bot.utils.card import CARD_PLANS, card_ready
     from bot.utils.cryptopay import CRYPTO_PLANS, cryptopay
     from bot.utils.plans import STARS_PLANS
-    from bot.utils.robokassa import CARD_PLANS, robokassa
     from bot.utils.settings_store import get_all_provider_states
 
     async with AsyncSessionLocal() as session:
         states = await get_all_provider_states(session)
     if states["stars"]:
         return f"{STARS_PLANS['plan_1m']['stars']} ⭐"
-    if states["card"] and robokassa.configured:
+    if states["card"] and card_ready():
         return f"{CARD_PLANS['plan_1m']['rub']} ₽"
     if states["crypto"] and cryptopay.configured:
         return f"${CRYPTO_PLANS['plan_1m']['usd']}"

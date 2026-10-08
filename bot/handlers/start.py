@@ -144,6 +144,9 @@ async def cmd_start(
         await session.refresh(user)
         await _notify_admin_new_user(message.bot, user)
 
+    if command.args and command.args.startswith("gift_"):
+        await _claim_gift_from_start(message, command.args[5:], user, session)
+
     now = datetime.utcnow()
     has_sub = bool(user.subscription_expires_at and user.subscription_expires_at > now)
 
@@ -165,6 +168,27 @@ async def cmd_start(
         t("start.inline_prompt"),
         reply_markup=_start_inline(user),
     )
+
+
+async def _claim_gift_from_start(message: Message, code: str, user: User, session: AsyncSession) -> None:
+    """/start gift_{код} — забрать подарок по ссылке прямо в боте."""
+    from bot.utils import gifts
+
+    try:
+        result = await gifts.claim_gift(code, user, session)
+    except gifts.GiftClaimError as e:
+        await message.answer(f"🎁 {e.message}")
+        return
+    personal = f"\n\n💬 <i>«{html.escape(result['message'])}»</i>" if result["message"] else ""
+    await message.answer(
+        f"🎁 <b>Подарок получен!</b>\n\n"
+        f"От: <b>{html.escape(result['sender_name'])}</b>\n"
+        f"📦 {result['plan_label']} — подписка активна до "
+        f"<b>{result['expires_at'].strftime('%d.%m.%Y')}</b>"
+        f"{personal}",
+        parse_mode="HTML",
+    )
+    await gifts.notify_gift_claimed(message.bot, result["sender_id"], result["plan_label"])
 
 
 def support_text() -> str:

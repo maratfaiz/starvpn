@@ -63,7 +63,7 @@ export const languageOptions = [
   { id: "ua", label: "Українська" },
 ];
 
-// price — Stars price, rub — card price via Robokassa. Matches bot/handlers/payment.py PLANS.
+// price — Stars price, rub — card price. Matches bot/handlers/payment.py PLANS.
 export const renewPlans = [
   { id: 1, label: "1 месяц", days: 30, perMonth: "99 ⭐ / мес", price: 99, rub: 199, popular: false },
   { id: 2, label: "3 месяца", days: 90, perMonth: "83 ⭐ / мес", price: 249, rub: 499, popular: true },

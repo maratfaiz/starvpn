@@ -47,6 +47,7 @@ SECTIONS: dict[str, str] = {
     "devices": "Устройства",
     "servers": "Серверы",
     "payments": "Платежи",
+    "gifts": "Подарки",
     "referrals": "Рефералы",
     "support": "Обращения",
     "bot": "Бот",

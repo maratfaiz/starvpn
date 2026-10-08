@@ -182,7 +182,7 @@ export default function RenewSheet({
         )}
       </button>
       <div className="text-center font-medium text-[11.5px] text-ink/30 mt-2.5">
-        {method === "stars" ? "Оплата через Telegram Stars" : "Visa · Mastercard · МИР — оплата через Robokassa"}
+        {method === "stars" ? "Оплата через Telegram Stars" : "Visa · Mastercard · МИР — оплата картой"}
       </div>
     </BottomSheet>
   );

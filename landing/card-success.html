@@ -53,9 +53,6 @@ h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(22px,3.2vw,28px);font-
 .btn-ghost{border:1px solid rgba(255,255,255,.16);color:var(--text)}
 .btn-ghost:hover{border-color:var(--gold-border);color:var(--gold)}
 
-.qr-wrap{margin:6px auto 18px;display:flex;justify-content:center}
-.qr-wrap img{width:200px;height:200px;border-radius:14px;background:#fff;padding:10px}
-.link-box{background:rgba(0,0,0,.4);border:1px solid var(--gold-border);border-radius:12px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;word-break:break-all;margin-bottom:16px;color:var(--text2)}
 
 .spinner{width:26px;height:26px;border-radius:50%;border:2.5px solid rgba(255,184,0,.2);border-top-color:var(--gold);animation:spin .8s linear infinite;margin:0 auto 20px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -139,54 +136,7 @@ async function accountState() {
   `;
 }
 
-async function pollGuestOrder(id, attempt) {
-  const box = document.getElementById('box');
-  if (attempt > 40) {
-    box.innerHTML = `
-      <div class="status-icon">${CHECK_ICON}</div>
-      <h1>Оплата обрабатывается</h1>
-      <p class="lede">Иногда это занимает чуть больше минуты. Обновите страницу — ключ появится здесь автоматически.</p>
-      <div class="actions"><a class="btn btn-primary" href="/support">Написать в поддержку</a></div>
-    `;
-    return;
-  }
-  try {
-    const res = await fetch('/api/guest/order/' + id);
-    const data = await res.json();
-    if (data.status === 'paid' && data.link) {
-      localStorage.removeItem('star_vpn_guest_order');
-      box.innerHTML = `
-        <div class="status-icon">${CHECK_ICON}</div>
-        <h1>VPN активирован</h1>
-        <p class="lede">Отсканируйте QR-код или скопируйте ссылку в приложение VPN-клиента.</p>
-        <div class="qr-wrap"><img src="${data.qr_url}" alt="QR-код подключения"></div>
-        <div class="link-box" id="vlessLink"></div>
-        <div class="actions" style="margin-bottom:8px">
-          <button class="btn btn-primary" id="copyBtn">Скопировать ссылку</button>
-          <a class="btn btn-ghost" href="/wiki">Как подключиться</a>
-        </div>
-        <div class="links">
-          <a href="/tariffs">Тарифы</a>
-          <a href="/support">Поддержка</a>
-        </div>
-      `;
-      const linkEl = document.getElementById('vlessLink');
-      linkEl.textContent = data.link;
-      document.getElementById('copyBtn').addEventListener('click', () => {
-        navigator.clipboard.writeText(data.link);
-      });
-      return;
-    }
-  } catch (e) { /* ignore, retry */ }
-  setTimeout(() => pollGuestOrder(id, attempt + 1), 2000);
-}
-
-const orderId = localStorage.getItem('star_vpn_guest_order');
-if (orderId) {
-  pollGuestOrder(orderId, 0);
-} else {
-  accountState();
-}
+accountState();
 
 </script>
 <script src="/stars.js"></script>

@@ -36,6 +36,7 @@ from bot.models.payment import Payment
 from bot.models.user import User
 from bot.utils.marzban import marzban
 from bot.utils.bot_media import send_screen
+from bot.utils import gifts
 from bot.utils.bot_texts import MenuText, image_for, t
 from bot.utils.plans import STARS_PLANS
 from bot.handlers.gift import handle_gift_payment
@@ -335,6 +336,14 @@ async def _pre_checkout_error(query: PreCheckoutQuery, session: AsyncSession) ->
     if buyer.is_banned:
         return "Аккаунт заблокирован."
 
+    link_payment_id = gifts.parse_link_payload(payload)
+    if link_payment_id is not None:
+        gift = await session.get(Payment, link_payment_id)
+        if (not gift or gift.status != "pending" or gift.payment_method != "stars"
+                or gift.gift_sender_id != buyer.telegram_id):
+            return "Счёт устарел — оформите подарок заново."
+        return None
+
     if payload.startswith("gift:"):
         parsed = parse_stars_gift_payload(payload)
         if not parsed or parsed[0] not in PLANS:
@@ -375,7 +384,7 @@ async def on_stars_payment(message: Message, session: AsyncSession) -> None:
 
     # Подарочные инвойсы: запись о платеже, звёзды покупателя и подписка
     # получателю — внутри handle_gift_payment.
-    if plan_key.startswith("gift:"):
+    if plan_key.startswith(("gift:", gifts.LINK_PAYLOAD_PREFIX)):
         await handle_gift_payment(message, plan_key, session)
         return
 

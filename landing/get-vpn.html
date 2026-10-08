@@ -178,7 +178,7 @@ footer{border-top:1px solid rgba(255,255,255,.07)}
       <div class="side-card-title">Как это работает</div>
       <div class="how-row"><span class="how-num">1</span><div class="how-text">Выбираете тариф — 1, 3 или 6 месяцев.</div></div>
       <div class="how-row"><span class="how-num">2</span><div class="how-text">Регистрируетесь через Telegram или по email — телефон не нужен.</div></div>
-      <div class="how-row"><span class="how-num">3</span><div class="how-text">Платите картой через Robokassa или криптовалютой через @CryptoBot.</div></div>
+      <div class="how-row"><span class="how-num">3</span><div class="how-text">Платите криптовалютой через @CryptoBot (оплата картой — скоро).</div></div>
       <div class="how-row"><span class="how-num">4</span><div class="how-text">Ключ появляется в личном кабинете — вставляете ссылку в клиент и подключаетесь.</div></div>
     </div>
     <div class="notice">
@@ -204,7 +204,7 @@ footer{border-top:1px solid rgba(255,255,255,.07)}
   <h2 class="section-h">Частые вопросы про покупку без бота</h2>
   <div class="faq-grid">
     <div class="faq-card"><div class="faq-q">Зачем регистрация, если это "покупка без бота"?</div><div class="faq-a">Ключ привязан к аккаунту — так его можно продлить, увидеть остаток дней и восстановить, если ссылка потеряется. "Без бота" означает, что открывать Telegram-бота не нужно — регистрация всё равно нужна.</div></div>
-    <div class="faq-card"><div class="faq-q">Нужен ли паспорт?</div><div class="faq-a">Нет. Ни оплата картой через Robokassa, ни оплата криптовалютой не требуют от вас документов.</div></div>
+    <div class="faq-card"><div class="faq-q">Нужен ли паспорт?</div><div class="faq-a">Нет. Ни оплата картой, ни оплата криптовалютой не требуют от вас документов.</div></div>
     <div class="faq-card"><div class="faq-q">А если у меня только email, без Telegram?</div><div class="faq-a">Регистрируйтесь по email и платите картой — для этого способа Telegram не нужен вообще. А вот оплата криптовалютой проходит через @CryptoBot, для неё Telegram всё же понадобится.</div></div>
     <div class="faq-card"><div class="faq-q">Работает ли здесь пробный период?</div><div class="faq-a">Бесплатные 2 дня выдаются один раз на Telegram-аккаунт: в боте или в личном кабинете при входе через Telegram. Аккаунтам, созданным по email, пробный период не выдаётся.</div></div>
     <div class="faq-card"><div class="faq-q">Чем это отличается от покупки в боте?</div><div class="faq-a">Ничем в итоге — тот же аккаунт, тот же ключ. Просто регистрация и оплата проходят на сайте, а не в переписке с ботом.</div></div>
@@ -316,7 +316,7 @@ function refreshStep3(){
   buyBtn.textContent = `Оплатить — ${price}`;
   payNoteEl.textContent = selectedProvider === 'crypto'
     ? 'Счёт откроется в @CryptoBot — платите любой из принятых монет.'
-    : 'Visa, Mastercard и МИР через Robokassa. Реквизиты вводятся на стороне провайдера.';
+    : 'Visa, Mastercard и МИР. Реквизиты вводятся на стороне платёжного сервиса.';
 }
 
 async function loadPlans(){
