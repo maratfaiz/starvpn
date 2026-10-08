@@ -2837,9 +2837,19 @@ async def serve_media(media_id: int):
     )
 
 
+# Payment.amount хранится в валюте способа оплаты: ⭐ — Stars, $ — крипта
+# (CryptoPay выставляет счёт в долларах), ₽ — карта и старые рублёвые платежи.
+_METHOD_CURRENCY = {"stars": "stars", "crypto": "usd"}
+
+
+def _payment_currency(method: str | None) -> str:
+    return _METHOD_CURRENCY.get(method or "stars", "rub")
+
+
 @app.get("/web/stats")
-async def web_stats(authorization: str | None = Header(default=None)):
+async def web_stats(days: int = 7, authorization: str | None = Header(default=None)):
     _web_auth(authorization, "dash")
+    days = days if days in (7, 30, 90) else 7
     async with AsyncSessionLocal() as session:
         now = datetime.utcnow()
         total = (await session.execute(select(func.count(User.telegram_id)))).scalar_one()
@@ -2857,31 +2867,48 @@ async def web_stats(authorization: str | None = Header(default=None)):
             select(func.count(Payment.id)).where(Payment.status == "paid")
         )).scalar_one()
         revenue_rows, new_rows = [], []
-        for i in range(6, -1, -1):
+        totals = {cur: {"amount": 0.0, "count": 0} for cur in ("rub", "stars", "usd")}
+        for i in range(days - 1, -1, -1):
             day_start = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
             day_end = day_start + timedelta(days=1)
-            # Payment.amount хранится в валюте способа оплаты — раньше ⭐, ₽ и $
-            # складывались в одно число. Рубли — карта (и старые рублёвые платежи).
             by_method = (await session.execute(
-                select(Payment.payment_method, func.sum(Payment.amount))
+                select(Payment.payment_method, func.sum(Payment.amount), func.count(Payment.id))
                 .where(Payment.status == "paid", Payment.paid_at >= day_start, Payment.paid_at < day_end)
                 .group_by(Payment.payment_method)
             )).all()
             sums = {"rub": 0.0, "usd": 0.0, "stars": 0.0}
-            for method, amount in by_method:
-                key = {"stars": "stars", "crypto": "usd"}.get(method, "rub")
-                sums[key] += float(amount or 0)
+            counts = {"rub": 0, "usd": 0, "stars": 0}
+            for method, amount, n in by_method:
+                cur = _payment_currency(method)
+                sums[cur] += float(amount or 0)
+                counts[cur] += n
+                totals[cur]["amount"] += float(amount or 0)
+                totals[cur]["count"] += n
             cnt = (await session.execute(
                 select(func.count(User.telegram_id)).where(User.created_at >= day_start, User.created_at < day_end)
             )).scalar_one() or 0
             label = day_start.strftime("%d.%m")
-            revenue_rows.append({"date": label, "amount": sums["rub"], **sums})
+            revenue_rows.append({"date": label, **sums, "counts": counts})
             new_rows.append({"date": label, "count": cnt})
     return {
         "total_users": total, "active_subscriptions": active, "banned": banned,
         "trial_used": trial, "total_stars": int(stars), "total_payments": pays,
-        "online_now": -1, "revenue_chart": revenue_rows, "users_chart": new_rows,
+        "days": days, "revenue_chart": revenue_rows, "revenue_totals": totals,
+        "users_chart": new_rows,
     }
+
+
+def _user_search(q: str, *extra) -> object:
+    """Условие поиска пользователя в админке: ID, @username, имя или email.
+    extra — дополнительные текстовые колонки (например, имя пользователя в Marzban)."""
+    qs = q.strip().lstrip("@")
+    if qs.lstrip("-").isdigit():
+        return or_(User.telegram_id == int(qs), *(c.ilike(f"%{qs}%") for c in extra))
+    like = f"%{qs}%"
+    return or_(
+        User.username.ilike(like), User.full_name.ilike(like), User.email.ilike(like),
+        *(c.ilike(like) for c in extra),
+    )
 
 
 @app.get("/web/users")
@@ -2894,12 +2921,8 @@ async def web_users(
     now = datetime.utcnow()
     async with AsyncSessionLocal() as session:
         query = select(User)
-        if q:
-            qs = q.strip().lstrip("@")
-            if qs.lstrip("-").isdigit():
-                query = query.where(User.telegram_id == int(qs))
-            else:
-                query = query.where(or_(User.username.ilike(f"%{qs}%"), User.full_name.ilike(f"%{qs}%")))
+        if q.strip():
+            query = query.where(_user_search(q))
         if status == "active":
             query = query.where(User.subscription_expires_at > now, User.is_banned.is_(False))
         elif status == "banned":
@@ -3057,16 +3080,22 @@ async def web_user_message(tg_id: int, request: Request, authorization: str | No
 
 
 @app.get("/web/payments")
-async def web_payments(limit: int = 50, offset: int = 0, authorization: str | None = Header(default=None)):
+async def web_payments(
+    limit: int = 50, offset: int = 0, q: str = "", authorization: str | None = Header(default=None),
+):
     _web_auth(authorization, "payments")
     async with AsyncSessionLocal() as session:
+        cond = [Payment.status == "paid"]
+        if q.strip():
+            cond.append(Payment.telegram_id.in_(select(User.telegram_id).where(_user_search(q))))
         pays = (await session.execute(
-            select(Payment).where(Payment.status == "paid").order_by(Payment.paid_at.desc()).limit(limit).offset(offset)
+            select(Payment).where(*cond).order_by(Payment.paid_at.desc()).limit(limit).offset(offset)
         )).scalars().all()
-        total = (await session.execute(select(func.count(Payment.id)).where(Payment.status == "paid"))).scalar_one()
+        total = (await session.execute(select(func.count(Payment.id)).where(*cond))).scalar_one()
     return {
         "total": total,
-        "payments": [{"id": p.id, "telegram_id": p.telegram_id, "amount": int(p.amount),
+        "payments": [{"id": p.id, "telegram_id": p.telegram_id, "amount": float(p.amount),
+                      "currency": _payment_currency(p.payment_method),
                       "method": p.payment_method or "stars", "asset": p.asset or "",
                       "days": p.days or 0, "paid_at": p.paid_at.isoformat() if p.paid_at else None} for p in pays],
     }
@@ -3075,17 +3104,22 @@ async def web_payments(limit: int = 50, offset: int = 0, authorization: str | No
 # ─── Устройства (админка) ─────────────────────────────────────────────────────
 
 @app.get("/web/devices")
-async def web_devices(limit: int = 100, offset: int = 0, authorization: str | None = Header(default=None)):
+async def web_devices(
+    limit: int = 100, offset: int = 0, q: str = "", authorization: str | None = Header(default=None),
+):
     _web_auth(authorization, "devices")
     async with AsyncSessionLocal() as session:
+        cond = [Device.is_active.is_(True)]
+        if q.strip():
+            cond.append(_user_search(q, Device.marzban_username, Device.custom_name))
         query = (
             select(Device, User)
             .join(User, User.telegram_id == Device.telegram_id)
-            .where(Device.is_active.is_(True))
+            .where(*cond)
             .order_by(Device.created_at.desc())
         )
         total = (await session.execute(
-            select(func.count(Device.id)).where(Device.is_active.is_(True))
+            select(func.count(Device.id)).join(User, User.telegram_id == Device.telegram_id).where(*cond)
         )).scalar_one()
         rows = (await session.execute(query.limit(limit).offset(offset))).all()
     return {
@@ -3094,6 +3128,7 @@ async def web_devices(limit: int = 100, offset: int = 0, authorization: str | No
             {
                 "id": d.id,
                 "name": d.name,
+                "custom_name": d.custom_name or "",
                 "slot": d.slot,
                 "marzban_username": d.marzban_username,
                 "owner_id": u.telegram_id,
@@ -3108,12 +3143,12 @@ async def web_devices(limit: int = 100, offset: int = 0, authorization: str | No
 # ─── Рефералы (админка) ────────────────────────────────────────────────────────
 
 @app.get("/web/referrals")
-async def web_referrals(limit: int = 100, authorization: str | None = Header(default=None)):
+async def web_referrals(limit: int = 100, q: str = "", authorization: str | None = Header(default=None)):
     _web_auth(authorization, "referrals")
     async with AsyncSessionLocal() as session:
         rows = (await session.execute(
             select(User)
-            .where(User.referral_count > 0)
+            .where(User.referral_count > 0, *([_user_search(q)] if q.strip() else []))
             .order_by(User.referral_count.desc())
             .limit(limit)
         )).scalars().all()
