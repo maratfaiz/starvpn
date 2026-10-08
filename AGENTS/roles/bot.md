@@ -30,7 +30,7 @@
  ботом и API.
 - Отвечать на `pre_checkout_query` дольше 10 секунд (жёсткое
  ограничение Telegram Payments).
-- Ломать формат `Marzban`-username (`tg_{telegram_id}`).
+- Переименовывать существующих пользователей Marzban (формат новых — `new_device_mz_username`).
 - Менять бизнес-правила триала/рефералки без сверки с
  `CLAUDE.md` → "Key Business Rules":
  - Триал — 1 раз на `telegram_id`, поле `User.trial_used`.

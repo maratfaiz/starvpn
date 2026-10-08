@@ -54,7 +54,7 @@ tg_id = _tg_id(x_telegram_init_data)
 
 - Заводить параллельный `/api/account/*`-эндпоинт, дублирующий
  `_resolve_tg_id`-логику — расширяй общий резолвер, а не копируй его.
-- Менять формат Marzban-логина (`tg_{telegram_id}` / `web_{id}`).
+- Переименовывать существующих пользователей Marzban (формат новых — `new_device_mz_username`, см. CLAUDE.md).
 - Отключать/ослаблять проверку подписи платёжных вебхуков.
 - Писать `print()` — только `logging` (см. `CLAUDE.md`).
 - Синхронные SQLAlchemy-сессии — только `AsyncSession`.

@@ -802,7 +802,7 @@ def _free_slot(devices: list[Device]) -> int | None:
 DEVICE_TYPES_API = {"ios", "android", "macos", "windows", "linux", "androidtv", "appletv"}
 
 
-from bot.handlers.devices import new_device_mz_username  # noqa: E402 — одна реализация на бота и API
+from bot.handlers.devices import device_mz_note, new_device_mz_username  # noqa: E402 — одна реализация на бота и API
 
 
 # ─── GET /api/me ──────────────────────────────────────────────────────────────
@@ -951,12 +951,12 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
         if not slot:
             raise HTTPException(403, f"Maximum {MAX_DEVICES} devices allowed")
 
-        mz_username = await new_device_mz_username(tg_id, session)
+        mz_username = await new_device_mz_username(user, type_key, session)
 
         try:
             mz_user = await marzban.provision_user(
                 mz_username, tg_id, user.subscription_expires_at,
-                note=f"device|type:{type_key}|slot:{slot}|tg:{tg_id}|webapp", ip_limit=1,
+                note=device_mz_note(user, type_key, slot, "сайт / приложение"), ip_limit=1,
             )
             link = marzban.extract_vless_link(mz_user) or ""
         except Exception as e:
