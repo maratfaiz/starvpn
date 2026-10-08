@@ -50,7 +50,7 @@ PostgreSQL 16, SQLAlchemy 2.0 (async), миграции — Alembic
 |---|---|---|
 | `users` | `User` | Центральная таблица. Реальный Telegram-пользователь **или** веб-аккаунт (email-only, отрицательный `telegram_id`) |
 | `devices` | `Device` | Привязанные VPN-устройства (слот 1–3, `marzban_username` уникален) |
-| `payments` | `Payment` | Все платежи (Stars/Robokassa/крипта), включая подарки (`is_gift`); поле `payment_method` может исторически содержать `"yoomoney"` в старых строках — провайдер удалён из кода (ADR-015), но данные не переписывались |
+| `payments` | `Payment` | Все платежи (Stars/крипта; старые — карта), подарки по ссылке, включая подарки (`is_gift`); поле `payment_method` может исторически содержать `"yoomoney"` в старых строках — провайдер удалён из кода (ADR-015), но данные не переписывались |
 | `gift_notifications` | `GiftNotification` | Уведомление получателю о подарке (сами дни уже начислены в момент оплаты — это только UI-уведомление) |
 | `support_tickets` | `SupportTicket` | Обращения в поддержку (сайт + бот) |
 | `web_sessions` | `WebSession` | Сессии веб-личного кабинета (cookie `star_session`) |

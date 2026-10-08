@@ -31,7 +31,7 @@ Payments:
 
 Telegram Stars (XTR): Использование метода sendInvoice с валютой XTR. Обработка pre_checkout_query обязательна.
 
-Russian Gateways: Интеграция с Prodamus/Robokassa через вебхуки с проверкой HMAC-SHA256 подписи.
+Оплата картой (₽): новый сервис эквайринга подключается в bot/utils/card.py — Robokassa удалена (ADR-022). Вебхуки всегда с проверкой подписи.
 ------------------------
 5. UI/UX Requirements
 Haptic Feedback: Каждое ключевое действие в Mini App (оплата, включение VPN, ошибка) должно сопровождаться тактильной отдачей через @tma.js/sdk.
