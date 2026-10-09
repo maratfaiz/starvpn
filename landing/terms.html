@@ -25,7 +25,7 @@ html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smo
 body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:16px;line-height:1.7;overflow-x:hidden}
 a{color:var(--gold);text-decoration:none}
 a:hover{color:var(--gold2)}
-#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.28}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(255,184,0,.2);border-radius:2px}
@@ -102,7 +102,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
 
     <div class="legal-section">
       <h2 id="s4">4. Оплата и возвраты</h2>
-      <p>Сервис поддерживает оплату банковской картой через Robokassa, криптовалютой через @CryptoBot, а также Telegram Stars в боте — какие из них сейчас включены, показано на странице <a href="/tariffs">тарифов</a>. Ни один способ не требует документов.</p>
+      <p>Сервис поддерживает оплату банковской картой, криптовалютой через @CryptoBot, а также Telegram Stars в боте — какие из них сейчас включены, показано на странице <a href="/tariffs">тарифов</a>. Ни один способ не требует документов.</p>
       <p>Поскольку услуга активируется сразу и является цифровой, возврат за уже начавшийся оплаченный период не предусмотрен, кроме случаев, когда сервис не работал по нашей вине. Спорные ситуации решаются через поддержку в боте.</p>
     </div>
 
@@ -167,36 +167,7 @@ footer{position:relative;z-index:2;border-top:1px solid rgba(255,255,255,.07)}
   </div>
 </footer>
 
-<script>
-/* ═══ Starfield ══════════════════════════════════════════════ */
-(function(){
-  const c = document.getElementById('bg-canvas');
-  const ctx = c.getContext('2d');
-  function resize(){ c.width = innerWidth; c.height = innerHeight; }
-  resize(); window.addEventListener('resize', resize, {passive:true});
-  const stars = Array.from({length:50}, () => ({
-    x: Math.random(), y: Math.random(),
-    r: Math.random() * 1.1 + 0.15,
-    o: Math.random() * 0.5 + 0.1,
-    sp: Math.random() * 0.0004 + 0.00006,
-    ph: Math.random() * Math.PI * 2,
-  }));
-  let f = 0;
-  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function draw(){
-    ctx.clearRect(0,0,c.width,c.height); f++;
-    for(const s of stars){
-      const a = s.o * (0.4 + 0.6 * Math.sin(f * s.sp * 200 + s.ph));
-      ctx.beginPath();
-      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(255,216,120,${a})`; ctx.fill();
-    }
-    if(!reduced) requestAnimationFrame(draw);
-  }
-  draw();
-})();
 
-</script>
-
+<script src="/stars.js"></script>
 </body>
 </html>

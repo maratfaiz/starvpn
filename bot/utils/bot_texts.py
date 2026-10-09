@@ -304,7 +304,7 @@ SCREENS: list[dict] = [
      "buttons": [{"label": "Кнопки тарифов (из цен)", "to": "invoice"},
                  {"key": "btn.back", "to": "pay_choice", "back": True}]},
     {"id": "card", "title": "Оплата картой", "col": 4, "row": 1, "kind": "code",
-     "note": "Robokassa — логика в коде.", "buttons": []},
+     "note": "Оплата картой — провайдер пока не подключён.", "buttons": []},
     {"id": "crypto", "title": "Оплата криптой", "col": 4, "row": 2, "kind": "code",
      "note": "@CryptoBot — логика в коде.", "buttons": []},
     {"id": "instructions", "title": "Инструкции", "col": 4, "row": 3,

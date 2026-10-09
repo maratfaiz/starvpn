@@ -149,7 +149,8 @@ async def handle_crypto_webhook(
 ) -> None:
     """
     Вызывается из /crypto/webhook после верификации подписи.
-    Поддерживает обычные платежи и подарки (payload начинается с 'gift:').
+    Поддерживает обычные платежи, подарки по ссылке (Payment.gift_link_code)
+    и старые подарки конкретному человеку (payload начинается с 'gift:').
 
     Отметка об оплате и выдача подписки — одна транзакция (единственный
     коммит внутри _grant_subscription): если выдача упала, откатывается и
@@ -157,7 +158,7 @@ async def handle_crypto_webhook(
     Повторная доставка после успеха ничего не делает — pending-строки нет.
     """
     from datetime import datetime
-    from bot.handlers.card_payment import _notify_gift_recipient
+    from bot.utils.gifts import notify_gift_recipient, send_gift_link
     from bot.handlers.payment import _credit_referral, _grant_subscription
 
     is_gift = invoice_payload.startswith("gift:")
@@ -185,6 +186,14 @@ async def handle_crypto_webhook(
         days = payment.days or 30
         plan_label = {30: "1 месяц", 90: "3 месяца", 180: "6 месяцев"}.get(days, f"{days} дней")
 
+        if payment.gift_link_code:
+            # Подарок по ссылке: оплата ничего не выдаёт — дарителю уходит
+            # ссылка, подписку получит тот, кто её откроет (gifts.claim_gift).
+            await session.commit()
+            await send_gift_link(bot, payment)
+            logger.info("Crypto gift-link paid: invoice_id=%s payment=%s", invoice_id, payment.id)
+            return
+
         if is_gift:
             # Формат payload: gift:{plan_key}:{recipient_id}:{anon}:{sender_id}
             parts = invoice_payload.split(":")
@@ -210,7 +219,7 @@ async def handle_crypto_webhook(
             await _grant_subscription(recipient, days, session)  # коммитит и отметку
             # Уведомление получателю (Telegram + окно о подарке в мини-аппе/
             # кабинете) и личное сообщение — как у подарков Stars и картой.
-            await _notify_gift_recipient(payment, recipient, plan_label, bot, session)
+            await notify_gift_recipient(payment, recipient, plan_label, bot, session)
 
             sender = await session.get(User, sender_id)
             try:

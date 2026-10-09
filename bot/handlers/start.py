@@ -27,7 +27,7 @@ from sqlalchemy import select
 
 from bot.config import settings
 from bot.models.user import User
-from bot.utils import bot_texts
+from bot.utils import app_config, bot_texts
 from bot.utils.bot_media import send_screen
 from bot.utils.bot_texts import MenuText, image_for, t
 
@@ -50,7 +50,7 @@ def main_keyboard(user: User) -> ReplyKeyboardMarkup:
         rows.append(visible("btn.gift", "btn.referral"))
     else:
         rows.append(visible("btn.connect"))
-        if not user.trial_used:
+        if not user.trial_used and app_config.trial_enabled():
             rows.append(visible("btn.trial"))
         rows.append(visible("btn.referral"))
 
@@ -77,7 +77,7 @@ def _start_inline(user: User) -> InlineKeyboardMarkup:
     has_sub = bool(user.subscription_expires_at and user.subscription_expires_at > now)
 
     if not has_sub:
-        if not user.trial_used:
+        if not user.trial_used and app_config.trial_enabled():
             buttons.append([InlineKeyboardButton(
                 text=t("btn.try_trial"),
                 callback_data="activate_trial",
@@ -144,6 +144,9 @@ async def cmd_start(
         await session.refresh(user)
         await _notify_admin_new_user(message.bot, user)
 
+    if command.args and command.args.startswith("gift_"):
+        await _claim_gift_from_start(message, command.args[5:], user, session)
+
     now = datetime.utcnow()
     has_sub = bool(user.subscription_expires_at and user.subscription_expires_at > now)
 
@@ -154,7 +157,7 @@ async def cmd_start(
     else:
         greeting_key = "start.welcome_new"
         greeting = t(greeting_key)
-        if not user.trial_used:
+        if not user.trial_used and app_config.trial_enabled():
             greeting += "\n\n" + t("start.trial_hint")
 
     await send_screen(
@@ -165,6 +168,27 @@ async def cmd_start(
         t("start.inline_prompt"),
         reply_markup=_start_inline(user),
     )
+
+
+async def _claim_gift_from_start(message: Message, code: str, user: User, session: AsyncSession) -> None:
+    """/start gift_{код} — забрать подарок по ссылке прямо в боте."""
+    from bot.utils import gifts
+
+    try:
+        result = await gifts.claim_gift(code, user, session)
+    except gifts.GiftClaimError as e:
+        await message.answer(f"🎁 {e.message}")
+        return
+    personal = f"\n\n💬 <i>«{html.escape(result['message'])}»</i>" if result["message"] else ""
+    await message.answer(
+        f"🎁 <b>Подарок получен!</b>\n\n"
+        f"От: <b>{html.escape(result['sender_name'])}</b>\n"
+        f"📦 {result['plan_label']} — подписка активна до "
+        f"<b>{result['expires_at'].strftime('%d.%m.%Y')}</b>"
+        f"{personal}",
+        parse_mode="HTML",
+    )
+    await gifts.notify_gift_claimed(message.bot, result["sender_id"], result["plan_label"])
 
 
 def support_text() -> str:

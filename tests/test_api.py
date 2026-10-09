@@ -41,23 +41,23 @@ async def test_master_key_only_registers_first_admin(session, monkeypatch):
     assert worker.rank == "worker"
 
 
-async def test_site_plans_custom_days_and_crypto_only(monkeypatch):
-    from bot.utils.cryptopay import cryptopay
-    from bot.utils.robokassa import robokassa
+async def test_site_plans_are_crypto_only_while_card_is_not_connected(session, monkeypatch):
+    import pytest
 
-    monkeypatch.setattr(type(robokassa), "configured", property(lambda self: True))
+    from bot.utils.cryptopay import cryptopay
+    from bot.utils.settings_store import is_provider_enabled, set_provider_enabled
+
     monkeypatch.setattr(type(cryptopay), "configured", property(lambda self: True), raising=False)
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="https://test") as client:
         plans = (await client.get("/api/site/plans?days=47")).json()
-        custom = [p for p in plans if p["key"] == "custom"]
-        assert custom and custom[0]["days"] == 47 and custom[0]["rub"] == 310  # 47 × 6.6 ₽, как на /tariffs
-        assert len((await client.get("/api/site/plans?days=90")).json()) == 3
+    # Robokassa удалена (ADR-022): нет ни рублёвых цен, ни «своего срока».
+    assert len(plans) == 3 and all(p["rub"] is None and p["usd"] for p in plans)
 
-    monkeypatch.setattr(type(robokassa), "configured", property(lambda self: False))
-    async with httpx.AsyncClient(transport=transport, base_url="https://test") as client:
-        plans = (await client.get("/api/site/plans?days=47")).json()
-        assert len(plans) == 3 and all(p["rub"] is None and p["usd"] for p in plans)
+    assert not await is_provider_enabled(session, "card")
+    with pytest.raises(ValueError):
+        await set_provider_enabled(session, "card", True)
+
 
 
 async def test_password_reset_flow(session, monkeypatch):

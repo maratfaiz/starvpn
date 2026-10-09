@@ -430,6 +430,9 @@ footer{
 }
 .app-tile-icon svg{width:19px;height:19px;stroke:var(--gold);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .app-tile-name{font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:700;color:var(--text)}
+.app-tile:has(.app-tile-os){flex-direction:column;align-items:flex-start;gap:10px;padding:16px 14px}
+.app-tile-os{display:flex;flex-wrap:wrap;gap:4px;margin-top:auto}
+.app-tile-os span{font-size:10.5px;line-height:1.2;padding:3px 7px;border-radius:999px;color:var(--gold);background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.18)}
 
 /* ─── REFERRAL SPLIT ───────────────────────────────────────── */
 .ref-split{
@@ -777,22 +780,32 @@ footer{
     <a class="app-tile" href="/wiki/install-ios">
       <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M7 3h10a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM10.5 18h3"/></svg></span>
       <div class="app-tile-name">Телефон</div>
+      <div class="app-tile-os"><span>iOS</span><span>Android</span></div>
     </a>
     <a class="app-tile" href="/wiki/install-android">
       <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 011 1v16a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1zM10.5 18.5h3"/></svg></span>
       <div class="app-tile-name">Планшет</div>
+      <div class="app-tile-os"><span>iPadOS</span><span>Android</span></div>
     </a>
     <a class="app-tile" href="/wiki/install-windows">
       <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M3 5h18v11H3zM8 20h8M12 16v4"/></svg></span>
       <div class="app-tile-name">Ноутбук / ПК</div>
+      <div class="app-tile-os"><span>Windows</span><span>macOS</span><span>Linux</span></div>
     </a>
     <a class="app-tile" href="/wiki">
       <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v12H4zM9 20h6M12 16v4"/></svg></span>
       <div class="app-tile-name">ТВ</div>
+      <div class="app-tile-os"><span>Android TV</span><span>Apple TV</span></div>
     </a>
     <a class="app-tile" href="/wiki">
       <span class="app-tile-icon"><svg viewBox="0 0 24 24"><path d="M3 11h18v4a1 1 0 01-1 1H4a1 1 0 01-1-1zM7 16v3M17 16v3M6 11V8a2 2 0 012-2h8a2 2 0 012 2v3"/></svg></span>
       <div class="app-tile-name">Роутер</div>
+      <div class="app-tile-os"><span>Keenetic</span><span>OpenWrt</span></div>
+    </a>
+    <a class="app-tile" href="/wiki">
+      <span class="app-tile-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/></svg></span>
+      <div class="app-tile-name">Другие</div>
+      <div class="app-tile-os"><span>Любой VLESS-клиент</span></div>
     </a>
   </div>
 </div>
@@ -875,7 +888,7 @@ footer{
         Нужен ли паспорт при оплате?
         <svg class="faq-arr" viewBox="0 0 24 24"><polyline points="6,9 12,15 18,9"/></svg>
       </button>
-      <div class="faq-body"><p>Нет. Ни оплата картой через Robokassa, ни оплата криптовалютой через @CryptoBot, ни оплата Telegram Stars в боте не требуют от вас документов.</p></div>
+      <div class="faq-body"><p>Нет. Ни оплата картой, ни оплата криптовалютой через @CryptoBot, ни оплата Telegram Stars в боте не требуют от вас документов.</p></div>
     </div>
 
     <div class="faq-item">
@@ -1176,32 +1189,6 @@ window.addEventListener('scroll', () => {
   bar.style.width = Math.min(pct, 100) + '%';
 }, {passive:true});
 
-/* ═══ Starfield ══════════════════════════════════════════════ */
-(function(){
-  const c = document.getElementById('bg-canvas');
-  const ctx = c.getContext('2d');
-  function resize(){ c.width = innerWidth; c.height = innerHeight; }
-  resize(); window.addEventListener('resize', resize, {passive:true});
-  const stars = Array.from({length:340}, () => ({
-    x: Math.random(), y: Math.random(),
-    r: Math.random() * 1.6 + 0.3,
-    o: Math.random() * 0.6 + 0.35,
-    sp: Math.random() * 0.0004 + 0.00006,
-    ph: Math.random() * Math.PI * 2,
-  }));
-  let f = 0;
-  function draw(){
-    ctx.clearRect(0,0,c.width,c.height); f++;
-    for(const s of stars){
-      const a = s.o * (0.55 + 0.45 * Math.sin(f * s.sp * 200 + s.ph));
-      ctx.beginPath();
-      ctx.arc(s.x*c.width, s.y*c.height, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(255,216,120,${a})`; ctx.fill();
-    }
-    requestAnimationFrame(draw);
-  }
-  draw();
-})();
 
 /* ═══ Scroll reveal ══════════════════════════════════════════ */
 const io = new IntersectionObserver(entries => {
@@ -1273,5 +1260,6 @@ document.querySelectorAll('.device-copy').forEach(btn => {
 });
 </script>
 
+<script src="/stars.js"></script>
 </body>
 </html>

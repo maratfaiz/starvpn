@@ -221,12 +221,6 @@ textarea.ipt{width:100%;min-height:80px;line-height:1.6;margin-bottom:12px;font-
 .tkt-foot{display:flex;justify-content:space-between;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#6E6250}
 .tkt-detail{background:#161513;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px}
 .tkt-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.07);margin-bottom:18px}
-.msg-bubble{max-width:88%;border-radius:14px;padding:14px 16px;margin-bottom:12px}
-.msg-bubble.user{background:#0B0A09;border:1px solid rgba(255,255,255,.08)}
-.msg-bubble.admin{background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.22);margin-left:auto}
-.msg-who{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;margin-bottom:6px}
-.msg-text{font-size:14px;line-height:1.6;color:#EBE0CC;white-space:pre-wrap}
-.msg-time{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#6E6250;margin-top:7px}
 
 /* ── Servers ─────────────────────────────────────────────── */
 .srv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
@@ -319,6 +313,16 @@ details.editor-card[open] > summary::after{content:' ▾'}
 .bfield .ipt{flex:1;min-width:0}
 .bfield-hide{display:flex;align-items:center;gap:5px;font-size:11.5px;color:#8A7A60;white-space:nowrap;cursor:pointer}
 .bfield-hint{font-size:11px;color:#7E705B;margin:0 0 10px 2px}
+.emoji-btn{flex-shrink:0;width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#8A7A60;font-size:16px;cursor:pointer;line-height:1}
+.emoji-btn:hover{border-color:rgba(255,184,0,.4);color:#FFB800}
+.tfield-tools .emoji-btn{width:28px;height:28px;font-size:14px}
+.emoji-pop{position:fixed;z-index:1000;width:300px;max-height:340px;overflow-y:auto;background:#141210;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px;box-shadow:0 20px 50px rgba(0,0,0,.6);display:none}
+.emoji-pop.open{display:block}
+.emoji-group{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#7E705B;margin:6px 2px 4px}
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:2px}
+.emoji-grid button{background:none;border:0;border-radius:7px;font-size:19px;padding:4px 0;cursor:pointer}
+.emoji-grid button:hover{background:rgba(255,184,0,.14)}
+.emoji-clear{width:100%;margin-top:8px;background:none;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#8A7A60;font-size:12px;padding:6px;cursor:pointer}
 .cb-btn{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:9px;margin-bottom:8px}
 .cb-btn .ipt{padding:8px 10px}
 .cb-target .ipt{width:100%}
@@ -327,6 +331,29 @@ details.editor-card[open] > summary::after{content:' ▾'}
 .tg-bubble{background:#182533;color:#F5F5F5;border-radius:12px 12px 12px 4px;padding:9px 12px;font-size:13.5px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;max-width:100%;font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
 .tg-bubble a{color:#6AB2F2}
 .tg-bubble code,.tg-bubble pre{font-family:'JetBrains Mono',monospace;font-size:12px;color:#E5A06E}
+.seg{display:inline-flex;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:2px}
+.seg-item{padding:4px 10px;font-size:12px;color:#8A7A60;border-radius:7px;cursor:pointer}
+.seg-item.sel{background:rgba(255,184,0,.16);color:#FFB800}
+.rev-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.rev-tab{border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;cursor:pointer;min-width:0;transition:border-color .15s}
+.rev-tab:hover{border-color:rgba(255,184,0,.3)}
+.rev-tab.sel{border-color:rgba(255,184,0,.6);background:rgba(255,184,0,.06)}
+.rev-tab-lbl{font-size:11px;color:#8A7A60;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rev-tab-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:#EBE0CC;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rev-tab.sel .rev-tab-val{color:#FFB800}
+.rev-tab-sub{font-size:11px;color:#6E6250;margin-top:2px}
+.letter{border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:14px 16px;margin-top:12px;background:rgba(0,0,0,.25)}
+.letter.sent{border-color:rgba(255,184,0,.25);background:rgba(255,184,0,.04)}
+.letter.compose{background:rgba(255,255,255,.02)}
+.letter-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#EBE0CC;margin-bottom:8px}
+.letter-row{display:flex;gap:10px;font-size:13px;padding:3px 0;align-items:baseline;min-width:0}
+.letter-k{width:44px;flex-shrink:0;color:#6E6250}
+.letter-v{color:#EBE0CC;min-width:0;overflow-wrap:anywhere}
+.letter-body{white-space:pre-wrap;font-size:14px;line-height:1.6;color:#EBE0CC;margin-top:10px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);overflow-wrap:anywhere}
+.letter-hint{font-size:12px;color:#8A7A60;margin:8px 0 10px}
+.letter-hint.warn{color:#FBBF24}
+.tkt-date{margin-left:auto;font-size:11px;color:#6E6250;white-space:nowrap}
+.tkt-snippet{font-size:12px;color:#7E705B;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .tg-bubble blockquote{border-left:3px solid #6AB2F2;padding-left:8px;margin:2px 0}
 .img-picker{display:flex;gap:12px;align-items:center;background:rgba(0,0,0,.3);border:1px dashed rgba(255,255,255,.14);border-radius:12px;padding:10px;margin-bottom:8px}
 .img-thumb{width:84px;height:56px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -375,6 +402,12 @@ details.editor-card[open] > summary::after{content:' ▾'}
 .copy-btn{flex-shrink:0;width:30px;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#8A7A60;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .copy-btn:hover{color:#FFB800;border-color:rgba(255,184,0,.4)}
 .copy-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8}
+.cfg-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13.5px;color:#EBE0CC;margin-top:10px;flex-wrap:wrap}
+.cfg-field{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#8A7A60}
+.cfg-affix{font-size:13px;color:#8A7A60}
+.cfg-input{padding:7px 9px!important;text-align:right}
+.cfg-reset{cursor:pointer;color:#FFB800;font-size:14px}
+.cfg-hint{font-size:12px;color:#6E6250;margin-top:4px;line-height:1.5}
 .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
 @media(max-width:820px){.settings-grid{grid-template-columns:1fr}}
 .tariff-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px;margin-bottom:10px}
@@ -419,8 +452,6 @@ details.editor-card[open] > summary::after{content:' ▾'}
 .banner-icon-opt.sel{border-color:#FFB800;background:rgba(255,184,0,.12);color:#FFB800}
 .toggle-track{width:42px;height:24px;border-radius:100px;padding:2px;display:flex;flex-shrink:0}
 .toggle-knob{width:18px;height:18px;border-radius:50%}
-.zl-box{background:rgba(255,184,0,.05);border:1px solid rgba(255,184,0,.22);border-radius:16px;padding:22px}
-.zl-code{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.09);border-radius:10px;padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.9;color:#8A7A60;margin-top:14px}
 
 .toast-wrap{position:fixed;right:22px;bottom:22px;z-index:300;display:flex;flex-direction:column;gap:8px}
 .toast-item{background:rgba(12,11,10,.97);border:1px solid rgba(255,184,0,.35);border-radius:12px;padding:14px 20px;box-shadow:0 20px 50px rgba(0,0,0,.6);font-size:13.5px;color:#EBE0CC;animation:toastIn .2s ease}
@@ -629,12 +660,39 @@ function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt
 function fmtDate(iso) { if (!iso) return '—'; return new Date(iso).toLocaleDateString('ru-RU', {day:'2-digit',month:'2-digit',year:'2-digit'}); }
 function fmtDateTime(iso) { if (!iso) return '—'; return new Date(iso).toLocaleString('ru-RU', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
 /* ── Картинки: загрузка в /web/media и выбор «файл или ссылка» ── */
+/* Большие фото уменьшаем в браузере до 1920 px и пережимаем: прокси перед
+   сервером (Netlify / nginx) режет тела запросов больше ~1 МБ, и загрузка
+   фото с телефона молча падала. GIF не трогаем — сломается анимация. */
+const UPLOAD_SOFT_LIMIT = 900 * 1024, UPLOAD_MAX_SIDE = 1920;
+async function shrinkImage(file) {
+  if (!/^image\/(png|jpeg|webp)$/.test(file.type)) return file;
+  let bmp;
+  try { bmp = await createImageBitmap(file); } catch (e) { return file; }
+  const scale = Math.min(1, UPLOAD_MAX_SIDE / Math.max(bmp.width, bmp.height));
+  if (scale === 1 && file.size <= UPLOAD_SOFT_LIMIT) return file;
+  const cv = document.createElement('canvas');
+  cv.width = Math.round(bmp.width * scale); cv.height = Math.round(bmp.height * scale);
+  cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
+  const blob = (type, q) => new Promise(res => cv.toBlob(res, type, q));
+  let out = file.type === 'image/png' ? await blob('image/png') : null;
+  if (!out || out.size > UPLOAD_SOFT_LIMIT) out = await blob('image/jpeg', 0.88);
+  if (out && out.size > UPLOAD_SOFT_LIMIT) out = await blob('image/jpeg', 0.75);
+  if (!out || out.size >= file.size) return file;
+  return new File([out], file.name.replace(/\.\w+$/, out.type === 'image/png' ? '.png' : '.jpg'), { type: out.type });
+}
 async function uploadImage(file) {
+  if (!/^image\/(png|jpeg|gif|webp)$/.test(file.type)) throw new Error('Подходят только PNG, JPEG, GIF или WebP');
+  file = await shrinkImage(file);
+  if (file.size > 5 * 1024 * 1024) throw new Error('Файл больше 5 МБ — уменьшите картинку');
   const fd = new FormData();
   fd.append('file', file);
-  const r = await fetch('/web/media', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+  let r;
+  try {
+    r = await fetch('/web/media', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: fd });
+  } catch (e) { throw new Error('Сеть недоступна — картинка не загрузилась'); }
   const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.detail || 'Не удалось загрузить картинку');
+  if (r.status === 413) throw new Error('Файл слишком большой для сервера — уменьшите картинку');
+  if (!r.ok) throw new Error(data.detail || `Не удалось загрузить картинку (ошибка ${r.status})`);
   return data;  // {id, ref: "media:12", url: "/media/12"}
 }
 function imageRefUrl(ref) {
@@ -662,9 +720,12 @@ async function onImagePicked(slot, input) {
   const file = input.files && input.files[0];
   if (!file) return;
   try {
+    toast('Загружаю картинку…');
     const up = await uploadImage(file);
     onImageChange(slot, up.ref);
+    toast('Картинка загружена — не забудьте нажать «Сохранить»');
   } catch (e) { toast(e.message, true); }
+  input.value = '';
 }
 function onImageUrl(slot) {
   const url = prompt('Ссылка на картинку (https://…)', 'https://');
@@ -709,6 +770,7 @@ const NAV_ICONS = {
   devices: 'M7 3h6a1 1 0 011 1v16a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1zM9.5 18h1',
   servers: 'M4 5h16v5H4zM4 14h16v5H4zM7.5 7.5h.01M7.5 16.5h.01',
   payments: 'M3 6h18v12H3zM3 10h18M6.5 14.5h3',
+  gifts: 'M20 12v8H4v-8M2 8h20v4H2zM12 20V8M12 8H8a2 2 0 110-4c2.5 0 4 4 4 4zm0 0h4a2 2 0 100-4c-2.5 0-4 4-4 4z',
   referrals: 'M6 14a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 7.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM18 21a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8.2 10.3l7.6-3.6M8.2 13.2l7.6 3.6',
   support: 'M4 5h16v11H8l-4 4V5zM8 9h8M8 12h5',
   wiki: 'M4 5a1 1 0 011-1h5a2 2 0 012 2v13a2 2 0 00-2-1.6H4zM20 5a1 1 0 00-1-1h-5a2 2 0 00-2 2v13a2 2 0 012-1.6h6z',
@@ -721,7 +783,7 @@ const NAV_ICONS = {
 const NAV_GROUPS = [
   { title: 'Обзор', items: [{ id: 'dash', label: 'Дашборд' }] },
   { title: 'VPN', items: [{ id: 'users', label: 'Аккаунты', countKey: 'users' }, { id: 'devices', label: 'Устройства', countKey: 'devices' }, { id: 'servers', label: 'Серверы' }] },
-  { title: 'Деньги', items: [{ id: 'payments', label: 'Платежи', countKey: 'payments' }, { id: 'referrals', label: 'Рефералы', countKey: 'referrals' }] },
+  { title: 'Деньги', items: [{ id: 'payments', label: 'Платежи', countKey: 'payments' }, { id: 'gifts', label: 'Подарки', countKey: 'gifts' }, { id: 'referrals', label: 'Рефералы', countKey: 'referrals' }] },
   { title: 'Поддержка', items: [{ id: 'support', label: 'Обращения', countKey: 'tickets' }] },
   { title: 'Контент', items: [{ id: 'bot', label: 'Бот' }, { id: 'wiki', label: 'Wiki', countKey: 'wiki' }, { id: 'banner', label: 'Баннер' }] },
   { title: 'Система', items: [{ id: 'settings', label: 'Настройки' }, { id: 'staff', label: 'Команда' }] },
@@ -735,6 +797,7 @@ const PAGE_META = {
   devices: ['Устройства', 'Активные VLESS-ключи'],
   servers: ['Серверы', 'Ноды Marzban · Xray-core'],
   payments: ['Платежи', 'История всех оплаченных транзакций'],
+  gifts: ['Подарки', 'Подарки по ссылке: кто подарил, забрали ли — и бесплатные ссылки от STAR VPN'],
   referrals: ['Рефералы', 'Лидерборд по приглашённым'],
   support: ['Обращения', 'Тикеты из /support и личного кабинета'],
   bot: ['Бот', 'Тексты, кнопки и свои блоки Telegram-бота'],
@@ -836,25 +899,44 @@ function navAllowed(id) {
   return !!(myProfile && myProfile.allowed_sections && myProfile.allowed_sections.includes(id));
 }
 
-function goto(s) {
+function goto(s, q = '') {
   if (!confirmLeave()) return;
   if (!navAllowed(s)) s = 'dash';
   section = s;
-  filter = 'all'; query = ''; selectedRow = null; selectedTicket = null;
-  document.getElementById('globalQuery').value = '';
+  filter = 'all'; query = q; selectedRow = null; selectedTicket = null;
+  document.getElementById('globalQuery').value = q;
   renderSidebar();
   const [title, sub] = PAGE_META[s] || [s, ''];
   document.getElementById('tbTitle').textContent = title;
   document.getElementById('tbSub').textContent = sub;
   document.getElementById('content').innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
-  const fns = { dash: renderDashboard, users: () => renderTable('users'), devices: () => renderTable('devices'), servers: renderServers, payments: () => renderTable('payments'), referrals: () => renderTable('referrals'), support: renderSupport, wiki: renderWiki, bot: renderBot, settings: renderSettings, profile: renderProfile, banner: renderAdBanner, staff: renderStaff };
+  renderSection(s);
+}
+
+function renderSection(s) {
+  const fns = { dash: renderDashboard, users: () => renderTable('users'), devices: () => renderTable('devices'), servers: renderServers, payments: () => renderTable('payments'), gifts: renderGifts, referrals: () => renderTable('referrals'), support: renderSupport, wiki: renderWiki, bot: renderBot, settings: renderSettings, profile: renderProfile, banner: renderAdBanner, staff: renderStaff };
   (fns[s] || (() => {}))();
 }
 
+/* Поиск ищет в текущем разделе. В разделах без списка (дашборд, настройки…)
+   переходит к пользователям — самое частое, что ищут. Раньше goto()
+   сбрасывал строку поиска, и поиск не работал нигде. */
+const SEARCHABLE = ['users', 'devices', 'payments', 'gifts', 'referrals', 'support', 'staff', 'wiki'];
 let _queryDebounce = null;
 function onQueryInput() {
   clearTimeout(_queryDebounce);
-  _queryDebounce = setTimeout(() => { query = document.getElementById('globalQuery').value; goto(section); }, 300);
+  _queryDebounce = setTimeout(() => {
+    const q = document.getElementById('globalQuery').value;
+    if (!SEARCHABLE.includes(section) && navAllowed('users')) { goto('users', q); return; }
+    query = q;
+    selectedRow = null;
+    renderSection(section);
+  }, 300);
+}
+/* Фильтр списка на клиенте — для разделов, которые грузятся целиком. */
+function matchesQuery(...fields) {
+  const q = query.trim().toLowerCase().replace(/^@/, '');
+  return !q || fields.some(f => f != null && String(f).toLowerCase().includes(q));
 }
 
 async function checkMarzban() {
@@ -873,6 +955,7 @@ async function loadCounts() {
     users: ['/web/users?limit=1', d => d.total],
     devices: ['/web/devices?limit=1', d => d.total],
     payments: ['/web/payments?limit=1', d => d.total],
+    gifts: ['/web/gifts?state=ready', d => d.waiting],
     referrals: ['/web/referrals', d => d.referrers_count],
     tickets: ['/web/tickets?status=open', d => d.tickets.length, 'support'],
     wiki: ['/web/wiki', d => d.articles.length],
@@ -899,11 +982,58 @@ function statCard(icon, label, val, color) {
   return `<div class="stat-card"><div class="stat-top"><span class="stat-ico" style="${tint}"><svg viewBox="0 0 24 24"><path d="${STAT_ICONS[icon]}"/></svg></span><div class="stat-label">${label}</div></div><div class="stat-val" ${color ? `style="color:${color}"` : ''}>${val}</div></div>`;
 }
 
+/* Выручка: у каждого способа оплаты своя валюта, складывать их нельзя —
+   переключатель показывает график по одной валюте, сводка — все сразу. */
+const CURRENCIES = {
+  rub: { label: 'Рубли', method: 'Картой', sign: '₽' },
+  stars: { label: 'Звёзды', method: 'Telegram Stars', sign: '⭐' },
+  usd: { label: 'Крипта', method: 'Криптой', sign: '$' },
+};
+let revCur = 'rub', revDays = 7;
+function fmtMoney(amount, cur) {
+  const n = Number(amount) || 0;
+  if (cur === 'usd') return '$' + n.toFixed(2);
+  return Math.round(n).toLocaleString('ru-RU') + ' ' + CURRENCIES[cur || 'rub'].sign;
+}
+function revenueCard(s) {
+  const max = Math.max(1, ...s.revenue_chart.map(r => r[revCur]));
+  const t = s.revenue_totals;
+  const many = s.revenue_chart.length > 10;
+  return `
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div class="dcard-title" style="flex:1;min-width:140px">Выручка за ${s.days} дней</div>
+      <div class="seg">${[7, 30, 90].map(d => `<div class="seg-item ${d === revDays ? 'sel' : ''}" onclick="revDays=${d};renderDashboard()">${d} дн</div>`).join('')}</div>
+    </div>
+    <div class="rev-tabs">
+      ${Object.entries(CURRENCIES).map(([cur, m]) => `
+        <div class="rev-tab ${cur === revCur ? 'sel' : ''}" onclick="revCur='${cur}';document.getElementById('revCard').innerHTML=revenueCard(window._dashStats)">
+          <div class="rev-tab-lbl">${m.method}</div>
+          <div class="rev-tab-val">${fmtMoney(t[cur].amount, cur)}</div>
+          <div class="rev-tab-sub">${t[cur].count} ${plural(t[cur].count, 'платёж', 'платежа', 'платежей')}</div>
+        </div>`).join('')}
+    </div>
+    <div class="bars">
+      ${s.revenue_chart.map(r => `
+        <div class="bar-col" title="${r.date}: ${fmtMoney(r[revCur], revCur)} · ${r.counts[revCur]} шт.">
+          <div class="bar-val">${!many && r[revCur] ? (revCur === 'usd' ? r[revCur].toFixed(2) : Math.round(r[revCur])) : ''}</div>
+          <div class="bar" style="height:${Math.max(2, r[revCur] / max * 100)}%"></div>
+          <div class="bar-lbl">${many ? '' : r.date}</div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+function plural(n, one, few, many) {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+}
+
 async function renderDashboard() {
   const c = document.getElementById('content');
   try {
-    const s = await api('GET', '/web/stats');
-    const maxRev = Math.max(1, ...s.revenue_chart.map(r => r.amount));
+    const s = await api('GET', `/web/stats?days=${revDays}`);
+    window._dashStats = s;
     const maxUsr = Math.max(1, ...s.users_chart.map(r => r.count));
     c.innerHTML = `
       <div class="stat-grid">
@@ -914,23 +1044,7 @@ async function renderDashboard() {
         ${statCard('banned', 'Забанено', s.banned, '#F87171')}
       </div>
       <div class="dash-grid">
-        <div class="dcard">
-          <div class="dcard-title">Выручка за 7 дней, ₽</div>
-          <div style="color:#8A7A60;font-size:12px;margin-top:4px">${(() => {
-            const stars = s.revenue_chart.reduce((a, r) => a + (r.stars || 0), 0);
-            const usd = s.revenue_chart.reduce((a, r) => a + (r.usd || 0), 0);
-            return `Картой — по дням. Ещё за неделю: ${Math.round(stars)} ⭐ · $${usd.toFixed(2)}`;
-          })()}</div>
-          <div class="bars">
-            ${s.revenue_chart.map(r => `
-              <div class="bar-col">
-                <div class="bar-val">${r.amount ? Math.round(r.amount) : ''}</div>
-                <div class="bar" style="height:${Math.max(2, r.amount / maxRev * 100)}%"></div>
-                <div class="bar-lbl">${r.date}</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
+        <div class="dcard" id="revCard">${revenueCard(s)}</div>
         <div class="dcard">
           <div class="dcard-title">Последние события</div>
           <div style="margin-top:16px" id="activityFeed"><div class="spinner-wrap"><div class="spinner"></div></div></div>
@@ -938,13 +1052,13 @@ async function renderDashboard() {
       </div>
       <div class="dash-grid" style="margin-top:12px">
         <div class="dcard">
-          <div class="dcard-title">Новые аккаунты за 7 дней</div>
+          <div class="dcard-title">Новые аккаунты за ${s.days} дней</div>
           <div class="bars">
             ${s.users_chart.map(r => `
               <div class="bar-col">
-                <div class="bar-val">${r.count || ''}</div>
-                <div class="bar" style="height:${Math.max(2, r.count / maxUsr * 100)}%;background:linear-gradient(180deg,#4ADE80,#22c55e)"></div>
-                <div class="bar-lbl">${r.date}</div>
+                <div class="bar-val">${s.days <= 10 && r.count ? r.count : ''}</div>
+                <div class="bar" title="${r.date}: ${r.count}" style="height:${Math.max(2, r.count / maxUsr * 100)}%;background:linear-gradient(180deg,#4ADE80,#22c55e)"></div>
+                <div class="bar-lbl">${s.days <= 10 ? r.date : ''}</div>
               </div>
             `).join('')}
           </div>
@@ -967,7 +1081,7 @@ async function loadActivity() {
       navAllowed('support') ? api('GET', '/web/tickets') : empty('tickets'),
     ]);
     const events = [
-      ...pays.payments.map(p => ({ text: `Платёж ${p.amount} ₽ от ${p.telegram_id}`, time: p.paid_at, dot: '#4ADE80' })),
+      ...pays.payments.map(p => ({ text: `Платёж ${fmtMoney(p.amount, p.currency)} от ${p.telegram_id}`, time: p.paid_at, dot: '#4ADE80' })),
       ...tickets.tickets.slice(0, 5).map(t => ({ text: `Тикет «${t.topic_label}» от ${esc(t.user_label)}`, time: t.created_at, dot: '#FFB800' })),
     ].filter(e => e.time).sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 7);
     el.innerHTML = events.length ? events.map(e => `
@@ -1024,7 +1138,7 @@ async function renderTable(sec) {
     }
 
     if (sec === 'devices') {
-      const data = await api('GET', '/web/devices?limit=200');
+      const data = await api('GET', `/web/devices?limit=200&q=${encodeURIComponent(query)}`);
       cols = ['Устройство', 'Владелец', 'Слот', 'Marzban', 'Создано'];
       rows = data.devices.map(d => ({ key: d.id, owner: d.owner_id, cells: [
         `<div style="font-weight:600">${esc(d.name)}</div>`,
@@ -1037,7 +1151,7 @@ async function renderTable(sec) {
     }
 
     if (sec === 'payments') {
-      const data = await api('GET', '/web/payments?limit=100');
+      const data = await api('GET', `/web/payments?limit=100&q=${encodeURIComponent(query)}`);
       cols = ['ID', 'Пользователь', 'Сумма', 'Метод', 'Дней', 'Дата'];
       const icoStar = '<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.7 1.1 6.6L12 17.1l-5.8 3.2 1.1-6.6L2.5 9l6.6-.9z"/></svg>';
       const icoCard = '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>';
@@ -1046,7 +1160,7 @@ async function renderTable(sec) {
       rows = data.payments.map(p => { const mc = methodChip[p.method] || ['—', 'grey']; return { key: p.id, owner: p.telegram_id, cells: [
         `<span class="mono" style="color:#6E6250">#${p.id}</span>`,
         `<a href="#" onclick="event.preventDefault();openUserDetail(${p.telegram_id})">${p.telegram_id}</a>`,
-        `<span class="mono" style="color:#FFB800;font-weight:700">${p.amount}</span>`,
+        `<span class="mono" style="color:#FFB800;font-weight:700">${fmtMoney(p.amount, p.currency)}</span>`,
         `<span class="chip ${mc[1]}">${mc[0]}</span>`,
         `<span style="color:#8A7A60">${p.days || '—'}</span>`,
         `<span style="color:#8A7A60;font-size:12px">${fmtDateTime(p.paid_at)}</span>`,
@@ -1055,7 +1169,7 @@ async function renderTable(sec) {
     }
 
     if (sec === 'referrals') {
-      const data = await api('GET', '/web/referrals');
+      const data = await api('GET', `/web/referrals?q=${encodeURIComponent(query)}`);
       cols = ['Пригласивший', 'Оплативших друзей', 'Дней получено'];
       rows = data.referrers.map(r => ({ key: r.telegram_id, owner: r.telegram_id, cells: [
         `<a href="#" onclick="event.preventDefault();openUserDetail(${r.telegram_id})">${esc(r.label)}</a>`,
@@ -1089,6 +1203,72 @@ async function renderTable(sec) {
   } catch (e) {
     c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GIFTS — подарки по ссылке (bot/utils/gifts.py)
+═══════════════════════════════════════════════════════════ */
+const GIFT_STATE = { ready: ['Ждёт получателя', 'gold'], claimed: ['Забран', 'green'], unpaid: ['Не оплачен', 'grey'] };
+const GIFT_METHOD = { stars: 'Stars', crypto: 'Крипта', card: 'Карта', admin: 'Бесплатно' };
+async function renderGifts() {
+  const c = document.getElementById('content');
+  try {
+    const data = await api('GET', `/web/gifts?q=${encodeURIComponent(query)}${filter !== 'all' ? '&state=' + filter : ''}`);
+    const filters = [
+      { id: 'all', label: 'Все' }, { id: 'ready', label: 'Ждут получателя', count: data.waiting },
+      { id: 'claimed', label: 'Забраны', count: data.claimed }, { id: 'unpaid', label: 'Не оплачены' },
+    ];
+    c.innerHTML = `
+      <div class="editor-card" style="margin-bottom:12px">
+        <div class="dcard-title">Создать подарочную ссылку</div>
+        <div style="font-size:13px;color:#8A7A60;margin:4px 0 14px">Бесплатно, от имени «STAR VPN» — для конкурсов, компенсаций и партнёров. Ссылку забирают один раз — на сайте или в боте.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <select class="ipt" id="gfDays" style="width:auto">
+            ${[7, 30, 90, 180].map(d => `<option value="${d}" ${d === 30 ? 'selected' : ''}>${d} дней</option>`).join('')}
+          </select>
+          <input class="ipt" id="gfMessage" maxlength="300" placeholder="Сообщение получателю (необязательно)" style="flex:1;min-width:200px">
+          <div class="primary-btn" onclick="createAdminGift()">Создать ссылку</div>
+        </div>
+        <div id="gfResult"></div>
+      </div>
+      <div class="filters">
+        ${filters.map(f => `<div class="filter-pill ${f.id === filter ? 'sel' : ''}" onclick="filter='${f.id}';renderGifts()">${f.label}${f.count != null ? `<span class="n">${f.count}</span>` : ''}</div>`).join('')}
+      </div>
+      <div class="tbl-wrap"><div class="tbl-scroll"><table>
+        <thead><tr><th>Создан</th><th>Даритель</th><th>Срок</th><th>Оплата</th><th>Статус</th><th>Забрал</th><th></th></tr></thead>
+        <tbody>${data.gifts.length ? data.gifts.map(g => {
+          const [lbl, kind] = GIFT_STATE[g.state];
+          return `<tr>
+            <td style="color:#8A7A60;font-size:12px">${fmtDateTime(g.created_at)}</td>
+            <td>${g.method === 'admin' ? esc(g.sender_label) : `<a href="#" onclick="event.preventDefault();goto('users', '${g.sender_id}')">${esc(g.sender_label)}</a>`}${g.anon && g.method !== 'admin' ? ' <span class="chip grey" style="font-size:10px">анонимно</span>' : ''}</td>
+            <td>${esc(g.plan_label)}</td>
+            <td><span class="mono">${g.method === 'admin' ? '—' : fmtMoney(g.amount, g.currency)}</span> <span style="color:#6E6250;font-size:12px">${GIFT_METHOD[g.method] || esc(g.method)}</span></td>
+            <td><span class="chip ${kind}">${lbl}</span></td>
+            <td>${esc(g.claimed_by || '—')}</td>
+            <td>${g.state === 'ready' ? `<button type="button" class="act-btn plain" onclick="copyText('${esc(g.link)}')">Ссылка</button>` : ''}</td>
+          </tr>`;
+        }).join('') : `<tr><td colspan="7"><div class="empty">Подарков пока нет</div></td></tr>`}</tbody>
+      </table></div><div class="tbl-foot"><span>Ждут получателя: ${data.waiting} · забраны: ${data.claimed}</span></div></div>
+    `;
+  } catch (e) {
+    c.innerHTML = `<div class="empty">Ошибка загрузки: ${esc(e.message)}</div>`;
+  }
+}
+async function createAdminGift() {
+  try {
+    const r = await api('POST', '/web/gifts', {
+      days: Number(document.getElementById('gfDays').value),
+      message: document.getElementById('gfMessage').value.trim(),
+    });
+    document.getElementById('gfResult').innerHTML = `
+      <div style="margin-top:14px;display:grid;gap:8px">
+        <div class="field-lbl">Ссылка на сайт</div>${copyField(r.link, '#FFB800')}
+        <div class="field-lbl">Или ссылка на бота</div>${copyField(r.bot_link)}
+      </div>`;
+    document.getElementById('gfMessage').value = '';
+    toast('Ссылка создана');
+    loadCounts();
+  } catch (e) { toast(e.message, true); }
 }
 
 /* ── User detail (used by users/devices/payments/referrals tables) ── */
@@ -1272,15 +1452,16 @@ async function renderSupport() {
       <div class="filters">${filters.map(f => `<div class="filter-pill ${f.id === filter ? 'sel' : ''}" onclick="filter='${f.id}';renderSupport()">${f.label}</div>`).join('')}</div>
       <div class="support-grid">
         <div class="tkt-list">
-          ${data.tickets.length ? data.tickets.map(t => `
-            <div class="tkt-card ${selectedTicket === t.id ? 'sel' : ''}" onclick="openTicket(${t.id})">
+          ${data.tickets.length ? data.tickets.filter(t => matchesQuery(t.user_label, t.topic_label, t.public_id, t.contact, t.message)).map(t => `
+            <div class="tkt-card ${selectedTicket === t.id ? 'sel' : ''}" data-id="${t.id}" onclick="openTicket(${t.id})">
               <div class="tkt-card-top">
                 <span style="width:7px;height:7px;border-radius:50%;background:${TICKET_STATUS[t.status][1]};flex-shrink:0"></span>
                 <span class="tkt-user">${esc(t.user_label)}</span>
-                <span class="chip grey" style="font-size:10.5px">${TICKET_STATUS[t.status][0]}</span>
+                <span class="tkt-date">${fmtDateTime(t.created_at)}</span>
               </div>
               <div class="tkt-subject">${esc(t.topic_label)}</div>
-              <div class="tkt-foot"><span>${fmtDateTime(t.created_at)}</span><span>${t.public_id}</span></div>
+              <div class="tkt-snippet">${esc(t.message.slice(0, 140))}</div>
+              <div class="tkt-foot"><span>${(TICKET_CHANNEL[t.delivery.channel] || TICKET_CHANNEL.none)[0]} · ${TICKET_STATUS[t.status][0]}</span><span>${t.public_id}</span></div>
             </div>
           `).join('') : '<div class="empty">Нет обращений</div>'}
         </div>
@@ -1293,43 +1474,66 @@ async function renderSupport() {
   }
 }
 
+/* Обращение — как письмо: шапка «от / кому / тема», текст, ниже ответ
+   и форма ответа с явным адресатом и каналом доставки. */
+const TICKET_CHANNEL = {
+  telegram: ['Telegram', 'Сообщение придёт от бота в Telegram'],
+  email: ['Email', 'Ответ уйдёт письмом на почту'],
+  manual: ['Вручную', 'Бот не может написать по @username без аккаунта — ответьте сами по ссылке и отметьте обращение отвеченным'],
+  none: ['Нет контакта', 'Автор не оставил контакт — ответить некуда'],
+};
+function letterRow(label, value) {
+  return `<div class="letter-row"><span class="letter-k">${label}</span><span class="letter-v">${value}</span></div>`;
+}
 async function openTicket(id) {
   selectedTicket = id;
   const el = document.getElementById('ticketDetail');
-  document.querySelectorAll('.tkt-card').forEach(x => x.classList.remove('sel'));
+  document.querySelectorAll('.tkt-card').forEach(x => x.classList.toggle('sel', x.dataset.id === String(id)));
   el.innerHTML = `<div class="tkt-detail"><div class="spinner-wrap"><div class="spinner"></div></div></div>`;
   try {
     const data = await api('GET', '/web/tickets');
     const t = data.tickets.find(x => x.id === id);
     if (!t) { el.innerHTML = '<div class="empty">Тикет не найден</div>'; return; }
+    const d = t.delivery;
+    const [chName, chHint] = TICKET_CHANNEL[d.channel] || TICKET_CHANNEL.none;
+    const emailOff = d.channel === 'email' && !d.smtp_ready;
+    const canSend = d.channel === 'telegram' || (d.channel === 'email' && d.smtp_ready);
+    const from = [t.account, t.contact && t.contact !== t.account ? t.contact : ''].filter(Boolean).map(esc).join(' · ') || esc(t.user_label);
+    const toLine = `<span class="chip ${canSend ? 'green' : 'grey'}" style="font-size:10.5px">${chName}</span> ${esc(d.to || '—')}${d.link ? ` <a href="${esc(d.link)}" target="_blank" rel="noopener">открыть ↗</a>` : ''}`;
     el.innerHTML = `
       <div class="tkt-detail">
         <div class="tkt-detail-head">
-          <div>
-            <div class="detail-title">${esc(t.topic_label)}</div>
-            <div class="detail-sub">${esc(t.user_label)} · ${esc(t.platform || '—')} · ${fmtDateTime(t.created_at)} · ${t.public_id}</div>
-          </div>
+          <div class="detail-title">${esc(t.topic_label)} <span class="mono" style="font-size:12px;color:#6E6250;font-weight:400">${t.public_id}</span></div>
           <div class="detail-actions">
             <span class="chip grey">${TICKET_STATUS[t.status][0]}</span>
             ${t.status !== 'closed' ? `<div class="act-btn plain" onclick="setTicketStatus(${t.id}, 'closed')">Закрыть</div>` : `<div class="act-btn plain" onclick="setTicketStatus(${t.id}, 'open')">Открыть заново</div>`}
           </div>
         </div>
-        <div class="msg-bubble user">
-          <div class="msg-who" style="color:#8A7A60">${esc(t.user_label)}</div>
-          <div class="msg-text">${esc(t.message)}</div>
-          <div class="msg-time">${fmtDateTime(t.created_at)}</div>
+        <div class="letter">
+          ${letterRow('От', from + (t.user_id ? ` · <a href="#" onclick="event.preventDefault();goto('users', '${t.user_id}')">аккаунт</a>` : ''))}
+          ${letterRow('Кому', 'Поддержка STAR VPN')}
+          ${letterRow('Тема', esc(t.topic_label))}
+          ${letterRow('Дата', fmtDateTime(t.created_at) + (t.platform ? ' · ' + esc(t.platform) : ''))}
+          <div class="letter-body">${esc(t.message)}</div>
         </div>
         ${t.admin_reply ? `
-          <div class="msg-bubble admin">
-            <div class="msg-who" style="color:#FFB800">Поддержка</div>
-            <div class="msg-text">${esc(t.admin_reply)}</div>
-            <div class="msg-time">${fmtDateTime(t.updated_at)}</div>
+          <div class="letter sent">
+            ${letterRow('От', 'Поддержка STAR VPN')}
+            ${letterRow('Кому', toLine)}
+            ${letterRow('Дата', fmtDateTime(t.updated_at))}
+            <div class="letter-body">${esc(t.admin_reply)}</div>
+          </div>` : ''}
+        <div class="letter compose">
+          <div class="letter-title">${t.admin_reply ? 'Новый ответ (заменит предыдущий)' : 'Ответ'}</div>
+          ${letterRow('Кому', toLine)}
+          ${letterRow('Тема', 'Re: ' + esc(t.topic_label))}
+          <div class="letter-hint ${emailOff || !canSend ? 'warn' : ''}">${emailOff ? 'Почта на сервере не настроена (SMTP в .env) — письмо не уйдёт. Ответьте вручную и отметьте обращение отвеченным.' : chHint}</div>
+          <textarea class="ipt" id="replyInput" placeholder="Текст ответа…" style="width:100%;min-height:140px"></textarea>
+          <div style="display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:12px">
+            ${canSend
+              ? `<div class="primary-btn" onclick="sendReply(${t.id})">Отправить</div>`
+              : `<div class="primary-btn" onclick="sendReply(${t.id})" title="Сохранит ответ в обращении и отметит его отвеченным">Сохранить и отметить отвеченным</div>`}
           </div>
-        ` : ''}
-        <textarea class="ipt" id="replyInput" placeholder="Ответ пользователю…" style="width:100%;min-height:110px;margin-top:14px"></textarea>
-        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px">
-          <span style="font-size:12px;color:#6E6250">Ответ уйдёт в бота или на email — туда, откуда пришло обращение.</span>
-          <div class="primary-btn" onclick="sendReply(${t.id})">Отправить</div>
         </div>
       </div>
     `;
@@ -1340,10 +1544,13 @@ async function openTicket(id) {
 
 async function sendReply(id) {
   const reply = document.getElementById('replyInput').value.trim();
-  if (!reply) return;
+  if (!reply) { toast('Напишите текст ответа', true); return; }
   try {
-    await api('POST', `/web/tickets/${id}/reply`, { reply, status: 'answered' });
-    toast('Ответ отправлен');
+    const r = await api('POST', `/web/tickets/${id}/reply`, { reply, status: 'answered' });
+    if (r.delivered) toast(r.channel === 'telegram' ? `Ответ доставлен в Telegram (${r.to})` : `Письмо отправлено на ${r.to}`);
+    else if (r.channel === 'telegram') toast('Сохранено, но Telegram не доставил сообщение (пользователь мог заблокировать бота)', true);
+    else if (r.channel === 'email') toast('Сохранено, но письмо не ушло — проверьте SMTP', true);
+    else toast('Ответ сохранён — отправьте его пользователю вручную');
     renderSupport();
   } catch (e) { toast(e.message, true); }
 }
@@ -1371,11 +1578,11 @@ async function renderWiki() {
         <a class="ghost-btn" href="/wiki" target="_blank" rel="noopener" style="text-decoration:none">Открыть Wiki ↗</a>
         <div class="primary-btn" onclick="openWikiEditor(null)">+ Новая статья</div>
       </div>
-      ${data.articles.length ? data.articles.map((a, i) => `
+      ${data.articles.length ? data.articles.map((a, i) => !matchesQuery(a.title, a.short_title, a.slug, a.section) ? '' : `
         <div class="wiki-row">
           <div class="wiki-order">
-            <button type="button" class="tb-btn" title="Выше" ${i === 0 ? 'disabled' : ''} onclick="wikiMove(${i}, -1)">↑</button>
-            <button type="button" class="tb-btn" title="Ниже" ${i === data.articles.length - 1 ? 'disabled' : ''} onclick="wikiMove(${i}, 1)">↓</button>
+            <button type="button" class="tb-btn" title="Выше" ${i === 0 || query ? 'disabled' : ''} onclick="wikiMove(${i}, -1)">↑</button>
+            <button type="button" class="tb-btn" title="Ниже" ${i === data.articles.length - 1 || query ? 'disabled' : ''} onclick="wikiMove(${i}, 1)">↓</button>
           </div>
           <div style="min-width:220px;flex:1">
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">
@@ -1427,7 +1634,7 @@ const WIKI_TOOLS = [
   ['code', 'Код', '<span class="mono" style="font-size:11px">&lt;/&gt;</span>'],
   ['image', 'Картинка: загрузить (можно перетащить или вставить Ctrl+V)', '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-9 9"/></svg>'],
   ['hr', 'Разделитель', '—'],
-  ['clear', 'Убрать оформление', '<span style="font-size:12px">T<sub>x</sub></span>'],
+  ['clear', 'Очистить формат: убирает жирный, курсив, ссылки и превращает блок (заголовок, цитату) в обычный абзац', '<span style="font-size:12px">T<sub>x</sub></span>'],
   ['undo', 'Отменить', '↶'],
   ['redo', 'Повторить', '↷'],
 ];
@@ -1613,6 +1820,7 @@ function wikiCmd(cmd, value) {
     }
   }
   wikiFixNesting();
+  wikiEnsureTrailingP();
   wikiSyncBlockSelect();
   wikiPaintOverlays();
 }
@@ -1659,6 +1867,23 @@ function wikiCaret(el, selectAll) {
   if (!selectAll) r.collapse(!el.textContent);
   const sel = d.getSelection();
   sel.removeAllRanges(); sel.addRange(r);
+}
+/* Курсор в конце блока (после него только пустота / <br>). */
+function wikiCaretAtEnd(el, r) {
+  const after = wikiDoc().createRange();
+  after.setStart(r.endContainer, r.endOffset);
+  after.setEnd(el, el.childNodes.length);
+  return !after.toString().replace(/\n$/, '');
+}
+/* После последнего блока всегда есть пустой абзац — иначе под цитатой или
+   таблицей в конце статьи некуда поставить курсор. */
+function wikiEnsureTrailingP() {
+  const ed = wikiEd();
+  if (!ed) return;
+  const last = ed.lastElementChild;
+  if (last && last.tagName === 'P') return;
+  const p = wikiDoc().createElement('p'); p.innerHTML = '<br>';
+  ed.append(p);
 }
 function wikiEmptyP(el) { return el && el.tagName === 'P' && !el.textContent.trim() && !el.querySelector('img'); }
 
@@ -1971,6 +2196,7 @@ function wikiBindEditor() {
   const d = wikiDoc(), ed = wikiEd();
   d.body.insertAdjacentHTML('beforeend', WIKI_OVERLAYS);
   ed.querySelectorAll('details').forEach(x => { x.open = true; });
+  wikiEnsureTrailingP();
 
   const bar = (id, fn) => d.getElementById(id).addEventListener('mousedown', (e) => {
     const b = e.target.closest('button');
@@ -2026,6 +2252,20 @@ function wikiBindEditor() {
     const r = wikiSelRange();
     const summary = r && wikiElOf(r.startContainer).closest('summary');
     if (summary && e.key === ' ') { e.preventDefault(); d.execCommand('insertText', false, ' '); return; }
+    // Цитата, заметка и код: Enter в конце блока — выход в новый абзац под ним
+    // (раньше из цитаты нельзя было выйти: Enter создавал ещё одну строку цитаты).
+    // Shift+Enter — перенос строки внутри блока.
+    const box = r && e.key === 'Enter' && !e.shiftKey && wikiElOf(r.startContainer).closest('blockquote, div.callout, pre');
+    if (box && ed.contains(box) && wikiCaretAtEnd(box, r)) {
+      e.preventDefault();
+      if (box.tagName === 'PRE') box.textContent = box.textContent.replace(/\n$/, '');
+      const p = d.createElement('p'); p.innerHTML = '<br>';
+      box.after(p);
+      if (!box.textContent.trim() && !box.querySelector('img')) box.remove();
+      wikiCaret(p);
+      unsaved = true;
+      return;
+    }
     if (summary && e.key === 'Enter') {
       e.preventDefault();
       let body = summary.nextElementSibling;
@@ -2463,6 +2703,7 @@ function botTextField(tx) {
         <button type="button" class="tb-btn" title="Курсив" onmousedown="event.preventDefault()" onclick="botWrap('${tx.key}','i')"><i>I</i></button>
         <button type="button" class="tb-btn" title="Моноширинный (можно скопировать нажатием)" onmousedown="event.preventDefault()" onclick="botWrap('${tx.key}','code')"><span class="mono" style="font-size:11px">{}</span></button>
         <button type="button" class="tb-btn" title="Ссылка" onmousedown="event.preventDefault()" onclick="botWrap('${tx.key}','a')">🔗</button>
+        ${emojiBtn('tf-' + tx.key)}
         ${tx.placeholders.map(ph => `<span class="ph-chip" title="Подставится автоматически" onmousedown="event.preventDefault()" onclick="botInsert('${tx.key}','{${ph}}')">{${ph}}</span>`).join('')}
       </div>` : ''}
       ${tx.hint && !tx.key.startsWith('instr.') ? `<div class="bfield-hint" style="margin:-2px 0 6px">${esc(tx.hint)}</div>` : ''}
@@ -2488,10 +2729,70 @@ IMAGE_SLOTS.cbimg = (slot, ref) => {
   botUpdatePreview();
 };
 
+/* ── Выбор эмодзи для кнопок и текстов бота ─────────────────
+   Telegram показывает в кнопках только текст и эмодзи (картинок у кнопок
+   нет), поэтому «иконка» кнопки — это эмодзи в начале подписи. У поля
+   ввода выбранный эмодзи заменяет прежний первый эмодзи, в длинный
+   текст — вставляется в позицию курсора. */
+const EMOJI_GROUPS = [
+  ['Частые', '⚡ 🚀 🔥 ⭐ 🌟 ✨ 💫 🎁 🎉 💎 👑 🏆 ✅ ❌ ⚠️ ❗ ❓ 💡 📌 📍 🔔 🆕 🆓 💯'],
+  ['VPN', '🔒 🔓 🔐 🔑 🛡️ 🌐 🌍 🌎 🌏 📡 📶 🛰️ 🔌 ⚙️ 🧩 🕵️ 👁️ 🚫 🔄 ♻️ ⏸️ ▶️ ⏹️ 🏁'],
+  ['Устройства', '📱 📲 💻 🖥️ ⌨️ 🖱️ 📺 🎮 ⌚ 🍏 🍎 🤖 🪟 🐧 📟 🔋'],
+  ['Оплата', '💳 💰 💵 💶 💸 🪙 🧾 🏦 💹 📈 📉 🛒 🛍️ 🏷️ 💲 ⭐'],
+  ['Люди', '👤 👥 🤝 👋 🙌 👍 👎 👏 🙏 💬 🗨️ 📣 📢 🎧 👨‍💻 🧑‍💼 ❤️ 💛 🧡 💚 💙 💜 🖤 🤍'],
+  ['Время', '⏱️ ⏰ ⏳ ⌛ 📅 📆 🗓️ 🕐 🌙 ☀️'],
+  ['Навигация', '🏠 📋 📖 📚 📝 ✏️ 🔍 🔗 📎 📂 📁 🗂️ ⬅️ ➡️ ⬆️ ⬇️ ↩️ 🔙 🔝 ℹ️ 🆘 📞 ✉️ 📧'],
+];
+const LEADING_EMOJI = /^(?:[\p{Extended_Pictographic}\p{Regional_Indicator}\u200D\uFE0F\u20E3]|[\u{1F3FB}-\u{1F3FF}])+\s*/u;
+
+function emojiBtn(targetId) {
+  return `<button type="button" class="emoji-btn" title="Выбрать эмодзи" onmousedown="event.preventDefault()" onclick="openEmojiPicker(this${targetId ? `, '${targetId}'` : ''})">☺</button>`;
+}
+let emojiTarget = null;
+function openEmojiPicker(btn, targetId) {
+  emojiTarget = targetId ? document.getElementById(targetId) : btn.previousElementSibling;
+  let pop = document.getElementById('emojiPop');
+  if (!pop) {
+    pop = document.createElement('div');
+    pop.id = 'emojiPop';
+    pop.className = 'emoji-pop';
+    pop.innerHTML = EMOJI_GROUPS.map(([title, list]) => `
+      <div class="emoji-group">${title}</div>
+      <div class="emoji-grid">${list.split(' ').map(e => `<button type="button" onmousedown="event.preventDefault()" onclick="pickEmoji('${e}')">${e}</button>`).join('')}</div>`).join('')
+      + `<button type="button" class="emoji-clear" onmousedown="event.preventDefault()" onclick="pickEmoji('')">Убрать эмодзи в начале</button>`;
+    document.body.appendChild(pop);
+    document.addEventListener('mousedown', (e) => {
+      if (!e.target.closest('#emojiPop, .emoji-btn')) pop.classList.remove('open');
+    });
+  }
+  pop.querySelector('.emoji-clear').style.display = emojiTarget && emojiTarget.tagName === 'INPUT' ? '' : 'none';
+  pop.classList.add('open');
+  const r = btn.getBoundingClientRect();
+  const w = pop.offsetWidth, h = pop.offsetHeight;
+  pop.style.left = Math.max(8, Math.min(r.right - w, innerWidth - w - 8)) + 'px';
+  pop.style.top = (r.bottom + h + 8 > innerHeight ? Math.max(8, r.top - h - 6) : r.bottom + 6) + 'px';
+}
+function pickEmoji(e) {
+  const el = emojiTarget;
+  if (!el) return;
+  if (el.tagName === 'INPUT') {
+    const rest = el.value.replace(LEADING_EMOJI, '');
+    el.value = e ? `${e} ${rest}` : rest;
+    document.getElementById('emojiPop').classList.remove('open');
+  } else {
+    const a = el.selectionStart ?? el.value.length, b = el.selectionEnd ?? a;
+    el.value = el.value.slice(0, a) + e + el.value.slice(b);
+    el.selectionStart = el.selectionEnd = a + e.length;
+  }
+  el.focus();
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 function botButtonField(tx) {
   return `
     <div class="bfield" data-key="${tx.key}">
       <input class="ipt" id="tf-${tx.key}" value="${esc(tx.value)}" data-default="${esc(tx.default)}" maxlength="64" oninput="botFieldChanged('${tx.key}')" placeholder="${esc(tx.default)}">
+      ${emojiBtn('tf-' + tx.key)}
       ${tx.hideable ? `<label class="bfield-hide" title="Показывать кнопку в меню"><input type="checkbox" id="hd-${tx.key}" ${tx.hidden ? '' : 'checked'} onchange="unsaved=true;botUpdatePreview()"> видна</label>` : ''}
       <span class="tfield-reset" style="${tx.overridden ? '' : 'display:none'}" onclick="botResetField('${tx.key}')">Сбросить</span>
     </div>
@@ -2707,6 +3008,7 @@ function botRenderCustomPanel(p) {
         <button type="button" class="tb-btn" title="Курсив" onmousedown="event.preventDefault()" onclick="botWrapCb('i')"><i>I</i></button>
         <button type="button" class="tb-btn" title="Моноширинный" onmousedown="event.preventDefault()" onclick="botWrapCb('code')"><span class="mono" style="font-size:11px">{}</span></button>
         <button type="button" class="tb-btn" title="Ссылка" onmousedown="event.preventDefault()" onclick="botWrapCb('a')">🔗</button>
+        ${emojiBtn('cbText')}
       </div>
       <textarea class="ipt tfield-input" id="cbText" rows="6" placeholder="Что бот ответит, когда откроют этот блок" oninput="botUpdatePreview()">${esc(b.text)}</textarea>
 
@@ -2715,8 +3017,11 @@ function botRenderCustomPanel(p) {
       <div class="ghost-btn" style="display:inline-block;margin-top:4px" onclick="botCbAddButton()">+ Кнопка</div>
 
       <div class="editor-label" style="margin-top:18px">Как открыть этот блок</div>
-      <label class="cb-check"><input type="checkbox" id="cbMenu" ${b.show_in_menu ? 'checked' : ''} onchange="document.getElementById('cbMenuLabel').style.display=this.checked?'':'none'"> Кнопка в главном меню</label>
-      <input class="ipt" id="cbMenuLabel" value="${esc(b.menu_label)}" maxlength="64" placeholder="Подпись кнопки, например 🔥 Акции" style="width:100%;margin:6px 0 10px;${b.show_in_menu ? '' : 'display:none'}">
+      <label class="cb-check"><input type="checkbox" id="cbMenu" ${b.show_in_menu ? 'checked' : ''} onchange="document.getElementById('cbMenuRow').style.display=this.checked?'':'none'"> Кнопка в главном меню</label>
+      <div class="bfield" id="cbMenuRow" style="margin:6px 0 10px;${b.show_in_menu ? '' : 'display:none'}">
+        <input class="ipt" id="cbMenuLabel" value="${esc(b.menu_label)}" maxlength="64" placeholder="Подпись кнопки, например 🔥 Акции">
+        ${emojiBtn('cbMenuLabel')}
+      </div>
       <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
         <span class="mono" style="color:#8A7A60">/</span>
         <input class="ipt mono" id="cbCommand" value="${esc(b.command)}" maxlength="32" placeholder="команда (необязательно), например help" style="flex:1;min-width:0">
@@ -2743,7 +3048,8 @@ function botCbButtonRow(btn, i, total, others) {
     <div class="cb-btn" data-i="${i}">
       <div style="display:flex;gap:6px;align-items:center">
         <input class="ipt" data-f="label" value="${esc(btn.label || '')}" maxlength="64" placeholder="Подпись кнопки" style="flex:1;min-width:0" oninput="botUpdatePreview()">
-        <button type="button" class="tb-btn" title="Выше" ${i === 0 ? 'disabled' : ''} onclick="botCbMove(${i},-1)">↑</button>
+        ${emojiBtn()}
+        <button type="button" class="tb-btn" title="Выше" ${i === 0 || query ? 'disabled' : ''} onclick="botCbMove(${i},-1)">↑</button>
         <button type="button" class="tb-btn" title="Ниже" ${i === total - 1 ? 'disabled' : ''} onclick="botCbMove(${i},1)">↓</button>
         <button type="button" class="tb-btn" title="Удалить кнопку" onclick="botCbRemove(${i})">✕</button>
       </div>
@@ -2841,36 +3147,63 @@ window.addEventListener('resize', () => { if (section === 'bot' && document.getE
 /* ═══════════════════════════════════════════════════════════
    SETTINGS — реальный обзор, read-only (тарифы задаются в коде)
 ═══════════════════════════════════════════════════════════ */
+/* Настройки: всё, что здесь показано, редактируется (bot/utils/app_config.py).
+   Поля собираются в один PUT /web/settings по кнопке «Сохранить». */
+let settingsData = null;
+function cfgInput(key, opts = {}) {
+  const f = settingsData.config[key];
+  const step = f.type === 'money' ? '0.01' : '1';
+  const value = f.type === 'money' ? Number(f.value).toFixed(2) : f.value;
+  return `<span class="cfg-field">
+    ${opts.prefix ? `<span class="cfg-affix">${opts.prefix}</span>` : ''}
+    <input class="ipt cfg-input mono" type="number" data-cfg="${key}" value="${value}" min="${f.min}" max="${f.max}" step="${step}" style="width:${opts.width || 92}px">
+    ${opts.suffix ? `<span class="cfg-affix">${opts.suffix}</span>` : ''}
+    ${f.overridden ? `<span class="cfg-reset" title="Вернуть ${f.default}" onclick="cfgReset('${key}')">↺</span>` : ''}
+  </span>`;
+}
+function cfgReset(key) {
+  const el = document.querySelector(`[data-cfg="${key}"]`);
+  if (!el) return;
+  el.value = settingsData.config[key].default;
+  el.dataset.reset = '1';
+  unsaved = true;
+}
 async function renderSettings() {
   const c = document.getElementById('content');
   try {
     const s = await api('GET', '/web/settings/overview');
+    settingsData = s;
+    const cfg = s.config;
+    const isAdmin = myProfile && myProfile.rank === 'admin';
     c.innerHTML = `
+      <div class="filters">
+        <span style="font-size:13px;color:#8A7A60">Изменения применяются сразу после сохранения — в боте, на сайте и в Mini App, без перезапуска.</span>
+        <div style="flex:1"></div>
+        <div class="primary-btn" data-save title="Ctrl+S" onclick="saveSettings()">Сохранить</div>
+      </div>
       <div class="settings-grid">
         <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
           <div class="editor-card">
-            <div class="dcard-title">Тарифы</div>
-            <div style="font-size:13px;color:#8A7A60;margin:4px 0 18px">Цены заданы в коде (bot/handlers/payment.py, bot/utils/robokassa.py) и отдаются боту и сайту через API — измените там и задеплойте, чтобы поменять.</div>
-            ${s.tariffs.map(t => `
+            <div class="dcard-title">Цены тарифов</div>
+            <div style="font-size:13px;color:#8A7A60;margin:4px 0 14px">Звёзды — оплата в боте, $ — криптовалюта, ₽ — оплата картой (появится, когда подключат сервис оплаты).</div>
+            ${s.plans.map(p => `
               <div class="tariff-row">
-                <div style="min-width:110px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#EBE0CC">${esc(t.label)}</div>
-                <div class="mono" style="color:#EBE0CC">${t.rub} ₽</div>
-                <div class="mono" style="color:#8A7A60;display:inline-flex;align-items:center;gap:4px">${t.stars}<svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor" stroke="none"><path d="M12 2l2.9 6.1 6.6.9-4.8 4.7 1.1 6.6L12 17.1l-5.8 3.2 1.1-6.6L2.5 9l6.6-.9z"/></svg></div>
-                <div style="flex:1"></div>
-                <div style="font-size:12px;color:#6E6250">${t.days} дней</div>
-              </div>
-            `).join('')}
+                <div style="min-width:96px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#EBE0CC">${esc(p.label)}<div style="font-size:11.5px;color:#6E6250;font-weight:400">${p.days} дней</div></div>
+                ${cfgInput('price.stars.' + p.key, { suffix: '⭐', width: 84 })}
+                ${cfgInput('price.usd.' + p.key, { prefix: '$', width: 84 })}
+                ${cfgInput('price.rub.' + p.key, { suffix: '₽', width: 92 })}
+              </div>`).join('')}
           </div>
           <div class="editor-card">
             <div class="dcard-title">Приём оплаты</div>
-            <div style="font-size:13px;color:#8A7A60;margin:4px 0 18px">«Настроено» — есть ключи в .env. Переключатель — показывать ли способ пользователям (боту и сайту) прямо сейчас. Stars — только в боте (на сайте недоступны в принципе).</div>
-            ${[['stars', 'Telegram Stars (только в боте)', s.providers.stars], ['card', 'Банковская карта (Robokassa)', s.providers.card], ['crypto', 'Криптовалюта (@CryptoBot)', s.providers.crypto]].map(([key, label, p]) => `
+            <div style="font-size:13px;color:#8A7A60;margin:4px 0 18px">Переключатель — показывать ли способ пользователям. «Не подключено» — нет ключей в .env.</div>
+            ${[['stars', 'Telegram Stars (только в боте)', s.providers.stars], ['card', 'Оплата картой', s.providers.card], ['crypto', 'Криптовалюта (@CryptoBot)', s.providers.crypto]].map(([key, label, p]) => ({ key, label, p: { ...p, enabled: p.enabled && p.configured } })).map(({ key, label, p }) => `
               <div class="provider-row">
                 <div style="flex:1;font-size:14px;font-weight:600;color:#EBE0CC">${label}</div>
-                <span class="chip ${p.configured ? 'green' : 'grey'}">${p.configured ? 'Настроено' : 'Не настроено'}</span>
+                <span class="chip ${p.configured ? 'green' : 'grey'}">${p.configured ? 'Подключено' : 'Не подключено'}</span>
                 <div class="toggle-track" data-provider="${key}" data-on="${p.enabled ? '1' : '0'}"
-                     style="background:${p.enabled ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'};cursor:pointer"
-                     onclick="togglePaymentProvider('${key}')" title="${p.enabled ? 'Выключить' : 'Включить'}">
+                     style="background:${p.enabled ? 'rgba(255,184,0,.35)' : 'rgba(255,255,255,.1)'};cursor:${p.configured ? 'pointer' : 'not-allowed'};opacity:${p.configured ? 1 : .5}"
+                     ${p.configured ? `onclick="togglePaymentProvider('${key}')"` : ''} title="${p.configured ? (p.enabled ? 'Выключить' : 'Включить') : 'Сначала подключите способ оплаты'}">
                   <div class="toggle-knob" style="background:${p.enabled ? '#FFB800' : '#7E705B'};margin-left:${p.enabled ? 'auto' : '0'}"></div>
                 </div>
               </div>
@@ -2879,24 +3212,27 @@ async function renderSettings() {
         </div>
         <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
           <div class="editor-card">
-            <div class="dcard-title" style="margin-bottom:18px">Лимиты</div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="color:#8A7A60;font-size:13px">Устройств на аккаунт</span><span class="mono" style="color:#FFB800">${s.limits.max_devices}</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:#8A7A60;font-size:13px">Пробный период</span><span class="mono" style="color:#FFB800">${s.limits.trial_days} дня</span></div>
+            <div class="dcard-title" style="margin-bottom:14px">Подписка</div>
+            <label class="cfg-row"><span>Пробный период</span>
+              <span class="cfg-field"><input type="checkbox" data-cfg="trial_enabled" ${cfg.trial_enabled.value ? 'checked' : ''} style="width:17px;height:17px;accent-color:#FFB800"> включён</span></label>
+            <div class="cfg-row"><span>Длительность пробного периода</span>${cfgInput('trial_days', { suffix: 'дн.', width: 70 })}</div>
+            <div class="cfg-hint">Только для Telegram-аккаунтов, один раз. Фразы «2 дня бесплатно» на сайте подставятся сами.</div>
+            <div class="cfg-row"><span>Устройств на аккаунт</span>${cfgInput('max_devices', { width: 70 })}</div>
+            <div class="cfg-hint">Новые устройства сверх лимита добавить не получится; уже добавленные не удаляются.</div>
           </div>
-          ${telegramLoginCard(s.telegram_login)}
           <div class="editor-card">
-            <div class="dcard-title" style="margin-bottom:14px">Доступ к админке</div>
-            <div style="font-size:13px;color:#8A7A60;margin-bottom:10px">У каждого сотрудника свой логин и пароль. Мастер-ключ ниже — из ADMIN_WEB_KEY в .env, нужен только для регистрации самого первого аккаунта (ранга admin). Дальше приглашения — через личный ключ в разделе «Профиль».</div>
-            <div class="mono" style="background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.09);border-radius:9px;padding:10px 12px;font-size:13px;color:#8A7A60">${s.admin_web_key_masked || '—'}</div>
+            <div class="dcard-title" style="margin-bottom:14px">Реферальная программа</div>
+            <div class="cfg-row"><span>Бонус пригласившему</span>${cfgInput('referral_bonus_days', { suffix: 'дн.', width: 70 })}</div>
+            <div class="cfg-row"><span>За каждых … оплативших друзей</span>${cfgInput('referral_milestone', { width: 70 })}</div>
+            <div class="cfg-hint">0 дней — бонус не начисляется. Разовые достижения (5, 10, 25 друзей) не меняются.</div>
           </div>
-          <div class="zl-box">
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#FFB800;margin-bottom:8px">Zero Logs</div>
-            <div style="font-size:13.5px;line-height:1.65;color:#EBE0CC">Логирование Xray закреплено в конфиге: access, error и loglevel — none. Параметр не выводится в интерфейс намеренно, чтобы его нельзя было включить случайно.</div>
-            <div class="zl-code">
-              <div>"access": <span style="color:#FFB800">"none"</span>,</div>
-              <div>"error": <span style="color:#FFB800">"none"</span>,</div>
-              <div>"loglevel": <span style="color:#FFB800">"none"</span></div>
+          ${telegramLoginCard(s.telegram_login, cfg.tg_oauth_secret, isAdmin)}
+          <div class="editor-card">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="dcard-title" style="flex:1">Вход по email</div>
+              <span class="chip ${s.smtp_configured ? 'green' : 'red'}">${s.smtp_configured ? 'Почта настроена' : 'Почта не настроена'}</span>
             </div>
+            ${s.smtp_configured ? '' : '<div class="cfg-hint" style="margin-top:8px;color:#FBBF24">Коды подтверждения не уходят — новые пользователи не смогут закончить регистрацию по email. Задайте SMTP_HOST, SMTP_USERNAME и SMTP_PASSWORD в .env.</div>'}
           </div>
         </div>
       </div>
@@ -2906,8 +3242,31 @@ async function renderSettings() {
   }
 }
 
+async function saveSettings() {
+  const changes = {};
+  document.querySelectorAll('#content [data-cfg]').forEach(el => {
+    const key = el.dataset.cfg, f = settingsData.config[key];
+    if (el.dataset.reset === '1' && String(el.value) === String(f.default)) { changes[key] = null; return; }
+    if (el.type === 'checkbox') { if (el.checked !== f.value) changes[key] = el.checked; return; }
+    if (f.type === 'secret') { if (el.value.trim()) changes[key] = el.value.trim(); return; }
+    if (Number(el.value) !== Number(f.value)) changes[key] = el.value;
+  });
+  if (!Object.keys(changes).length) { toast('Изменений нет'); return; }
+  try {
+    await api('PUT', '/web/settings', { changes });
+    unsaved = false;
+    toast('Настройки сохранены');
+    renderSettings();
+  } catch (e) { toast(e.message, true); }
+}
+async function clearTgSecret() {
+  if (!confirm('Убрать секрет из админки? Останется значение из .env, если оно есть.')) return;
+  try { await api('PUT', '/web/settings', { changes: { tg_oauth_secret: null } }); toast('Секрет убран'); renderSettings(); }
+  catch (e) { toast(e.message, true); }
+}
+
 const TG_LOGIN_HINTS = {
-  not_configured: 'В .env не заданы TELEGRAM_OAUTH_CLIENT_ID / TELEGRAM_OAUTH_CLIENT_SECRET.',
+  not_configured: 'Не задан Client Secret — вставьте его в карточке «Вход и регистрация через Telegram».',
   token: 'Telegram не выдал токен: чаще всего неверный Client Secret или Redirect URI не зарегистрирован в BotFather.',
   aud: 'TELEGRAM_OAUTH_CLIENT_ID не совпадает с ботом, в котором настроен Login Widget (это числовой ID бота — часть токена до двоеточия).',
   state: 'Вход начат на другом домене (www / без www) или прошло больше 10 минут. SITE_URL должен совпадать с адресом, по которому открывают сайт.',
@@ -2917,21 +3276,32 @@ const TG_LOGIN_HINTS = {
   server: 'Ошибка на нашей стороне при создании сессии — см. лог бота.',
 };
 
-function telegramLoginCard(t) {
+function telegramLoginCard(t, secret, isAdmin) {
   if (!t) return '';
   const err = t.last_error;
+  const secretState = secret.value ? 'задан в админке' : (t.secret_from_env ? 'задан в .env' : 'не задан');
   return `
     <div class="editor-card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div class="dcard-title" style="flex:1">Вход через Telegram на сайте</div>
-        <span class="chip ${t.configured ? 'green' : 'grey'}">${t.configured ? 'Настроено' : 'Не настроено'}</span>
+        <div class="dcard-title" style="flex:1">Вход и регистрация через Telegram</div>
+        <span class="chip ${t.configured ? 'green' : 'red'}">${t.configured ? 'Работает' : 'Не настроено'}</span>
       </div>
-      <div style="font-size:13px;color:#8A7A60;margin-bottom:12px">@BotFather → ваш бот → Bot Settings → Login Widget. Адреса должны совпадать символ в символ.</div>
+      <div style="font-size:13px;color:#8A7A60;margin-bottom:12px;line-height:1.6">
+        1. @BotFather → ваш бот → Bot Settings → <b>Login Widget</b>.<br>
+        2. Добавьте адреса ниже (символ в символ) в Redirect URIs и Trusted Origins.<br>
+        3. Скопируйте оттуда <b>Client Secret</b> и вставьте сюда.
+      </div>
       <div class="field-lbl">Redirect URIs</div>
       ${copyField(t.redirect_uri)}
       <div class="field-lbl" style="margin-top:6px">Trusted Origins</div>
       ${copyField(t.origin)}
-      <div style="font-size:12.5px;color:#8A7A60">Client ID из .env: <span class="mono" style="color:#EBE0CC">${esc(t.client_id || '—')}</span></div>
+      <div class="field-lbl" style="margin-top:6px">Client ID (ID бота — определяется автоматически)</div>
+      ${copyField(t.client_id || '—')}
+      <div class="field-lbl" style="margin-top:6px">Client Secret · ${secretState}</div>
+      ${isAdmin ? `<div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input class="ipt mono" type="password" data-cfg="tg_oauth_secret" autocomplete="off" placeholder="${secret.value ? '•••••••• — введите новый, чтобы заменить' : 'Вставьте Client Secret'}" style="flex:1;min-width:200px">
+        ${secret.value ? '<div class="act-btn plain" onclick="clearTgSecret()">Убрать</div>' : ''}
+      </div>` : '<div class="cfg-hint">Секрет меняет только главный администратор.</div>'}
       ${err ? `
         <div style="margin-top:12px;border:1px solid rgba(255,90,90,.25);background:rgba(255,90,90,.06);border-radius:10px;padding:10px 12px">
           <div style="font-size:12px;color:#FF8A80;margin-bottom:4px">Последняя ошибка · ${fmtDateTime(err.at + 'Z')}</div>
@@ -3091,7 +3461,7 @@ async function renderStaff() {
       <div class="tbl-scroll"><table class="staff-table">
         <thead><tr><th>Сотрудник</th><th>Роль</th><th>Последний вход</th><th>Сеансы</th><th>Доступ</th><th></th></tr></thead>
         <tbody>
-        ${staff.map(a => `
+        ${staff.filter(a => matchesQuery(a.username, a.display_name)).map(a => `
           <tr class="${a.is_active ? '' : 'off'}">
             <td>
               <div style="display:flex;align-items:center;gap:10px">
@@ -3463,8 +3833,12 @@ async function togglePaymentProvider(provider) {
 }
 
 /* ── Boot ──────────────────────────────────────────────────── */
+/* Правки помечаются только в редакторах с кнопкой «Сохранить» (Wiki, Бот,
+   Баннер). Раньше хватало любого .editor-card — и страница «Команда», где
+   роль и доступ сохраняются сразу, ложно спрашивала про несохранённое. */
 document.addEventListener('input', (e) => {
-  if (e.target.closest && e.target.closest('#content .editor-card, #content .bot-panel')) unsaved = true;
+  if (!e.target.closest || !document.querySelector('#content [data-save]')) return;
+  if (e.target.closest('#content .editor-card, #content .bot-panel')) unsaved = true;
 });
 
 (function boot() {

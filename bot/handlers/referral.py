@@ -21,9 +21,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
 from bot.models.user import User
+from bot.utils import app_config
 from bot.utils.bot_media import send_screen
 from bot.utils.bot_texts import MenuText, image_for, t
-from bot.handlers.payment import REFERRAL_DAYS_BONUS, REFERRAL_MILESTONE_SIZE, REFERRAL_ACHIEVEMENTS
+from bot.handlers.payment import REFERRAL_ACHIEVEMENTS
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -49,8 +50,9 @@ async def send_referral_info(message: Message, tg_id: int, session: AsyncSession
 
     paying = user.referral_count or 0
     days_earned = user.extra_days_granted or 0
-    left_to_next = REFERRAL_MILESTONE_SIZE - (paying % REFERRAL_MILESTONE_SIZE)
-    if left_to_next == REFERRAL_MILESTONE_SIZE:
+    milestone, bonus_days = app_config.referral_milestone(), app_config.referral_bonus_days()
+    left_to_next = milestone - (paying % milestone)
+    if left_to_next == milestone:
         left_to_next = 0
 
     bot_info = await message.bot.get_me()
@@ -65,9 +67,9 @@ async def send_referral_info(message: Message, tg_id: int, session: AsyncSession
     ]
 
     next_milestone_line = (
-        f"Ещё {left_to_next} — и начислим +{REFERRAL_DAYS_BONUS} дней автоматически."
+        f"Ещё {left_to_next} — и начислим +{bonus_days} дней автоматически."
         if left_to_next
-        else f"Следующие +{REFERRAL_DAYS_BONUS} дней — за ещё {REFERRAL_MILESTONE_SIZE} оплативших друзей."
+        else f"Следующие +{bonus_days} дней — за ещё {milestone} оплативших друзей."
     )
 
     achievements_lines = []
@@ -84,7 +86,7 @@ async def send_referral_info(message: Message, tg_id: int, session: AsyncSession
         message,
         t(
             "referral.text",
-            milestone_size=REFERRAL_MILESTONE_SIZE, bonus_days=REFERRAL_DAYS_BONUS,
+            milestone_size=milestone, bonus_days=bonus_days,
             invited=total, paying=paying, days_earned=days_earned,
             next_milestone=next_milestone_line, achievements=achievements_block,
             ref_link=ref_link,

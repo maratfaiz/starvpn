@@ -215,7 +215,7 @@ export default function App() {
     haptic("notification");
 
     if (renewMethod === "card") {
-      // Real endpoint: POST /api/invoice/card -> tg.openLink(Robokassa url);
+      // Real endpoint: POST /api/invoice/card -> tg.openLink(payment url);
       // confirmation arrives later via the /card/webhook ResultURL, so we
       // don't touch the subscription state here — only the invoice was created.
       setRenewOpen(false);

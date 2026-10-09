@@ -54,7 +54,7 @@ tg_id = _tg_id(x_telegram_init_data)
 
 - Заводить параллельный `/api/account/*`-эндпоинт, дублирующий
  `_resolve_tg_id`-логику — расширяй общий резолвер, а не копируй его.
-- Менять формат Marzban-логина (`tg_{telegram_id}` / `web_{id}`).
+- Переименовывать существующих пользователей Marzban (формат новых — `new_device_mz_username`, см. CLAUDE.md).
 - Отключать/ослаблять проверку подписи платёжных вебхуков.
 - Писать `print()` — только `logging` (см. `CLAUDE.md`).
 - Синхронные SQLAlchemy-сессии — только `AsyncSession`.
@@ -63,7 +63,7 @@ tg_id = _tg_id(x_telegram_init_data)
 
 `bot/api.py` (2800+ строк — используй поиск по эндпоинту, не читай целиком),
 `bot/utils/webauth.py` (магик-линк логин), `bot/utils/marzban.py`,
-`bot/utils/robokassa.py` / `cryptopay.py`.
+`bot/utils/card.py` (слот карты) / `cryptopay.py`.
 
 См. также [`AGENTS/architecture/api.md`](../architecture/api.md) для
 полного списка эндпоинтов.

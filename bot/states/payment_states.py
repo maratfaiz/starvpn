@@ -20,11 +20,10 @@ class AdminForm(StatesGroup):
 
 
 class GiftForm(StatesGroup):
-    """FSM для подарка подписки другому пользователю."""
+    """FSM для подарка подписки по ссылке."""
     pay_method       = State()  # выбор способа оплаты: Stars или Крипта
-    recipient        = State()  # ввод ID или @username получателя
     anon_choice      = State()  # выбор анонимности (inline кнопки)
-    personal_message = State()  # необязательное личное сообщение (только Stars)
+    personal_message = State()  # необязательное личное сообщение
 
 
 class DeviceForm(StatesGroup):

@@ -10,11 +10,12 @@
       [Тип] → создание в Marzban → QR + ключ
       [Устройство] → карточка: статус / трафик / онлайн + [🔑 Ключ] [🗑 Удалить]
 
-Marzban username: tg_{telegram_id}_d{n} (web_{id}_d{n} для веб-аккаунтов) —
-см. new_device_mz_username.
+Marzban username: {ник}_{тип}_{telegram_id}, например ivan_iphone_123456789
+(веб-аккаунты — …_w{id}) — см. new_device_mz_username.
 """
 
 import logging
+import re
 from datetime import datetime
 
 import httpx
@@ -29,8 +30,9 @@ from aiogram.types import (
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.models.device import Device, MAX_DEVICES
+from bot.models.device import Device
 from bot.models.user import User
+from bot.utils import app_config
 from bot.utils.marzban import marzban
 from bot.utils.qr import make_qr_photo
 from bot.utils.branding import set_vless_remark, subscription_url
@@ -79,28 +81,64 @@ def _type_label(name: str) -> str:
     return dt["label"] if dt else name
 
 
-async def new_device_mz_username(telegram_id: int, session: AsyncSession) -> str:
-    """Имя пользователя Marzban для нового устройства: tg_{id}_d{n}.
+# Тип устройства в имени пользователя Marzban — коротко и по-человечески.
+_MZ_TYPE = {
+    "ios": "iphone", "android": "android", "macos": "mac", "windows": "windows",
+    "linux": "linux", "appletv": "appletv", "androidtv": "tv",
+}
+_TRANSLIT = dict(zip(
+    "абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
+    ["a", "b", "v", "g", "d", "e", "e", "zh", "z", "i", "y", "k", "l", "m", "n", "o", "p",
+     "r", "s", "t", "u", "f", "h", "ts", "ch", "sh", "sch", "", "y", "", "e", "yu", "ya"],
+))
+MZ_NAME_MAX = 32  # лимит длины username в Marzban
 
-    Раньше имя строилось из Telegram @username ({type}_tg_{username}) и
-    подбиралось только среди активных устройств. Отсюда два бага:
-    повторное добавление удалённого устройства того же типа падало на
-    UNIQUE (строка удалённого устройства остаётся в БД), а @username можно
-    освободить и занять другим человеком — его новое устройство попадало
-    в чужого пользователя Marzban. Теперь в имени telegram_id (он уникален),
-    а n не повторяется ни с одним устройством пользователя, включая
-    удалённые: у нового устройства всегда новый ключ.
-    Веб-аккаунты (отрицательный id) — web_{id}_d{n}; длина ≤ 32 символов.
+
+def _mz_slug(text: str) -> str:
+    """«Иван Петров» → ivan_petrov: только a-z, 0-9 и _, как требует Marzban."""
+    s = "".join(_TRANSLIT.get(ch, ch) for ch in text.lower())
+    return re.sub(r"[^a-z0-9]+", "_", s).strip("_")
+
+
+async def new_device_mz_username(user: User, type_key: str, session: AsyncSession) -> str:
+    """Имя пользователя Marzban для нового устройства: ivan_iphone_123456789.
+
+    Читаемая часть — @username (или имя, или начало email) и тип
+    устройства; уникальность даёт telegram_id в конце: он у каждого свой,
+    и в нём нет «_», поэтому имена двух людей совпасть не могут, даже
+    если @username освободят и займёт кто-то другой. Второй iPhone того же
+    человека — ivan_iphone2_123456789. Имена удалённых устройств тоже
+    заняты (строка Device остаётся в БД) — у нового устройства всегда
+    новый ключ. Веб-аккаунты (отрицательный id) — …_w{id}. Старые
+    устройства (tg_{id}_d{n}, {type}_tg_{username}) не переименовываются.
     """
-    ident = f"tg_{telegram_id}" if telegram_id > 0 else f"web_{-telegram_id}"
+    ident = str(user.telegram_id) if user.telegram_id > 0 else f"w{-user.telegram_id}"
+    kind = _MZ_TYPE.get(type_key, "device")
+    nick = (
+        _mz_slug(user.username or "")
+        or _mz_slug((user.full_name or "").split(" ")[0])
+        or _mz_slug((user.email or "").split("@")[0])
+        or "user"
+    )
     rows = await session.execute(
-        select(Device.marzban_username).where(Device.telegram_id == telegram_id)
+        select(Device.marzban_username).where(Device.telegram_id == user.telegram_id)
     )
     taken = set(rows.scalars().all())
     n = 1
-    while f"{ident}_d{n}" in taken:
+    while True:
+        suffix = f"{kind}{n if n > 1 else ''}_{ident}"
+        head = nick[:MZ_NAME_MAX - len(suffix) - 1].strip("_")
+        name = f"{head}_{suffix}" if head else suffix
+        if name not in taken:
+            return name
         n += 1
-    return f"{ident}_d{n}"
+
+
+def device_mz_note(user: User, type_key: str, slot: int, source: str = "бот") -> str:
+    """Подпись пользователя в панели Marzban: «@ivan · iPhone / iPad · слот 1 · tg 123 · бот»."""
+    who = f"@{user.username}" if user.username else (user.email or user.full_name or "")
+    account = f"tg {user.telegram_id}" if user.telegram_id > 0 else "веб-аккаунт"
+    return " · ".join(x for x in (who, _type_label(type_key), f"слот {slot}", account, source) if x)
 
 
 async def _get_devices(telegram_id: int, session: AsyncSession) -> list[Device]:
@@ -139,7 +177,7 @@ def _list_kb(devices: list[Device], has_sub: bool) -> InlineKeyboardMarkup:
             callback_data=f"dev:info:{dev.id}",
         )])
 
-    if has_sub and len(devices) < MAX_DEVICES:
+    if has_sub and len(devices) < app_config.max_devices():
         rows.append([InlineKeyboardButton(
             text="➕ Добавить устройство",
             callback_data="dev:add",
@@ -241,7 +279,7 @@ async def show_devices_screen(
         sub_note = "\n\n⚠️ <i>Нет активной подписки — добавить устройство нельзя.</i>"
 
     text = (
-        f"📱 <b>Мои устройства</b> ({len(devices)}/{MAX_DEVICES})\n\n"
+        f"📱 <b>Мои устройства</b> ({len(devices)}/{app_config.max_devices()})\n\n"
         f"{devices_text}"
         f"{sub_note}\n\n"
         "<i>Нажми на устройство — увидишь ключ и статус подключения.</i>"
@@ -274,8 +312,8 @@ async def dev_add_start(callback: CallbackQuery, session: AsyncSession) -> None:
         return
 
     devices = await _get_devices(tg_id, session)
-    if len(devices) >= MAX_DEVICES:
-        await callback.answer(f"Максимум {MAX_DEVICES} устройства.", show_alert=True)
+    if len(devices) >= app_config.max_devices():
+        await callback.answer(f"Максимум устройств: {app_config.max_devices()}.", show_alert=True)
         return
 
     await callback.message.edit_text(
@@ -309,18 +347,18 @@ async def dev_add_type(callback: CallbackQuery, session: AsyncSession) -> None:
         return
 
     devices = await _get_devices(tg_id, session)
-    if len(devices) >= MAX_DEVICES:
-        await callback.answer(f"Максимум {MAX_DEVICES} устройства.", show_alert=True)
+    if len(devices) >= app_config.max_devices():
+        await callback.answer(f"Максимум устройств: {app_config.max_devices()}.", show_alert=True)
         return
 
     # Свободный слот (только для внутреннего порядка)
     occupied_slots = {d.slot for d in devices}
-    slot = next((s for s in range(1, MAX_DEVICES + 1) if s not in occupied_slots), None)
+    slot = next((s for s in range(1, app_config.max_devices() + 1) if s not in occupied_slots), None)
     if not slot:
         await callback.answer("Нет свободных слотов.", show_alert=True)
         return
 
-    mz_username = await new_device_mz_username(tg_id, session)
+    mz_username = await new_device_mz_username(user, type_key, session)
     dt = DEVICE_TYPES[type_key]
 
     await callback.message.edit_text(
@@ -333,7 +371,7 @@ async def dev_add_type(callback: CallbackQuery, session: AsyncSession) -> None:
     try:
         mz = await marzban.provision_user(
             mz_username, tg_id, user.subscription_expires_at,
-            note=f"device|type:{type_key}|slot:{slot}|tg:{tg_id}", ip_limit=1,
+            note=device_mz_note(user, type_key, slot), ip_limit=1,
         )
         link = set_vless_remark(marzban.extract_vless_link(mz), type_key)
     except Exception as e:

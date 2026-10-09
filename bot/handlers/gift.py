@@ -1,20 +1,20 @@
 """
-🎁 Подарить подписку — покупка VPN-подписки для другого пользователя.
+🎁 Подарить подписку — по ссылке (bot/utils/gifts.py).
 
 Флоу:
-  1. Нажал «🎁 Подарить VPN» → выбирает тариф (inline)
-  2. Выбирает способ оплаты: ⭐ Stars или 💎 Крипта  (GiftForm.pay_method)
-  3. Вводит @username или ID получателя (GiftForm.recipient)
-  4. Выбирает: анонимно или нет (GiftForm.anon_choice)
-  5. Пишет личное сообщение (GiftForm.personal_message; можно пропустить)
-  6. Stars  → answer_invoice (XTR)
-     Крипта → create_invoice CryptoPay → ссылка на @CryptoBot
-  7. После оплаты → подписка активируется получателю, оба получают уведомления
+  1. «🎁 Подарить VPN» → тариф (inline)
+  2. Способ оплаты: ⭐ Stars или 💎 Крипта  (GiftForm.pay_method)
+  3. Анонимно или от своего имени           (GiftForm.anon_choice)
+  4. Личное сообщение (можно пропустить)    (GiftForm.personal_message)
+  5. Stars → answer_invoice (XTR), крипта → счёт @CryptoBot;
+     payload счёта — "giftlink:{payment_id}"
+  6. После оплаты даритель получает ссылку {SITE_URL}/gift/{код} — и
+     отправляет её кому угодно; получатель забирает подарок на сайте или
+     через /start gift_{код}.
 
-Подарок сохраняется pending-платежом (Payment.is_gift + gift_*) ещё до
-оплаты — личное сообщение и анонимность берутся оттуда. Раньше сообщение
-лежало в памяти процесса и терялось при рестарте, а у крипты не
-сохранялось вовсе.
+Раньше нужно было ввести @username получателя, и он должен был заранее
+запустить бота. Счета старого формата ("gift:{plan}:{recipient}:…")
+ещё обрабатываются — handle_gift_payment, ветка legacy.
 """
 
 import html
@@ -31,9 +31,8 @@ from aiogram.types import (
     Message,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, select
+from sqlalchemy import update
 
-from bot.config import settings
 from bot.models.gift_notification import GiftNotification
 from bot.models.payment import Payment
 from bot.models.user import User
@@ -41,18 +40,13 @@ from bot.states.payment_states import GiftForm
 from bot.utils.cryptopay import cryptopay, CRYPTO_PLANS
 from bot.utils.database import AsyncSessionLocal
 from bot.utils.bot_texts import MenuText
+from bot.utils import gifts
 from bot.utils.plans import STARS_PLANS
 
 router = Router()
 logger = logging.getLogger(__name__)
 
 PLANS = STARS_PLANS
-
-
-def _cancel_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="❌ Отмена", callback_data="gift:cancel")]
-    ])
 
 
 def _instructions_kb() -> InlineKeyboardMarkup:
@@ -148,7 +142,7 @@ async def gift_choose_plan(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
 
 
-# ──────────────────────── Шаг 3 — ввод получателя ───────────────────────────
+# ──────────────────────── Шаг 3 — анонимность ───────────────────────────────
 
 @router.callback_query(F.data.startswith("gift_method:"), GiftForm.pay_method)
 async def gift_choose_method(callback: CallbackQuery, state: FSMContext) -> None:
@@ -160,7 +154,7 @@ async def gift_choose_method(callback: CallbackQuery, state: FSMContext) -> None
         await callback.answer("Оплата через Stars сейчас недоступна", show_alert=True)
         return
     await state.update_data(gift_method=method)
-    await state.set_state(GiftForm.recipient)
+    await state.set_state(GiftForm.anon_choice)
 
     data = await state.get_data()
     plan = PLANS[data["gift_plan"]]
@@ -168,64 +162,9 @@ async def gift_choose_method(callback: CallbackQuery, state: FSMContext) -> None
 
     await callback.message.edit_text(
         f"🎁 Подарок: <b>{plan['label']}</b> · {method_label}\n\n"
-        "👤 Введи <b>@username</b> или <b>ID</b> получателя:",
-        parse_mode="HTML",
-        reply_markup=_cancel_kb(),
-    )
-    await callback.answer()
-
-
-# ──────────────────────── Шаг 4 — выбор анонимности ─────────────────────────
-
-@router.message(GiftForm.recipient)
-async def gift_enter_recipient(message: Message, state: FSMContext, session: AsyncSession) -> None:
-    arg = (message.text or "").strip()
-    if not arg:
-        await message.answer("Введи @username или числовой ID.", reply_markup=_cancel_kb())
-        return
-
-    # Поиск пользователя в БД
-    if arg.lstrip("-").isdigit():
-        result = await session.execute(
-            select(User).where(User.telegram_id == int(arg))
-        )
-    else:
-        result = await session.execute(
-            select(User).where(func.lower(User.username) == arg.lstrip("@").lower()).limit(1)
-        )
-    recipient: User | None = result.scalar_one_or_none()
-
-    if not recipient:
-        await message.answer(
-            f"❌ Пользователь <b>{html.escape(arg)}</b> не найден.\n\n"
-            "Возможно, он ещё не запустил бота — попроси его написать "
-            f"<b>/start</b> в @{settings.bot_username}, затем попробуй снова.\n\n"
-            "Или введи другой @username / ID:",
-            parse_mode="HTML",
-            reply_markup=_cancel_kb(),
-        )
-        return
-
-    if recipient.telegram_id == message.from_user.id:
-        await message.answer(
-            "❌ Нельзя подарить подписку самому себе.",
-            reply_markup=_cancel_kb(),
-        )
-        return
-
-    data = await state.get_data()
-    plan = PLANS[data["gift_plan"]]
-    method = data.get("gift_method", "stars")
-    await state.update_data(gift_recipient_id=recipient.telegram_id)
-    await state.set_state(GiftForm.anon_choice)
-
-    uname = f"@{recipient.username}" if recipient.username else str(recipient.telegram_id)
-    method_label = "⭐ Stars" if method == "stars" else "💎 Крипта"
-
-    await message.answer(
-        f"🎁 Получатель: <b>{uname}</b>\n"
-        f"Тариф: <b>{plan['label']}</b> · {method_label}\n\n"
-        "Отправить <b>анонимно</b> или <b>от своего имени</b>?",
+        "После оплаты ты получишь <b>ссылку</b> — отправь её другу, и он заберёт "
+        "подписку в боте или на сайте.\n\n"
+        "Подписать подарок <b>своим именем</b> или отправить <b>анонимно</b>?",
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
             [
@@ -235,6 +174,7 @@ async def gift_enter_recipient(message: Message, state: FSMContext, session: Asy
             [InlineKeyboardButton(text="❌ Отмена", callback_data="gift:cancel")],
         ]),
     )
+    await callback.answer()
 
 
 # ──────────────────────── Шаг 5 — личное сообщение ──────────────────────────
@@ -247,7 +187,7 @@ async def gift_choose_anon(callback: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(GiftForm.personal_message)
     await callback.message.edit_text(
         "✍️ <b>Хочешь добавить личное сообщение получателю?</b>\n\n"
-        "Напиши что-нибудь тёплое — оно придёт вместе с подарком 🎁\n"
+        "Напиши что-нибудь тёплое — получатель увидит его, когда откроет ссылку 🎁\n"
         "Или нажми <b>Пропустить</b>.",
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
@@ -283,11 +223,10 @@ async def _send_gift_invoice(
     personal_message: str,
 ) -> None:
     plan_key = data.get("gift_plan")
-    recipient_id = data.get("gift_recipient_id")
     anon = data.get("gift_anon", "0")
     method = data.get("gift_method", "stars")
 
-    if not plan_key or not recipient_id:
+    if not plan_key or plan_key not in PLANS:
         await msg.answer("Ошибка. Начни заново.")
         await state.clear()
         return
@@ -296,119 +235,76 @@ async def _send_gift_invoice(
 
     plan = PLANS[plan_key]
     sender_id = msg.chat.id
-
     anon_label = "Анонимно 🕵️" if anon == "1" else "От твоего имени 👤"
-
-    async with AsyncSessionLocal() as session:
-        recipient = await session.get(User, recipient_id)
-        if not recipient or recipient.is_banned:
-            await msg.answer("❌ Получатель не найден. Начни заново.")
-            return
-
-    gift_fields = dict(
-        telegram_id=recipient_id, days=plan["days"], is_gift=True, gift_sender_id=sender_id,
-        gift_anon=anon == "1", gift_message=personal_message or None, status="pending",
-    )
+    fields = gifts.link_gift_fields(sender_id, plan["days"], anon == "1", personal_message)
 
     if method == "crypto":
-        # ── Крипто-подарок ──────────────────────────────────────────────────
         crypto_plan = CRYPTO_PLANS.get(plan_key)
         if not crypto_plan:
             await msg.answer("❌ Крипто-тариф не найден.")
             return
-
-        payload_str = f"gift:{plan_key}:{recipient_id}:{anon}:{sender_id}"
-
-        try:
-            invoice = await cryptopay.create_invoice(
-                usd_amount=crypto_plan["usd"],
-                payload=payload_str,
-                description=f"STAR VPN Подарок — {plan['label']}",
-            )
-        except Exception as e:
-            logger.error("CryptoPay gift invoice failed sender=%s: %s", sender_id, e)
-            await msg.answer(
-                "❌ Не удалось создать крипто-счёт. Попробуй позже или выбери оплату ⭐ Stars."
-            )
-            return
-
-        invoice_id = invoice.get("invoice_id")
-        pay_url = invoice.get("bot_invoice_url") or invoice.get("mini_app_invoice_url", "")
-
-        # Сохраняем pending-платёж в БД
         async with AsyncSessionLocal() as session:
-            session.add(Payment(
-                order_id=f"crypto_gift_{invoice_id}",
-                amount=float(crypto_plan["usd"]),
-                payment_method="crypto",
-                invoice_id=invoice_id,
-                **gift_fields,
-            ))
+            payment = Payment(order_id=f"crypto_gift_{uuid.uuid4().hex}",
+                              amount=float(crypto_plan["usd"]), payment_method="crypto", **fields)
+            session.add(payment)
+            await session.flush()
+            try:
+                invoice = await cryptopay.create_invoice(
+                    usd_amount=crypto_plan["usd"],
+                    payload=gifts.link_payload(payment.id),
+                    description=f"STAR VPN Подарок — {plan['label']}",
+                )
+            except Exception as e:  # noqa: BLE001 — любая ошибка CryptoPay = счёт не создан
+                await session.rollback()
+                logger.error("CryptoPay gift invoice failed sender=%s: %s", sender_id, e)
+                await msg.answer(
+                    "❌ Не удалось создать крипто-счёт. Попробуй позже или выбери оплату ⭐ Stars."
+                )
+                return
+            payment.invoice_id = invoice.get("invoice_id")
+            payment.order_id = f"crypto_gift_{payment.invoice_id}"
             await session.commit()
-
-        kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(
-                text=f"💎 Оплатить ${crypto_plan['usd']} через @CryptoBot",
-                url=pay_url,
-            )],
-        ])
+        pay_url = invoice.get("bot_invoice_url") or invoice.get("mini_app_invoice_url", "")
 
         await msg.answer(
             f"💎 <b>Счёт для подарка создан!</b>\n\n"
             f"📦 Тариф: <b>{plan['label']}</b>\n"
             f"💵 Сумма: <b>${crypto_plan['usd']}</b>\n"
-            f"Отправка: {anon_label}\n\n"
-            f"Нажми кнопку и оплати через @CryptoBot.\n"
-            f"Подписка активируется получателю <b>автоматически</b> ✅\n\n"
+            f"Подпись: {anon_label}\n\n"
+            f"Оплати через @CryptoBot — сразу после оплаты пришлю ссылку на подарок 🎁\n\n"
             f"⏱ Счёт действителен 1 час.",
             parse_mode="HTML",
-            reply_markup=kb,
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(
+                text=f"💎 Оплатить ${crypto_plan['usd']} через @CryptoBot", url=pay_url,
+            )]]),
         )
+        return
 
-    else:
-        # ── Stars-подарок ────────────────────────────────────────────────────
-        payment_id = await create_stars_gift_payment(plan["stars"], gift_fields)
-        payload = stars_gift_payload(plan_key, recipient_id, anon, payment_id)
-        msg_label = (
-            f"\n✍️ Сообщение: <i>{html.escape(personal_message[:50])}{'...' if len(personal_message) > 50 else ''}</i>"
-            if personal_message else ""
-        )
-
-        await msg.answer(
-            f"🎁 <b>Подтверди оплату</b>\n\n"
-            f"Тариф: <b>{plan['label']}</b> — {plan['stars']} ⭐\n"
-            f"Отправка: {anon_label}"
-            f"{msg_label}",
-            parse_mode="HTML",
-        )
-
-        await msg.answer_invoice(
-            title=f"🎁 Подарок STAR VPN — {plan['label']}",
-            description=f"Подарочная подписка на {plan['days']} дней",
-            payload=payload,
-            currency="XTR",
-            prices=[LabeledPrice(label=f"Подарок: {plan['label']}", amount=plan["stars"])],
-        )
-
-
-async def create_stars_gift_payment(stars: int, gift_fields: dict) -> int:
-    """Pending-платёж для подарка за Stars (бот и Mini App). Возвращает его id —
-    он уходит в payload счёта, по нему после оплаты берутся сообщение и
-    анонимность."""
     async with AsyncSessionLocal() as session:
-        payment = Payment(
-            order_id=f"stars_gift_{uuid.uuid4().hex}",
-            amount=float(stars),
-            payment_method="stars",
-            **gift_fields,
-        )
+        payment = Payment(order_id=f"stars_gift_{uuid.uuid4().hex}",
+                          amount=float(plan["stars"]), payment_method="stars", **fields)
         session.add(payment)
         await session.commit()
-        return payment.id
-
-
-def stars_gift_payload(plan_key: str, recipient_id: int, anon: str, payment_id: int) -> str:
-    return f"gift:{plan_key}:{recipient_id}:{anon}:{payment_id}"
+        payment_id = payment.id
+    msg_label = (
+        f"\n✍️ Сообщение: <i>{html.escape(personal_message[:50])}{'...' if len(personal_message) > 50 else ''}</i>"
+        if personal_message else ""
+    )
+    await msg.answer(
+        f"🎁 <b>Подтверди оплату</b>\n\n"
+        f"Тариф: <b>{plan['label']}</b> — {plan['stars']} ⭐\n"
+        f"Подпись: {anon_label}"
+        f"{msg_label}\n\n"
+        f"После оплаты пришлю ссылку на подарок.",
+        parse_mode="HTML",
+    )
+    await msg.answer_invoice(
+        title=f"🎁 Подарок STAR VPN — {plan['label']}",
+        description=f"Подарочная подписка на {plan['days']} дней — придёт ссылкой",
+        payload=gifts.link_payload(payment_id),
+        currency="XTR",
+        prices=[LabeledPrice(label=f"Подарок: {plan['label']}", amount=plan["stars"])],
+    )
 
 
 def parse_stars_gift_payload(payload: str) -> tuple[str, int, bool, int | None] | None:
@@ -439,16 +335,50 @@ async def gift_cancel(callback: CallbackQuery, state: FSMContext) -> None:
 
 # ──────────────────────── Активация после оплаты Stars ───────────────────────
 
+async def _handle_link_gift_payment(message: Message, payment_id: int, session: AsyncSession) -> None:
+    """Подарок по ссылке оплачен звёздами: отметить оплату (атомарно — повтор
+    апдейта ничего не делает), учесть звёзды покупателя и прислать ему ссылку.
+    Подписку никто не получает, пока ссылку не откроют (gifts.claim_gift)."""
+    from datetime import datetime
+
+    paid = message.successful_payment
+    if paid is None or message.from_user is None:
+        return
+    claimed = await session.execute(
+        update(Payment)
+        .where(Payment.id == payment_id, Payment.status == "pending",
+               Payment.gift_sender_id == message.from_user.id)
+        .values(status="paid", paid_at=datetime.utcnow(),
+                order_id=f"gift_{message.from_user.id}_{paid.telegram_payment_charge_id}")
+    )
+    if claimed.rowcount != 1:
+        await session.rollback()
+        logger.error("Stars gift-link payment %s: no pending row", payment_id)
+        return
+    buyer = await session.get(User, message.from_user.id)
+    if buyer:
+        buyer.total_stars_paid = (buyer.total_stars_paid or 0) + paid.total_amount
+    await session.commit()
+    payment = await session.get(Payment, payment_id)
+    await gifts.send_gift_link(message.bot, payment)
+
+
 async def handle_gift_payment(
     message: Message,
     payload: str,
     session: AsyncSession,
 ) -> None:
-    """Вызывается из payment.py при успешной оплате gift-invoice (Stars):
-    отмечает платёж оплаченным вместе с выдачей подписки получателю и
-    уведомляет обоих."""
+    """Вызывается из payment.py при успешной оплате подарочного счёта Stars.
+    Подарок по ссылке — _handle_link_gift_payment; старые счета на
+    конкретного получателя — выдача подписки получателю сразу."""
     from datetime import datetime
 
+    link_payment_id = gifts.parse_link_payload(payload)
+    if link_payment_id is not None:
+        await _handle_link_gift_payment(message, link_payment_id, session)
+        return
+
+    # ── legacy: счёт на подарок конкретному человеку (до ADR-022) ──
     parsed = parse_stars_gift_payload(payload)
     plan = STARS_PLANS.get(parsed[0]) if parsed else None
     if not parsed or not plan:

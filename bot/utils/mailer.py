@@ -67,7 +67,7 @@ async def send_ticket_reply_email(to_email: str, ticket_subject: str, reply: str
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#060606;color:#EBE0CC">
       <h2 style="color:#FFB800;margin:0 0 16px">STAR VPN — Поддержка</h2>
       <p style="color:#8A7A60;margin:0 0 8px">По тикету «{ticket_subject}»:</p>
-      <p style="white-space:pre-wrap">{reply}</p>
+      <p style="white-space:pre-wrap">{html.escape(reply)}</p>
     </div>
     """
 

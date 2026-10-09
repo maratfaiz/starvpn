@@ -8,8 +8,10 @@ import asyncio
 import base64
 import hashlib
 import hmac
+import html
 import json
 import logging
+import re
 import secrets
 import time
 import urllib.parse
@@ -21,15 +23,16 @@ from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
-from sqlalchemy import func, or_, select, update
+from sqlalchemy import case, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from bot.config import settings
-from bot.models.device import Device, MAX_DEVICES
+from bot.models.device import Device
 from bot.models.gift_notification import GiftNotification
 from bot.models.payment import Payment
 from bot.models.user import User
+from bot.utils import app_config
 from bot.utils.database import AsyncSessionLocal
 from bot.utils.marzban import marzban
 from bot.utils.vpn_access import set_vpn_enabled
@@ -281,6 +284,16 @@ async def serve_world_dots():
     """Данные для карты серверов на главной (landing/index.html)."""
     from fastapi.responses import FileResponse
     p = _LANDING_DIR / "world-dots.js"
+    if p.exists():
+        return FileResponse(str(p), media_type="application/javascript")
+    return HTMLResponse(content="", status_code=404)
+
+
+@app.get("/stars.js", include_in_schema=False)
+async def serve_stars_js():
+    """Звёздный фон, общий для всех страниц сайта."""
+    from fastapi.responses import FileResponse
+    p = _LANDING_DIR / "stars.js"
     if p.exists():
         return FileResponse(str(p), media_type="application/javascript")
     return HTMLResponse(content="", status_code=404)
@@ -781,7 +794,7 @@ async def _get_active_devices(tg_id: int, session) -> list[Device]:
 
 def _free_slot(devices: list[Device]) -> int | None:
     used = {d.slot for d in devices}
-    for s in range(1, MAX_DEVICES + 1):
+    for s in range(1, app_config.max_devices() + 1):
         if s not in used:
             return s
     return None
@@ -790,7 +803,7 @@ def _free_slot(devices: list[Device]) -> int | None:
 DEVICE_TYPES_API = {"ios", "android", "macos", "windows", "linux", "androidtv", "appletv"}
 
 
-from bot.handlers.devices import new_device_mz_username  # noqa: E402 — одна реализация на бота и API
+from bot.handlers.devices import device_mz_note, new_device_mz_username  # noqa: E402 — одна реализация на бота и API
 
 
 # ─── GET /api/me ──────────────────────────────────────────────────────────────
@@ -828,7 +841,8 @@ async def get_me(request: Request, x_telegram_init_data: str | None = Header(def
         "subscription_expires_at": exp.isoformat() if exp else None,
         "subscription_active": bool(exp and exp > now),
         "trial_used": bool(user.trial_used),
-        "trial_days": settings.trial_days,
+        "trial_days": app_config.trial_days(),
+        "trial_enabled": app_config.trial_enabled(),
         "total_stars_paid": int(user.total_stars_paid or 0),
         "referral_count": int(user.referral_count or 0),
         "extra_days_granted": int(user.extra_days_granted or 0),
@@ -837,7 +851,7 @@ async def get_me(request: Request, x_telegram_init_data: str | None = Header(def
         "created_at": user.created_at.isoformat() if user.created_at else None,
         "support_url": f"https://t.me/{settings.support_username.lstrip('@')}",
         "bot_username": settings.bot_username,
-        "max_devices": MAX_DEVICES,
+        "max_devices": app_config.max_devices(),
         "server_host": settings.server_host,
         "server_country": settings.server_country,
         "server_city": settings.server_city,
@@ -937,14 +951,14 @@ async def create_device(request: Request, x_telegram_init_data: str | None = Hea
         devs = await _get_active_devices(tg_id, session)
         slot = _free_slot(devs)
         if not slot:
-            raise HTTPException(403, f"Maximum {MAX_DEVICES} devices allowed")
+            raise HTTPException(403, f"Можно подключить не больше {app_config.max_devices()} устройств")
 
-        mz_username = await new_device_mz_username(tg_id, session)
+        mz_username = await new_device_mz_username(user, type_key, session)
 
         try:
             mz_user = await marzban.provision_user(
                 mz_username, tg_id, user.subscription_expires_at,
-                note=f"device|type:{type_key}|slot:{slot}|tg:{tg_id}|webapp", ip_limit=1,
+                note=device_mz_note(user, type_key, slot, "сайт / приложение"), ip_limit=1,
             )
             link = marzban.extract_vless_link(mz_user) or ""
         except Exception as e:
@@ -1079,7 +1093,7 @@ async def get_referral(request: Request, x_telegram_init_data: str | None = Head
         )
         referrals = refs_r.scalars().all()
 
-    from bot.handlers.payment import REFERRAL_DAYS_BONUS, REFERRAL_MILESTONE_SIZE, REFERRAL_ACHIEVEMENTS
+    from bot.handlers.payment import REFERRAL_ACHIEVEMENTS
 
     paying = int(user.referral_count or 0)
 
@@ -1087,8 +1101,8 @@ async def get_referral(request: Request, x_telegram_init_data: str | None = Head
         "extra_days_granted": int(user.extra_days_granted or 0),
         "link": f"https://t.me/{settings.bot_username}?start=ref{tg_id}",
         "referral_count": paying,
-        "days_bonus": REFERRAL_DAYS_BONUS,
-        "milestone_size": REFERRAL_MILESTONE_SIZE,
+        "days_bonus": app_config.referral_bonus_days(),
+        "milestone_size": app_config.referral_milestone(),
         "achievements": [
             {
                 "key": a["key"],
@@ -1120,13 +1134,18 @@ def _require_admin(tg_id: int) -> None:
         raise HTTPException(403, "Admin only")
 
 
-async def _tg_send(chat_id: int, text: str) -> None:
-    """Отправить сообщение через Telegram Bot API напрямую."""
-    async with httpx.AsyncClient(timeout=10) as client:
-        await client.post(
-            f"https://api.telegram.org/bot{settings.telegram_api_token}/sendMessage",
-            json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
-        )
+async def _tg_send(chat_id: int, text: str) -> bool:
+    """Отправить сообщение через Telegram Bot API напрямую. True — доставлено."""
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.post(
+                f"https://api.telegram.org/bot{settings.telegram_api_token}/sendMessage",
+                json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
+            )
+        return r.status_code == 200 and bool(r.json().get("ok"))
+    except (httpx.HTTPError, ValueError) as e:
+        logger.warning("Telegram send to %s failed: %s", chat_id, e)
+        return False
 
 
 # ─── GET /api/admin/check ────────────────────────────────────────────────────
@@ -1505,238 +1524,98 @@ async def invoice_renew(request: Request, x_telegram_init_data: str | None = Hea
     return {"url": url}
 
 
-# ─── POST /api/invoice/gift ──────────────────────────────────────────────────
-
-@app.post("/api/invoice/gift")
-async def invoice_gift(request: Request, x_telegram_init_data: str | None = Header(default=None)):
-    """Создать invoice для подарка подписки."""
-    from bot.handlers.gift import create_stars_gift_payment, stars_gift_payload
-
-    tg_id = _tg_id(x_telegram_init_data)
-    body = await request.json()
-    plan_key = (body.get("plan") or "").strip()
-    recipient_input = (body.get("recipient") or "").strip()
-    anon = "1" if body.get("anon") else "0"
-    personal_message = (body.get("message") or "").strip()[:300]
-
-    plan = _PLANS_API.get(plan_key)
-    if not plan:
-        raise HTTPException(400, "Invalid plan key")
-    if not recipient_input:
-        raise HTTPException(400, "Recipient required")
-
-    async with AsyncSessionLocal() as session:
-        await _ensure_can_pay(session, tg_id, "stars")
-        recipient = await _lookup_gift_recipient(recipient_input, session)
-
-    if not recipient or recipient.is_banned:
-        raise HTTPException(404, "Получатель не найден. Попроси его написать /start боту.")
-    if recipient.telegram_id == tg_id:
-        raise HTTPException(400, "Нельзя подарить подписку самому себе.")
-
-    # Сообщение и анонимность — в pending-платеже (раньше в памяти процесса).
-    payment_id = await create_stars_gift_payment(plan["stars"], dict(
-        telegram_id=recipient.telegram_id, days=plan["days"], is_gift=True,
-        gift_sender_id=tg_id, gift_anon=anon == "1", gift_message=personal_message or None,
-        status="pending",
-    ))
-    payload = stars_gift_payload(plan_key, recipient.telegram_id, anon, payment_id)
-    uname = f"@{recipient.username}" if recipient.username else str(recipient.telegram_id)
-
-    url = await _create_tg_invoice(
-        title=f"🎁 Подарок STAR VPN — {plan['label']}",
-        description=f"Подарочная подписка для {uname} на {plan['days']} дней",
-        payload=payload,
-        stars=plan["stars"],
-    )
-    return {"url": url, "recipient_name": uname}
-
-
-# ─── POST /api/invoice/gift/crypto ───────────────────────────────────────────
-
-@app.post("/api/invoice/gift/crypto")
-async def create_gift_crypto_invoice(
-    request: Request,
-    x_telegram_init_data: str | None = Header(default=None),
-):
-    """Создаёт крипто-инвойс для подарка подписки (мини-апп)."""
-    tg_id = _tg_id(x_telegram_init_data)
-    body = await request.json()
-    plan_key = (body.get("plan") or "").strip()
-    recipient_input = (body.get("recipient") or "").strip()
-    anon = "1" if body.get("anon") else "0"
-    personal_message = (body.get("message") or "").strip()[:300]
-
-    from bot.utils.cryptopay import cryptopay, CRYPTO_PLANS
-    plan = CRYPTO_PLANS.get(plan_key)
-    if not plan:
-        raise HTTPException(400, "Неизвестный тариф")
-    if not recipient_input:
-        raise HTTPException(400, "Получатель обязателен")
-
-    async with AsyncSessionLocal() as session:
-        await _ensure_can_pay(session, tg_id, "crypto")
-        recipient = await _lookup_gift_recipient(recipient_input, session)
-
-    if not recipient or recipient.is_banned:
-        raise HTTPException(404, "Получатель не найден. Попроси его написать /start боту.")
-    if recipient.telegram_id == tg_id:
-        raise HTTPException(400, "Нельзя подарить самому себе.")
-
-    uname = f"@{recipient.username}" if recipient.username else str(recipient.telegram_id)
-    payload_str = f"gift:{plan_key}:{recipient.telegram_id}:{anon}:{tg_id}"
-
-    try:
-        invoice = await cryptopay.create_invoice(
-            usd_amount=plan["usd"],
-            payload=payload_str,
-            description=f"STAR VPN — подарок {plan['label']} для {uname}",
-        )
-    except Exception as e:
-        logger.error("CryptoPay gift invoice error: %s", e)
-        raise HTTPException(502, "Ошибка CryptoPay. Попробуй позже.")
-
-    invoice_id = invoice.get("invoice_id")
-    pay_url = invoice.get("bot_invoice_url") or invoice.get("mini_app_invoice_url", "")
-
-    async with AsyncSessionLocal() as session:
-        payment = Payment(
-            order_id=f"crypto_gift_{invoice_id}",
-            telegram_id=recipient.telegram_id,
-            amount=float(plan["usd"]),
-            status="pending",
-            payment_method="crypto",
-            invoice_id=invoice_id,
-            days=plan["days"],
-            is_gift=True,
-            gift_sender_id=tg_id,
-            gift_anon=anon == "1",
-            gift_message=personal_message or None,
-        )
-        session.add(payment)
-        await session.commit()
-
-    return {"url": pay_url, "recipient_name": uname}
-
-
-# ─── Подарок с сайта (личный кабинет) — только карта, без Stars ─────────────
-
-async def _lookup_gift_recipient(recipient_input: str, session: AsyncSession) -> User | None:
-    recipient_input = recipient_input.strip()
-    if not recipient_input:
-        return None
-    if recipient_input.lstrip("-").isdigit():
-        r = await session.execute(select(User).where(User.telegram_id == int(recipient_input)))
-    else:
-        r = await session.execute(select(User).where(func.lower(User.username) == recipient_input.lstrip("@").lower()).limit(1))
-    return r.scalar_one_or_none()
-
-
-@app.post("/api/gift/lookup")
-async def gift_lookup(request: Request, x_telegram_init_data: str | None = Header(default=None)):
-    """Проверяет получателя подарка по @username или ID, до перехода к оплате."""
-    body = await request.json()
-    recipient_input = (body.get("recipient") or "").strip()
-    if not recipient_input:
-        raise HTTPException(400, "Укажите получателя")
-
-    async with AsyncSessionLocal() as session:
-        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
-        recipient = await _lookup_gift_recipient(recipient_input, session)
-
-    if not recipient or recipient.telegram_id <= 0:
-        raise HTTPException(404, f"Получатель не найден. Он должен сначала написать /start боту @{settings.bot_username}.")
-    if recipient.telegram_id == tg_id:
-        raise HTTPException(400, "Нельзя подарить подписку самому себе.")
-
-    uname = f"@{recipient.username}" if recipient.username else str(recipient.telegram_id)
-    return {"telegram_id": recipient.telegram_id, "display_name": uname}
-
-
-def _new_gift_link_code() -> str:
-    return secrets.token_urlsafe(9).replace("-", "").replace("_", "")[:11]
-
+# ─── Подарок по ссылке с сайта / из Mini App (bot/utils/gifts.py) ───────────
 
 @app.post("/api/gift/invoice")
 async def gift_invoice(request: Request, x_telegram_init_data: str | None = Header(default=None)):
-    """
-    Создаёт подарочный платёж с сайта (личный кабинет) — картой.
-    Stars здесь недоступны — это оплата только внутри Telegram.
+    """Счёт на подарок по ссылке: {"plan", "provider": "crypto"|"card", "anon", "message"}.
 
-    Если recipient не указан — это подарок "по ссылке": получатель ещё
-    неизвестен, платёж временно висит на самом отправителе (gift_sender_id),
-    а после оплаты становится доступен на /gift/{code} — кто угодно
-    открывает ссылку и забирает подарок под своим аккаунтом.
-    """
+    Получатель не указывается — после оплаты даритель получает ссылку
+    /gift/{код} (в ответе и в Telegram) и отправляет её кому угодно.
+    Оплата картой — когда будет подключён провайдер (bot/utils/card.py)."""
+    from bot.utils import gifts
+    from bot.utils.cryptopay import CRYPTO_PLANS, cryptopay
+
     body = await request.json()
-    provider = (body.get("provider") or "").strip()
+    provider = (body.get("provider") or "crypto").strip()
     plan_key = (body.get("plan") or "").strip()
-    recipient_input = (body.get("recipient") or "").strip()
     anon = bool(body.get("anon"))
     message = (body.get("message") or "").strip()[:300]
-    link_mode = not recipient_input
-
-    if provider != "card":
+    if provider not in ("crypto", "card"):
         raise HTTPException(400, "Неизвестный способ оплаты")
-
 
     async with AsyncSessionLocal() as session:
         tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         await _ensure_can_pay(session, tg_id, provider)
-
-        gift_link_code = None
-        if link_mode:
-            recipient_tg_id = tg_id  # временный держатель записи, пока подарок не заберут
-            uname = "по ссылке"
-            gift_desc_suffix = "по ссылке"
-            gift_link_code = _new_gift_link_code()
-        else:
-            recipient = await _lookup_gift_recipient(recipient_input, session)
-            if not recipient or recipient.telegram_id <= 0:
-                raise HTTPException(404, f"Получатель не найден. Он должен сначала написать /start боту @{settings.bot_username}.")
-            if recipient.telegram_id == tg_id:
-                raise HTTPException(400, "Нельзя подарить подписку самому себе.")
-            recipient_tg_id = recipient.telegram_id
-            uname = f"@{recipient.username}" if recipient.username else str(recipient.telegram_id)
-            gift_desc_suffix = f"для {uname}"
-
-        from bot.utils.robokassa import robokassa, CARD_PLANS, payment_inv_id
-        plan = CARD_PLANS.get(plan_key)
+        plan = CRYPTO_PLANS.get(plan_key)
         if not plan:
             raise HTTPException(400, "Неизвестный тариф")
-        if not robokassa.configured:
-            raise HTTPException(503, "Оплата картой временно недоступна")
+        if not cryptopay.configured:
+            raise HTTPException(503, "Оплата криптовалютой временно недоступна")
 
         payment = Payment(
-            order_id="", telegram_id=recipient_tg_id, amount=float(plan["rub"]),
-            status="pending", payment_method="card", days=plan["days"],
-            is_gift=True, gift_sender_id=tg_id, gift_anon=anon, gift_message=message,
-            gift_link_code=gift_link_code,
+            order_id=f"crypto_gift_{secrets.token_hex(8)}", amount=float(plan["usd"]),
+            payment_method="crypto", **gifts.link_gift_fields(tg_id, plan["days"], anon, message),
         )
         session.add(payment)
         await session.flush()
-        payment.order_id = f"card_{payment.id}"
         try:
-            pay_url = robokassa.build_payment_url(
-                inv_id=payment_inv_id(payment.id),
-                amount=plan["rub"],
-                description=f"STAR VPN — подарок {plan['label']} {gift_desc_suffix}",
+            invoice = await cryptopay.create_invoice(
+                usd_amount=plan["usd"],
+                payload=gifts.link_payload(payment.id),
+                description=f"STAR VPN — подарок {plan['label']}",
             )
-        except RuntimeError as e:
+        except Exception as e:  # noqa: BLE001 — любая ошибка CryptoPay = счёт не создан
             await session.rollback()
-            logger.error("Robokassa gift build_payment_url failed: %s", e)
-            raise HTTPException(502, "Ошибка Robokassa. Попробуйте позже.")
-
+            logger.error("CryptoPay gift invoice error: %s", e)
+            raise HTTPException(502, "Ошибка CryptoPay. Попробуйте позже.")
+        payment.invoice_id = invoice.get("invoice_id")
+        payment.order_id = f"crypto_gift_{payment.invoice_id}"
+        code = payment.gift_link_code
         await session.commit()
-        inv_id = payment.id
 
-    result = {"url": pay_url, "invoice_id": inv_id, "recipient_name": uname}
-    if gift_link_code:
-        result["gift_link"] = f"{settings.site_url}/gift/{gift_link_code}"
-    return result
+    return {
+        "url": invoice.get("bot_invoice_url") or invoice.get("mini_app_invoice_url", ""),
+        "gift_link": gifts.gift_url(code), "code": code,
+    }
 
 
-_GIFT_PLAN_LABELS = {30: "1 месяц", 90: "3 месяца", 180: "6 месяцев"}
+def _gift_row(p: Payment, claimant: User | None) -> dict:
+    from bot.utils import gifts
+    if p.gift_claimed:
+        state = "claimed"
+    elif p.status == "paid":
+        state = "ready"
+    else:
+        state = "unpaid"
+    return {
+        "id": p.id, "code": p.gift_link_code, "state": state,
+        "link": gifts.gift_url(p.gift_link_code) if p.status == "paid" else "",
+        "plan_label": gifts.plan_label(p.days or 30), "days": p.days or 30,
+        "method": p.payment_method, "amount": float(p.amount),
+        "anon": bool(p.gift_anon), "message": p.gift_message or "",
+        "claimed_by": (
+            claimant.email or (f"@{claimant.username}" if claimant.username else str(claimant.telegram_id))
+        ) if claimant and p.gift_claimed else "",
+        "created_at": p.created_at.isoformat() if p.created_at else None,
+        "paid_at": p.paid_at.isoformat() if p.paid_at else None,
+    }
+
+
+@app.get("/api/gift/mine")
+async def my_gifts(request: Request, x_telegram_init_data: str | None = Header(default=None)):
+    """Подарки по ссылке, которые купил текущий пользователь (оплаченные)."""
+    async with AsyncSessionLocal() as session:
+        tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
+        rows = (await session.execute(
+            select(Payment, User)
+            .outerjoin(User, User.telegram_id == Payment.telegram_id)
+            .where(Payment.gift_sender_id == tg_id, Payment.is_gift.is_(True),
+                   Payment.gift_link_code.is_not(None), Payment.status == "paid")
+            .order_by(Payment.paid_at.desc())
+            .limit(100)
+        )).all()
+    return {"gifts": [_gift_row(p, u) for p, u in rows]}
 
 
 @app.get("/gift/{code}", include_in_schema=False)
@@ -1760,14 +1639,10 @@ async def gift_link_status(code: str):
         if payment.gift_claimed:
             return {"status": "claimed"}
 
+        from bot.utils import gifts
         days = payment.days or 30
-        plan_label = _GIFT_PLAN_LABELS.get(days, f"{days} дней")
-        sender_name = "Аноним"
-        if not payment.gift_anon and payment.gift_sender_id:
-            sr = await session.execute(select(User).where(User.telegram_id == payment.gift_sender_id))
-            sender: User | None = sr.scalar_one_or_none()
-            if sender:
-                sender_name = f"@{sender.username}" if sender.username else (sender.full_name or "пользователь")
+        plan_label = gifts.plan_label(days)
+        sender_name = await gifts.sender_name(payment, session)
 
         return {
             "status": "ready",
@@ -1781,79 +1656,26 @@ async def gift_link_status(code: str):
 @app.post("/api/gift/link/{code}/claim")
 async def gift_link_claim(code: str, request: Request, x_telegram_init_data: str | None = Header(default=None)):
     """Забрать подарок по ссылке — требует авторизации (Mini App или /login),
-    поэтому фронт на 401 должен предложить войти и вернуться на эту же ссылку."""
+    поэтому фронт на 401 должен предложить войти и вернуться на эту же ссылку.
+    Та же логика, что у /start gift_{код} в боте — bot.utils.gifts.claim_gift."""
+    from bot.utils import gifts
+    from bot.utils.webauth import get_or_create_user_by_telegram_id
+
     async with AsyncSessionLocal() as session:
         tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
-
-        r = await session.execute(
-            select(Payment).where(Payment.gift_link_code == code, Payment.is_gift.is_(True))
-        )
-        payment: Payment | None = r.scalar_one_or_none()
-        if not payment:
-            raise HTTPException(404, "Подарок не найден")
-        if payment.status != "paid":
-            raise HTTPException(409, "Дарящий ещё не завершил оплату")
-        if payment.gift_claimed:
-            raise HTTPException(409, "Этот подарок уже кто-то забрал")
-        if payment.gift_sender_id == tg_id:
-            raise HTTPException(400, "Нельзя забрать свой же подарок")
-
-        from sqlalchemy import update as _update
-        from bot.handlers.payment import _grant_subscription
-        from bot.utils.webauth import get_or_create_user_by_telegram_id
-
         claimant = await get_or_create_user_by_telegram_id(tg_id, None, None, session)
+        try:
+            result = await gifts.claim_gift(code, claimant, session)
+        except gifts.GiftClaimError as e:
+            raise HTTPException(e.status, e.message)
 
-        # Атомарно «забираем» подарок (при двух одновременных запросах раньше
-        # подписку могли получить оба) — в одной транзакции с выдачей:
-        # коммит внутри _grant_subscription. Если выдача упала, подарок
-        # остаётся незабранным, а не пропадает.
-        taken = await session.execute(
-            _update(Payment)
-            .where(Payment.id == payment.id, Payment.gift_claimed.is_(False))
-            .values(gift_claimed=True, telegram_id=tg_id)
-        )
-        if taken.rowcount != 1:
-            await session.rollback()
-            raise HTTPException(409, "Этот подарок уже кто-то забрал")
-
-        days = payment.days or 30
-        await _grant_subscription(claimant, days, session)
-
-        plan_label = _GIFT_PLAN_LABELS.get(days, f"{days} дней")
-        sender_name = "Аноним"
-        if not payment.gift_anon and payment.gift_sender_id:
-            sr = await session.execute(select(User).where(User.telegram_id == payment.gift_sender_id))
-            sender: User | None = sr.scalar_one_or_none()
-            if sender:
-                sender_name = f"@{sender.username}" if sender.username else (sender.full_name or "пользователь")
-
-        notif = GiftNotification(
-            recipient_id=tg_id, sender_name=sender_name, plan_label=plan_label, plan_days=days,
-        )
-        session.add(notif)
-        await session.commit()
-
-        if payment.gift_sender_id and payment.gift_sender_id > 0:
-            from aiogram import Bot
-            bot = Bot(token=settings.telegram_api_token)
-            try:
-                await bot.send_message(
-                    payment.gift_sender_id,
-                    f"✅ <b>Подарок забрали по ссылке!</b>\n\n"
-                    f"📦 Тариф: <b>{plan_label}</b>\n"
-                    f"Получатель уже пользуется VPN 🎉",
-                    parse_mode="HTML",
-                )
-            except Exception as e:
-                logger.warning("Gift-link sender notify failed: %s", e)
-            finally:
-                try:
-                    await bot.session.close()
-                except Exception:
-                    pass
-
-    return {"ok": True, "plan_label": plan_label, "plan_days": days}
+    from aiogram import Bot
+    bot = Bot(token=settings.telegram_api_token)
+    try:
+        await gifts.notify_gift_claimed(bot, result["sender_id"], result["plan_label"])
+    finally:
+        await bot.session.close()
+    return {"ok": True, "plan_label": result["plan_label"], "plan_days": result["plan_days"]}
 
 
 # ─── POST /api/trial ─────────────────────────────────────────────────────────
@@ -1868,6 +1690,8 @@ async def activate_trial_api(request: Request, x_telegram_init_data: str | None 
         user: User | None = result.scalar_one_or_none()
         if not user:
             raise HTTPException(status_code=404, detail="Пользователь не найден")
+        if not app_config.trial_enabled():
+            raise HTTPException(status_code=403, detail="Пробный период сейчас недоступен")
         if user.trial_used:
             raise HTTPException(status_code=400, detail="Пробный период уже был активирован")
         if user.is_banned:
@@ -1884,9 +1708,9 @@ async def activate_trial_api(request: Request, x_telegram_init_data: str | None 
         # и оплативший подписку, но не бравший пробный, терял оплаченное.
         from bot.handlers.payment import _grant_subscription
         user.trial_used = True
-        await _grant_subscription(user, settings.trial_days, session)
+        await _grant_subscription(user, app_config.trial_days(), session)
 
-        return {"ok": True, "days": settings.trial_days}
+        return {"ok": True, "days": app_config.trial_days()}
 
 
 # ─── GET /api/plans ──────────────────────────────────────────────────────────
@@ -2023,23 +1847,16 @@ async def crypto_webhook(request: Request):
 
 @app.get("/api/card/plans")
 async def get_card_plans(request: Request, x_telegram_init_data: str | None = Header(default=None)):
-    """Тарифы для оплаты картой (RUB). Возвращает [] если Robokassa не настроена или отключена в админке."""
+    """Тарифы для оплаты картой (₽). [] — пока провайдер не подключён
+    (bot/utils/card.py) или способ выключен в админке."""
+    from bot.utils.card import CARD_PLANS
     from bot.utils.settings_store import is_provider_enabled
     async with AsyncSessionLocal() as session:
         await _resolve_tg_id(request, x_telegram_init_data, session)
         if not await is_provider_enabled(session, "card"):
             return []
-    from bot.utils.robokassa import robokassa, CARD_PLANS
-    if not robokassa.configured:
-        return []
     return [
-        {
-            "key": k,
-            "label": v["label"],
-            "rub": float(v["rub"]),
-            "days": v["days"],
-            "desc": v["desc"],
-        }
+        {"key": k, "label": v["label"], "rub": float(v["rub"]), "days": v["days"], "desc": v["desc"]}
         for k, v in CARD_PLANS.items()
     ]
 
@@ -2051,67 +1868,16 @@ async def create_card_invoice(
     request: Request,
     x_telegram_init_data: str | None = Header(default=None),
 ):
-    """Создаёт pending-платёж и подписанную ссылку Robokassa (мини-апп).
+    """Оплата картой на сайте: {"plan": "plan_1m"} или {"days": N} (свой срок).
 
-    Принимает либо {"plan": "plan_1m"} (фиксированный тариф), либо
-    {"days": N} (7..180, произвольный срок — та же формула цены,
-    что и в гостевом чекауте, см. robokassa.custom_plan_price)."""
-    body = await request.json()
-    plan_key = body.get("plan")
-    custom_days = body.get("days")
-
-    from bot.utils.robokassa import (
-        robokassa, CARD_PLANS, CUSTOM_DAYS_MIN, CUSTOM_DAYS_MAX, custom_plan_price,
-    )
-    if plan_key:
-        plan_days = CARD_PLANS[plan_key]["days"] if plan_key in CARD_PLANS else None
-        if plan_days is None:
-            raise HTTPException(status_code=400, detail="Неизвестный тариф")
-        rub = CARD_PLANS[plan_key]["rub"]
-        label = CARD_PLANS[plan_key]["label"]
-    elif isinstance(custom_days, int) and CUSTOM_DAYS_MIN <= custom_days <= CUSTOM_DAYS_MAX:
-        plan_days = custom_days
-        rub = custom_plan_price(custom_days)
-        label = f"{custom_days} дней"
-    else:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Укажите тариф или срок от {CUSTOM_DAYS_MIN} до {CUSTOM_DAYS_MAX} дней",
-        )
-    if not robokassa.configured:
-        raise HTTPException(status_code=503, detail="Оплата картой временно недоступна")
-
+    Robokassa удалена (ADR-022), новый провайдер ещё не подключён —
+    _ensure_can_pay отвечает 503. Подключая провайдера: создать pending
+    Payment(payment_method="card") по CARD_PLANS / custom_plan_price и
+    вернуть {"url": ссылка на оплату}."""
     async with AsyncSessionLocal() as session:
         tg_id = await _resolve_tg_id(request, x_telegram_init_data, session)
         await _ensure_can_pay(session, tg_id, "card")
-        payment = Payment(
-            order_id="",
-            telegram_id=tg_id,
-            amount=float(rub),
-            status="pending",
-            payment_method="card",
-            days=plan_days,
-        )
-        session.add(payment)
-        await session.flush()
-        payment.order_id = f"card_{payment.id}"
-
-        try:
-            from bot.utils.robokassa import payment_inv_id
-            pay_url = robokassa.build_payment_url(
-                inv_id=payment_inv_id(payment.id),
-                amount=rub,
-                description=f"STAR VPN - {label}",
-            )
-        except RuntimeError as e:
-            await session.rollback()
-            logger.error("Robokassa build_payment_url failed: %s", e)
-            raise HTTPException(status_code=502, detail="Ошибка Robokassa. Попробуйте позже.")
-
-        await session.commit()
-        inv_id = payment.id
-
-    return {"url": pay_url, "invoice_id": inv_id}
+    raise HTTPException(503, "Оплата картой временно недоступна")
 
 
 # ─── GET /api/crypto/plans, POST /api/invoice/crypto (сайт/личный кабинет) ───
@@ -2190,40 +1956,18 @@ async def create_crypto_invoice_api(
     return {"url": pay_url, "invoice_id": invoice_id}
 
 
-# ─── Гостевые заказы (покупка без Telegram, с лендинга) ──────────────────────
-
-@app.get("/api/guest/plans")
-async def get_guest_plans():
-    """Тарифы для покупки без Telegram. Публичный эндпоинт — initData не нужен."""
-    from bot.utils.robokassa import robokassa, CARD_PLANS
-    from bot.utils.settings_store import get_all_provider_states
-    async with AsyncSessionLocal() as session:
-        states = await get_all_provider_states(session)
-    card_available = robokassa.configured and states["card"]
-    if not card_available:
-        return []
-    return [
-        {"key": k, "label": v["label"], "rub": float(v["rub"]), "days": v["days"], "desc": v["desc"]}
-        for k, v in CARD_PLANS.items()
-    ]
-
-
 @app.get("/api/site/plans")
 async def get_site_plans(days: int | None = None):
     """Тарифы для /get-vpn (публично, до входа): цена картой и криптой —
-    null, если способ недоступен. Раньше страница брала /api/guest/plans
-    (только карта) и при выключенной карте писала «нет тарифов», хотя
-    крипта работала. ?days=N (слайдер «Свой срок» на /tariffs) добавляет
+    null, если способ недоступен. ?days=N (слайдер «Свой срок» на /tariffs) добавляет
     тариф "custom" — только картой, по формуле custom_plan_price."""
     from bot.utils.cryptopay import CRYPTO_PLANS, cryptopay
-    from bot.utils.robokassa import (
-        CARD_PLANS, CUSTOM_DAYS_MAX, CUSTOM_DAYS_MIN, custom_plan_price, robokassa,
-    )
+    from bot.utils.card import CARD_PLANS, CUSTOM_DAYS_MAX, CUSTOM_DAYS_MIN, custom_plan_price
     from bot.utils.settings_store import get_all_provider_states
 
     async with AsyncSessionLocal() as session:
         states = await get_all_provider_states(session)
-    card_ok = robokassa.configured and states["card"]
+    card_ok = states["card"]
     crypto_ok = cryptopay.configured and states["crypto"]
     if not card_ok and not crypto_ok:
         return []
@@ -2250,195 +1994,10 @@ async def get_site_plans(days: int | None = None):
     return plans
 
 
-@app.get("/api/guest/providers")
-async def get_guest_providers():
-    """Какие способы оплаты доступны для покупки без Telegram."""
-    from bot.utils.robokassa import robokassa
-    from bot.utils.settings_store import get_all_provider_states
-    async with AsyncSessionLocal() as session:
-        states = await get_all_provider_states(session)
-    return {
-        "robokassa": robokassa.configured and states["card"],
-    }
-
-
-@app.post("/api/guest/checkout")
-async def guest_checkout(request: Request):
-    """
-    Создаёт гостевой заказ и подписанную ссылку на оплату Robokassa.
-    Публичный — для покупки VPN прямо с сайта, без Telegram (initData не требуется).
-    """
-    import uuid
-    from bot.models.guest_order import GuestOrder
-    from bot.utils.robokassa import (
-        robokassa, CARD_PLANS, guest_inv_id,
-        CUSTOM_DAYS_MIN, CUSTOM_DAYS_MAX, custom_plan_price,
-    )
-
-    body = await request.json()
-    plan_key = body.get("plan")
-    if plan_key == "custom":
-        days = body.get("days")
-        if not isinstance(days, int) or not (CUSTOM_DAYS_MIN <= days <= CUSTOM_DAYS_MAX):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Срок должен быть от {CUSTOM_DAYS_MIN} до {CUSTOM_DAYS_MAX} дней",
-            )
-        plan = {"days": days, "rub": custom_plan_price(days), "label": f"{days} дней"}
-    else:
-        plan = CARD_PLANS.get(plan_key)
-        if not plan:
-            raise HTTPException(status_code=400, detail="Неизвестный тариф")
-
-    from bot.utils.settings_store import is_provider_enabled
-    async with AsyncSessionLocal() as session:
-        if not await is_provider_enabled(session, "card"):
-            raise HTTPException(status_code=503, detail="Этот способ оплаты временно недоступен")
-
-    async with AsyncSessionLocal() as session:
-        order = GuestOrder(
-            public_id=str(uuid.uuid4()),
-            plan_key=body["plan"],
-            days=plan["days"],
-            amount=float(plan["rub"]),
-            status="pending",
-        )
-        session.add(order)
-        await session.flush()
-
-        try:
-            if not robokassa.configured:
-                raise HTTPException(status_code=503, detail="Оплата картой временно недоступна")
-            pay_url = robokassa.build_payment_url(
-                inv_id=guest_inv_id(order.id),
-                amount=plan["rub"],
-                description=f"STAR VPN - {plan['label']} (сайт)",
-            )
-        except RuntimeError as e:
-            await session.rollback()
-            logger.error("build_payment_url (guest) failed: %s", e)
-            raise HTTPException(status_code=502, detail="Ошибка платёжной системы. Попробуйте позже.")
-        except HTTPException:
-            await session.rollback()
-            raise
-
-        await session.commit()
-        public_id = order.public_id
-
-    return {"url": pay_url, "order_id": public_id}
-
-
-@app.get("/api/guest/order/{public_id}")
-async def guest_order_status(public_id: str):
-    """Поллится страницей успеха, пока вебхук не подтвердит оплату."""
-    from bot.models.guest_order import GuestOrder
-    from bot.utils.qr import qr_data_uri
-
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(select(GuestOrder).where(GuestOrder.public_id == public_id))
-        order: GuestOrder | None = result.scalar_one_or_none()
-        if not order:
-            raise HTTPException(status_code=404, detail="Заказ не найден")
-
-        return {
-            "status": order.status,
-            "link": order.vless_link,
-            "qr_url": qr_data_uri(order.vless_link) or None,
-        }
-
-
-async def _fulfill_guest_order(order_id: int) -> None:
-    """Создаёт Marzban-пользователя для гостевого заказа и сохраняет ключ."""
-    from datetime import datetime
-    from bot.models.guest_order import GuestOrder
-
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            select(GuestOrder).where(GuestOrder.id == order_id, GuestOrder.status == "pending")
-        )
-        order: GuestOrder | None = result.scalar_one_or_none()
-        if not order:
-            logger.warning("Guest webhook: pending order not found for id=%s", order_id)
-            return
-
-        mz_username = f"web_{order.public_id[:8]}"
-        # Ошибку Marzban пробрасываем наверх: вебхук ответит не-OK, и
-        # Robokassa повторит запрос (раньше заказ оставался оплаченным без ключа).
-        mz_user = await marzban.provision_user(
-            mz_username, 0, datetime.utcnow() + timedelta(days=order.days),
-            note=f"guest_order:{order.public_id}", ip_limit=1,
-        )
-        link = _set_vless_remark(marzban.extract_vless_link(mz_user) or "")
-
-        order.status = "paid"
-        order.marzban_username = mz_username
-        order.vless_link = link
-        order.paid_at = datetime.utcnow()
-        await session.commit()
-
-    logger.info("Guest order fulfilled: public_id=%s rub=%s days=%s", order.public_id, order.amount, order.days)
-
-
-# ─── POST /card/webhook (Robokassa ResultURL) ────────────────────────────────
-
-@app.post("/card/webhook", include_in_schema=False)
-async def card_webhook(request: Request):
-    """
-    ResultURL от Robokassa (server-to-server, application/x-www-form-urlencoded).
-    Подпись: MD5(OutSum:InvId:Password#2).
-    Один InvId на два вида платежей — см. decode_inv_id: чётный/нечётный
-    разделяет обычные Telegram-платежи (Payment) и гостевые заказы (GuestOrder).
-    Обязан ответить строкой "OK{InvId}" — иначе Robokassa повторит запрос.
-    """
-    from bot.utils.robokassa import robokassa, decode_inv_id
-    from bot.handlers.card_payment import handle_card_webhook
-    from aiogram import Bot
-
-    form = await request.form()
-    out_sum = form.get("OutSum", "")
-    inv_id = form.get("InvId", "")
-    signature = form.get("SignatureValue", "")
-
-    if not robokassa.check_result_signature(out_sum, inv_id, signature):
-        logger.warning("Robokassa webhook: invalid signature for InvId=%s", inv_id)
-        raise HTTPException(status_code=403, detail="Invalid signature")
-
-    kind, real_id = decode_inv_id(int(inv_id))
-
-    if kind == "guest":
-        try:
-            await _fulfill_guest_order(real_id)
-        except Exception as e:
-            logger.error("_fulfill_guest_order error: %s", e)
-            return PlainTextResponse("retry", status_code=503)
-        return PlainTextResponse(f"OK{inv_id}")
-
-    bot = Bot(token=settings.telegram_api_token)
-    try:
-        await handle_card_webhook(payment_id=real_id, bot=bot, out_sum=out_sum)
-    except Exception:
-        # Отметка об оплате откатилась вместе с выдачей подписки — отвечаем
-        # не-OK, чтобы Robokassa повторила запрос (раньше здесь отвечали OK,
-        # и платёж оставался без подписки навсегда).
-        logger.exception("handle_card_webhook error for InvId=%s", inv_id)
-        return PlainTextResponse("retry", status_code=503)
-    finally:
-        try:
-            await bot.session.close()
-        except Exception:
-            pass
-
-    # Формат ответа фиксирован протоколом Robokassa.
-    return PlainTextResponse(f"OK{inv_id}")
-
-
 @app.get("/card/success", response_class=HTMLResponse, include_in_schema=False)
 async def card_success():
-    # Один SuccessURL обслуживает Robokassa, Telegram-платежи и
-    # гостевые заказы с сайта. Различаем их на клиенте: если браузер,
-    # вернувшийся с оплаты, это тот же браузер, что открывал чекаут на
-    # /get-vpn, в localStorage будет лежать order_id гостевого заказа —
-    # тогда поллим его статус и показываем QR + ключ прямо здесь, без Telegram.
+    # Страницы возврата после оплаты картой — пригодятся новому провайдеру
+    # (bot/utils/card.py); кнопки ведут в бота или в личный кабинет.
     return _serve_html(_LANDING_DIR / "card-success.html")
 
 
@@ -2827,9 +2386,19 @@ async def serve_media(media_id: int):
     )
 
 
+# Payment.amount хранится в валюте способа оплаты: ⭐ — Stars, $ — крипта
+# (CryptoPay выставляет счёт в долларах), ₽ — карта и старые рублёвые платежи.
+_METHOD_CURRENCY = {"stars": "stars", "crypto": "usd"}
+
+
+def _payment_currency(method: str | None) -> str:
+    return _METHOD_CURRENCY.get(method or "stars", "rub")
+
+
 @app.get("/web/stats")
-async def web_stats(authorization: str | None = Header(default=None)):
+async def web_stats(days: int = 7, authorization: str | None = Header(default=None)):
     _web_auth(authorization, "dash")
+    days = days if days in (7, 30, 90) else 7
     async with AsyncSessionLocal() as session:
         now = datetime.utcnow()
         total = (await session.execute(select(func.count(User.telegram_id)))).scalar_one()
@@ -2844,34 +2413,52 @@ async def web_stats(authorization: str | None = Header(default=None)):
         )).scalar_one()
         stars = (await session.execute(select(func.sum(User.total_stars_paid)))).scalar_one() or 0
         pays = (await session.execute(
-            select(func.count(Payment.id)).where(Payment.status == "paid")
+            select(func.count(Payment.id)).where(Payment.status == "paid", Payment.payment_method != "admin")
         )).scalar_one()
         revenue_rows, new_rows = [], []
-        for i in range(6, -1, -1):
+        totals = {cur: {"amount": 0.0, "count": 0} for cur in ("rub", "stars", "usd")}
+        for i in range(days - 1, -1, -1):
             day_start = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
             day_end = day_start + timedelta(days=1)
-            # Payment.amount хранится в валюте способа оплаты — раньше ⭐, ₽ и $
-            # складывались в одно число. Рубли — карта (и старые рублёвые платежи).
             by_method = (await session.execute(
-                select(Payment.payment_method, func.sum(Payment.amount))
-                .where(Payment.status == "paid", Payment.paid_at >= day_start, Payment.paid_at < day_end)
+                select(Payment.payment_method, func.sum(Payment.amount), func.count(Payment.id))
+                .where(Payment.status == "paid", Payment.payment_method != "admin",
+                       Payment.paid_at >= day_start, Payment.paid_at < day_end)
                 .group_by(Payment.payment_method)
             )).all()
             sums = {"rub": 0.0, "usd": 0.0, "stars": 0.0}
-            for method, amount in by_method:
-                key = {"stars": "stars", "crypto": "usd"}.get(method, "rub")
-                sums[key] += float(amount or 0)
+            counts = {"rub": 0, "usd": 0, "stars": 0}
+            for method, amount, n in by_method:
+                cur = _payment_currency(method)
+                sums[cur] += float(amount or 0)
+                counts[cur] += n
+                totals[cur]["amount"] += float(amount or 0)
+                totals[cur]["count"] += n
             cnt = (await session.execute(
                 select(func.count(User.telegram_id)).where(User.created_at >= day_start, User.created_at < day_end)
             )).scalar_one() or 0
             label = day_start.strftime("%d.%m")
-            revenue_rows.append({"date": label, "amount": sums["rub"], **sums})
+            revenue_rows.append({"date": label, **sums, "counts": counts})
             new_rows.append({"date": label, "count": cnt})
     return {
         "total_users": total, "active_subscriptions": active, "banned": banned,
         "trial_used": trial, "total_stars": int(stars), "total_payments": pays,
-        "online_now": -1, "revenue_chart": revenue_rows, "users_chart": new_rows,
+        "days": days, "revenue_chart": revenue_rows, "revenue_totals": totals,
+        "users_chart": new_rows,
     }
+
+
+def _user_search(q: str, *extra) -> object:
+    """Условие поиска пользователя в админке: ID, @username, имя или email.
+    extra — дополнительные текстовые колонки (например, имя пользователя в Marzban)."""
+    qs = q.strip().lstrip("@")
+    if qs.lstrip("-").isdigit():
+        return or_(User.telegram_id == int(qs), *(c.ilike(f"%{qs}%") for c in extra))
+    like = f"%{qs}%"
+    return or_(
+        User.username.ilike(like), User.full_name.ilike(like), User.email.ilike(like),
+        *(c.ilike(like) for c in extra),
+    )
 
 
 @app.get("/web/users")
@@ -2884,12 +2471,8 @@ async def web_users(
     now = datetime.utcnow()
     async with AsyncSessionLocal() as session:
         query = select(User)
-        if q:
-            qs = q.strip().lstrip("@")
-            if qs.lstrip("-").isdigit():
-                query = query.where(User.telegram_id == int(qs))
-            else:
-                query = query.where(or_(User.username.ilike(f"%{qs}%"), User.full_name.ilike(f"%{qs}%")))
+        if q.strip():
+            query = query.where(_user_search(q))
         if status == "active":
             query = query.where(User.subscription_expires_at > now, User.is_banned.is_(False))
         elif status == "banned":
@@ -3047,35 +2630,134 @@ async def web_user_message(tg_id: int, request: Request, authorization: str | No
 
 
 @app.get("/web/payments")
-async def web_payments(limit: int = 50, offset: int = 0, authorization: str | None = Header(default=None)):
+async def web_payments(
+    limit: int = 50, offset: int = 0, q: str = "", authorization: str | None = Header(default=None),
+):
     _web_auth(authorization, "payments")
     async with AsyncSessionLocal() as session:
+        # Бесплатные подарки из админки (payment_method="admin") — не платежи.
+        cond = [Payment.status == "paid", Payment.payment_method != "admin"]
+        if q.strip():
+            cond.append(Payment.telegram_id.in_(select(User.telegram_id).where(_user_search(q))))
         pays = (await session.execute(
-            select(Payment).where(Payment.status == "paid").order_by(Payment.paid_at.desc()).limit(limit).offset(offset)
+            select(Payment).where(*cond).order_by(Payment.paid_at.desc()).limit(limit).offset(offset)
         )).scalars().all()
-        total = (await session.execute(select(func.count(Payment.id)).where(Payment.status == "paid"))).scalar_one()
+        total = (await session.execute(select(func.count(Payment.id)).where(*cond))).scalar_one()
     return {
         "total": total,
-        "payments": [{"id": p.id, "telegram_id": p.telegram_id, "amount": int(p.amount),
+        "payments": [{"id": p.id, "telegram_id": p.telegram_id, "amount": float(p.amount),
+                      "currency": _payment_currency(p.payment_method),
                       "method": p.payment_method or "stars", "asset": p.asset or "",
                       "days": p.days or 0, "paid_at": p.paid_at.isoformat() if p.paid_at else None} for p in pays],
     }
 
 
+# ─── Подарки (админка) ────────────────────────────────────────────────────────
+
+@app.get("/web/gifts")
+async def web_gifts(state: str = "", q: str = "", authorization: str | None = Header(default=None)):
+    """Все подарки по ссылке: кто подарил, забран ли и кем. state: ready|claimed|unpaid."""
+    _web_auth(authorization, "gifts")
+    from sqlalchemy.orm import aliased
+
+    claimant = aliased(User)
+    sender = aliased(User)
+    async with AsyncSessionLocal() as session:
+        cond = [Payment.is_gift.is_(True), Payment.gift_link_code.is_not(None)]
+        if state == "claimed":
+            cond.append(Payment.gift_claimed.is_(True))
+        elif state == "ready":
+            cond += [Payment.status == "paid", Payment.gift_claimed.is_(False)]
+        elif state == "unpaid":
+            cond.append(Payment.status != "paid")
+        if q.strip():
+            cond.append(Payment.gift_sender_id.in_(select(User.telegram_id).where(_user_search(q))))
+        rows = (await session.execute(
+            select(Payment, claimant, sender)
+            .outerjoin(claimant, claimant.telegram_id == Payment.telegram_id)
+            .outerjoin(sender, sender.telegram_id == Payment.gift_sender_id)
+            .where(*cond)
+            .order_by(Payment.created_at.desc())
+            .limit(300)
+        )).all()
+        claimed, waiting = (await session.execute(
+            select(
+                func.sum(case((Payment.gift_claimed.is_(True), 1), else_=0)),
+                func.sum(case(((Payment.status == "paid") & Payment.gift_claimed.is_(False), 1), else_=0)),
+            ).where(Payment.is_gift.is_(True), Payment.gift_link_code.is_not(None))
+        )).one()
+
+    def sender_label(p: Payment, u: User | None) -> str:
+        if p.payment_method == "admin":
+            return "STAR VPN (админка)"
+        if not u:
+            return str(p.gift_sender_id or "—")
+        return u.email or (f"@{u.username}" if u.username else str(u.telegram_id))
+
+    return {
+        "claimed": int(claimed or 0),
+        "waiting": int(waiting or 0),
+        "gifts": [
+            {**_gift_row(p, c), "sender_id": p.gift_sender_id, "sender_label": sender_label(p, s),
+             "currency": _payment_currency(p.payment_method)}
+            for p, c, s in rows
+        ],
+    }
+
+
+@app.post("/web/gifts")
+async def web_gift_create(request: Request, authorization: str | None = Header(default=None)):
+    """Бесплатная подарочная ссылка от STAR VPN — для конкурсов, компенсаций,
+    партнёров. {"days": 1..365, "message": "…"} → {"link": …}. Платёж
+    payment_method="admin", сумма 0 — в выручку не попадает."""
+    identity = _web_auth(authorization, "gifts")
+    from bot.utils import gifts
+    from bot.utils.webauth import get_or_create_user_by_telegram_id
+
+    body = await request.json()
+    try:
+        days = int(body.get("days") or 0)
+    except (TypeError, ValueError):
+        days = 0
+    if not 1 <= days <= 365:
+        raise HTTPException(400, "Срок — от 1 до 365 дней")
+    message = (body.get("message") or "").strip()[:300]
+
+    async with AsyncSessionLocal() as session:
+        # Payment.telegram_id — NOT NULL + FK: до клейма подарок «висит» на
+        # Telegram-аккаунте владельца сервиса (TELEGRAM_ADMIN_ID).
+        owner = await get_or_create_user_by_telegram_id(settings.telegram_admin_id, None, None, session)
+        fields = gifts.link_gift_fields(owner.telegram_id, days, True, message)
+        payment = Payment(
+            order_id=f"admin_gift_{secrets.token_hex(8)}", amount=0, payment_method="admin",
+            **{**fields, "status": "paid"}, paid_at=datetime.utcnow(),
+        )
+        session.add(payment)
+        await session.commit()
+        logger.info("Admin %s created gift link %s (%s days)", identity.username, payment.id, days)
+        return {"ok": True, "link": gifts.gift_url(payment.gift_link_code),
+                "bot_link": gifts.gift_bot_url(payment.gift_link_code)}
+
+
 # ─── Устройства (админка) ─────────────────────────────────────────────────────
 
 @app.get("/web/devices")
-async def web_devices(limit: int = 100, offset: int = 0, authorization: str | None = Header(default=None)):
+async def web_devices(
+    limit: int = 100, offset: int = 0, q: str = "", authorization: str | None = Header(default=None),
+):
     _web_auth(authorization, "devices")
     async with AsyncSessionLocal() as session:
+        cond = [Device.is_active.is_(True)]
+        if q.strip():
+            cond.append(_user_search(q, Device.marzban_username, Device.custom_name))
         query = (
             select(Device, User)
             .join(User, User.telegram_id == Device.telegram_id)
-            .where(Device.is_active.is_(True))
+            .where(*cond)
             .order_by(Device.created_at.desc())
         )
         total = (await session.execute(
-            select(func.count(Device.id)).where(Device.is_active.is_(True))
+            select(func.count(Device.id)).join(User, User.telegram_id == Device.telegram_id).where(*cond)
         )).scalar_one()
         rows = (await session.execute(query.limit(limit).offset(offset))).all()
     return {
@@ -3084,6 +2766,7 @@ async def web_devices(limit: int = 100, offset: int = 0, authorization: str | No
             {
                 "id": d.id,
                 "name": d.name,
+                "custom_name": d.custom_name or "",
                 "slot": d.slot,
                 "marzban_username": d.marzban_username,
                 "owner_id": u.telegram_id,
@@ -3098,12 +2781,12 @@ async def web_devices(limit: int = 100, offset: int = 0, authorization: str | No
 # ─── Рефералы (админка) ────────────────────────────────────────────────────────
 
 @app.get("/web/referrals")
-async def web_referrals(limit: int = 100, authorization: str | None = Header(default=None)):
+async def web_referrals(limit: int = 100, q: str = "", authorization: str | None = Header(default=None)):
     _web_auth(authorization, "referrals")
     async with AsyncSessionLocal() as session:
         rows = (await session.execute(
             select(User)
-            .where(User.referral_count > 0)
+            .where(User.referral_count > 0, *([_user_search(q)] if q.strip() else []))
             .order_by(User.referral_count.desc())
             .limit(limit)
         )).scalars().all()
@@ -3527,48 +3210,75 @@ async def web_bot_block_delete(block_id: int, authorization: str | None = Header
     return {"ok": True}
 
 
-# ─── Настройки (обзор — тарифы/лимиты/провайдеры сейчас read-only) ────────────
+# ─── Настройки — всё, что владелец меняет без правки кода (bot/utils/app_config.py) ──
 
 @app.get("/web/settings/overview")
 async def web_settings_overview(authorization: str | None = Header(default=None)):
     _web_auth(authorization, "settings")
-    from bot.handlers.payment import PLANS
-    from bot.utils.robokassa import robokassa, CARD_PLANS
-    from bot.models.device import MAX_DEVICES
-    from bot.utils.settings_store import get_all_provider_states
-
-    tariffs = []
-    for key, plan in PLANS.items():
-        card = CARD_PLANS.get(key, {})
-        tariffs.append({
-            "key": key, "label": plan["label"], "days": plan["days"],
-            "stars": plan["stars"], "rub": float(card.get("rub", 0)),
-        })
-
     from bot.utils import telegram_oauth
+    from bot.utils.card import CARD_PLANS, card_ready
+    from bot.utils.cryptopay import CRYPTO_PLANS
+    from bot.utils.plans import STARS_PLANS
+    from bot.utils.settings_store import get_all_provider_states
 
     async with AsyncSessionLocal() as session:
         toggles = await get_all_provider_states(session)
 
     return {
+        "config": app_config.public_view(),
+        "plans": [
+            {"key": k, "label": p["label"], "days": p["days"], "stars": p["stars"],
+             "usd": float(CRYPTO_PLANS[k]["usd"]), "rub": float(CARD_PLANS[k]["rub"])}
+            for k, p in STARS_PLANS.items()
+        ],
         "telegram_login": {
             "configured": telegram_oauth.is_configured(),
             "client_id": telegram_oauth.client_id(),
+            "secret_from_env": bool(settings.telegram_oauth_client_secret.strip()),
             "origin": telegram_oauth.site_origin(),
             "redirect_uri": telegram_oauth.redirect_uri(),
             "last_error": telegram_oauth.last_error,
         },
-        "tariffs": tariffs,
         "providers": {
             "stars": {"configured": True, "enabled": toggles["stars"]},
-            "card": {"configured": robokassa.configured, "enabled": toggles["card"]},
+            "card": {"configured": card_ready(), "enabled": toggles["card"]},
             "crypto": {"configured": bool(settings.cryptopay_token), "enabled": toggles["crypto"]},
         },
-        "limits": {"max_devices": MAX_DEVICES, "trial_days": settings.trial_days},
-        "admin_web_key_set": bool(settings.admin_web_key),
-        "admin_web_key_masked": (settings.admin_web_key[:4] + "…" + settings.admin_web_key[-4:]) if len(settings.admin_web_key) > 8 else "",
         "bot_username": settings.bot_username,
         "site_url": settings.site_url,
+        "smtp_configured": bool(settings.smtp_host),
+    }
+
+
+@app.put("/web/settings")
+async def web_settings_save(request: Request, authorization: str | None = Header(default=None)):
+    """{"changes": {key: значение | null}} — null возвращает значение по умолчанию."""
+    identity = _web_auth(authorization, "settings")
+    body = await request.json()
+    changes = body.get("changes") or {}
+    if not isinstance(changes, dict) or not changes:
+        raise HTTPException(400, "Нет изменений")
+    if "tg_oauth_secret" in changes and identity.rank != "admin":
+        raise HTTPException(403, "Секрет входа через Telegram меняет только главный администратор")
+    async with AsyncSessionLocal() as session:
+        try:
+            await app_config.save(session, changes)
+        except ValueError as e:
+            raise HTTPException(400, str(e))
+    logger.info("Admin %s changed settings: %s", identity.username, ", ".join(sorted(changes)))
+    return {"ok": True, "config": app_config.public_view()}
+
+
+@app.get("/api/site/prices")
+async def site_prices():
+    """Цены тарифов для статичных страниц сайта (/tariffs) — из настроек админки."""
+    from bot.utils.card import CARD_PLANS
+    from bot.utils.cryptopay import CRYPTO_PLANS
+    from bot.utils.plans import STARS_PLANS
+    return {
+        k: {"days": p["days"], "stars": p["stars"], "usd": float(CRYPTO_PLANS[k]["usd"]),
+            "rub": float(CARD_PLANS[k]["rub"])}
+        for k, p in STARS_PLANS.items()
     }
 
 
@@ -3585,7 +3295,10 @@ async def web_settings_payment_toggle(request: Request, authorization: str | Non
         raise HTTPException(status_code=400, detail="Неизвестный способ оплаты")
 
     async with AsyncSessionLocal() as session:
-        await set_provider_enabled(session, provider, enabled)
+        try:
+            await set_provider_enabled(session, provider, enabled)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
     return {"ok": True, "provider": provider, "enabled": enabled}
 
@@ -3789,6 +3502,28 @@ TICKET_TOPIC_LABELS = {
 }
 
 
+def _ticket_delivery(t, user: User | None) -> dict:
+    """Куда уйдёт ответ на тикет — показывается в админке до отправки.
+
+    Аккаунт с настоящим Telegram — сообщением от бота. Веб-аккаунт или
+    анонимное обращение с email — письмом. @username без аккаунта Bot API
+    написать не даёт — только вручную, по ссылке t.me."""
+    if user and user.telegram_id > 0:
+        name = f"@{user.username}" if user.username else f"ID {user.telegram_id}"
+        return {"channel": "telegram", "to": name}
+    contact = (t.contact or "").strip()
+    email = (user.email if user else None) or (
+        contact if "@" in contact and not contact.startswith("@") else None
+    )
+    if email:
+        return {"channel": "email", "to": email}
+    if contact:
+        handle = contact.lstrip("@")
+        link = f"https://t.me/{handle}" if re.fullmatch(r"[A-Za-z0-9_]{4,32}", handle) else ""
+        return {"channel": "manual", "to": contact, "link": link}
+    return {"channel": "none", "to": ""}
+
+
 @app.get("/web/tickets")
 async def web_tickets(status: str = "", authorization: str | None = Header(default=None)):
     _web_auth(authorization, "support")
@@ -3805,6 +3540,8 @@ async def web_tickets(status: str = "", authorization: str | None = Header(defau
             return u.email or (f"@{u.username}" if u.username else str(u.telegram_id))
         return t.contact or "—"
 
+    smtp_ready = bool(settings.smtp_host)
+
     return {
         "tickets": [
             {
@@ -3818,6 +3555,9 @@ async def web_tickets(status: str = "", authorization: str | None = Header(defau
                 "platform": t.platform or "",
                 "status": t.status,
                 "admin_reply": t.admin_reply or "",
+                "contact": t.contact or "",
+                "account": (u.email or (f"@{u.username}" if u.username else "")) if u else "",
+                "delivery": {**_ticket_delivery(t, u), "smtp_ready": smtp_ready},
                 "created_at": t.created_at.isoformat() if t.created_at else None,
                 "updated_at": t.updated_at.isoformat() if t.updated_at else None,
             }
@@ -3844,26 +3584,27 @@ async def web_ticket_reply(ticket_id: int, request: Request, authorization: str 
         if reply:
             t.admin_reply = reply
         t.status = new_status
-        user_id, contact, topic_label = t.user_id, t.contact, TICKET_TOPIC_LABELS.get(t.topic, t.topic)
+        user_id, topic_label = t.user_id, TICKET_TOPIC_LABELS.get(t.topic, t.topic)
         user = (await session.execute(select(User).where(User.telegram_id == user_id))).scalar_one_or_none() if user_id else None
         await session.commit()
 
+    delivery = _ticket_delivery(t, user)
+    delivered = False
     if reply:
-        # Аккаунт с реальным Telegram — шлём в бота. Веб-аккаунт (telegram_id
-        # синтетический) или анонимное обращение с email-контактом — на почту.
-        # @username без привязанного аккаунта Bot API написать не даёт —
-        # для таких тикетов остаётся только ручной ответ через сам контакт.
-        if user and user.telegram_id > 0:
-            await _tg_send(user.telegram_id, f"💬 <b>Ответ поддержки по тикету «{topic_label}»:</b>\n\n{reply}")
-        else:
-            email = (user.email if user else None) or (contact if contact and "@" in contact and not contact.startswith("@") else None)
-            if email:
-                from bot.utils.mailer import send_ticket_reply_email
-                try:
-                    await send_ticket_reply_email(email, topic_label, reply)
-                except Exception as e:
-                    logger.error("Failed to email ticket reply to %s: %s", email, e)
-    return {"ok": True}
+        safe = html.escape(reply)
+        if delivery["channel"] == "telegram":
+            delivered = await _tg_send(
+                user.telegram_id, f"💬 <b>Ответ поддержки по тикету «{topic_label}»:</b>\n\n{safe}",
+            )
+        elif delivery["channel"] == "email" and settings.smtp_host:
+            from bot.utils.mailer import send_ticket_reply_email
+            try:
+                await send_ticket_reply_email(delivery["to"], topic_label, reply)
+                delivered = True
+            except Exception as e:
+                logger.error("Failed to email ticket reply to %s: %s", delivery["to"], e)
+    return {"ok": True, "delivered": delivered, **delivery}
+
 
 
 @app.get("/web/marzban/ping")

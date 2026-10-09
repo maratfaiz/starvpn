@@ -29,13 +29,7 @@ class Settings(BaseSettings):
     marzban_username: str = Field("admin", env="MARZBAN_USERNAME")
     marzban_password: str = Field("", env="MARZBAN_PASSWORD")
 
-    # Robokassa — card payments in RUB (Visa/Mastercard/МИР)
-    robokassa_merchant_id: str = Field("", env="ROBOKASSA_MERCHANT_ID")
-    robokassa_password1: str = Field("", env="ROBOKASSA_PASSWORD1")  # for generating payment links
-    robokassa_password2: str = Field("", env="ROBOKASSA_PASSWORD2")  # for verifying ResultURL webhooks
-    robokassa_test_mode: bool = Field(False, env="ROBOKASSA_TEST_MODE")
-
-    # HTTP-сервер: API мини-аппа/сайта и вебхуки Robokassa/CryptoPay
+    # HTTP-сервер: API мини-аппа/сайта и вебхук CryptoPay
     webhook_host: str = Field("0.0.0.0", env="WEBHOOK_HOST")
     webhook_port: int = Field(8080, env="WEBHOOK_PORT")
 

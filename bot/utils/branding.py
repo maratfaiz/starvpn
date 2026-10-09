@@ -98,17 +98,18 @@ def ru_days(n: int) -> str:
     return f"{n} {word}"
 
 
-# Страницы свёрстаны под пробный период в 2 дня; при другом TRIAL_DAYS эти
+# Страницы свёрстаны под пробный период в 2 дня; при другом сроке (/admin → Настройки) эти
 # фразы подставляются из настроек, чтобы сайт не обещал не тот срок.
 _TEMPLATE_TRIAL_PHRASES = ("2 дня бесплатно", "Бесплатные 2 дня", "пробный период — 2 дня")
 
 
 def brand_html(page: str) -> str:
     from bot.config import settings
+    from bot.utils import app_config
     if SITE_NAV_MARKER in page:
         page = page.replace(SITE_NAV_MARKER, _SITE_NAV_FILE.read_text(encoding="utf-8"), 1)
-    if settings.trial_days != 2:
-        days = ru_days(settings.trial_days)
+    if app_config.trial_days() != 2:
+        days = ru_days(app_config.trial_days())
         for phrase in _TEMPLATE_TRIAL_PHRASES:
             page = page.replace(phrase, phrase.replace("2 дня", days))
     bot = settings.bot_username.lstrip("@")
